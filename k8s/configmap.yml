@@ -1,0 +1,8 @@
+apiVersion: v1
+kind: ConfigMap
+metadata:
+  name: backend-config
+  namespace: interview-demo
+data:
+  GIN_MODE: "release"
+  BACKEND_PORT: "8080"
