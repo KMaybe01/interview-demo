@@ -9,7 +9,17 @@
     "preview": "vite preview",
     "lint": "biome check --write src/",
     "lint:eslint": "eslint src/ --fix",
-    "format": "biome format --write src/"
+    "format": "biome format --write src/",
+    "prepare": "husky"
+  },
+  "lint-staged": {
+    "src/**/*.{ts,tsx}": [
+      "biome check --write --no-errors-on-unmatched",
+      "eslint --fix"
+    ],
+    "*.{json,css,md}": [
+      "biome check --write --no-errors-on-unmatched"
+    ]
   },
   "dependencies": {
     "@ant-design/cssinjs": "^2.1.2",
@@ -42,6 +52,8 @@
     "eslint-plugin-react-hooks": "5",
     "eslint-plugin-react-refresh": "0",
     "globals": "^17.6.0",
+    "husky": "^9.1.7",
+    "lint-staged": "^17.0.7",
     "typescript": "~6.0.2",
     "typescript-eslint": "^8.59.2",
     "vite": "^8.0.12"

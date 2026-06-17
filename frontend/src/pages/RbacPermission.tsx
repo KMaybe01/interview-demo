@@ -124,7 +124,7 @@ function flattenWithCodes(
       key: String(currentIndex),
       title: node.title,
       requiredPermissions: node.requiredPermissions,
-      code: 1 << currentIndex,
+      code: 1 << (currentIndex satisfies number),
       depth,
     }
     currentIndex++
