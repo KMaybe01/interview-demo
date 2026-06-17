@@ -23,30 +23,84 @@ React 19 + Go 1.26 全栈演示项目，涵盖 **12 个高级技术场景**，�
 
 ```
 interview-demo/
-├── frontend/
+├── frontend/                       # React 19 前端
 │   ├── src/
-│   │   ├── pages/                  # 11 个演示页面
+│   │   ├── main.tsx                # React 入口 (StrictMode, BrowserRouter)
+│   │   ├── App.tsx                 # 根组件 (Ant Design ConfigProvider, 路由)
+│   │   ├── assets/                 # 静态资源 (图片)
+│   │   ├── pages/                  # 13 个演示页面 (含仪表盘)
+│   │   │   ├── Dashboard.tsx       # / 仪表盘
+│   │   │   ├── JsonSchemaForm.tsx  # /json-schema-form 动态表单 + 实时 JSON 编辑
+│   │   │   ├── AlertWebSocket.tsx  # /alert-websocket WebSocket 告警
+│   │   │   ├── ChunkedUpload.tsx   # /chunked-upload 大文件分片上传
+│   │   │   ├── GisRendering.tsx    # /gis-rendering GIS 十万级点位
+│   │   │   ├── LogStream.tsx       # /log-stream 百万行日志流式解密
+│   │   │   ├── LruRouteCache.tsx   # /lru-route-cache LRU 路由缓存
+│   │   │   ├── RbacPermission.tsx  # /rbac-permission RBAC 位编码权限
+│   │   │   ├── RequestLoading.tsx  # /request-loading 请求加载 Signal
+│   │   │   ├── SseLogStream.tsx    # /sse-log-stream SSE 日志流
+│   │   │   ├── TokenRefresh.tsx    # /token-refresh 双 Token 无感刷新
+│   │   │   ├── TreeDataEngine.tsx  # /tree-data-engine 树形数据操作
+│   │   │   └── WebWorkerMerge.tsx  # /web-worker-merge 分治归并排序
 │   │   ├── components/
 │   │   │   └── dynamic-form/       # 自定义递归表单引擎
-│   │   │       ├── DynamicForm.tsx  # 容器：提交/重置/校验
+│   │   │       ├── DynamicForm.tsx  # 容器: forwardRef + onChange + 校验调度
 │   │   │       ├── Renderer.tsx     # 递归渲染器 (tabs→card→form→leaf)
-│   │   │       ├── registry.tsx     # 控件注册表
-│   │   │       ├── types.ts        # Schema 类型 + 校验逻辑
+│   │   │       ├── registry.tsx     # 策略模式控件注册表
+│   │   │       ├── types.ts        # Schema 类型 + AJV 校验 + 工具函数
 │   │   │       └── fields/         # 7 个字段组件
+│   │   │           ├── StringField.tsx   # Input
+│   │   │           ├── NumberField.tsx   # InputNumber
+│   │   │           ├── SelectField.tsx   # Select
+│   │   │           ├── SwitchField.tsx   # Switch
+│   │   │           ├── DateTimeField.tsx # DatePicker
+│   │   │           ├── JsonField.tsx     # TextArea (JSON)
+│   │   │           └── ArrayField.tsx    # 动态数组 (添加/删除)
 │   │   ├── stores/                  # Zustand 状态管理
-│   │   ├── utils/                   # LRU, RBAC, Token 工具
-│   │   ├── workers/                 # Web Worker
-│   │   ├── layouts/                 # Ant Design 布局
-│   │   └── routes/                  # 路由配置
-│   ├── biome.json
-│   └── eslint.config.js
-├── backend/
+│   │   │   ├── index.ts            # 桶文件导出
+│   │   │   ├── alertStore.ts       # WebSocket 告警
+│   │   │   ├── lruRouteStore.ts    # LRU 路由缓存
+│   │   │   ├── requestLoadingStore.ts # 请求加载 Signal
+│   │   │   └── uploadStore.ts      # 分片上传 (persist + localStorage)
+│   │   ├── layouts/
+│   │   │   └── MainLayout.tsx      # 侧边栏 + 头部 + 内容区布局
+│   │   ├── routes/
+│   │   │   └── index.tsx           # 13 条路由配置
+│   │   ├── utils/                   # 工具函数
+│   │   │   ├── token.ts            # JWT Token 工具
+│   │   │   ├── lru.ts              # LRUCache 泛型类
+│   │   │   ├── rbac.ts             # RBAC 位运算权限
+│   │   │   └── wsTransport.ts      # WebSocket 传输层: 二进制协议/背压/心跳/降级链
+│   │   └── workers/                 # Web Worker
+│   │       ├── merge.worker.ts     # 归并排序 Worker
+│   │       └── decrypt.worker.ts   # 日志解密 Worker
+│   ├── public/
+│   │   ├── favicon.svg
+│   │   └── icons.svg
+│   ├── vite.config.ts              # Vite + React + Babel + /api 代理
+│   ├── tsconfig.json               # TypeScript 配置入口
+│   ├── tsconfig.app.json
+│   ├── tsconfig.node.json
+│   ├── biome.json                  # Biome 2.5 配置
+│   ├── eslint.config.js            # ESLint 9 配置
+│   ├── package.json
+│   └── index.html                  # HTML 入口
+├── backend/                        # Go 1.26 后端
 │   ├── main.go                     # Gin 入口 :8080
-│   ├── handlers/                    # WebSocket, Auth, SSE, GIS, Schema
-│   └── middleware/                  # CORS
-├── Dockerfile                      # 多阶段构建 (frontend-builder → backend-builder → frontend/backend)
-├── nginx.conf                      # Nginx 反向代理 (静态文件 + /api + /ws WebSocket)
-├── .gitlab-ci.yml                  # GitLab CI/CD 流水线 (validate → build → package → deploy)
+│   ├── go.mod / go.sum
+│   ├── handlers/
+│   │   ├── alert.go                # WebSocket 告警推送 + HTTP SSE/Polling 多协议适配
+│   │   ├── auth.go                 # 登录 + Token 刷新/轮换
+│   │   ├── gis.go                  # GIS 点位数据
+│   │   ├── schema.go               # Schema 后端业务校验
+│   │   ├── sse.go                  # SSE 日志流
+│   │   ├── encrypted_logs.go       # 加密日志流
+│   │   └── upload.go               # 分片上传 / 状态查询 / 合并
+│   ├── middleware/
+│   │   └── (CORS 中间件)
+│   └── uploads/                    # 上传文件临时存储
+├── docs/
+│   └── 面试亮点.md                 # 项目技术分析报告 (面试用)
 ├── helm/                           # Helm Chart 部署
 │   ├── Chart.yaml                  # Chart 元数据 (v2, version 0.1.0)
 │   ├── values.yaml                 # 集中化配置 (镜像/副本/探针/资源/ingress)
@@ -59,15 +113,19 @@ interview-demo/
 │       ├── frontend-deployment.yaml# 2 副本, nginx :80
 │       ├── frontend-service.yaml   # ClusterIP :80
 │       └── ingress.yaml            # /api /ws → backend, / → frontend
+├── Dockerfile                      # 多阶段构建 (frontend-builder → backend-builder → frontend/backend)
+├── nginx.conf                      # Nginx 反向代理 (静态文件 + /api + /ws WebSocket)
+├── .gitlab-ci.yml                  # GitLab CI/CD 流水线 (validate → build → package → deploy)
+└── README.md
 ```
 
 ## 演示功能
 
 | #  | 页面                | 核心实现                                                                 |
 | -- | ------------------- | ------------------------------------------------------------------------ |
-| 1  | 告警 WebSocket      | 指数退避重连 + 心跳 Ping/Pong + 消息去重 + RAF 节流 + ECharts 实时趋势     |
+| 1  | 告警 WebSocket      | 多协议传输层 (WebSocket→SSE→Polling 降级) + 手动 Segmented 切换 + 直连后端 + 二进制协议 + 背压控制 + 消息合并 + 心跳保活 + 断线重连 + 消息去重 + RAF 节流 + ECharts 实时趋势 |
 | 2  | JSON Schema 动态表单 | 自定义递归渲染引擎: 条件显隐 / 数组列表 / 自定义/异步校验 / 字段联动 / ajv / 循环检测 / 实时 JSON 编辑与双向同步 |
-| 3  | LRU 路由缓存         | 3 页 Tab 切换 + DOM display:none 保持状态 + LRU 淘汰 + 切回后台刷新       |
+| 3  | LRU 路由缓存         | 3 页 Tab 切换 + DOM display:none 保持状态 + LRU 淘汰 + 写后失效缓存一致性 + 过期自动刷新 |
 | 4  | Web Worker 分治合并  | Worker Pool + 自适应分区 + 有序归并缓冲区 + 主线程 Array.sort 对比         |
 | 5  | GIS 十万级点位渲染   | OpenLayers Cluster 聚类 + BBOX 视口剪裁 + dataCache + moveend 惰性刷新   |
 | 6  | 百万行日志流式解密   | 生产/消费模式 + XOR 加解密 + 虚拟滚动                                     |
@@ -76,79 +134,7 @@ interview-demo/
 | 9  | SSE 日志流           | ReadableStream + AbortController + RAF 节流 + 暂停/恢复连接               |
 | 10 | 请求加载 Signal      | Signal 级别请求追踪 + 方法-路径匹配树                                     |
 | 11 | 树形数据操作引擎     | 递归 CRUD + 拖拽排序 + 节点校验 + 批量操作                                |
-| 12 | 大文件断点续传       | SHA-256 分片哈希 + 并发分片上传 + 完整性校验 + 暂停/恢复/停止 + 刷新持久化 |
-
-## 动态表单架构 (JSON Schema)
-
-### 递归渲染流程
-
-```
-FormSchema (tabs → card → form → leaf)
-  ↓
-Renderer.tsx (递归遍历 AST, 深度保护, 循环引用检测)
-  ↓
-registry.tsx (策略模式: FieldType → FieldComponent)
-  ↓
-7 个字段组件: String / Number / Select / Switch / DateTime / JSON / Array
-```
-
-### 校验体系
-
-| 层级   | 校验内容                            | 错误样式     |
-| ------ | ----------------------------------- | ------------ |
-| 前端   | ajv 结构校验 (类型/必填/枚举/正则)   | 黄色警告提示 |
-| 前端   | 自定义校验 (IP 格式/端口范围)        | 黄色警告提示 |
-| 前端   | 异步校验 (唯一性 1s 延迟模拟)        | 加载 Spin    |
-| 后端   | 业务语义 (IP 合法性/Cell ID 格式/MCC 白名单/端口-类型关联/带宽标准值) | 红色错误 + setFields 映射 |
-
-### 实时 JSON 编辑
-
-右侧面板提供双 Tab 视图:
-
-- **架构说明**: 渲染流程 / 控件注册表 / 校验体系 / 演示说明
-- **JSON 数据**: 表单数据的实时 JSON 预览，支持编辑修改后写回表单
-
-```
-表单字段变更 → DynamicForm.onChange → 实时 JSON 面板更新
-                                       ↓
-JSON 文本编辑 → DynamicFormHandle.setFormData → 表单数据重写
-```
-
-特性:
-- 表单编辑时 JSON 面板实时同步 (无需手动刷新)
-- 支持直接在 JSON 文本区编辑后"应用"到表单 (双向绑定)
-- 一键复制当前表单数据到剪贴板
-- 提交后独立展示最终提交数据方便对比
-
-## 无感刷新架构 (Token)
-
-```
-请求 → 401 → 队列锁 → POST /api/auth/refresh → Token Rotation → 重放队列
-                       ↓ 失败
-                    Refresh 过期 → 强制登出
-```
-
-- **Refresh Token Rotation**: 每次刷新后旧 Refresh Token 标记为已用，禁止重放攻击
-- **并发队列**: 刷新期间并发请求排队等待，刷新完成统一重放
-
-## 大文件断点续传架构
-
-```
-文件选择 → SHA-256 (Web Worker) → 分片队列 (Zustand + localStorage)
-  ↓
-初始化 POST /api/upload/init → 获取 uploadId
-  ↓
-并发上传分片 (最多 3 个) → 每片附带 SHA-256 校验
-  ↓ 暂停/失败
-分片进度持久化 (localStorage) → 刷新后自动恢复
-  ↓ 所有分片完成
-POST /api/upload/complete → 服务端合并 + SHA-256 完整性验证
-```
-
-- **暂停/恢复**: 使用 AbortController 取消进行中的分片，Zustand store 记录已完成的 chunk index
-- **刷新持久化**: uploadStore 自动同步到 localStorage，页面加载时恢复未完成的上传会话
-- **服务端会话**: 以 JSON 文件持久化未完成的上传状态 (`uploads/sessions.json`)
-- **中断续传**: `GET /api/upload/status/:uploadId` 返回服务端已接收的分片列表，前端仅上传缺失分片
+| 12 | 大文件断点续传       | SHA-256 分片哈希 + 并发分片上传 + 完整性校验 + 暂停/恢复/停止 + 刷新持久化 + 清除已完成 + 重置全部 |
 
 ## 快速启动
 
@@ -173,6 +159,7 @@ bun run lint:eslint    # ESLint 严格模式检查
 | 路由                   | 方法   | 说明                        |
 | ---------------------- | ------ | --------------------------- |
 | `/ws/alerts`           | GET    | WebSocket 告警推送          |
+| `/api/alerts`          | GET    | SSE/Polling 告警推送 (同路由分发) |
 | `/api/gis/points`      | GET    | GIS 点位数据                |
 | `/api/sse/logs`        | GET    | SSE 日志流                  |
 | `/api/auth/login`      | POST   | 登录获取双 Token            |
