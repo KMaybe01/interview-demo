@@ -255,6 +255,7 @@ export default function SseLogStream() {
               if (line.isError) color = "#f48771"
               else if (line.isWarn) color = "#cca700"
               return (
+                // biome-ignore lint/suspicious/noArrayIndexKey: static log output, no stable id
                 <div key={i} style={{ color }}>
                   {line.text}
                 </div>

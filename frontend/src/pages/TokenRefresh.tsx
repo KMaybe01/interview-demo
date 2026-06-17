@@ -512,6 +512,7 @@ export default function TokenRefresh() {
                 }}
               >
                 {log.map((l, i) => (
+                  // biome-ignore lint/suspicious/noArrayIndexKey: static log output, no stable id
                   <div key={i}>{l}</div>
                 ))}
                 {log.length === 0 && <Text type="secondary">暂无日志</Text>}

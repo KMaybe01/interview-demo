@@ -455,14 +455,22 @@ export default function TreeDataEngine() {
 
       return (
         <Space size={4}>
-          <span
+          <button
+            type="button"
             onClick={() => {
               handleStartEdit(nodeKey, node.title as string)
             }}
-            style={{ cursor: "pointer" }}
+            style={{
+              cursor: "pointer",
+              background: "none",
+              border: "none",
+              padding: 0,
+              font: "inherit",
+              color: "inherit",
+            }}
           >
             {node.title as string}
-          </span>
+          </button>
           {nodeType === "folder" && (
             <Tooltip title="Add child node">
               <Button

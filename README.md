@@ -153,6 +153,17 @@ bun run lint:eslint    # ESLint 严格模式检查
 | `/api/upload/status/:uploadId` | GET | 查询某个上传的已接收分片列表 |
 | `/api/upload/sessions` | GET    | 列出所有进行中的上传会话      |
 
+## 代码校验 (GitHub Actions)
+
+每次 Push / Pull Request 到 `main` 分支时自动触发：
+
+| Job           | 命令                | 工具        |
+| ------------- | ------------------- | ----------- |
+| lint-backend  | `go vet ./...`      | Go vet      |
+| lint-frontend | `npm run lint`      | Biome 2.5   |
+
+配置文件: `.github/workflows/lint.yml`
+
 ## CI/CD + K8s 部署
 
 ### 架构

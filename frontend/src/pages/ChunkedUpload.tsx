@@ -24,7 +24,7 @@ import {
   Upload,
 } from "antd"
 import { useCallback, useEffect, useRef, useState } from "react"
-import type { ChunkInfo, ChunkStatus, FileStatus, UploadFileItem, UploadResult } from "../stores/uploadStore.ts"
+import type { ChunkInfo, ChunkStatus, UploadResult } from "../stores/uploadStore.ts"
 import { useUploadStore } from "../stores/uploadStore.ts"
 
 const { Text } = Typography
@@ -79,7 +79,7 @@ async function computeFileHash(file: File, chunkSize: number): Promise<string> {
       pos += c.byteLength
     }
   }
-  const hash = await crypto.subtle.digest("SHA-256", combined)
+  const hash = await crypto.subtle.digest("SHA-256", combined.buffer as ArrayBuffer)
   return Array.from(new Uint8Array(hash))
     .map((b) => b.toString(16).padStart(2, "0"))
     .join("")
@@ -98,9 +98,11 @@ export default function ChunkedUpload() {
   const abortRef = useRef(false)
   const pausedRef = useRef(false)
   const resolvePauseRef = useRef<(() => void) | null>(null)
-  const timerRef = useRef<ReturnType<typeof setInterval>>()
+  const timerRef = useRef<ReturnType<typeof setInterval> | undefined>(undefined)
 
-  useEffect(() => { loadFromStorage() }, [loadFromStorage])
+  useEffect(() => {
+    loadFromStorage()
+  }, [loadFromStorage])
 
   useEffect(() => {
     if (files.length === 0) return
@@ -111,13 +113,16 @@ export default function ChunkedUpload() {
     void (async () => {
       try {
         const res = await fetch(`/api/upload/status/${serverId}`)
-        if (!res.ok) { removeFile(f.id); return }
+        if (!res.ok) {
+          removeFile(f.id)
+          return
+        }
         const data = (await res.json()) as { received: number[] }
         const done = new Set(data.received)
         updateFile(f.id, {
           chunks: f.chunks.map((c) => ({
             ...c,
-            status: done.has(c.index) ? "done" as ChunkStatus : "pending" as ChunkStatus,
+            status: done.has(c.index) ? ("done" as ChunkStatus) : ("pending" as ChunkStatus),
           })),
         })
       } catch {
@@ -127,40 +132,60 @@ export default function ChunkedUpload() {
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [])
 
-  const handleDrop = useCallback((raw: File) => {
-    const existing = files.find(
-      (f) => f.filename === raw.name && f.fileSize === raw.size && f.status !== "done",
-    )
-    if (existing) {
-      if (existing.status === "failed") {
-        updateFile(existing.id, {
+  const handleDrop = useCallback(
+    (raw: File) => {
+      const existing = files.find(
+        (f) => f.filename === raw.name && f.fileSize === raw.size && f.status !== "done",
+      )
+      if (existing) {
+        if (existing.status === "failed") {
+          updateFile(existing.id, {
+            status: "pending",
+            chunks: existing.chunks.map((c) => ({ ...c, status: "pending" as ChunkStatus })),
+          })
+        }
+        setFileObj(raw)
+        setIsResume(true)
+        return
+      }
+
+      const totalChunks = Math.ceil(raw.size / chunkSize)
+      const chunks: ChunkInfo[] = []
+      for (let i = 0; i < totalChunks; i++) {
+        const sz = Math.min(chunkSize, raw.size - i * chunkSize)
+        chunks.push({
+          index: i,
           status: "pending",
-          chunks: existing.chunks.map((c) => ({ ...c, status: "pending" as ChunkStatus })),
+          hash: "",
+          size: sz,
+          retries: 0,
+          speed: 0,
+          startTime: 0,
         })
       }
+      const id = `local_${Date.now()}_${Math.random().toString(36).slice(2, 8)}`
+      addFile({
+        id,
+        uploadId: "",
+        filename: raw.name,
+        fileSize: raw.size,
+        chunkSize,
+        totalChunks,
+        fileHash: "",
+        status: "pending",
+        progress: 0,
+        uploadedBytes: 0,
+        speed: 0,
+        elapsed: 0,
+        chunks,
+        result: null,
+        createdAt: Date.now(),
+      })
       setFileObj(raw)
-      setIsResume(true)
-      return
-    }
-
-    const totalChunks = Math.ceil(raw.size / chunkSize)
-    const chunks: ChunkInfo[] = []
-    for (let i = 0; i < totalChunks; i++) {
-      const sz = Math.min(chunkSize, raw.size - i * chunkSize)
-      chunks.push({ index: i, status: "pending", hash: "", size: sz, retries: 0, speed: 0, startTime: 0 })
-    }
-    const id = `local_${Date.now()}_${Math.random().toString(36).slice(2, 8)}`
-    addFile({
-      id, uploadId: "",
-      filename: raw.name, fileSize: raw.size,
-      chunkSize, totalChunks,
-      fileHash: "", status: "pending",
-      progress: 0, uploadedBytes: 0, speed: 0, elapsed: 0,
-      chunks, result: null, createdAt: Date.now(),
-    })
-    setFileObj(raw)
-    setIsResume(false)
-  }, [files, chunkSize, addFile])
+      setIsResume(false)
+    },
+    [files, chunkSize, addFile],
+  )
 
   const startUpload = useCallback(async () => {
     if (!fileObj || files.length === 0) return
@@ -177,7 +202,6 @@ export default function ChunkedUpload() {
       if (f) updateFile(f.id, { elapsed: performance.now() - startTime })
     }, 200)
 
-    let cancelled = false
     let completedCount = 0
     let currentInitId = item.uploadId
 
@@ -185,7 +209,7 @@ export default function ChunkedUpload() {
       let fileHash = item.fileHash
       if (!fileHash) {
         fileHash = await computeFileHash(fileObj, chunkSize)
-        if (cancelled) return
+        if (abortRef.current) return
         updateFile(item.id, { fileHash })
       }
 
@@ -194,20 +218,26 @@ export default function ChunkedUpload() {
           method: "POST",
           headers: { "Content-Type": "application/json" },
           body: JSON.stringify({
-            filename: item.filename, fileSize: item.fileSize,
-            chunkSize, totalChunks: item.totalChunks, fileHash,
+            filename: item.filename,
+            fileSize: item.fileSize,
+            chunkSize,
+            totalChunks: item.totalChunks,
+            fileHash,
           }),
         })
+        if (!initRes.ok) {
+          throw new Error(((await initRes.json()) as { error: string }).error ?? "Init failed")
+        }
         const initData = (await initRes.json()) as { uploadId: string }
         currentInitId = initData.uploadId
-        if (cancelled) return
+        if (abortRef.current) return
         updateFile(item.id, { uploadId: currentInitId })
       }
 
       completedCount = item.chunks.filter((c) => c.status === "done").length
 
       const uploadOne = async (chunkIdx: number): Promise<void> => {
-        if (cancelled || abortRef.current || !fileObj) return
+        if (abortRef.current || !fileObj) return
         if (item.chunks[chunkIdx]?.status === "done") return
 
         const offset = chunkIdx * chunkSize
@@ -216,14 +246,16 @@ export default function ChunkedUpload() {
 
         updateChunk(item.id, chunkIdx, { status: "hashing" })
         const hash = await computeHash(blob)
-        if (cancelled || abortRef.current) return
+        if (abortRef.current) return
 
         for (let attempt = 0; attempt <= 3; attempt++) {
-          if (cancelled || abortRef.current) return
-          while (pausedRef.current && !abortRef.current && !cancelled) {
-            await new Promise<void>((r) => { resolvePauseRef.current = r })
+          if (abortRef.current) return
+          while (pausedRef.current && !abortRef.current) {
+            await new Promise<void>((r) => {
+              resolvePauseRef.current = r
+            })
           }
-          if (cancelled || abortRef.current) return
+          if (abortRef.current) return
 
           const blob2 = fileObj.slice(offset, offset + size)
           const chunkStart = performance.now()
@@ -239,7 +271,12 @@ export default function ChunkedUpload() {
             if (!res.ok) throw new Error(((await res.json()) as { error: string }).error)
 
             const chunkSpeed = size / ((performance.now() - chunkStart) / 1000)
-            updateChunk(item.id, chunkIdx, { status: "done", hash, retries: attempt, speed: chunkSpeed })
+            updateChunk(item.id, chunkIdx, {
+              status: "done",
+              hash,
+              retries: attempt,
+              speed: chunkSpeed,
+            })
             completedCount++
             updateFile(item.id, {
               progress: Math.round((completedCount / item.totalChunks) * 100),
@@ -255,25 +292,31 @@ export default function ChunkedUpload() {
 
       const inflight = new Set<Promise<void>>()
       for (let i = 0; i < item.totalChunks; i++) {
-        if (cancelled || abortRef.current) break
+        if (abortRef.current || abortRef.current) break
         while (inflight.size >= concurrency) await Promise.race(inflight)
         const p = uploadOne(i).finally(() => inflight.delete(p))
         inflight.add(p)
       }
       await Promise.all(inflight)
-      if (cancelled || abortRef.current) return
+      if (abortRef.current) return
 
       const completeRes = await fetch("/api/upload/complete", {
         method: "POST",
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify({ uploadId: currentInitId }),
       })
+      if (!completeRes.ok) {
+        throw new Error(
+          ((await completeRes.json()) as { error: string }).error ?? "Complete failed",
+        )
+      }
       updateFile(item.id, {
         result: (await completeRes.json()) as UploadResult,
-        status: "done", progress: 100,
+        status: "done",
+        progress: 100,
       })
     } catch {
-      // abort
+      updateFile(item.id, { status: "failed" })
     } finally {
       if (timerRef.current) clearInterval(timerRef.current)
     }
@@ -310,16 +353,23 @@ export default function ChunkedUpload() {
           <Dragger
             accept="*"
             showUploadList={false}
-            beforeUpload={(f) => { handleDrop(f as File); return false }}
+            beforeUpload={(f) => {
+              handleDrop(f as File)
+              return false
+            }}
           >
-            <p className="ant-upload-drag-icon"><InboxOutlined /></p>
+            <p className="ant-upload-drag-icon">
+              <InboxOutlined />
+            </p>
             <p className="ant-upload-text">点击或拖拽文件到此处</p>
             <p className="ant-upload-hint">
               支持断点续传 — 上传中断后刷新页面重新拖入相同文件即可续传
             </p>
           </Dragger>
           {isResume && (
-            <Tag color="orange" style={{ marginTop: 8 }}>检测到未完成的上传，点击"续传"继续</Tag>
+            <Tag color="orange" style={{ marginTop: 8 }}>
+              检测到未完成的上传，点击"续传"继续
+            </Tag>
           )}
         </Card>
 
@@ -334,50 +384,156 @@ export default function ChunkedUpload() {
             }
             extra={
               <Space>
-                <Text type="secondary" style={{ fontSize: 12 }}>分片:</Text>
-                <InputNumber size="small" min={1} max={50} value={chunkSize / 1024 / 1024}
-                  onChange={(v) => {} /* keep default */}
-                  disabled style={{ width: 56 }}
+                <Text type="secondary" style={{ fontSize: 12 }}>
+                  分片:
+                </Text>
+                <InputNumber
+                  size="small"
+                  min={1}
+                  max={50}
+                  value={chunkSize / 1024 / 1024}
+                  onChange={(_v) => {} /* keep default */}
+                  disabled
+                  style={{ width: 56 }}
                 />
-                <Text type="secondary" style={{ fontSize: 12 }}>MB 并发:</Text>
-                <InputNumber size="small" min={1} max={10} value={concurrency}
-                  onChange={(v) => { if (v != null) setConcurrency(v) }}
+                <Text type="secondary" style={{ fontSize: 12 }}>
+                  MB 并发:
+                </Text>
+                <InputNumber
+                  size="small"
+                  min={1}
+                  max={10}
+                  value={concurrency}
+                  onChange={(v) => {
+                    if (v != null) setConcurrency(v)
+                  }}
                   disabled={item.status === "uploading"}
                   style={{ width: 56 }}
                 />
                 {item.status === "pending" && (
-                  <Button type="primary" size="small" icon={isResume ? <PlayCircleOutlined /> : <PlayCircleOutlined />}
-                    onClick={() => { void startUpload() }}>
+                  <Button
+                    type="primary"
+                    size="small"
+                    icon={isResume ? <PlayCircleOutlined /> : <PlayCircleOutlined />}
+                    onClick={() => {
+                      void startUpload()
+                    }}
+                  >
                     {isResume ? "续传" : "上传"}
                   </Button>
                 )}
                 {item.status === "uploading" && (
-                  <Button size="small" icon={<PauseCircleOutlined />} onClick={pause}>暂停</Button>
+                  <Button size="small" icon={<PauseCircleOutlined />} onClick={pause}>
+                    暂停
+                  </Button>
                 )}
                 {item.status === "paused" && (
-                  <Button type="primary" size="small" icon={<PlayCircleOutlined />} onClick={resume}>恢复</Button>
+                  <Button
+                    type="primary"
+                    size="small"
+                    icon={<PlayCircleOutlined />}
+                    onClick={resume}
+                  >
+                    恢复
+                  </Button>
                 )}
                 {(item.status === "uploading" || item.status === "paused") && (
-                  <Button size="small" danger icon={<StopOutlined />} onClick={abort}>停止</Button>
+                  <Button size="small" danger icon={<StopOutlined />} onClick={abort}>
+                    停止
+                  </Button>
                 )}
-                {(item.status === "done" || item.status === "failed") && (
-                  <Button size="small" icon={<StopOutlined />} onClick={() => { removeFile(item.id); setFileObj(null); setIsResume(false) }}>清除</Button>
+                {item.status === "failed" && (
+                  <Button
+                    type="primary"
+                    size="small"
+                    icon={<PlayCircleOutlined />}
+                    onClick={() => {
+                      updateFile(item.id, {
+                        status: "pending",
+                        progress: 0,
+                        chunks: item.chunks.map((c) => ({
+                          ...c,
+                          status: "pending" as ChunkStatus,
+                        })),
+                      })
+                      setIsResume(true)
+                    }}
+                  >
+                    重试
+                  </Button>
+                )}
+                {item.status === "done" && (
+                  <Button
+                    size="small"
+                    icon={<StopOutlined />}
+                    onClick={() => {
+                      removeFile(item.id)
+                      setFileObj(null)
+                      setIsResume(false)
+                    }}
+                  >
+                    清除
+                  </Button>
+                )}
+                {item.status === "failed" && (
+                  <Button
+                    size="small"
+                    icon={<StopOutlined />}
+                    onClick={() => {
+                      removeFile(item.id)
+                      setFileObj(null)
+                      setIsResume(false)
+                    }}
+                  >
+                    清除
+                  </Button>
                 )}
               </Space>
             }
           >
             {(item.status === "uploading" || item.status === "paused" || item.progress > 0) && (
               <div style={{ marginBottom: 12 }}>
-                <Progress percent={item.progress} size="small"
-                  format={() => `${String(item.progress)}% (${String(doneChunks)}/${String(item.totalChunks)} 分片)`}
+                <Progress
+                  percent={item.progress}
+                  size="small"
+                  format={() =>
+                    `${String(item.progress)}% (${String(doneChunks)}/${String(item.totalChunks)} 分片)`
+                  }
                 />
                 <Row gutter={16} style={{ marginTop: 8 }}>
-                  <Col span={6}><Statistic title="速度" value={formatSpeed(item.speed)} valueStyle={{ fontSize: 14 }} /></Col>
-                  <Col span={6}><Statistic title="已上传" value={formatBytes(item.uploadedBytes)} suffix={`/ ${formatBytes(item.fileSize)}`} valueStyle={{ fontSize: 14 }} /></Col>
-                  <Col span={6}><Statistic title="已用时间" value={formatDuration(item.elapsed)} valueStyle={{ fontSize: 14 }} /></Col>
                   <Col span={6}>
-                    <Statistic title="预估剩余"
-                      value={item.speed > 0 ? formatDuration(((item.totalChunks - doneChunks) * item.chunkSize / item.speed) * 1000) : "-"}
+                    <Statistic
+                      title="速度"
+                      value={formatSpeed(item.speed)}
+                      valueStyle={{ fontSize: 14 }}
+                    />
+                  </Col>
+                  <Col span={6}>
+                    <Statistic
+                      title="已上传"
+                      value={formatBytes(item.uploadedBytes)}
+                      suffix={`/ ${formatBytes(item.fileSize)}`}
+                      valueStyle={{ fontSize: 14 }}
+                    />
+                  </Col>
+                  <Col span={6}>
+                    <Statistic
+                      title="已用时间"
+                      value={formatDuration(item.elapsed)}
+                      valueStyle={{ fontSize: 14 }}
+                    />
+                  </Col>
+                  <Col span={6}>
+                    <Statistic
+                      title="预估剩余"
+                      value={
+                        item.speed > 0
+                          ? formatDuration(
+                              (((item.totalChunks - doneChunks) * item.chunkSize) / item.speed) *
+                                1000,
+                            )
+                          : "-"
+                      }
                       valueStyle={{ fontSize: 14 }}
                     />
                   </Col>
@@ -386,7 +542,10 @@ export default function ChunkedUpload() {
             )}
 
             <div>
-              <Button type="link" size="small" icon={<DownOutlined />}
+              <Button
+                type="link"
+                size="small"
+                icon={<DownOutlined />}
                 onClick={() => setChunkOpen((v) => !v)}
                 style={{ padding: 0, marginBottom: chunkOpen ? 8 : 0 }}
               >
@@ -398,21 +557,71 @@ export default function ChunkedUpload() {
                 <Table
                   dataSource={item.chunks}
                   columns={[
-                    { title: "分片 #", dataIndex: "index", key: "index", width: 80, render: (v: number) => <Text code>#{String(v).padStart(3, "0")}</Text> },
-                    { title: "大小", dataIndex: "size", key: "size", width: 100, render: (v: number) => formatBytes(v) },
-                    { title: "状态", dataIndex: "status", key: "status", width: 120,
+                    {
+                      title: "分片 #",
+                      dataIndex: "index",
+                      key: "index",
+                      width: 80,
+                      render: (v: number) => <Text code>#{String(v).padStart(3, "0")}</Text>,
+                    },
+                    {
+                      title: "大小",
+                      dataIndex: "size",
+                      key: "size",
+                      width: 100,
+                      render: (v: number) => formatBytes(v),
+                    },
+                    {
+                      title: "状态",
+                      dataIndex: "status",
+                      key: "status",
+                      width: 120,
                       render: (v: ChunkStatus) => {
                         if (v === "pending") return <Tag>等待</Tag>
-                        if (v === "hashing") return <Tag icon={<LoadingOutlined />} color="blue">哈希中</Tag>
-                        if (v === "uploading") return <Tag icon={<LoadingOutlined />} color="processing">上传中</Tag>
-                        if (v === "done") return <Tag icon={<CheckCircleFilled />} color="success">完成</Tag>
-                        return <Tag icon={<CloseCircleFilled />} color="error">失败</Tag>
-                      }
+                        if (v === "hashing")
+                          return (
+                            <Tag icon={<LoadingOutlined />} color="blue">
+                              哈希中
+                            </Tag>
+                          )
+                        if (v === "uploading")
+                          return (
+                            <Tag icon={<LoadingOutlined />} color="processing">
+                              上传中
+                            </Tag>
+                          )
+                        if (v === "done")
+                          return (
+                            <Tag icon={<CheckCircleFilled />} color="success">
+                              完成
+                            </Tag>
+                          )
+                        return (
+                          <Tag icon={<CloseCircleFilled />} color="error">
+                            失败
+                          </Tag>
+                        )
+                      },
                     },
-                    { title: "速度", dataIndex: "speed", key: "speed", width: 100, render: (v: number) => (v > 0 ? formatSpeed(v) : "-") },
-                    { title: "重试", dataIndex: "retries", key: "retries", width: 60, render: (v: number) => (v > 0 ? <Badge count={v} size="small" /> : "-") },
+                    {
+                      title: "速度",
+                      dataIndex: "speed",
+                      key: "speed",
+                      width: 100,
+                      render: (v: number) => (v > 0 ? formatSpeed(v) : "-"),
+                    },
+                    {
+                      title: "重试",
+                      dataIndex: "retries",
+                      key: "retries",
+                      width: 60,
+                      render: (v: number) => (v > 0 ? <Badge count={v} size="small" /> : "-"),
+                    },
                   ]}
-                  rowKey="index" size="small" pagination={false} scroll={{ y: 200 }}
+                  rowKey="index"
+                  size="small"
+                  pagination={false}
+                  scroll={{ y: 200 }}
                 />
               )}
             </div>
@@ -420,7 +629,9 @@ export default function ChunkedUpload() {
             {item.result && (
               <div style={{ marginTop: 8 }}>
                 <Space>
-                  <Text>SHA-256: <Text code>{item.result.fileHash.slice(0, 16)}...</Text></Text>
+                  <Text>
+                    SHA-256: <Text code>{item.result.fileHash.slice(0, 16)}...</Text>
+                  </Text>
                   <Tag color={item.result.integrityOK ? "success" : "error"}>
                     {item.result.integrityOK ? "完整性验证通过" : "完整性验证失败"}
                   </Tag>

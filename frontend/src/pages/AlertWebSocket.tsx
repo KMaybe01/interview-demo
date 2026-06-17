@@ -1,4 +1,10 @@
-import { ReloadOutlined, WarningOutlined } from "@ant-design/icons"
+import {
+  PauseCircleOutlined,
+  PlayCircleOutlined,
+  ReloadOutlined,
+  StopOutlined,
+  WarningOutlined,
+} from "@ant-design/icons"
 import { Alert, Badge, Button, Card, Empty, Segmented, Space, Tag, Tooltip, Typography } from "antd"
 import * as echarts from "echarts"
 import { useCallback, useEffect, useMemo, useRef, useState } from "react"
@@ -70,6 +76,7 @@ export default function AlertWebSocket() {
   const [reconnectCountdown, setReconnectCountdown] = useState(0)
   const [levelFilter, setLevelFilter] = useState<"all" | AlertLevel>("all")
   const [recovered, setRecovered] = useState(false)
+  const [isPaused, setIsPaused] = useState(false)
 
   const wsRef = useRef<WebSocket | null>(null)
   const retryRef = useRef(0)
@@ -79,6 +86,11 @@ export default function AlertWebSocket() {
   const pongTimerRef = useRef<ReturnType<typeof setTimeout> | null>(null)
   const reconnectTimerRef = useRef<ReturnType<typeof setTimeout> | null>(null)
   const countdownTimerRef = useRef<ReturnType<typeof setInterval> | null>(null)
+  const manualStopRef = useRef(false)
+  const pausedRef = useRef(false)
+  const chartActiveRef = useRef(true)
+  const startChartLoopRef = useRef<() => void>(() => {})
+  const stopChartLoopRef = useRef<() => void>(() => {})
   const seenRef = useRef<Set<string>>(new Set())
   const bufferRef = useRef<AlertMessage[]>([])
   const rafRef = useRef(0)
@@ -161,6 +173,7 @@ export default function AlertWebSocket() {
         ws.send(JSON.stringify({ type: "ping" }))
         pongTimerRef.current = setTimeout(() => {
           setHeartbeatAlive(false)
+          ws.close()
         }, 10000)
       }
       sendPing()
@@ -192,6 +205,9 @@ export default function AlertWebSocket() {
 
   const connect = useCallback(
     (delayMs = 0) => {
+      manualStopRef.current = false
+      pausedRef.current = false
+      setIsPaused(false)
       cancelReconnect()
 
       genRef.current++
@@ -226,6 +242,7 @@ export default function AlertWebSocket() {
             }, 3000)
             disconnectTimeRef.current = 0
           }
+          startChartLoopRef.current()
           startPingPong(ws)
         }
 
@@ -263,11 +280,17 @@ export default function AlertWebSocket() {
 
         ws.onclose = () => {
           if (genRef.current !== gen) return
-          setConnectionStatus("reconnecting")
           setHeartbeatAlive(false)
           cleanupTimers()
-          setIsInterrupted(true)
           flushBufferSync()
+
+          if (manualStopRef.current || pausedRef.current) {
+            setConnectionStatus("disconnected")
+            return
+          }
+
+          setConnectionStatus("reconnecting")
+          setIsInterrupted(true)
 
           if (disconnectTimeRef.current === 0) {
             disconnectTimeRef.current = Date.now()
@@ -308,6 +331,37 @@ export default function AlertWebSocket() {
       logInterruption,
     ],
   )
+
+  const disconnect = useCallback(() => {
+    manualStopRef.current = true
+    cancelReconnect()
+    cleanupTimers()
+    wsRef.current?.close()
+    wsRef.current = null
+    setConnectionStatus("disconnected")
+    setHeartbeatAlive(false)
+    setIsInterrupted(false)
+    stopChartLoopRef.current()
+  }, [cancelReconnect, cleanupTimers])
+
+  const pauseConnection = useCallback(() => {
+    pausedRef.current = true
+    setIsPaused(true)
+    cancelReconnect()
+    cleanupTimers()
+    wsRef.current?.close()
+    wsRef.current = null
+    setConnectionStatus("disconnected")
+    setHeartbeatAlive(false)
+    stopChartLoopRef.current()
+  }, [cancelReconnect, cleanupTimers])
+
+  const resumeConnection = useCallback(() => {
+    pausedRef.current = false
+    setIsPaused(false)
+    startChartLoopRef.current()
+    connect()
+  }, [connect])
 
   useEffect(() => {
     const p = new URLSearchParams(window.location.search)
@@ -422,10 +476,21 @@ export default function AlertWebSocket() {
       xAxis: { data: labels },
       series: LEVEL_ORDER.map((level) => ({ data: buckets[level] })),
     })
-    chartRafRef.current = requestAnimationFrame(updateChart)
+    if (chartActiveRef.current) {
+      chartRafRef.current = requestAnimationFrame(updateChart)
+    }
   }, [])
 
   useEffect(() => {
+    startChartLoopRef.current = () => {
+      chartActiveRef.current = true
+      cancelAnimationFrame(chartRafRef.current)
+      chartRafRef.current = requestAnimationFrame(updateChart)
+    }
+    stopChartLoopRef.current = () => {
+      chartActiveRef.current = false
+      cancelAnimationFrame(chartRafRef.current)
+    }
     chartRafRef.current = requestAnimationFrame(updateChart)
     return () => {
       cancelAnimationFrame(chartRafRef.current)
@@ -444,19 +509,21 @@ export default function AlertWebSocket() {
           ? "warning"
           : "error"
 
-  const statusText = recovered
-    ? "已恢复"
-    : isInterrupted && connectionStatus === "reconnecting"
-      ? `已中断 · ${String(reconnectCountdown)}s 后重连`
-      : isInterrupted
-        ? "已中断"
-        : connectionStatus === "connected" && heartbeatAlive
-          ? "已连接"
-          : connectionStatus === "connected"
-            ? "心跳异常"
-            : connectionStatus === "connecting"
-              ? "连接中..."
-              : "未连接"
+  const statusText = isPaused
+    ? "已暂停"
+    : recovered
+      ? "已恢复"
+      : isInterrupted && connectionStatus === "reconnecting"
+        ? `已中断 · ${String(reconnectCountdown)}s 后重连`
+        : isInterrupted
+          ? "已中断"
+          : connectionStatus === "connected" && heartbeatAlive
+            ? "已连接"
+            : connectionStatus === "connected"
+              ? "心跳异常"
+              : connectionStatus === "connecting"
+                ? "连接中..."
+                : "未连接"
 
   const statusTooltip = recovered
     ? "连接已恢复"
@@ -560,27 +627,35 @@ export default function AlertWebSocket() {
             }}
             style={{ width: 60, fontSize: 12 }}
           />
-          {isExhausted ? (
+          {connectionStatus === "connected" ? (
+            <>
+              <Button size="small" icon={<PauseCircleOutlined />} onClick={pauseConnection}>
+                暂停
+              </Button>
+              <Button size="small" danger icon={<StopOutlined />} onClick={disconnect}>
+                断开连接
+              </Button>
+            </>
+          ) : isPaused ? (
             <Button
               size="small"
               type="primary"
-              danger
-              icon={<ReloadOutlined />}
-              onClick={() => {
-                connect(100)
-              }}
+              icon={<PlayCircleOutlined />}
+              onClick={resumeConnection}
             >
-              手动重连
+              恢复
             </Button>
           ) : (
             <Button
               size="small"
+              type={isExhausted ? "primary" : "default"}
+              danger={isExhausted}
               icon={<ReloadOutlined />}
               onClick={() => {
                 connect(100)
               }}
             >
-              重连
+              {isExhausted ? "手动重连" : "重连"}
             </Button>
           )}
           <Button

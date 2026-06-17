@@ -464,6 +464,7 @@ export default function LogStream() {
                   else if (line.startsWith("[WARN]")) color = "#cca700"
                   else if (line.startsWith("[DEBUG]")) color = "#6a9955"
                   return (
+                    // biome-ignore lint/suspicious/noArrayIndexKey: static log output, no stable id
                     <div key={i} style={{ color }}>
                       {line}
                     </div>

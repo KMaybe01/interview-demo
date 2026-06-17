@@ -95,7 +95,7 @@ function loadFromStorage(): UploadFileItem[] {
   }
 }
 
-export const useUploadStore = create<UploadState>((set, get) => ({
+export const useUploadStore = create<UploadState>((set, _get) => ({
   files: [],
 
   addFile: (item) => {
@@ -128,9 +128,7 @@ export const useUploadStore = create<UploadState>((set, get) => ({
         if (f.id !== fileId) return f
         return {
           ...f,
-          chunks: f.chunks.map((c) =>
-            c.index === chunkIndex ? { ...c, ...partial } : c,
-          ),
+          chunks: f.chunks.map((c) => (c.index === chunkIndex ? { ...c, ...partial } : c)),
         }
       })
       saveToStorage(next)
