@@ -13,7 +13,7 @@ import {
   ThunderboltOutlined,
   UploadOutlined,
 } from "@ant-design/icons"
-import { lazy, type ComponentType } from "react"
+import { type ComponentType, lazy } from "react"
 
 export interface RouteConfig {
   path: string
@@ -23,7 +23,12 @@ export interface RouteConfig {
 }
 
 export const routes: RouteConfig[] = [
-  { path: "/", name: "仪表盘", icon: DashboardOutlined, element: lazy(() => import("../pages/Dashboard.tsx")) },
+  {
+    path: "/",
+    name: "仪表盘",
+    icon: DashboardOutlined,
+    element: lazy(() => import("../pages/Dashboard.tsx")),
+  },
   {
     path: "/alert-websocket",
     name: "告警 WebSocket",
@@ -41,24 +46,6 @@ export const routes: RouteConfig[] = [
     name: "LRU 路由缓存",
     icon: PartitionOutlined,
     element: lazy(() => import("../pages/LruRouteCache.tsx")),
-  },
-  {
-    path: "/web-worker-merge",
-    name: "Web Worker 分治合并",
-    icon: NodeIndexOutlined,
-    element: lazy(() => import("../pages/WebWorkerMerge.tsx")),
-  },
-  {
-    path: "/gis-rendering",
-    name: "GIS 十万级点位渲染",
-    icon: EnvironmentOutlined,
-    element: lazy(() => import("../pages/GisRendering.tsx")),
-  },
-  {
-    path: "/log-stream",
-    name: "百万行日志流式解密",
-    icon: FileTextOutlined,
-    element: lazy(() => import("../pages/LogStream.tsx")),
   },
   {
     path: "/rbac-permission",
@@ -89,6 +76,24 @@ export const routes: RouteConfig[] = [
     name: "树形数据操作引擎",
     icon: ApartmentOutlined,
     element: lazy(() => import("../pages/TreeDataEngine.tsx")),
+  },
+  {
+    path: "/web-worker-merge",
+    name: "Web Worker 分治合并",
+    icon: NodeIndexOutlined,
+    element: lazy(() => import("../pages/WebWorkerMerge.tsx")),
+  },
+  {
+    path: "/gis-rendering",
+    name: "GIS 十万级点位渲染",
+    icon: EnvironmentOutlined,
+    element: lazy(() => import("../pages/GisRendering.tsx")),
+  },
+  {
+    path: "/log-stream",
+    name: "百万行日志流式解密",
+    icon: FileTextOutlined,
+    element: lazy(() => import("../pages/LogStream.tsx")),
   },
   {
     path: "/chunked-upload",

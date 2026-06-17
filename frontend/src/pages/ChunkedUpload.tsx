@@ -26,8 +26,8 @@ import {
   Upload,
 } from "antd"
 import { useCallback, useEffect, useRef, useState } from "react"
-import type { ChunkInfo, ChunkStatus, UploadResult } from "../stores/uploadStore.ts"
 import { useUploadStore } from "../stores"
+import type { ChunkInfo, ChunkStatus, UploadResult } from "../stores/uploadStore.ts"
 
 const { Text } = Typography
 const { Dragger } = Upload
