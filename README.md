@@ -17,7 +17,7 @@ React 19 + Go 1.26 全栈演示项目，涵盖 **11 个高级技术场景**，�
 | 表单     | 自定义递归渲染引擎 (非 @rjsf)                                            |
 | 运行     | Bun 1.3                                                                 |
 | CI/CD    | GitLab CI + Docker (多阶段构建)                                         |
-| 部署     | Kubernetes (滚动更新, zero-downtime), Nginx Ingress                     |
+| 部署     | Kubernetes Helm (滚动更新, zero-downtime), Nginx Ingress                |
 
 ## 项目结构
 
@@ -47,15 +47,18 @@ interview-demo/
 ├── Dockerfile                      # 多阶段构建 (frontend-builder → backend-builder → frontend/backend)
 ├── nginx.conf                      # Nginx 反向代理 (静态文件 + /api + /ws WebSocket)
 ├── .gitlab-ci.yml                  # GitLab CI/CD 流水线 (validate → build → package → deploy)
-└── k8s/
-    ├── namespace.yml               # ns/interview-demo
-    ├── configmap.yml               # 后端环境变量
-    ├── backend-deployment.yml      # 2 副本, 滚动更新, 健康检查
-    ├── backend-service.yml         # ClusterIP :8080
-    ├── frontend-deployment.yml     # 2 副本, nginx :80
-    ├── frontend-service.yml        # ClusterIP :80
-    ├── ingress.yml                 # /api /ws → backend, / → frontend
-    └── kustomization.yml           # Kustomize 统一管理
+├── helm/                           # Helm Chart 部署
+│   ├── Chart.yaml                  # Chart 元数据 (v2, version 0.1.0)
+│   ├── values.yaml                 # 集中化配置 (镜像/副本/探针/资源/ingress)
+│   └── templates/
+│       ├── _helpers.tpl            # 通用标签/选择器模板
+│       ├── namespace.yaml          # ns/interview-demo
+│       ├── configmap.yaml          # 后端环境变量
+│       ├── backend-deployment.yaml # 2 副本, 滚动更新, 健康检查
+│       ├── backend-service.yaml    # ClusterIP :8080
+│       ├── frontend-deployment.yaml# 2 副本, nginx :80
+│       ├── frontend-service.yaml   # ClusterIP :80
+│       └── ingress.yaml            # /api /ws → backend, / → frontend
 ```
 
 ## 演示功能
@@ -163,21 +166,67 @@ docker build --target backend  -t registry/frontend:tag .
 | build      | build-frontend   | `npm ci && npm run build`             |
 | package    | docker-backend   | 多阶段构建 backend 镜像并推送 Registry |
 | package    | docker-frontend  | 多阶段构建 frontend 镜像并推送 Registry |
-| deploy     | deploy-k8s       | `kubectl set image` + `rollout status` |
+| deploy     | deploy-k8s       | `helm upgrade --install` + `--wait`    |
 
 流水线入口: `.gitlab-ci.yml`
 
+### Helm Chart 结构
+
+```
+helm/
+├── Chart.yaml        # Chart 元数据
+├── values.yaml       # 所有可配置参数 (镜像/副本/探针/资源/域名等)
+└── templates/
+    ├── _helpers.tpl          # Go template 辅助函数
+    ├── namespace.yaml        # 命名空间
+    ├── configmap.yaml        # 后端 ConfigMap
+    ├── backend-deployment.yaml
+    ├── backend-service.yaml
+    ├── frontend-deployment.yaml
+    ├── frontend-service.yaml
+    └── ingress.yaml          # 可通过 ingress.enabled 开关
+```
+
 ### 部署到 K8s
 
-前提: 已配置 `kubectl` 连接目标集群，`CI_REGISTRY_USER`/`CI_REGISTRY_PASSWORD` 变量。
+前提: 已安装 `helm` 并配置 `kubectl` 连接目标集群。
 
 ```bash
-# 本地测试部署 (替换镜像地址)
-kubectl apply -k k8s/
+# 安装/升级部署
+helm upgrade --install interview-demo ./helm \
+  --namespace interview-demo \
+  --create-namespace \
+  --set backend.image.repository=registry.example.com/backend \
+  --set backend.image.tag=latest \
+  --set frontend.image.repository=registry.example.com/frontend \
+  --set frontend.image.tag=latest \
+  --wait --timeout 120s
 
 # 验证
 kubectl rollout status deployment/backend -n interview-demo
 kubectl rollout status deployment/frontend -n interview-demo
+
+# 卸载
+helm uninstall interview-demo -n interview-demo
+```
+
+### 常用 Helm 操作
+
+```bash
+# 渲染模板 (本地预览)
+helm template interview-demo ./helm
+
+# 查看当前 values
+helm get values interview-demo -n interview-demo
+
+# 升级指定镜像版本 (CI 中使用)
+helm upgrade --install interview-demo ./helm \
+  --set backend.image.tag=$CI_COMMIT_SHORT_SHA \
+  --set frontend.image.tag=$CI_COMMIT_SHORT_SHA \
+  --wait --timeout 120s
+
+# 回滚
+helm rollback interview-demo 1 -n interview-demo
 ```
 
 ### 零停机滚动更新

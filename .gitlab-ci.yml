@@ -96,12 +96,16 @@ deploy-k8s:
   needs:
     - docker-backend
     - docker-frontend
-  image: bitnami/kubectl:latest
+  image: alpine/helm:3.17.0
   script:
-    - kubectl set image deployment/backend "backend=$CI_REGISTRY_IMAGE/backend:$CI_COMMIT_SHORT_SHA" -n $K8S_NAMESPACE
-    - kubectl set image deployment/frontend "frontend=$CI_REGISTRY_IMAGE/frontend:$CI_COMMIT_SHORT_SHA" -n $K8S_NAMESPACE
-    - kubectl rollout status deployment/backend -n $K8S_NAMESPACE --timeout=120s
-    - kubectl rollout status deployment/frontend -n $K8S_NAMESPACE --timeout=120s
+    - helm upgrade --install interview-demo ./helm
+        --namespace $K8S_NAMESPACE
+        --create-namespace
+        --set backend.image.repository=$CI_REGISTRY_IMAGE/backend
+        --set backend.image.tag=$CI_COMMIT_SHORT_SHA
+        --set frontend.image.repository=$CI_REGISTRY_IMAGE/frontend
+        --set frontend.image.tag=$CI_COMMIT_SHORT_SHA
+        --wait --timeout 120s
   only:
     - main
   environment:
