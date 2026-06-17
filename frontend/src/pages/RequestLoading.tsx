@@ -1,7 +1,7 @@
 import { LoadingOutlined } from "@ant-design/icons"
 import { Button, Card, Space, Table, Tag, Typography } from "antd"
 import { useCallback, useEffect, useRef, useState } from "react"
-import { useRequestLoadingStore } from "../stores/requestLoadingStore.ts"
+import { useRequestLoadingStore } from "../stores"
 
 const { Text } = Typography
 

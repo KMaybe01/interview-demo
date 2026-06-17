@@ -1,6 +1,6 @@
 import { Card, Col, Row, Typography } from "antd"
 import { useNavigate } from "react-router-dom"
-import { routes } from "../routes/index.tsx"
+import { routes } from "../routes"
 
 const { Title, Paragraph } = Typography
 
@@ -9,9 +9,9 @@ export default function Dashboard() {
 
   return (
     <div>
-      <Title level={3}>技术演示平台</Title>
+      <Title level={3}>技术演示</Title>
       <Paragraph type="secondary">
-        React 19 + Ant Design 6 + TypeScript + Zustand + React Router 7
+        React 19 + Ant Design 6 + TypeScript + Zustand + React Router 7 + Go 1.26 + Gin 1.12
       </Paragraph>
       <Row gutter={[16, 16]}>
         {routes

@@ -1,4 +1,4 @@
-import { CloseOutlined, ReloadOutlined, SearchOutlined } from "@ant-design/icons"
+import { CloseOutlined, ReloadOutlined, SaveOutlined, SearchOutlined } from "@ant-design/icons"
 import type { TableColumnsType } from "antd"
 import {
   Badge,
@@ -41,11 +41,13 @@ interface ServiceRow {
 }
 
 function MonitorPage({ pageKey, isActive }: { pageKey: string; isActive: boolean }) {
-  const { pages, updateData, setLoading, setScrollTop, updateFormValue } = useLruCacheStore()
+  const { pages, staleKeys, updateData, setLoading, setScrollTop, updateFormValue, clearStale } =
+    useLruCacheStore()
   const page = pages[pageKey]
   const containerRef = useRef<HTMLDivElement>(null)
   const dataLoadedRef = useRef(false)
   const activeRef = useRef(false)
+  const isStale = staleKeys.includes(pageKey)
 
   const searchText = (page.formValues.search as string | undefined) ?? ""
   const statusFilter = (page.formValues.status as string | undefined) ?? "all"
@@ -78,24 +80,26 @@ function MonitorPage({ pageKey, isActive }: { pageKey: string; isActive: boolean
     setLoading(pageKey, true)
     const timer = setTimeout(() => {
       updateData(pageKey, { services: allData })
+      clearStale(pageKey)
     }, 800)
     return () => {
       clearTimeout(timer)
     }
-  }, [pageKey, setLoading, updateData, allData, page.data])
+  }, [pageKey, setLoading, updateData, allData, page.data, clearStale])
 
   useEffect(() => {
-    if (activeRef.current && isActive) {
+    if ((activeRef.current || isStale) && isActive) {
       setLoading(pageKey, true)
       const timer = setTimeout(() => {
         updateData(pageKey, { services: allData })
+        clearStale(pageKey)
       }, 600)
       return () => {
         clearTimeout(timer)
       }
     }
     activeRef.current = isActive
-  }, [isActive, pageKey, setLoading, updateData, allData])
+  }, [isActive, isStale, pageKey, setLoading, updateData, allData, clearStale])
 
   const filtered = useMemo(() => {
     let list = allData
@@ -215,10 +219,13 @@ function MonitorPage({ pageKey, isActive }: { pageKey: string; isActive: boolean
 }
 
 function ConfigPage({ pageKey, isActive }: { pageKey: string; isActive: boolean }) {
-  const { pages, updateData, setLoading, updateFormValue } = useLruCacheStore()
+  const { pages, staleKeys, updateData, setLoading, updateFormValue, invalidateAll } =
+    useLruCacheStore()
   const page = pages[pageKey]
   const dataLoadedRef = useRef(false)
   const activeRef = useRef(false)
+  const savedRef = useRef(false)
+  const isStale = staleKeys.includes(pageKey)
 
   const formValues = page.formValues
 
@@ -253,7 +260,8 @@ function ConfigPage({ pageKey, isActive }: { pageKey: string; isActive: boolean 
   }, [pageKey, setLoading, updateData, updateFormValue, page.data, mockConfig])
 
   useEffect(() => {
-    if (activeRef.current && isActive) {
+    savedRef.current = false
+    if (dataLoadedRef.current && dataLoadedRef.current && isActive) {
       setLoading(pageKey, true)
       const timer = setTimeout(() => {
         const cfg = mockConfig()
@@ -268,7 +276,7 @@ function ConfigPage({ pageKey, isActive }: { pageKey: string; isActive: boolean 
       }
     }
     activeRef.current = isActive
-  }, [isActive, pageKey, setLoading, updateData, updateFormValue, mockConfig])
+  }, [isActive, isStale, pageKey, setLoading, updateData, updateFormValue, mockConfig])
 
   const setField = useCallback(
     (path: string, value: unknown) => {
@@ -276,6 +284,24 @@ function ConfigPage({ pageKey, isActive }: { pageKey: string; isActive: boolean 
     },
     [pageKey, updateFormValue],
   )
+
+  const handleSave = useCallback(() => {
+    savedRef.current = true
+    const config = {
+      clusterName: formValues.clusterName,
+      replicas: formValues.replicas,
+      enableTls: formValues.enableTls,
+      logLevel: formValues.logLevel,
+    }
+    updateData(pageKey, { config })
+    invalidateAll(pageKey)
+    notification.success({
+      message: "配置已保存",
+      description: "相关页面缓存数据已标记为过期，切换时将自动刷新",
+      placement: "topRight",
+      duration: 3,
+    })
+  }, [pageKey, formValues, updateData, invalidateAll])
 
   return (
     <Spin spinning={page.loading} description="加载配置...">
@@ -344,17 +370,27 @@ function ConfigPage({ pageKey, isActive }: { pageKey: string; isActive: boolean 
             style={{ marginTop: 4 }}
           />
         </div>
+        <div>
+          <Button type="primary" icon={<SaveOutlined />} onClick={handleSave}>
+            保存配置
+          </Button>
+          <Text type="secondary" style={{ marginLeft: 12, fontSize: 12 }}>
+            保存后将失效其他页面的缓存数据，返回时自动刷新
+          </Text>
+        </div>
       </Space>
     </Spin>
   )
 }
 
 function LogsPage({ pageKey, isActive }: { pageKey: string; isActive: boolean }) {
-  const { pages, updateData, setLoading, setScrollTop, updateFormValue } = useLruCacheStore()
+  const { pages, staleKeys, updateData, setLoading, setScrollTop, updateFormValue, clearStale } =
+    useLruCacheStore()
   const page = pages[pageKey]
   const containerRef = useRef<HTMLDivElement>(null)
   const dataLoadedRef = useRef(false)
   const activeRef = useRef(false)
+  const isStale = staleKeys.includes(pageKey)
 
   const searchQuery: string = (page.formValues.query as string | undefined) ?? ""
   const logLevelFilter: string = (page.formValues.logLevel as string | undefined) ?? "all"
@@ -388,24 +424,26 @@ function LogsPage({ pageKey, isActive }: { pageKey: string; isActive: boolean })
     setLoading(pageKey, true)
     const timer = setTimeout(() => {
       updateData(pageKey, { logs: allLogs })
+      clearStale(pageKey)
     }, 1000)
     return () => {
       clearTimeout(timer)
     }
-  }, [pageKey, setLoading, updateData, allLogs, page.data])
+  }, [pageKey, setLoading, updateData, allLogs, page.data, clearStale])
 
   useEffect(() => {
-    if (activeRef.current && isActive) {
+    if ((activeRef.current || isStale) && isActive) {
       setLoading(pageKey, true)
       const timer = setTimeout(() => {
         updateData(pageKey, { logs: allLogs })
+        clearStale(pageKey)
       }, 800)
       return () => {
         clearTimeout(timer)
       }
     }
     activeRef.current = isActive
-  }, [isActive, pageKey, setLoading, updateData, allLogs])
+  }, [isActive, isStale, pageKey, setLoading, updateData, allLogs, clearStale])
 
   const filtered = useMemo(() => {
     let list = allLogs
@@ -518,6 +556,7 @@ export default function LruRouteCache() {
     order,
     activePage,
     maxPages,
+    staleKeys,
     evictedPage,
     setActive,
     initPage,
@@ -574,19 +613,25 @@ export default function LruRouteCache() {
         </Space>
         <Space>
           {PAGE_CONFIGS.map((cfg, i) => (
-            <Button
+            <Badge
               key={cfg.key}
+              count={staleKeys.includes(cfg.key) ? "!" : 0}
               size="small"
-              type={activePage === cfg.key ? "primary" : "default"}
-              style={
-                activePage !== cfg.key ? { borderColor: COLORS[i], color: COLORS[i] } : undefined
-              }
-              onClick={() => {
-                handleTabClick(cfg.key)
-              }}
+              offset={[-2, 2]}
             >
-              {cfg.label}
-            </Button>
+              <Button
+                size="small"
+                type={activePage === cfg.key ? "primary" : "default"}
+                style={
+                  activePage !== cfg.key ? { borderColor: COLORS[i], color: COLORS[i] } : undefined
+                }
+                onClick={() => {
+                  handleTabClick(cfg.key)
+                }}
+              >
+                {cfg.label}
+              </Button>
+            </Badge>
           ))}
           {openPageKeys.length > 0 && (
             <Button size="small" icon={<ReloadOutlined />} onClick={handleReset}>
@@ -595,26 +640,6 @@ export default function LruRouteCache() {
           )}
         </Space>
       </div>
-
-      {openPageKeys.length === 0 && (
-        <div style={{ textAlign: "center", padding: "60px 0" }}>
-          <Text type="secondary">点击上方按钮打开页面，最多同时缓存 {String(maxPages)} 个页面</Text>
-          <div style={{ marginTop: 8, display: "flex", justifyContent: "center", gap: 8 }}>
-            {PAGE_CONFIGS.map((cfg, i) => (
-              <Tag
-                key={cfg.key}
-                color={COLORS[i]}
-                style={{ cursor: "pointer", padding: "4px 12px" }}
-                onClick={() => {
-                  handleTabClick(cfg.key)
-                }}
-              >
-                {cfg.label}
-              </Tag>
-            ))}
-          </div>
-        </div>
-      )}
 
       <Card size="small" style={{ marginBottom: 12 }}>
         <Space orientation="vertical" style={{ width: "100%" }} size="small">
@@ -634,6 +659,17 @@ export default function LruRouteCache() {
               label="当前页面"
               value={PAGE_CONFIGS.find((p) => p.key === activePage)?.label ?? "-"}
             />
+            <StatBox
+              label="过期数据"
+              value={
+                staleKeys.length === 0
+                  ? "无"
+                  : staleKeys
+                      .map((k) => PAGE_CONFIGS.find((p) => p.key === k)?.label ?? k)
+                      .join(", ")
+              }
+              valueColor={staleKeys.length > 0 ? "#faad14" : undefined}
+            />
           </div>
           {openPageKeys.length > 0 && (
             <div style={{ marginTop: 4 }}>
@@ -641,6 +677,14 @@ export default function LruRouteCache() {
                 当前打开页面在 LRU
                 顺序末尾（最新使用）。超过容量时，最久未使用的页面（最左侧）将被淘汰，其 DOM
                 和状态将被销毁。
+              </Text>
+            </div>
+          )}
+          {staleKeys.length > 0 && (
+            <div style={{ marginTop: 4 }}>
+              <Text type="warning" style={{ fontSize: 12, color: "#faad14" }}>
+                以下页面缓存数据已过期，切换到对应页面时将自动刷新：
+                {staleKeys.map((k) => PAGE_CONFIGS.find((p) => p.key === k)?.label ?? k).join("、")}
               </Text>
             </div>
           )}
@@ -662,17 +706,24 @@ export default function LruRouteCache() {
                   <Space>
                     <Badge status={isActive ? "processing" : "default"} />
                     <Text strong>{cfg.label}</Text>
+                    {staleKeys.includes(cfg.key) && (
+                      <Tag color="orange" style={{ fontSize: 10 }}>
+                        数据已过期
+                      </Tag>
+                    )}
                     {pages[cfg.key].loading && pages[cfg.key].data && (
                       <Tag color="orange" style={{ fontSize: 10 }}>
                         刷新中...
                       </Tag>
                     )}
                     {pages[cfg.key].loading && !pages[cfg.key].data && <Spin size="small" />}
-                    {pages[cfg.key].data && !pages[cfg.key].loading && (
-                      <Tag color="green" style={{ fontSize: 10 }}>
-                        已缓存
-                      </Tag>
-                    )}
+                    {pages[cfg.key].data &&
+                      !pages[cfg.key].loading &&
+                      !staleKeys.includes(cfg.key) && (
+                        <Tag color="green" style={{ fontSize: 10 }}>
+                          已缓存
+                        </Tag>
+                      )}
                     {!pages[cfg.key].data && !pages[cfg.key].loading && (
                       <Tag style={{ fontSize: 10 }}>未加载</Tag>
                     )}
@@ -698,13 +749,21 @@ export default function LruRouteCache() {
   )
 }
 
-function StatBox({ label, value }: { label: string; value: string }) {
+function StatBox({
+  label,
+  value,
+  valueColor,
+}: {
+  label: string
+  value: string
+  valueColor?: string
+}) {
   return (
     <div style={{ background: "#fafafa", borderRadius: 6, padding: "8px 14px", minWidth: 180 }}>
       <Text type="secondary" style={{ fontSize: 11 }}>
         {label}
       </Text>
-      <div style={{ fontWeight: 600, fontSize: 13, marginTop: 2 }}>{value}</div>
+      <div style={{ fontWeight: 600, fontSize: 13, marginTop: 2, color: valueColor }}>{value}</div>
     </div>
   )
 }

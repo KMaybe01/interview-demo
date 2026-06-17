@@ -170,14 +170,7 @@ func randomMessage(topic string) AlertMessage {
 	}
 }
 
-func WebSocketAlerts(c *gin.Context) {
-	conn, err := upgrader.Upgrade(c.Writer, c.Request, nil)
-	if err != nil {
-		log.Printf("WebSocket upgrade error: %v", err)
-		return
-	}
-	defer conn.Close()
-
+func parseRate(c *gin.Context) int {
 	rate := 1000
 	if r := c.Query("rate"); r != "" {
 		if v, err := strconv.Atoi(r); err == nil && v > 0 {
@@ -187,7 +180,10 @@ func WebSocketAlerts(c *gin.Context) {
 	if rate > 200000 {
 		rate = 200000
 	}
+	return rate
+}
 
+func parseWorkers(c *gin.Context) int {
 	workers := 4
 	if w := c.Query("workers"); w != "" {
 		if v, err := strconv.Atoi(w); err == nil && v > 0 {
@@ -197,17 +193,53 @@ func WebSocketAlerts(c *gin.Context) {
 	if workers > 128 {
 		workers = 128
 	}
+	return workers
+}
 
-	batchInterval := 5 * time.Millisecond
+func computeBatchConfig(rate, workers int) (batchInterval time.Duration, batchSize int) {
+	batchInterval = 5 * time.Millisecond
 	batchesPerSec := int(time.Second / batchInterval)
 	perWorker := rate / workers
 	if perWorker < 1 {
 		perWorker = 1
 	}
-	batchSize := perWorker / batchesPerSec
+	batchSize = perWorker / batchesPerSec
 	if batchSize < 1 {
 		batchSize = 1
 	}
+	return
+}
+
+func generateAlertJSON() []byte {
+	topic := topics[rand.Intn(len(topics))]
+	alert := randomMessage(topic)
+	data, _ := json.Marshal(alert)
+	return data
+}
+
+func AlertDispatcher(c *gin.Context) {
+	transport := c.DefaultQuery("transport", "ws")
+	switch transport {
+	case "sse":
+		serveAlertSSE(c)
+	case "poll":
+		serveAlertPoll(c)
+	default:
+		serveAlertWS(c)
+	}
+}
+
+func serveAlertWS(c *gin.Context) {
+	conn, err := upgrader.Upgrade(c.Writer, c.Request, nil)
+	if err != nil {
+		log.Printf("WebSocket upgrade error: %v", err)
+		return
+	}
+	defer conn.Close()
+
+	rate := parseRate(c)
+	workers := parseWorkers(c)
+	batchInterval, batchSize := computeBatchConfig(rate, workers)
 
 	conn.SetReadLimit(512)
 
@@ -267,9 +299,7 @@ func WebSocketAlerts(c *gin.Context) {
 				select {
 				case <-ticker.C:
 					for i := 0; i < batchSize; i++ {
-						topic := topics[rand.Intn(len(topics))]
-						alert := randomMessage(topic)
-						data, _ := json.Marshal(alert)
+						data := generateAlertJSON()
 						select {
 						case msgChan <- data:
 						default:
@@ -284,4 +314,61 @@ func WebSocketAlerts(c *gin.Context) {
 
 	<-done
 	wg.Wait()
+}
+
+func serveAlertSSE(c *gin.Context) {
+	rate := parseRate(c)
+
+	tickInterval := 100 * time.Millisecond
+	msgsPerTick := rate * int(tickInterval/time.Second)
+	if msgsPerTick < 1 {
+		msgsPerTick = 1
+	}
+
+	c.Writer.Header().Set("Content-Type", "text/event-stream")
+	c.Writer.Header().Set("Cache-Control", "no-cache")
+	c.Writer.Header().Set("Connection", "keep-alive")
+
+	flusher, ok := c.Writer.(interface{ Flush() })
+	if !ok {
+		return
+	}
+
+	ticker := time.NewTicker(tickInterval)
+	defer ticker.Stop()
+
+	done := c.Request.Context().Done()
+	for {
+		select {
+		case <-ticker.C:
+			for i := 0; i < msgsPerTick; i++ {
+				data := generateAlertJSON()
+				fmt.Fprintf(c.Writer, "data: %s\n\n", string(data))
+			}
+			flusher.Flush()
+		case <-done:
+			return
+		}
+	}
+}
+
+func serveAlertPoll(c *gin.Context) {
+	rate := parseRate(c)
+
+	count := rate / 10
+	if count < 10 {
+		count = 10
+	}
+	if count > 200 {
+		count = 200
+	}
+
+	alerts := make([]AlertMessage, count)
+	for i := 0; i < count; i++ {
+		topic := topics[rand.Intn(len(topics))]
+		alerts[i] = randomMessage(topic)
+	}
+
+	c.Writer.Header().Set("Content-Type", "application/json")
+	c.JSON(http.StatusOK, alerts)
 }

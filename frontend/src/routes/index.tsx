@@ -13,20 +13,7 @@ import {
   ThunderboltOutlined,
   UploadOutlined,
 } from "@ant-design/icons"
-import type { ComponentType } from "react"
-import AlertWebSocket from "../pages/AlertWebSocket.tsx"
-import ChunkedUpload from "../pages/ChunkedUpload.tsx"
-import Dashboard from "../pages/Dashboard.tsx"
-import GisRendering from "../pages/GisRendering.tsx"
-import JsonSchemaForm from "../pages/JsonSchemaForm.tsx"
-import LogStream from "../pages/LogStream.tsx"
-import LruRouteCache from "../pages/LruRouteCache.tsx"
-import RbacPermission from "../pages/RbacPermission.tsx"
-import RequestLoading from "../pages/RequestLoading.tsx"
-import SseLogStream from "../pages/SseLogStream.tsx"
-import TokenRefresh from "../pages/TokenRefresh.tsx"
-import TreeDataEngine from "../pages/TreeDataEngine.tsx"
-import WebWorkerMerge from "../pages/WebWorkerMerge.tsx"
+import { lazy, type ComponentType } from "react"
 
 export interface RouteConfig {
   path: string
@@ -36,62 +23,77 @@ export interface RouteConfig {
 }
 
 export const routes: RouteConfig[] = [
-  { path: "/", name: "仪表盘", icon: DashboardOutlined, element: Dashboard },
+  { path: "/", name: "仪表盘", icon: DashboardOutlined, element: lazy(() => import("../pages/Dashboard.tsx")) },
   {
     path: "/alert-websocket",
     name: "告警 WebSocket",
     icon: AlertOutlined,
-    element: AlertWebSocket,
+    element: lazy(() => import("../pages/AlertWebSocket.tsx")),
   },
   {
     path: "/json-schema-form",
     name: "JSON Schema 动态表单",
     icon: FormOutlined,
-    element: JsonSchemaForm,
+    element: lazy(() => import("../pages/JsonSchemaForm.tsx")),
   },
   {
     path: "/lru-route-cache",
     name: "LRU 路由缓存",
     icon: PartitionOutlined,
-    element: LruRouteCache,
+    element: lazy(() => import("../pages/LruRouteCache.tsx")),
   },
   {
     path: "/web-worker-merge",
     name: "Web Worker 分治合并",
     icon: NodeIndexOutlined,
-    element: WebWorkerMerge,
+    element: lazy(() => import("../pages/WebWorkerMerge.tsx")),
   },
   {
     path: "/gis-rendering",
     name: "GIS 十万级点位渲染",
     icon: EnvironmentOutlined,
-    element: GisRendering,
+    element: lazy(() => import("../pages/GisRendering.tsx")),
   },
-  { path: "/log-stream", name: "百万行日志流式解密", icon: FileTextOutlined, element: LogStream },
+  {
+    path: "/log-stream",
+    name: "百万行日志流式解密",
+    icon: FileTextOutlined,
+    element: lazy(() => import("../pages/LogStream.tsx")),
+  },
   {
     path: "/rbac-permission",
     name: "RBAC 位编码权限",
     icon: SafetyOutlined,
-    element: RbacPermission,
+    element: lazy(() => import("../pages/RbacPermission.tsx")),
   },
-  { path: "/token-refresh", name: "双 Token 无感刷新", icon: KeyOutlined, element: TokenRefresh },
-  { path: "/sse-log-stream", name: "SSE 日志流", icon: ThunderboltOutlined, element: SseLogStream },
+  {
+    path: "/token-refresh",
+    name: "双 Token 无感刷新",
+    icon: KeyOutlined,
+    element: lazy(() => import("../pages/TokenRefresh.tsx")),
+  },
+  {
+    path: "/sse-log-stream",
+    name: "SSE 日志流",
+    icon: ThunderboltOutlined,
+    element: lazy(() => import("../pages/SseLogStream.tsx")),
+  },
   {
     path: "/request-loading",
     name: "请求加载 Signal",
     icon: ApiOutlined,
-    element: RequestLoading,
+    element: lazy(() => import("../pages/RequestLoading.tsx")),
   },
   {
     path: "/tree-data-engine",
     name: "树形数据操作引擎",
     icon: ApartmentOutlined,
-    element: TreeDataEngine,
+    element: lazy(() => import("../pages/TreeDataEngine.tsx")),
   },
   {
     path: "/chunked-upload",
     name: "大文件分片上传",
     icon: UploadOutlined,
-    element: ChunkedUpload,
+    element: lazy(() => import("../pages/ChunkedUpload.tsx")),
   },
 ]

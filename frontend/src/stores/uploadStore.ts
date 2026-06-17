@@ -48,6 +48,7 @@ interface UploadState {
   updateChunk: (fileId: string, chunkIndex: number, partial: Partial<ChunkInfo>) => void
   loadFromStorage: () => void
   clearCompleted: () => void
+  resetAll: () => void
 }
 
 const STORAGE_KEY = "upload_sessions"
@@ -149,5 +150,14 @@ export const useUploadStore = create<UploadState>((set, _get) => ({
       saveToStorage(next)
       return { files: next }
     })
+  },
+
+  resetAll: () => {
+    try {
+      localStorage.removeItem(STORAGE_KEY)
+    } catch {
+      /* ignore */
+    }
+    set({ files: [] })
   },
 }))

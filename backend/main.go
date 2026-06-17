@@ -29,7 +29,8 @@ func main() {
 		api.GET("/upload/sessions", handlers.ListUploadSessions)
 	}
 
-	r.GET("/ws/alerts", handlers.WebSocketAlerts)
+	r.GET("/ws/alerts", handlers.AlertDispatcher)
+	r.GET("/api/alerts", handlers.AlertDispatcher)
 
 	println("Backend running on :8080")
 	r.Run(":8080")

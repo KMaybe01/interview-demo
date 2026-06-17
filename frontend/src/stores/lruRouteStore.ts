@@ -14,6 +14,7 @@ interface LruRouteState {
   activePage: string | null
   maxPages: number
   evictedPage: string | null
+  staleKeys: string[]
 
   setActive: (key: string) => void
   updateData: (key: string, data: Record<string, unknown>) => void
@@ -23,6 +24,9 @@ interface LruRouteState {
   closePage: (key: string) => void
   initPage: (key: string) => void
   clearEvicted: () => void
+  invalidateCache: (key: string) => void
+  invalidateAll: (except?: string) => void
+  clearStale: (key: string) => void
 }
 
 export const useLruCacheStore = create<LruRouteState>((set, get) => ({
@@ -31,6 +35,7 @@ export const useLruCacheStore = create<LruRouteState>((set, get) => ({
   activePage: null,
   maxPages: 3,
   evictedPage: null,
+  staleKeys: [],
 
   setActive: (key) => {
     const state = get()
@@ -44,7 +49,13 @@ export const useLruCacheStore = create<LruRouteState>((set, get) => ({
       const remaining = Object.fromEntries(
         Object.entries(state.pages).filter(([k]) => k !== toEvict),
       ) as Record<string, PageState>
-      set({ activePage: key, order: newOrder, pages: remaining, evictedPage: toEvict })
+      set({
+        activePage: key,
+        order: newOrder,
+        pages: remaining,
+        evictedPage: toEvict,
+        staleKeys: state.staleKeys.filter((k) => k !== toEvict),
+      })
     } else {
       set({ activePage: key, order: newOrder })
     }
@@ -111,5 +122,26 @@ export const useLruCacheStore = create<LruRouteState>((set, get) => ({
 
   clearEvicted: () => {
     set({ evictedPage: null })
+  },
+
+  invalidateCache: (key) => {
+    const state = get()
+    if (!(key in state.pages)) return
+    if (state.staleKeys.includes(key)) return
+    set({ staleKeys: [...state.staleKeys, key] })
+  },
+
+  invalidateAll: (except) => {
+    const state = get()
+    const keys = Object.keys(state.pages).filter((k) => k !== except)
+    const newStale = keys.filter((k) => !state.staleKeys.includes(k))
+    if (newStale.length === 0) return
+    set({ staleKeys: [...state.staleKeys, ...newStale] })
+  },
+
+  clearStale: (key) => {
+    const state = get()
+    if (!state.staleKeys.includes(key)) return
+    set({ staleKeys: state.staleKeys.filter((k) => k !== key) })
   },
 }))

@@ -1,6 +1,8 @@
 import {
   CheckCircleFilled,
+  ClearOutlined,
   CloseCircleFilled,
+  DeleteOutlined,
   DownOutlined,
   InboxOutlined,
   LoadingOutlined,
@@ -25,7 +27,7 @@ import {
 } from "antd"
 import { useCallback, useEffect, useRef, useState } from "react"
 import type { ChunkInfo, ChunkStatus, UploadResult } from "../stores/uploadStore.ts"
-import { useUploadStore } from "../stores/uploadStore.ts"
+import { useUploadStore } from "../stores"
 
 const { Text } = Typography
 const { Dragger } = Upload
@@ -88,7 +90,16 @@ async function computeFileHash(file: File, chunkSize: number): Promise<string> {
 const defaultChunkSize = 5 * 1024 * 1024
 
 export default function ChunkedUpload() {
-  const { files, addFile, removeFile, updateFile, updateChunk, loadFromStorage } = useUploadStore()
+  const {
+    files,
+    addFile,
+    removeFile,
+    updateFile,
+    updateChunk,
+    loadFromStorage,
+    clearCompleted,
+    resetAll,
+  } = useUploadStore()
   const [fileObj, setFileObj] = useState<File | null>(null)
   const [chunkSize] = useState(defaultChunkSize)
   const [concurrency, setConcurrency] = useState(4)
@@ -372,6 +383,36 @@ export default function ChunkedUpload() {
             </Tag>
           )}
         </Card>
+
+        {files.length > 0 && (
+          <div style={{ display: "flex", justifyContent: "flex-end", gap: 8 }}>
+            <Button
+              size="small"
+              icon={<ClearOutlined />}
+              onClick={() => {
+                clearCompleted()
+                if (item && item.status !== "uploading" && item.status !== "paused") {
+                  setFileObj(null)
+                  setIsResume(false)
+                }
+              }}
+            >
+              清除已完成
+            </Button>
+            <Button
+              size="small"
+              danger
+              icon={<DeleteOutlined />}
+              onClick={() => {
+                resetAll()
+                setFileObj(null)
+                setIsResume(false)
+              }}
+            >
+              重置全部
+            </Button>
+          </div>
+        )}
 
         {item && (
           <Card

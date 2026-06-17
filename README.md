@@ -150,11 +150,49 @@ cd frontend && bun dev
 
 ```bash
 cd frontend
-bun run build          # tsc -b + vite build
+bun run build          # tsc -b + vite build (Rolldown Rust bundler)
 bun run lint:eslint    # ESLint 严格模式检查
 ```
 
-## 后端 API
+## 构建产物 (dist/)
+
+Rolldown 代码分割 + `React.lazy()` 页面级懒加载后，首屏仅 **~50 kB**，其余页面按需加载：
+
+```
+dist/
+├── index.html                             0.58 kB       (HTML 入口)
+├── assets/
+│   ├── rolldown-runtime-*.js              0.82 kB       (Rolldown 运行时)
+│   ├── index-*.js                         7.15 kB       (应用入口: 路由+布局)
+│   ├── vendor-*.js                      231.93 kB       (React / Zustand / Router)
+│   ├── antd-*.js                     1,111.19 kB       [缓存] Ant Design
+│   ├── echarts-*.js                  1,118.10 kB       [缓存] ECharts
+│   ├── gis-*.js                        304.84 kB       [缓存] OpenLayers
+│   │
+│   ├── pages/ (React.lazy 懒加载)                        首屏不加载
+│   │   ├── Dashboard-*.js                1.05 kB        仪表盘
+│   │   ├── RequestLoading-*.js           2.30 kB        请求加载 Signal
+│   │   ├── SseLogStream-*.js             3.90 kB        SSE 日志流
+│   │   ├── GisRendering-*.js             5.05 kB        GIS 点位渲染
+│   │   ├── WebWorkerMerge-*.js           5.25 kB        Worker 分治合并
+│   │   ├── LogStream-*.js                8.09 kB        日志流式解密
+│   │   ├── TokenRefresh-*.js             9.07 kB        无感刷新
+│   │   ├── TreeDataEngine-*.js           9.46 kB        树形数据操作
+│   │   ├── ChunkedUpload-*.js           11.69 kB        大文件断点续传
+│   │   ├── RbacPermission-*.js          16.94 kB        RBAC 位编码权限
+│   │   ├── AlertWebSocket-*.js          18.29 kB        WebSocket 告警
+│   │   ├── LruRouteCache-*.js           19.92 kB        LRU 路由缓存
+│   │   └── JsonSchemaForm-*.js         142.11 kB        动态表单引擎
+│   │
+│   └── workers/
+│       ├── merge.worker-*.js             0.35 kB        归并排序 Worker
+│       └── decrypt.worker-*.js           0.48 kB        日志解密 Worker
+```
+
+- **代码分割**: 12 页面通过 `React.lazy()` 独立 chunk，`codeSplitting.groups` 按优先级分割 vendor
+- **缓存策略**: antd/echarts/gis 等大型库独立缓存，版本不变即 `304 Not Modified`
+- **构建时间**: ~3.2s (3911 modules, Rolldown Rust bundler)
+- **对比**: 单 bundle 3,034 kB → 首屏 ~50 kB (↓98%)
 
 | 路由                   | 方法   | 说明                        |
 | ---------------------- | ------ | --------------------------- |

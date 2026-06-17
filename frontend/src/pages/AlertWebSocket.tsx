@@ -1,4 +1,5 @@
 import {
+  ApiOutlined,
   PauseCircleOutlined,
   PlayCircleOutlined,
   ReloadOutlined,
@@ -14,6 +15,7 @@ import {
   CATEGORY_COLORS,
   useAlertStore,
 } from "../stores/alertStore.ts"
+import { type ConnectionStatus, MAX_RETRY, ReconnectingTransport } from "../utils/wsTransport.ts"
 
 const { Text } = Typography
 
@@ -40,31 +42,11 @@ const ALERT_TYPE: Record<AlertLevel, "success" | "info" | "warning" | "error"> =
 
 const LEVEL_ORDER: AlertLevel[] = ["critical", "major", "minor", "info"]
 
-const LEVEL_ALIAS: Record<string, AlertLevel> = {
-  success: "info",
-  warning: "major",
-  error: "critical",
-  critical: "critical",
-  major: "major",
-  minor: "minor",
-  info: "info",
-}
-
 const CHART_COLORS: Record<AlertLevel, string> = {
   critical: "#f5222d",
   major: "#fa8c16",
   minor: "#1890ff",
   info: "#52c41a",
-}
-
-type ConnectionStatus = "disconnected" | "connecting" | "connected" | "reconnecting"
-
-const MAX_RETRY = 10
-
-function computeDelay(attempt: number): number {
-  const base = Math.min(1000 * 2 ** attempt, 30000)
-  const jitter = Math.round(base * (0.8 + Math.random() * 0.4))
-  return jitter
 }
 
 export default function AlertWebSocket() {
@@ -77,17 +59,9 @@ export default function AlertWebSocket() {
   const [levelFilter, setLevelFilter] = useState<"all" | AlertLevel>("all")
   const [recovered, setRecovered] = useState(false)
   const [isPaused, setIsPaused] = useState(false)
+  const [transportType, setTransportType] = useState("WebSocket")
 
-  const wsRef = useRef<WebSocket | null>(null)
-  const retryRef = useRef(0)
-  const genRef = useRef(0)
-  const disconnectTimeRef = useRef(0)
-  const pingTimerRef = useRef<ReturnType<typeof setInterval> | null>(null)
-  const pongTimerRef = useRef<ReturnType<typeof setTimeout> | null>(null)
-  const reconnectTimerRef = useRef<ReturnType<typeof setTimeout> | null>(null)
-  const countdownTimerRef = useRef<ReturnType<typeof setInterval> | null>(null)
-  const manualStopRef = useRef(false)
-  const pausedRef = useRef(false)
+  const transportRef = useRef<import("../utils/wsTransport.ts").ReconnectingTransport | null>(null)
   const chartActiveRef = useRef(true)
   const startChartLoopRef = useRef<() => void>(() => {})
   const stopChartLoopRef = useRef<() => void>(() => {})
@@ -100,87 +74,14 @@ export default function AlertWebSocket() {
   const chartRafRef = useRef(0)
   const rateRef = useRef(1000)
   const workersRef = useRef(4)
+  const pausedRef = useRef(false)
+  const disconnectTimeRef = useRef(0)
   const [editRate, setEditRate] = useState(1000)
   const [editWorkers, setEditWorkers] = useState(4)
 
-  const cleanupTimers = useCallback(() => {
-    if (pingTimerRef.current != null) {
-      clearInterval(pingTimerRef.current)
-      pingTimerRef.current = null
-    }
-    if (pongTimerRef.current != null) {
-      clearTimeout(pongTimerRef.current)
-      pongTimerRef.current = null
-    }
+  const addToBuffer = useCallback((msg: AlertMessage) => {
+    bufferRef.current.push(msg)
   }, [])
-
-  const cancelReconnect = useCallback(() => {
-    if (reconnectTimerRef.current != null) {
-      clearTimeout(reconnectTimerRef.current)
-      reconnectTimerRef.current = null
-    }
-    if (countdownTimerRef.current != null) {
-      clearInterval(countdownTimerRef.current)
-      countdownTimerRef.current = null
-    }
-    setReconnectCountdown(0)
-  }, [])
-
-  const startCountdown = useCallback((seconds: number) => {
-    if (countdownTimerRef.current != null) {
-      clearInterval(countdownTimerRef.current)
-    }
-    setReconnectCountdown(seconds)
-    countdownTimerRef.current = setInterval(() => {
-      setReconnectCountdown((prev) => {
-        if (prev <= 1) {
-          if (countdownTimerRef.current != null) {
-            clearInterval(countdownTimerRef.current)
-            countdownTimerRef.current = null
-          }
-          return 0
-        }
-        return prev - 1
-      })
-    }, 1000)
-  }, [])
-
-  const flushBufferSync = useCallback(() => {
-    if (bufferRef.current.length === 0) return
-    const batch = bufferRef.current.splice(0)
-    const unique: AlertMessage[] = []
-    for (const msg of batch) {
-      if (!seenRef.current.has(msg.id)) {
-        seenRef.current.add(msg.id)
-        unique.push(msg)
-      }
-    }
-    if (seenRef.current.size > 5000) seenRef.current = new Set()
-    if (unique.length > 0) {
-      unique.sort((a, b) => PRIORITY[a.level] - PRIORITY[b.level])
-      const now = Date.now()
-      for (const msg of unique) trendBufferRef.current.push({ time: now, level: msg.level })
-      addAlerts(unique)
-    }
-  }, [addAlerts])
-
-  const startPingPong = useCallback(
-    (ws: WebSocket) => {
-      cleanupTimers()
-      const sendPing = () => {
-        if (ws.readyState !== WebSocket.OPEN) return
-        setHeartbeatAlive(false)
-        ws.send(JSON.stringify({ type: "ping" }))
-        pongTimerRef.current = setTimeout(() => {
-          setHeartbeatAlive(false)
-          ws.close()
-        }, 10000)
-      }
-      sendPing()
-      pingTimerRef.current = setInterval(sendPing, 30000)
-    },
-    [cleanupTimers],
-  )
 
   const rafFlush = useCallback(() => {
     if (bufferRef.current.length > 0) {
@@ -203,165 +104,103 @@ export default function AlertWebSocket() {
     rafRef.current = requestAnimationFrame(rafFlush)
   }, [addAlerts])
 
-  const connect = useCallback(
-    (delayMs = 0) => {
-      manualStopRef.current = false
-      pausedRef.current = false
-      setIsPaused(false)
-      cancelReconnect()
+  const initTransport = useCallback(() => {
+    const protocol = window.location.protocol === "https:" ? "wss:" : "ws:"
+    const baseUrl = `${protocol}//localhost:8080/ws/alerts?rate=${String(rateRef.current)}&workers=${String(workersRef.current)}`
 
-      genRef.current++
-      const gen = genRef.current
-
-      wsRef.current?.close()
-      wsRef.current = null
-      cleanupTimers()
-
-      const doConnect = () => {
-        if (genRef.current !== gen) return
-        setConnectionStatus("connecting")
-
-        const protocol = window.location.protocol === "https:" ? "wss:" : "ws:"
-        const host = window.location.host
-        const ws = new WebSocket(
-          `${protocol}//${host}/ws/alerts?rate=${String(rateRef.current)}&workers=${String(workersRef.current)}`,
-        )
-
-        ws.onopen = () => {
-          if (genRef.current !== gen) return
-          setConnectionStatus("connected")
-          setHeartbeatAlive(true)
+    const transport = new ReconnectingTransport(baseUrl)
+    transport.setCallbacks({
+      onMessage: (msg) => {
+        addToBuffer(msg)
+      },
+      onStatus: (status) => {
+        setConnectionStatus(status)
+        if (status === "connected") {
           setIsInterrupted(false)
-          retryRef.current = 0
           setRetryCount(0)
-          setReconnectCountdown(0)
-          if (disconnectTimeRef.current > 0) {
-            setRecovered(true)
-            setTimeout(() => {
-              setRecovered(false)
-            }, 3000)
-            disconnectTimeRef.current = 0
-          }
+          disconnectTimeRef.current = 0
           startChartLoopRef.current()
-          startPingPong(ws)
-        }
-
-        ws.onmessage = (e: MessageEvent<string>) => {
-          if (genRef.current !== gen) return
-          let parsed: Record<string, unknown>
-          try {
-            parsed = JSON.parse(e.data) as Record<string, unknown>
-          } catch {
-            return
-          }
-          if (parsed.type === "pong") {
-            setHeartbeatAlive(true)
-            if (pongTimerRef.current != null) {
-              clearTimeout(pongTimerRef.current)
-              pongTimerRef.current = null
-            }
-            return
-          }
-          const id = typeof parsed.id === "string" ? parsed.id : crypto.randomUUID()
-          const seq = typeof parsed.seq === "number" ? parsed.seq : 0
-          const topic = (
-            typeof parsed.topic === "string" && ["alert", "status", "log"].includes(parsed.topic)
-              ? parsed.topic
-              : "alert"
-          ) as AlertMessage["topic"]
-          const category = typeof parsed.category === "string" ? parsed.category : "system"
-          const level =
-            typeof parsed.level === "string" ? (LEVEL_ALIAS[parsed.level] ?? "info") : "info"
-          const message = typeof parsed.message === "string" ? parsed.message : e.data
-          const time =
-            typeof parsed.time === "string" ? parsed.time : new Date().toLocaleTimeString()
-          bufferRef.current.push({ id, seq, topic, category, level, message, time })
-        }
-
-        ws.onclose = () => {
-          if (genRef.current !== gen) return
-          setHeartbeatAlive(false)
-          cleanupTimers()
-          flushBufferSync()
-
-          if (manualStopRef.current || pausedRef.current) {
-            setConnectionStatus("disconnected")
-            return
-          }
-
-          setConnectionStatus("reconnecting")
+        } else if (status === "reconnecting") {
           setIsInterrupted(true)
-
+          stopChartLoopRef.current()
           if (disconnectTimeRef.current === 0) {
             disconnectTimeRef.current = Date.now()
           }
-
-          if (retryRef.current < MAX_RETRY) {
-            const delay = computeDelay(retryRef.current)
-            retryRef.current += 1
-            setRetryCount(retryRef.current)
-            setReconnectCountdown(Math.ceil(delay / 1000))
-            startCountdown(Math.ceil(delay / 1000))
-            reconnectTimerRef.current = setTimeout(connect, delay)
-          } else {
-            logInterruption(Date.now() - disconnectTimeRef.current)
-            setConnectionStatus("disconnected")
-          }
+        } else if (status === "disconnected") {
+          stopChartLoopRef.current()
         }
-
-        ws.onerror = () => {
-          ws.close()
+      },
+      onRetry: (attempt, _delay) => {
+        setRetryCount(attempt)
+        setReconnectCountdown(Math.ceil(_delay / 1000))
+      },
+      onHeartbeat: (alive) => {
+        setHeartbeatAlive(alive)
+        if (alive && disconnectTimeRef.current > 0) {
+          setRecovered(true)
+          setTimeout(() => setRecovered(false), 3000)
+          disconnectTimeRef.current = 0
         }
+      },
+      onSyncRequest: (_lastSeq) => {
+        // server-side sync would go here
+      },
+    })
 
-        wsRef.current = ws
-      }
+    transport.onFallbackChange((type) => {
+      setTransportType(type)
+    })
 
+    transport.onInterruptionLogged((downtimeMs) => {
+      logInterruption(downtimeMs)
+    })
+
+    transportRef.current = transport
+    return transport
+  }, [addToBuffer, logInterruption])
+
+  const connect = useCallback(
+    (delayMs = 0) => {
+      pausedRef.current = false
+      setIsPaused(false)
       if (delayMs > 0) {
-        reconnectTimerRef.current = setTimeout(doConnect, delayMs)
+        setTimeout(() => {
+          const t = transportRef.current || initTransport()
+          t.connect()
+        }, delayMs)
       } else {
-        doConnect()
+        const t = transportRef.current || initTransport()
+        t.connect()
       }
     },
-    [
-      cleanupTimers,
-      startPingPong,
-      cancelReconnect,
-      startCountdown,
-      flushBufferSync,
-      logInterruption,
-    ],
+    [initTransport],
   )
 
   const disconnect = useCallback(() => {
-    manualStopRef.current = true
-    cancelReconnect()
-    cleanupTimers()
-    wsRef.current?.close()
-    wsRef.current = null
+    transportRef.current?.disconnect()
+    transportRef.current = null
     setConnectionStatus("disconnected")
     setHeartbeatAlive(false)
     setIsInterrupted(false)
     stopChartLoopRef.current()
-  }, [cancelReconnect, cleanupTimers])
+  }, [])
 
   const pauseConnection = useCallback(() => {
     pausedRef.current = true
     setIsPaused(true)
-    cancelReconnect()
-    cleanupTimers()
-    wsRef.current?.close()
-    wsRef.current = null
+    transportRef.current?.disconnect()
     setConnectionStatus("disconnected")
     setHeartbeatAlive(false)
     stopChartLoopRef.current()
-  }, [cancelReconnect, cleanupTimers])
+  }, [])
 
   const resumeConnection = useCallback(() => {
     pausedRef.current = false
     setIsPaused(false)
     startChartLoopRef.current()
-    connect()
-  }, [connect])
+    const t = transportRef.current || initTransport()
+    t.connect()
+  }, [initTransport])
 
   useEffect(() => {
     const p = new URLSearchParams(window.location.search)
@@ -380,14 +219,12 @@ export default function AlertWebSocket() {
   useEffect(() => {
     connect()
     return () => {
-      cancelReconnect()
-      cleanupTimers()
-      wsRef.current?.close()
+      disconnect()
       cancelAnimationFrame(rafRef.current)
       cancelAnimationFrame(chartRafRef.current)
       chartInstanceRef.current?.dispose()
     }
-  }, [connect, cancelReconnect, cleanupTimers])
+  }, [connect, disconnect])
 
   useEffect(() => {
     rafRef.current = requestAnimationFrame(rafFlush)
@@ -497,7 +334,8 @@ export default function AlertWebSocket() {
     }
   }, [updateChart])
 
-  const isExhausted = retryCount >= MAX_RETRY && connectionStatus !== "connected"
+  const fallbackLabel =
+    transportType === "SSE" ? "SSE 降级" : transportType === "Polling" ? "轮询降级" : null
 
   const statusBadge: "success" | "warning" | "error" = recovered
     ? "success"
@@ -518,7 +356,7 @@ export default function AlertWebSocket() {
         : isInterrupted
           ? "已中断"
           : connectionStatus === "connected" && heartbeatAlive
-            ? "已连接"
+            ? `已连接 (${transportType})`
             : connectionStatus === "connected"
               ? "心跳异常"
               : connectionStatus === "connecting"
@@ -530,14 +368,12 @@ export default function AlertWebSocket() {
     : isInterrupted
       ? `连接异常中断 · 第 ${String(retryCount)}/${String(MAX_RETRY)} 次重连 · 已中断 ${String(Math.floor((Date.now() - disconnectTimeRef.current) / 1000))}s`
       : connectionStatus === "connected" && heartbeatAlive
-        ? "WebSocket 已连接，心跳正常"
+        ? `${transportType} 已连接，心跳正常`
         : connectionStatus === "connected"
-          ? "WebSocket 已连接，未收到心跳响应"
+          ? `${transportType} 已连接，未收到心跳响应`
           : connectionStatus === "connecting"
             ? "正在建立连接..."
-            : isExhausted
-              ? "已达最大重试次数，请手动重连"
-              : "WebSocket 未连接"
+            : `${transportType} 未连接`
 
   const displayAlerts = useMemo(() => {
     if (levelFilter === "all")
@@ -590,6 +426,24 @@ export default function AlertWebSocket() {
           </Tag>
           {metrics.gapsDetected > 0 && <Tag color="warning">丢段: {metrics.gapsDetected}</Tag>}
         </Space>
+        <Segmented
+          size="small"
+          value={transportType}
+          onChange={(v) => {
+            const index = v === "WebSocket" ? 0 : v === "SSE" ? 1 : 2
+            let t = transportRef.current
+            if (!t) {
+              t = initTransport()
+              transportRef.current = t
+            }
+            t.forceTransport(index)
+          }}
+          options={[
+            { label: "WebSocket", value: "WebSocket" },
+            { label: "SSE", value: "SSE" },
+            { label: "Polling", value: "Polling" },
+          ]}
+        />
         <Space>
           <Tooltip title="目标速率 (msg/s)，修改后点重连生效">
             <span>速率:</span>
@@ -627,6 +481,11 @@ export default function AlertWebSocket() {
             }}
             style={{ width: 60, fontSize: 12 }}
           />
+          {fallbackLabel && (
+            <Tag color="orange" icon={<ApiOutlined />}>
+              {fallbackLabel}
+            </Tag>
+          )}
           {connectionStatus === "connected" ? (
             <>
               <Button size="small" icon={<PauseCircleOutlined />} onClick={pauseConnection}>
@@ -648,14 +507,13 @@ export default function AlertWebSocket() {
           ) : (
             <Button
               size="small"
-              type={isExhausted ? "primary" : "default"}
-              danger={isExhausted}
+              type="primary"
               icon={<ReloadOutlined />}
               onClick={() => {
                 connect(100)
               }}
             >
-              {isExhausted ? "手动重连" : "重连"}
+              重连
             </Button>
           )}
           <Button
