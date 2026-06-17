@@ -2,9 +2,9 @@
 
 ## 项目概述
 
-React 19 + Go 1.26 全栈演示项目，涵盖 **11 个高级技术场景**，聚焦前端工程化、性能优化与架构设计。
+React 19 + Go 1.26 全栈演示项目，涵盖 **12 个高级技术场景**，聚焦前端工程化、性能优化与架构设计。
 
-**Keywords:** 无感刷新 · Token Rotation · 递归表单引擎 · 双重校验 · WebSocket 心跳 · LRU 路由缓存 · Web Worker 分治 · OpenLayers 聚类 · RBAC 位编码 · SSE 流式日志 · 请求加载 Signal · 树形数据引擎
+**Keywords:** 无感刷新 · Token Rotation · 递归表单引擎 · 双重校验 · WebSocket 心跳 · LRU 路由缓存 · Web Worker 分治 · OpenLayers 聚类 · RBAC 位编码 · SSE 流式日志 · 请求加载 Signal · 树形数据引擎 · 大文件断点续传
 
 ## 技术栈
 
@@ -76,6 +76,7 @@ interview-demo/
 | 9  | SSE 日志流           | ReadableStream + AbortController + RAF 节流 + 暂停/恢复连接               |
 | 10 | 请求加载 Signal      | Signal 级别请求追踪 + 方法-路径匹配树                                     |
 | 11 | 树形数据操作引擎     | 递归 CRUD + 拖拽排序 + 节点校验 + 批量操作                                |
+| 12 | 大文件断点续传       | SHA-256 分片哈希 + 并发分片上传 + 完整性校验 + 暂停/恢复/停止 + 刷新持久化 |
 
 ## 双重校验策略 (动态表单)
 
@@ -96,6 +97,25 @@ interview-demo/
 
 - **Refresh Token Rotation**: 每次刷新后旧 Refresh Token 标记为已用，禁止重放攻击
 - **并发队列**: 刷新期间并发请求排队等待，刷新完成统一重放
+
+## 大文件断点续传架构
+
+```
+文件选择 → SHA-256 (Web Worker) → 分片队列 (Zustand + localStorage)
+  ↓
+初始化 POST /api/upload/init → 获取 uploadId
+  ↓
+并发上传分片 (最多 3 个) → 每片附带 SHA-256 校验
+  ↓ 暂停/失败
+分片进度持久化 (localStorage) → 刷新后自动恢复
+  ↓ 所有分片完成
+POST /api/upload/complete → 服务端合并 + SHA-256 完整性验证
+```
+
+- **暂停/恢复**: 使用 AbortController 取消进行中的分片，Zustand store 记录已完成的 chunk index
+- **刷新持久化**: uploadStore 自动同步到 localStorage，页面加载时恢复未完成的上传会话
+- **服务端会话**: 以 JSON 文件持久化未完成的上传状态 (`uploads/sessions.json`)
+- **中断续传**: `GET /api/upload/status/:uploadId` 返回服务端已接收的分片列表，前端仅上传缺失分片
 
 ## 快速启动
 
@@ -127,6 +147,11 @@ bun run lint:eslint    # ESLint 严格模式检查
 | `/api/auth/check`      | GET    | 验证 Access Token 有效性     |
 | `/api/auth/used-tokens`| GET    | 已轮换 Refresh Token 计数   |
 | `/api/schema/validate` | POST   | 后端 Schema + 业务语义校验   |
+| `/api/upload/init`     | POST   | 初始化大文件上传 (uploadId, chunkSize, totalChunks) |
+| `/api/upload/chunk`    | POST   | 上传单个分片 (SHA-256 校验)  |
+| `/api/upload/complete` | POST   | 分片合并 + 完整性验证        |
+| `/api/upload/status/:uploadId` | GET | 查询某个上传的已接收分片列表 |
+| `/api/upload/sessions` | GET    | 列出所有进行中的上传会话      |
 
 ## CI/CD + K8s 部署
 

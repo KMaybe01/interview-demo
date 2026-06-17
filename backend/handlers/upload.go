@@ -3,6 +3,7 @@ package handlers
 import (
 	"crypto/sha256"
 	"encoding/hex"
+	"encoding/json"
 	"fmt"
 	"io"
 	"os"
@@ -16,18 +17,73 @@ import (
 var (
 	uploadSessions = sync.Map{}
 	uploadDir      = "uploads"
+	sessionsFile   = "uploads/sessions.json"
+	cleanupOnce    sync.Once
 )
 
 type UploadSession struct {
-	ID          string
-	Filename    string
-	FileSize    int64
-	ChunkSize   int64
-	TotalChunks int
-	Received    map[int]bool
-	FileHash    string
-	CreatedAt   time.Time
-	mu          sync.Mutex
+	ID          string       `json:"id"`
+	Filename    string       `json:"filename"`
+	FileSize    int64        `json:"fileSize"`
+	ChunkSize   int64        `json:"chunkSize"`
+	TotalChunks int          `json:"totalChunks"`
+	Received    map[int]bool `json:"received"`
+	FileHash    string       `json:"fileHash"`
+	CreatedAt   time.Time    `json:"createdAt"`
+}
+
+func saveSessions() {
+	data := make(map[string]*UploadSession)
+	uploadSessions.Range(func(key, val interface{}) bool {
+		data[key.(string)] = val.(*UploadSession)
+		return true
+	})
+	raw, err := json.Marshal(data)
+	if err != nil {
+		return
+	}
+	os.WriteFile(sessionsFile, raw, 0644)
+}
+
+func loadSessions() {
+	raw, err := os.ReadFile(sessionsFile)
+	if err != nil {
+		return
+	}
+	var data map[string]*UploadSession
+	if err := json.Unmarshal(raw, &data); err != nil {
+		return
+	}
+	for k, v := range data {
+		uploadSessions.Store(k, v)
+	}
+}
+
+func startCleanup() {
+	cleanupOnce.Do(func() {
+		go func() {
+			for {
+				time.Sleep(10 * time.Minute)
+				now := time.Now()
+				uploadSessions.Range(func(key, val interface{}) bool {
+					session := val.(*UploadSession)
+					if now.After(session.CreatedAt.Add(30 * time.Minute)) {
+						chunkDir := filepath.Join(uploadDir, session.ID)
+						os.RemoveAll(chunkDir)
+						uploadSessions.Delete(key)
+					}
+					return true
+				})
+				saveSessions()
+			}
+		}()
+	})
+}
+
+func init() {
+	os.MkdirAll(uploadDir, 0755)
+	loadSessions()
+	startCleanup()
 }
 
 type InitUploadRequest struct {
@@ -68,14 +124,58 @@ func InitUpload(c *gin.Context) {
 	}
 
 	uploadSessions.Store(id, session)
-
-	go func() {
-		time.Sleep(30 * time.Minute)
-		uploadSessions.Delete(id)
-		os.RemoveAll(chunkDir)
-	}()
+	saveSessions()
 
 	c.JSON(200, gin.H{"uploadId": id})
+}
+
+func GetUploadStatus(c *gin.Context) {
+	uploadID := c.Param("uploadId")
+	val, ok := uploadSessions.Load(uploadID)
+	if !ok {
+		c.JSON(404, gin.H{"error": "Upload session not found"})
+		return
+	}
+	session := val.(*UploadSession)
+
+	received := make([]int, 0, len(session.Received))
+	for i := 0; i < session.TotalChunks; i++ {
+		if session.Received[i] {
+			received = append(received, i)
+		}
+	}
+
+	c.JSON(200, gin.H{
+		"uploadId":      session.ID,
+		"filename":      session.Filename,
+		"fileSize":      session.FileSize,
+		"chunkSize":     session.ChunkSize,
+		"totalChunks":   session.TotalChunks,
+		"received":      received,
+		"receivedCount": len(received),
+		"fileHash":      session.FileHash,
+		"createdAt":     session.CreatedAt,
+	})
+}
+
+func ListUploadSessions(c *gin.Context) {
+	var sessions []map[string]interface{}
+	uploadSessions.Range(func(key, val interface{}) bool {
+		session := val.(*UploadSession)
+		sessions = append(sessions, map[string]interface{}{
+			"uploadId":      session.ID,
+			"filename":      session.Filename,
+			"fileSize":      session.FileSize,
+			"totalChunks":   session.TotalChunks,
+			"receivedCount": len(session.Received),
+			"createdAt":     session.CreatedAt,
+		})
+		return true
+	})
+	if sessions == nil {
+		sessions = []map[string]interface{}{}
+	}
+	c.JSON(200, gin.H{"sessions": sessions})
 }
 
 func UploadChunk(c *gin.Context) {
@@ -132,10 +232,9 @@ func UploadChunk(c *gin.Context) {
 		return
 	}
 
-	session.mu.Lock()
 	session.Received[chunkIndex] = true
 	received := len(session.Received)
-	session.mu.Unlock()
+	saveSessions()
 
 	c.JSON(200, gin.H{
 		"success":    true,
@@ -159,7 +258,6 @@ func CompleteUpload(c *gin.Context) {
 	}
 	session := val.(*UploadSession)
 
-	session.mu.Lock()
 	receivedCount := len(session.Received)
 	if receivedCount != session.TotalChunks {
 		missing := make([]int, 0, session.TotalChunks-receivedCount)
@@ -168,14 +266,12 @@ func CompleteUpload(c *gin.Context) {
 				missing = append(missing, i)
 			}
 		}
-		session.mu.Unlock()
 		c.JSON(400, gin.H{
 			"error":   "Not all chunks received",
 			"missing": missing,
 		})
 		return
 	}
-	session.mu.Unlock()
 
 	chunkDir := filepath.Join(uploadDir, req.UploadID)
 	outputName := fmt.Sprintf("%s_%s", req.UploadID, session.Filename)
@@ -211,6 +307,7 @@ func CompleteUpload(c *gin.Context) {
 
 	os.RemoveAll(chunkDir)
 	uploadSessions.Delete(req.UploadID)
+	saveSessions()
 
 	c.JSON(200, gin.H{
 		"success":     true,

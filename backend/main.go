@@ -25,6 +25,8 @@ func main() {
 		api.POST("/upload/init", handlers.InitUpload)
 		api.POST("/upload/chunk", handlers.UploadChunk)
 		api.POST("/upload/complete", handlers.CompleteUpload)
+		api.GET("/upload/status/:uploadId", handlers.GetUploadStatus)
+		api.GET("/upload/sessions", handlers.ListUploadSessions)
 	}
 
 	r.GET("/ws/alerts", handlers.WebSocketAlerts)
