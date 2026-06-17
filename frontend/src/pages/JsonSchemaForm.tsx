@@ -1,6 +1,19 @@
-import { Card, Col, Divider, notification, Row, Tag, Typography } from "antd"
-import { useCallback, useState } from "react"
-import DynamicForm from "../components/dynamic-form/DynamicForm.tsx"
+import {
+  Button,
+  Card,
+  Col,
+  Divider,
+  Input,
+  message,
+  notification,
+  Row,
+  Space,
+  Tabs,
+  Tag,
+  Typography,
+} from "antd"
+import { useCallback, useRef, useState } from "react"
+import DynamicForm, { type DynamicFormHandle } from "../components/dynamic-form/DynamicForm.tsx"
 import ArrayField from "../components/dynamic-form/fields/ArrayField.tsx"
 import DateTimeField from "../components/dynamic-form/fields/DateTimeField.tsx"
 import JsonField from "../components/dynamic-form/fields/JsonField.tsx"
@@ -360,6 +373,11 @@ const initialData: Record<string, unknown> = {
 export default function JsonSchemaFormPage() {
   const [submittedData, setSubmittedData] = useState<Record<string, unknown> | null>(null)
   const [backendErrors, setBackendErrors] = useState<Record<string, string>>({})
+  const formRef = useRef<DynamicFormHandle>(null)
+  const [liveData, setLiveData] = useState<Record<string, unknown>>(initialData)
+  const [jsonEditing, setJsonEditing] = useState(false)
+  const [editJsonText, setEditJsonText] = useState("")
+  const [activeTab, setActiveTab] = useState("form")
 
   const handleBackendValidate = useCallback(
     async (
@@ -403,6 +421,33 @@ export default function JsonSchemaFormPage() {
     setBackendErrors({})
   }, [])
 
+  const handleCopyJson = useCallback(() => {
+    navigator.clipboard
+      .writeText(JSON.stringify(liveData, null, 2))
+      .then(() => message.success("已复制到剪贴板"))
+      .catch(() => message.error("复制失败"))
+  }, [liveData])
+
+  const handleStartEdit = useCallback(() => {
+    setEditJsonText(JSON.stringify(liveData, null, 2))
+    setJsonEditing(true)
+  }, [liveData])
+
+  const handleApplyJson = useCallback(() => {
+    try {
+      const parsed = JSON.parse(editJsonText) as Record<string, unknown>
+      formRef.current?.setFormData(parsed)
+      setJsonEditing(false)
+      message.success("JSON 已应用到表单")
+    } catch {
+      message.error("JSON 格式错误")
+    }
+  }, [editJsonText])
+
+  const handleCancelEdit = useCallback(() => {
+    setJsonEditing(false)
+  }, [])
+
   return (
     <div>
       <Row gutter={24}>
@@ -421,132 +466,208 @@ export default function JsonSchemaFormPage() {
               </div>
             </div>
             <DynamicForm
+              ref={formRef}
               schema={networkSchema}
               initialData={initialData}
               onBackendValidate={handleBackendValidate}
               onSubmit={handleSubmit}
+              onChange={setLiveData}
               backendErrors={Object.keys(backendErrors).length > 0 ? backendErrors : undefined}
             />
           </Card>
         </Col>
         <Col xs={24} lg={10}>
-          <Card title="架构说明" size="small">
-            <div style={{ display: "flex", flexDirection: "column", gap: 12 }}>
-              <div>
-                <Text strong>递归渲染流程</Text>
-                <div
-                  style={{
-                    fontFamily: "monospace",
-                    fontSize: 12,
-                    background: "#f5f5f5",
-                    padding: 8,
-                    borderRadius: 4,
-                    marginTop: 4,
-                  }}
-                >
-                  renderTabs → renderCard → renderForm → renderLeaf
-                </div>
-              </div>
-              <Divider style={{ margin: "4px 0" }} />
-              <div>
-                <Text strong>控件注册表</Text>
-                <div style={{ marginTop: 4, display: "flex", flexWrap: "wrap", gap: 4 }}>
-                  {[
-                    { type: "string", label: "String", color: "blue" },
-                    { type: "number", label: "Number", color: "cyan" },
-                    { type: "select", label: "Select", color: "geekblue" },
-                    { type: "switch", label: "Switch", color: "purple" },
-                    { type: "datetime", label: "DateTime", color: "orange" },
-                    { type: "json", label: "JSON", color: "magenta" },
-                    { type: "array", label: "Array", color: "lime" },
-                  ].map((t) => (
-                    <Tag key={t.type} color={t.color}>
-                      {t.label}
-                    </Tag>
-                  ))}
-                </div>
-                <Text type="secondary" style={{ fontSize: 11 }}>
-                  运行时 register() 可扩展自定义控件
-                </Text>
-              </div>
-              <Divider style={{ margin: "4px 0" }} />
-              <div>
-                <Text strong>前端校验</Text>
-                <div style={{ fontSize: 12, marginTop: 2 }}>
-                  <Tag color="gold">ajv</Tag> Schema 结构校验 (类型/必填/枚举)
-                  <br />
-                  <Tag color="cyan">自定义</Tag> IP 格式、端口范围
-                  <br />
-                  <Tag color="purple">异步</Tag> Cell ID 唯一性 (1s 模拟)
-                  <br />
-                  <Tag color="volcano">显隐</Tag> 加密字段条件联动
-                  <br />
-                  <Tag color="geekblue">联动</Tag> 基站名称自动填充
-                </div>
-              </div>
-              <Divider style={{ margin: "4px 0" }} />
-              <div>
-                <Text strong>后端业务校验</Text>
-                <div style={{ fontSize: 12, marginTop: 2 }}>
-                  <Tag color="red">业务</Tag> IP 地址合法性 + 回环地址检测
-                  <br />
-                  <Tag color="red">业务</Tag> Cell ID 格式 (CELL-xxx)
-                  <br />
-                  <Tag color="red">业务</Tag> MCC/MNC 联动 + 国家码白名单
-                  <br />
-                  <Tag color="red">业务</Tag> 端口号与基站类型关联规则
-                  <br />
-                  <Tag color="red">业务</Tag> 带宽标准值校验
-                </div>
-              </div>
-              <Divider style={{ margin: "4px 0" }} />
-              <div>
-                <Text strong>双重校验策略</Text>
-                <div
-                  style={{
-                    fontSize: 12,
-                    marginTop: 4,
-                    background: "#f5f5f5",
-                    padding: 8,
-                    borderRadius: 4,
-                  }}
-                >
-                  前端校验 = 黄色提示（格式错误）
-                  <br />
-                  后端校验 = 红色错误（业务冲突）
-                  <br />
-                  前端通过后才允许提交
-                  <br />
-                  后端错误 setFields 精准映射到控件
-                </div>
-              </div>
-              <Divider style={{ margin: "4px 0" }} />
-              <div>
-                <Text strong>演示说明</Text>
-                <ul style={{ fontSize: 12, margin: 0, paddingLeft: 16, lineHeight: 1.8 }}>
-                  <li>
-                    <Text code>传输配置</Text> Tab: SCTP 端口数组 (添加/删除)
-                  </li>
-                  <li>
-                    <Text code>启用加密</Text>: 切换后显隐联动加密算法/证书字段
-                  </li>
-                  <li>
-                    <Text code>完整基站名称</Text>: 自动填充 (cellType + cellName)
-                  </li>
-                  <li>
-                    <Text code>基站 ID</Text> 输入 CELL-999: 异步校验拒绝
-                  </li>
-                  <li>
-                    <Text code>IP 127.x.x.x</Text>: 后端拦截回环地址
-                  </li>
-                  <li>先通过前端校验 → 后端业务校验 → 提交成功</li>
-                </ul>
-              </div>
-            </div>
+          <Card size="small" styles={{ body: { padding: 0 } }}>
+            <Tabs
+              activeKey={activeTab}
+              onChange={setActiveTab}
+              items={[
+                {
+                  key: "form",
+                  label: "架构说明",
+                  children: (
+                    <div style={{ padding: 16, display: "flex", flexDirection: "column", gap: 12 }}>
+                      <div>
+                        <Text strong>递归渲染流程</Text>
+                        <div
+                          style={{
+                            fontFamily: "monospace",
+                            fontSize: 12,
+                            background: "#f5f5f5",
+                            padding: 8,
+                            borderRadius: 4,
+                            marginTop: 4,
+                          }}
+                        >
+                          renderTabs → renderCard → renderForm → renderLeaf
+                        </div>
+                      </div>
+                      <Divider style={{ margin: "4px 0" }} />
+                      <div>
+                        <Text strong>控件注册表</Text>
+                        <div style={{ marginTop: 4, display: "flex", flexWrap: "wrap", gap: 4 }}>
+                          {[
+                            { type: "string", label: "String", color: "blue" },
+                            { type: "number", label: "Number", color: "cyan" },
+                            { type: "select", label: "Select", color: "geekblue" },
+                            { type: "switch", label: "Switch", color: "purple" },
+                            { type: "datetime", label: "DateTime", color: "orange" },
+                            { type: "json", label: "JSON", color: "magenta" },
+                            { type: "array", label: "Array", color: "lime" },
+                          ].map((t) => (
+                            <Tag key={t.type} color={t.color}>
+                              {t.label}
+                            </Tag>
+                          ))}
+                        </div>
+                        <Text type="secondary" style={{ fontSize: 11 }}>
+                          运行时 register() 可扩展自定义控件
+                        </Text>
+                      </div>
+                      <Divider style={{ margin: "4px 0" }} />
+                      <div>
+                        <Text strong>前端校验</Text>
+                        <div style={{ fontSize: 12, marginTop: 2 }}>
+                          <Tag color="gold">ajv</Tag> Schema 结构校验 (类型/必填/枚举)
+                          <br />
+                          <Tag color="cyan">自定义</Tag> IP 格式、端口范围
+                          <br />
+                          <Tag color="purple">异步</Tag> Cell ID 唯一性 (1s 模拟)
+                          <br />
+                          <Tag color="volcano">显隐</Tag> 加密字段条件联动
+                          <br />
+                          <Tag color="geekblue">联动</Tag> 基站名称自动填充
+                        </div>
+                      </div>
+                      <Divider style={{ margin: "4px 0" }} />
+                      <div>
+                        <Text strong>后端业务校验</Text>
+                        <div style={{ fontSize: 12, marginTop: 2 }}>
+                          <Tag color="red">业务</Tag> IP 地址合法性 + 回环地址检测
+                          <br />
+                          <Tag color="red">业务</Tag> Cell ID 格式 (CELL-xxx)
+                          <br />
+                          <Tag color="red">业务</Tag> MCC/MNC 联动 + 国家码白名单
+                          <br />
+                          <Tag color="red">业务</Tag> 端口号与基站类型关联规则
+                          <br />
+                          <Tag color="red">业务</Tag> 带宽标准值校验
+                        </div>
+                      </div>
+                      <Divider style={{ margin: "4px 0" }} />
+                      <div>
+                        <Text strong>双重校验策略</Text>
+                        <div
+                          style={{
+                            fontSize: 12,
+                            marginTop: 4,
+                            background: "#f5f5f5",
+                            padding: 8,
+                            borderRadius: 4,
+                          }}
+                        >
+                          前端校验 = 黄色提示（格式错误）
+                          <br />
+                          后端校验 = 红色错误（业务冲突）
+                          <br />
+                          前端通过后才允许提交
+                          <br />
+                          后端错误 setFields 精准映射到控件
+                        </div>
+                      </div>
+                      <Divider style={{ margin: "4px 0" }} />
+                      <div>
+                        <Text strong>演示说明</Text>
+                        <ul style={{ fontSize: 12, margin: 0, paddingLeft: 16, lineHeight: 1.8 }}>
+                          <li>
+                            <Text code>传输配置</Text> Tab: SCTP 端口数组 (添加/删除)
+                          </li>
+                          <li>
+                            <Text code>启用加密</Text>: 切换后显隐联动加密算法/证书字段
+                          </li>
+                          <li>
+                            <Text code>完整基站名称</Text>: 自动填充 (cellType + cellName)
+                          </li>
+                          <li>
+                            <Text code>基站 ID</Text> 输入 CELL-999: 异步校验拒绝
+                          </li>
+                          <li>
+                            <Text code>IP 127.x.x.x</Text>: 后端拦截回环地址
+                          </li>
+                          <li>先通过前端校验 → 后端业务校验 → 提交成功</li>
+                        </ul>
+                      </div>
+                    </div>
+                  ),
+                },
+                {
+                  key: "json",
+                  label: "JSON 数据",
+                  children: (
+                    <div>
+                      <div
+                        style={{
+                          padding: "8px 16px",
+                          borderBottom: "1px solid #f0f0f0",
+                          display: "flex",
+                          justifyContent: "flex-end",
+                        }}
+                      >
+                        {jsonEditing ? (
+                          <Space>
+                            <Button size="small" type="primary" onClick={handleApplyJson}>
+                              应用
+                            </Button>
+                            <Button size="small" onClick={handleCancelEdit}>
+                              取消
+                            </Button>
+                          </Space>
+                        ) : (
+                          <Space>
+                            <Button size="small" onClick={handleStartEdit}>
+                              编辑
+                            </Button>
+                            <Button size="small" onClick={handleCopyJson}>
+                              复制
+                            </Button>
+                          </Space>
+                        )}
+                      </div>
+                      <div style={{ padding: jsonEditing ? 0 : 16 }}>
+                        {jsonEditing ? (
+                          <Input.TextArea
+                            value={editJsonText}
+                            onChange={(e) => setEditJsonText(e.target.value)}
+                            rows={20}
+                            style={{
+                              fontFamily: "'Courier New', monospace",
+                              fontSize: 12,
+                              border: "none",
+                              borderRadius: 0,
+                            }}
+                          />
+                        ) : (
+                          <pre
+                            style={{
+                              fontSize: 12,
+                              maxHeight: 400,
+                              overflow: "auto",
+                              margin: 0,
+                            }}
+                          >
+                            {JSON.stringify(liveData, null, 2)}
+                          </pre>
+                        )}
+                      </div>
+                    </div>
+                  ),
+                },
+              ]}
+            />
           </Card>
           {submittedData && (
             <Card title="提交数据" size="small" style={{ marginTop: 12 }}>
-              <pre style={{ fontSize: 12, maxHeight: 400, overflow: "auto" }}>
+              <pre style={{ fontSize: 12, maxHeight: 400, overflow: "auto", margin: 0 }}>
                 {JSON.stringify(submittedData, null, 2)}
               </pre>
             </Card>

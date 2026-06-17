@@ -4,7 +4,7 @@
 
 React 19 + Go 1.26 全栈演示项目，涵盖 **12 个高级技术场景**，聚焦前端工程化、性能优化与架构设计。
 
-**Keywords:** 无感刷新 · Token Rotation · 递归表单引擎 · 双重校验 · WebSocket 心跳 · LRU 路由缓存 · Web Worker 分治 · OpenLayers 聚类 · RBAC 位编码 · SSE 流式日志 · 请求加载 Signal · 树形数据引擎 · 大文件断点续传
+**Keywords:** 无感刷新 · Token Rotation · 递归表单引擎 · 双重校验 · 实时 JSON 编辑 · WebSocket 心跳 · LRU 路由缓存 · Web Worker 分治 · OpenLayers 聚类 · RBAC 位编码 · SSE 流式日志 · 请求加载 Signal · 树形数据引擎 · 大文件断点续传
 
 ## 技术栈
 
@@ -66,7 +66,7 @@ interview-demo/
 | #  | 页面                | 核心实现                                                                 |
 | -- | ------------------- | ------------------------------------------------------------------------ |
 | 1  | 告警 WebSocket      | 指数退避重连 + 心跳 Ping/Pong + 消息去重 + RAF 节流 + ECharts 实时趋势     |
-| 2  | JSON Schema 动态表单 | 自定义递归渲染引擎: 条件显隐 / 数组列表 / 自定义/异步校验 / 字段联动 / ajv / 循环检测 |
+| 2  | JSON Schema 动态表单 | 自定义递归渲染引擎: 条件显隐 / 数组列表 / 自定义/异步校验 / 字段联动 / ajv / 循环检测 / 实时 JSON 编辑与双向同步 |
 | 3  | LRU 路由缓存         | 3 页 Tab 切换 + DOM display:none 保持状态 + LRU 淘汰 + 切回后台刷新       |
 | 4  | Web Worker 分治合并  | Worker Pool + 自适应分区 + 有序归并缓冲区 + 主线程 Array.sort 对比         |
 | 5  | GIS 十万级点位渲染   | OpenLayers Cluster 聚类 + BBOX 视口剪裁 + dataCache + moveend 惰性刷新   |
@@ -78,7 +78,21 @@ interview-demo/
 | 11 | 树形数据操作引擎     | 递归 CRUD + 拖拽排序 + 节点校验 + 批量操作                                |
 | 12 | 大文件断点续传       | SHA-256 分片哈希 + 并发分片上传 + 完整性校验 + 暂停/恢复/停止 + 刷新持久化 |
 
-## 双重校验策略 (动态表单)
+## 动态表单架构 (JSON Schema)
+
+### 递归渲染流程
+
+```
+FormSchema (tabs → card → form → leaf)
+  ↓
+Renderer.tsx (递归遍历 AST, 深度保护, 循环引用检测)
+  ↓
+registry.tsx (策略模式: FieldType → FieldComponent)
+  ↓
+7 个字段组件: String / Number / Select / Switch / DateTime / JSON / Array
+```
+
+### 校验体系
 
 | 层级   | 校验内容                            | 错误样式     |
 | ------ | ----------------------------------- | ------------ |
@@ -86,6 +100,25 @@ interview-demo/
 | 前端   | 自定义校验 (IP 格式/端口范围)        | 黄色警告提示 |
 | 前端   | 异步校验 (唯一性 1s 延迟模拟)        | 加载 Spin    |
 | 后端   | 业务语义 (IP 合法性/Cell ID 格式/MCC 白名单/端口-类型关联/带宽标准值) | 红色错误 + setFields 映射 |
+
+### 实时 JSON 编辑
+
+右侧面板提供双 Tab 视图:
+
+- **架构说明**: 渲染流程 / 控件注册表 / 校验体系 / 演示说明
+- **JSON 数据**: 表单数据的实时 JSON 预览，支持编辑修改后写回表单
+
+```
+表单字段变更 → DynamicForm.onChange → 实时 JSON 面板更新
+                                       ↓
+JSON 文本编辑 → DynamicFormHandle.setFormData → 表单数据重写
+```
+
+特性:
+- 表单编辑时 JSON 面板实时同步 (无需手动刷新)
+- 支持直接在 JSON 文本区编辑后"应用"到表单 (双向绑定)
+- 一键复制当前表单数据到剪贴板
+- 提交后独立展示最终提交数据方便对比
 
 ## 无感刷新架构 (Token)
 

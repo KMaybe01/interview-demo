@@ -1,5 +1,4 @@
 import { Alert, Card, Tabs, Tag, Typography } from "antd"
-import { memo, useMemo } from "react"
 import { getField } from "./registry.tsx"
 import type { FormSchema } from "./types.ts"
 
@@ -99,19 +98,6 @@ function Renderer({
   maxDepth = 10,
 }: RendererProps) {
   const activeData = allData ?? data
-
-  const leafVisibility = useMemo(() => {
-    if (schema.type !== "leaf" || !schema.properties) return null
-    const result: Record<string, boolean> = {}
-    for (const [propKey, leaf] of Object.entries(schema.properties)) {
-      if (!leaf.visible) {
-        result[propKey] = true
-      } else {
-        result[propKey] = evaluateExpression(leaf.visible, activeData)
-      }
-    }
-    return result
-  }, [schema, activeData])
 
   if (_depth > maxDepth) {
     return (
@@ -241,9 +227,8 @@ function Renderer({
   if (schema.type === "leaf" && schema.properties) {
     return (
       <div style={{ display: "flex", flexDirection: "column", gap: 16 }}>
-        {Object.entries(schema.properties).map(([propKey, leaf]) => {
-          const isVisible = leafVisibility ? leafVisibility[propKey] : true
-          if (!isVisible) return null
+        {Object.entries(schema.properties).map(([_propKey, leaf]) => {
+          if (leaf.visible && !evaluateExpression(leaf.visible, activeData)) return null
 
           const fullPath = leaf.key
           const FieldComponent = getField(leaf.type)
@@ -335,4 +320,4 @@ function Space({ children, ...props }: { children: React.ReactNode; style?: Reac
   )
 }
 
-export default memo(Renderer)
+export default Renderer

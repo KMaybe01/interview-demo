@@ -1,6 +1,6 @@
 import type { ValidateFunction } from "ajv"
 import { Button, notification, Spin, Tag, Typography } from "antd"
-import { useCallback, useEffect, useMemo, useRef, useState } from "react"
+import { forwardRef, useEffect, useImperativeHandle, useRef, useState } from "react"
 import Renderer from "./Renderer.tsx"
 import {
   compileAjvSchema,
@@ -19,6 +19,10 @@ interface BackendError {
   source: string
 }
 
+export interface DynamicFormHandle {
+  setFormData: (data: Record<string, unknown>) => void
+}
+
 interface DynamicFormProps {
   schema: FormSchema
   initialData?: Record<string, unknown>
@@ -27,17 +31,22 @@ interface DynamicFormProps {
   backendErrors?: Record<string, string>
   maxDepth?: number
   onBackendValidate?: (data: Record<string, unknown>) => Promise<BackendError[]>
+  onChange?: (data: Record<string, unknown>) => void
 }
 
-export default function DynamicForm({
-  schema,
-  initialData = {},
-  onSubmit,
-  title,
-  backendErrors = {},
-  maxDepth = 10,
-  onBackendValidate,
-}: DynamicFormProps) {
+const DynamicForm = forwardRef<DynamicFormHandle, DynamicFormProps>(function DynamicForm(
+  {
+    schema,
+    initialData = {},
+    onSubmit,
+    title,
+    backendErrors = {},
+    maxDepth = 10,
+    onBackendValidate,
+    onChange,
+  },
+  ref,
+) {
   const [data, setData] = useState<Record<string, unknown>>(initialData)
   const [errors, setErrors] = useState<Record<string, string>>({})
   const [submitted, setSubmitted] = useState(false)
@@ -48,100 +57,101 @@ export default function DynamicForm({
   const compiledRef = useRef<Map<string, ValidateFunction>>(new Map())
   const prevAutoFillRef = useRef<Record<string, unknown>>({})
 
-  const leaves = useMemo(() => flattenSchema(schema), [schema])
-
-  const runAjvValidation = useCallback(
-    (currentData: Record<string, unknown>) => {
-      const newAjvErrors: Record<string, string[]> = {}
-      for (const leaf of leaves) {
-        if (!leaf.ajvSchema) continue
-        const key = leaf.key
-        let validate = compiledRef.current.get(key)
-        if (!validate) {
-          const compiled = compileAjvSchema(leaf.ajvSchema)
-          if (compiled) {
-            validate = compiled
-            compiledRef.current.set(key, validate)
-          }
-        }
-        if (validate) {
-          validate(currentData[key])
-          if (validate.errors) {
-            newAjvErrors[key] = validate.errors.map((e) => {
-              if (e.keyword === "type") return `应为 ${String(e.params.type)} 类型`
-              if (e.keyword === "required")
-                return `缺少必填字段: ${String(e.params.missingProperty)}`
-              if (e.keyword === "enum") return `值不在允许范围内: ${String(e.params.allowedValues)}`
-              if (e.keyword === "pattern") return `格式不匹配: ${String(e.message)}`
-              return e.message ?? "格式错误"
-            })
-          }
-        }
-      }
-      setAjvErrors(newAjvErrors)
-    },
-    [leaves],
+  useImperativeHandle(
+    ref,
+    () => ({
+      setFormData(newData: Record<string, unknown>) {
+        setData(newData)
+      },
+    }),
+    [],
   )
 
-  const handleChange = useCallback(
-    (path: string, value: unknown) => {
-      setData((prev) => updateValue(prev, path, value))
+  const leaves = flattenSchema(schema)
 
-      setErrors((prev) => {
-        if (prev[path]) {
-          const next = Object.fromEntries(Object.entries(prev).filter(([k]) => k !== path))
-          return next
+  function runAjvValidation(currentData: Record<string, unknown>) {
+    const newAjvErrors: Record<string, string[]> = {}
+    for (const leaf of leaves) {
+      if (!leaf.ajvSchema) continue
+      const key = leaf.key
+      let validate = compiledRef.current.get(key)
+      if (!validate) {
+        const compiled = compileAjvSchema(leaf.ajvSchema)
+        if (compiled) {
+          validate = compiled
+          compiledRef.current.set(key, validate)
+        }
+      }
+      if (validate) {
+        validate(currentData[key])
+        if (validate.errors) {
+          newAjvErrors[key] = validate.errors.map((e) => {
+            if (e.keyword === "type") return `应为 ${String(e.params.type)} 类型`
+            if (e.keyword === "required") return `缺少必填字段: ${String(e.params.missingProperty)}`
+            if (e.keyword === "enum") return `值不在允许范围内: ${String(e.params.allowedValues)}`
+            if (e.keyword === "pattern") return `格式不匹配: ${String(e.message)}`
+            return e.message ?? "格式错误"
+          })
+        }
+      }
+    }
+    setAjvErrors(newAjvErrors)
+  }
+
+  function handleChange(path: string, value: unknown) {
+    setData((prev) => updateValue(prev, path, value))
+
+    setErrors((prev) => {
+      if (prev[path]) {
+        const next = Object.fromEntries(Object.entries(prev).filter(([k]) => k !== path))
+        return next
+      }
+      return prev
+    })
+
+    const leaf = findLeaf(schema, path)
+    const validationFn = leaf?.validation
+    if (validationFn) {
+      setData((prev) => {
+        const newData = updateValue(prev, path, value)
+        const err = validationFn(value, newData)
+        if (err) {
+          setErrors((current) => ({ ...current, [path]: err }))
         }
         return prev
       })
+    }
+  }
 
-      const leaf = findLeaf(schema, path)
-      if (leaf?.validation) {
-        const updatedData = { ...data, [path]: value }
-        const newData = updateValue(updatedData, path, value)
-        const err = leaf.validation(value, newData)
+  async function runAsyncValidation(blurPath: string, currentData: Record<string, unknown>) {
+    const leaf = findLeaf(schema, blurPath)
+    if (!leaf?.asyncValidation) return
+
+    setAsyncValidating((prev) => ({ ...prev, [blurPath]: true }))
+    try {
+      const err = await leaf.asyncValidation(currentData[blurPath])
+      setErrors((prev) => {
         if (err) {
-          setErrors((prev) => ({ ...prev, [path]: err }))
+          return { ...prev, [blurPath]: err }
         }
-      }
-    },
-    [schema, data],
-  )
+        return Object.fromEntries(Object.entries(prev).filter(([k]) => k !== blurPath))
+      })
+    } catch {
+      setErrors((prev) => ({ ...prev, [blurPath]: "校验异常" }))
+    } finally {
+      setAsyncValidating((prev) => ({ ...prev, [blurPath]: false }))
+    }
+  }
 
-  const runAsyncValidation = useCallback(
-    async (blurPath: string, currentData: Record<string, unknown>) => {
-      const leaf = findLeaf(schema, blurPath)
-      if (!leaf?.asyncValidation) return
-
-      setAsyncValidating((prev) => ({ ...prev, [blurPath]: true }))
-      try {
-        const err = await leaf.asyncValidation(currentData[blurPath])
-        setErrors((prev) => {
-          if (err) {
-            return { ...prev, [blurPath]: err }
-          }
-          return Object.fromEntries(Object.entries(prev).filter(([k]) => k !== blurPath))
-        })
-      } catch {
-        setErrors((prev) => ({ ...prev, [blurPath]: "校验异常" }))
-      } finally {
-        setAsyncValidating((prev) => ({ ...prev, [blurPath]: false }))
-      }
-    },
-    [schema],
-  )
-
-  const handleBlur = useCallback(
-    (blurPath: string) => {
-      void runAsyncValidation(blurPath, data)
-    },
-    [runAsyncValidation, data],
-  )
+  function handleBlur(blurPath: string) {
+    void runAsyncValidation(blurPath, data)
+  }
 
   useEffect(() => {
     if (Object.keys(data).length === 0) return
     runAjvValidation(data)
-  }, [data, runAjvValidation])
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [data])
 
   useEffect(() => {
     const updates: Record<string, unknown> = {}
@@ -171,9 +181,22 @@ export default function DynamicForm({
         return next
       })
     }
-  }, [data, leaves])
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [data, schema])
 
-  const handleSubmit = useCallback(async () => {
+  const onChangeRef = useRef(onChange)
+  onChangeRef.current = onChange
+
+  const dataInitialized = useRef(false)
+  useEffect(() => {
+    if (!dataInitialized.current) {
+      dataInitialized.current = true
+      return
+    }
+    onChangeRef.current?.(data)
+  }, [data])
+
+  async function handleSubmit() {
     setSubmitting(true)
     setSubmitted(false)
 
@@ -260,16 +283,16 @@ export default function DynamicForm({
     onSubmit?.(data)
     notification.success({ message: "表单提交成功", description: "数据已通过校验" })
     setSubmitting(false)
-  }, [schema, data, leaves, onSubmit, onBackendValidate])
+  }
 
-  const handleReset = useCallback(() => {
+  function handleReset() {
     setData(initialData)
     setErrors({})
     setSubmitted(false)
     setAsyncValidating({})
     setAjvErrors({})
     prevAutoFillRef.current = {}
-  }, [initialData])
+  }
 
   const hasAsyncErrors = Object.values(asyncValidating).some(Boolean)
 
@@ -317,4 +340,6 @@ export default function DynamicForm({
       </div>
     </Spin>
   )
-}
+})
+
+export default DynamicForm
