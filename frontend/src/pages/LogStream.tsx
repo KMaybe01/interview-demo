@@ -3,7 +3,7 @@ import { useCallback, useEffect, useMemo, useRef, useState } from "react"
 
 const { Text } = Typography
 
-type Status = "idle" | "connecting" | "key-exchange" | "decrypting" | "done"
+type Status = "idle" | "connecting" | "key-exchange" | "decrypting" | "done" | "interrupted"
 
 interface DecodeStats {
   totalChunks: number
@@ -55,6 +55,7 @@ export default function LogStream() {
   const userScrolledRef = useRef(false)
   const statsRef = useRef({ totalChunks: 0, decryptedChunks: 0, totalLines: 0 })
   const startTimeRef = useRef(0)
+  const doneTimeRef = useRef(0)
   const timerRef = useRef<number | undefined>(undefined)
   const statusRef = useRef<Status>("idle")
 
@@ -72,17 +73,16 @@ export default function LogStream() {
         setEncryptedLines((prev) => [...prev, ...encryptedBufRef.current])
         encryptedBufRef.current = []
       }
-      if (statusRef.current !== "done") {
-        const s = statsRef.current
-        const elapsed = (performance.now() - startTimeRef.current) / 1000
-        setStats({
-          totalChunks: s.totalChunks,
-          decryptedChunks: s.decryptedChunks,
-          totalLines: s.totalLines,
-          elapsed,
-          linesPerSec: elapsed > 0 ? Math.round(s.totalLines / elapsed) : 0,
-        })
-      }
+      const s = statsRef.current
+      const now = doneTimeRef.current || performance.now()
+      const elapsed = (now - startTimeRef.current) / 1000
+      setStats({
+        totalChunks: s.totalChunks,
+        decryptedChunks: s.decryptedChunks,
+        totalLines: s.totalLines,
+        elapsed,
+        linesPerSec: elapsed > 0 ? Math.round(s.totalLines / elapsed) : 0,
+      })
     })
   }, [])
 
@@ -134,7 +134,7 @@ export default function LogStream() {
       availableRef.current = []
 
       for (let i = 0; i < workerCount; i++) {
-        const worker = new Worker(new URL("../workers/decrypt.worker.ts", import.meta.url), {
+        const worker = new Worker(new URL("../utils/decrypt.worker.ts", import.meta.url), {
           type: "module",
         })
         worker.postMessage({ type: "init", key: aesKey })
@@ -172,6 +172,23 @@ export default function LogStream() {
     statsRef.current = { totalChunks: 0, decryptedChunks: 0, totalLines: 0 }
   }, [])
 
+  const interrupt = useCallback(() => {
+    abortRef.current?.abort()
+    abortRef.current = null
+    if (timerRef.current) clearInterval(timerRef.current)
+    for (const w of workersRef.current) {
+      w.terminate()
+    }
+    workersRef.current = []
+    availableRef.current = []
+    pendingRef.current = []
+    mergeRef.current.clear()
+    encryptedBufRef.current = []
+    if (rafRef.current) cancelAnimationFrame(rafRef.current)
+    rafRef.current = 0
+    setStatus("interrupted")
+  }, [])
+
   const start = useCallback(() => {
     disconnect()
     setStatus("connecting")
@@ -180,6 +197,7 @@ export default function LogStream() {
     setEncryptedLines([])
     statsRef.current = { totalChunks: 0, decryptedChunks: 0, totalLines: 0 }
     startTimeRef.current = performance.now()
+    doneTimeRef.current = 0
 
     const abort = new AbortController()
     abortRef.current = abort
@@ -232,6 +250,7 @@ export default function LogStream() {
             }
 
             if (evt.type === "done") {
+              doneTimeRef.current = performance.now()
               setStatus("done")
               continue
             }
@@ -288,12 +307,14 @@ export default function LogStream() {
     }
   }, [lines])
 
-  const statusBadge: "success" | "default" | "processing" =
-    status === "decrypting" || status === "done"
+  const statusBadge: "success" | "default" | "processing" | "warning" =
+    status === "done"
       ? "success"
-      : status === "idle"
-        ? "default"
-        : "processing"
+      : status === "interrupted"
+        ? "warning"
+        : status === "decrypting" || status === "connecting" || status === "key-exchange"
+          ? "processing"
+          : "default"
 
   const statusText =
     status === "idle"
@@ -304,10 +325,9 @@ export default function LogStream() {
           ? "密钥交换中..."
           : status === "decrypting"
             ? "解密中"
-            : "解密完成"
-
-  const decryptProgress =
-    stats.totalChunks > 0 ? Math.round((stats.decryptedChunks / stats.totalChunks) * 100) : 0
+            : status === "interrupted"
+              ? "已中断"
+              : "解密完成"
 
   const sharedLogStyle: React.CSSProperties = {
     height: 480,
@@ -327,16 +347,21 @@ export default function LogStream() {
           <Space wrap style={{ marginBottom: 8 }}>
             <Badge status={statusBadge} />
             <Text>{statusText}</Text>
-            <Button
-              type="primary"
-              onClick={start}
-              disabled={status !== "idle" && status !== "done"}
-            >
-              开始解密
-            </Button>
-            <Button onClick={disconnect} disabled={status === "idle" || status === "done"}>
-              停止
-            </Button>
+            {status === "idle" && (
+              <Button type="primary" onClick={start}>
+                开始解密
+              </Button>
+            )}
+            {(status === "connecting" || status === "key-exchange" || status === "decrypting") && (
+              <Button type="primary" danger onClick={interrupt}>
+                中断
+              </Button>
+            )}
+            {(status === "interrupted" || status === "done") && (
+              <Button type="primary" onClick={start}>
+                重新开始
+              </Button>
+            )}
           </Space>
           <Row gutter={16}>
             <Col span={4}>
@@ -348,9 +373,8 @@ export default function LogStream() {
             </Col>
             <Col span={5}>
               <Statistic
-                title="解密进度"
-                value={decryptProgress}
-                suffix="%"
+                title="已解密 Chunks"
+                value={stats.decryptedChunks}
                 styles={{ content: { fontSize: 18 } }}
               />
             </Col>
@@ -396,12 +420,14 @@ export default function LogStream() {
           )}
         </Card>
 
-        {status !== "idle" && (
+        {status !== "idle" && status !== "interrupted" && (
           <Progress
-            percent={progress}
+            percent={status === "done" ? 100 : progress}
             size="small"
             format={() =>
-              `${progress.toFixed(1)}% (${String(stats.decryptedChunks)}/${String(stats.totalChunks)} chunks)`
+              status === "done"
+                ? "100% (完成)"
+                : `${progress.toFixed(1)}% (${String(stats.decryptedChunks)}/${String(stats.totalChunks)} chunks)`
             }
           />
         )}
@@ -419,9 +445,10 @@ export default function LogStream() {
                 {encryptedLines.length === 0 && status === "decrypting" && (
                   <Text type="secondary">等待加密数据到达...</Text>
                 )}
-                {encryptedLines.length === 0 && status !== "decrypting" && status !== "done" && (
-                  <Text type="secondary">加密数据将在此显示</Text>
-                )}
+                {encryptedLines.length === 0 &&
+                  status !== "decrypting" &&
+                  status !== "done" &&
+                  status !== "interrupted" && <Text type="secondary">加密数据将在此显示</Text>}
                 {encryptedLines.map((entry) => (
                   <div
                     key={entry.seq}
@@ -457,6 +484,9 @@ export default function LogStream() {
                 )}
                 {lines.length === 0 && status === "done" && (
                   <Text type="secondary">所有日志解密完成</Text>
+                )}
+                {lines.length === 0 && status === "interrupted" && (
+                  <Text type="secondary">解密被中断，无已解密数据</Text>
                 )}
                 {lines.map((line, i) => {
                   let color = "#d4d4d4"

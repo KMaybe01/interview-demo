@@ -78,16 +78,16 @@ export const routes: RouteConfig[] = [
     element: lazy(() => import("../pages/TreeDataEngine.tsx")),
   },
   {
-    path: "/web-worker-merge",
-    name: "Web Worker 分治合并",
-    icon: NodeIndexOutlined,
-    element: lazy(() => import("../pages/WebWorkerMerge.tsx")),
-  },
-  {
     path: "/gis-rendering",
     name: "GIS 十万级点位渲染",
     icon: EnvironmentOutlined,
     element: lazy(() => import("../pages/GisRendering.tsx")),
+  },
+  {
+    path: "/web-worker-merge",
+    name: "Web Worker 分治合并",
+    icon: NodeIndexOutlined,
+    element: lazy(() => import("../pages/WebWorkerMerge.tsx")),
   },
   {
     path: "/log-stream",

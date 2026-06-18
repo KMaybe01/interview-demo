@@ -9,6 +9,7 @@ import {
 import { Alert, Badge, Button, Card, Empty, Segmented, Space, Tag, Tooltip, Typography } from "antd"
 import * as echarts from "echarts"
 import { useCallback, useEffect, useMemo, useRef, useState } from "react"
+import { List } from "react-window"
 import {
   type AlertLevel,
   type AlertMessage,
@@ -41,6 +42,33 @@ const ALERT_TYPE: Record<AlertLevel, "success" | "info" | "warning" | "error"> =
 }
 
 const LEVEL_ORDER: AlertLevel[] = ["critical", "major", "minor", "info"]
+const DISPLAY_LIMIT = 2000
+
+const AlertRow = ({ index, style, data }: { index: number; style: React.CSSProperties; data: AlertMessage[] }) => {
+  const a = data[index]
+  const tag = LEVEL_TAG[a.level]
+  const catColor = CATEGORY_COLORS[a.category] || "#8c8c8c"
+  return (
+    <div style={style}>
+      <Alert
+        type={ALERT_TYPE[a.level]}
+        title={
+          <Space style={{ flexWrap: "wrap" }}>
+            <Tag color={tag.color}>{tag.text}</Tag>
+            <Tag color={catColor}>{a.category}</Tag>
+            <Tag>{a.topic.toUpperCase()}</Tag>
+            <Text>{a.message}</Text>
+            <Text type="secondary" style={{ fontSize: 11 }}>
+              {a.time}
+            </Text>
+          </Space>
+        }
+        showIcon
+        style={{ marginBottom: 6, padding: "6px 12px" }}
+      />
+    </div>
+  )
+}
 
 const CHART_COLORS: Record<AlertLevel, string> = {
   critical: "#f5222d",
@@ -62,6 +90,7 @@ export default function AlertWebSocket() {
   const [transportType, setTransportType] = useState("WebSocket")
 
   const transportRef = useRef<import("../utils/wsTransport.ts").ReconnectingTransport | null>(null)
+  const aliveRef = useRef(true)
   const chartActiveRef = useRef(true)
   const startChartLoopRef = useRef<() => void>(() => {})
   const stopChartLoopRef = useRef<() => void>(() => {})
@@ -84,6 +113,7 @@ export default function AlertWebSocket() {
   }, [])
 
   const rafFlush = useCallback(() => {
+    if (!aliveRef.current) return
     if (bufferRef.current.length > 0) {
       const batch = bufferRef.current.splice(0)
       const unique: AlertMessage[] = []
@@ -217,14 +247,15 @@ export default function AlertWebSocket() {
   }, [])
 
   useEffect(() => {
-    connect()
+    aliveRef.current = true
     return () => {
+      aliveRef.current = false
       disconnect()
       cancelAnimationFrame(rafRef.current)
       cancelAnimationFrame(chartRafRef.current)
       chartInstanceRef.current?.dispose()
     }
-  }, [connect, disconnect])
+  }, [disconnect])
 
   useEffect(() => {
     rafRef.current = requestAnimationFrame(rafFlush)
@@ -278,6 +309,7 @@ export default function AlertWebSocket() {
   }, [])
 
   const updateChart = useCallback(() => {
+    if (!aliveRef.current) return
     const chart = chartInstanceRef.current
     if (!chart) {
       chartRafRef.current = requestAnimationFrame(updateChart)
@@ -376,11 +408,12 @@ export default function AlertWebSocket() {
             : `${transportType} 未连接`
 
   const displayAlerts = useMemo(() => {
-    if (levelFilter === "all")
-      return [...alerts].sort((a, b) => PRIORITY[a.level] - PRIORITY[b.level])
-    return alerts
-      .filter((a) => a.level === levelFilter)
-      .sort((a, b) => PRIORITY[a.level] - PRIORITY[b.level])
+    const sorted = levelFilter === "all"
+      ? [...alerts].sort((a, b) => PRIORITY[a.level] - PRIORITY[b.level])
+      : alerts
+          .filter((a) => a.level === levelFilter)
+          .sort((a, b) => PRIORITY[a.level] - PRIORITY[b.level])
+    return sorted.slice(0, DISPLAY_LIMIT)
   }, [alerts, levelFilter])
 
   const qps = useMemo(() => {
@@ -399,7 +432,7 @@ export default function AlertWebSocket() {
   }, [metrics])
 
   return (
-    <div style={{ display: "flex", flexDirection: "column", gap: 12 }}>
+    <div style={{ display: "flex", flexDirection: "column", gap: 12, height: "100%" }}>
       {/* Connection + QPS bar */}
       <div
         style={{
@@ -551,6 +584,8 @@ export default function AlertWebSocket() {
       {/* Alert list */}
       <Card
         size="small"
+        styles={{ body: { padding: 0, overflow: "hidden" } }}
+        style={{ flex: 1, minHeight: 0 }}
         title={
           <div
             style={{
@@ -581,29 +616,13 @@ export default function AlertWebSocket() {
         {displayAlerts.length === 0 ? (
           <Empty description="暂无告警" />
         ) : (
-          displayAlerts.slice(0, 80).map((a) => {
-            const tag = LEVEL_TAG[a.level]
-            const catColor = CATEGORY_COLORS[a.category] || "#8c8c8c"
-            return (
-              <Alert
-                key={a.id}
-                type={ALERT_TYPE[a.level]}
-                title={
-                  <Space style={{ flexWrap: "wrap" }}>
-                    <Tag color={tag.color}>{tag.text}</Tag>
-                    <Tag color={catColor}>{a.category}</Tag>
-                    <Tag>{a.topic.toUpperCase()}</Tag>
-                    <Text>{a.message}</Text>
-                    <Text type="secondary" style={{ fontSize: 11 }}>
-                      {a.time}
-                    </Text>
-                  </Space>
-                }
-                showIcon
-                style={{ marginBottom: 6, padding: "6px 12px" }}
-              />
-            )
-          })
+          <List<{ data: AlertMessage[] }>
+            rowCount={displayAlerts.length}
+            rowHeight={48}
+            rowComponent={AlertRow}
+            rowProps={{ data: displayAlerts }}
+            style={{ height: 520 }}
+          />
         )}
       </Card>
     </div>

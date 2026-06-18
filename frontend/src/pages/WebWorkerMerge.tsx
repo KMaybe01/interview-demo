@@ -19,7 +19,7 @@ import {
   Tooltip,
   Typography,
 } from "antd"
-import { useCallback, useState } from "react"
+import { useCallback, useEffect, useRef, useState } from "react"
 
 const { Text } = Typography
 
@@ -81,6 +81,7 @@ const POOL_SIZE = navigator.hardwareConcurrency || 4
 const MIN_FIRST_CHUNK = 2000
 
 export default function WebWorkerMerge() {
+  const workersRef = useRef<Worker[]>([])
   const [dataSize, setDataSize] = useState(500_000)
   const [status, setStatus] = useState<"idle" | "running" | "done">("idle")
   const [workerTime, setWorkerTime] = useState(0)
@@ -137,11 +138,12 @@ export default function WebWorkerMerge() {
     const pendingJobs: number[] = []
 
     for (let i = 0; i < Math.min(POOL_SIZE, partitions.length); i++) {
-      const worker = new Worker(new URL("../workers/merge.worker.ts", import.meta.url), {
+      const worker = new Worker(new URL("../utils/merge.worker.ts", import.meta.url), {
         type: "module",
       })
       availableWorkers.push(worker)
     }
+    workersRef.current = availableWorkers
 
     function assignJob(worker: Worker, seq: number): void {
       setChunks((prev) =>
@@ -217,6 +219,13 @@ export default function WebWorkerMerge() {
       }
     }
   }, [dataSize])
+
+  useEffect(() => {
+    return () => {
+      for (const w of workersRef.current) w.terminate()
+      workersRef.current = []
+    }
+  }, [])
 
   const reset = useCallback(() => {
     setStatus("idle")

@@ -86,7 +86,7 @@ export const useAlertStore = create<AlertState>((set) => ({
           : newTimestamps
 
       return {
-        alerts: [...items, ...state.alerts].slice(0, 200),
+        alerts: [...items, ...state.alerts],
         metrics: {
           ...state.metrics,
           totalReceived: state.metrics.totalReceived + items.length,

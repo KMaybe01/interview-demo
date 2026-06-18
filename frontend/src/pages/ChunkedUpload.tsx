@@ -116,6 +116,16 @@ export default function ChunkedUpload() {
   }, [loadFromStorage])
 
   useEffect(() => {
+    return () => {
+      abortRef.current = true
+      pausedRef.current = false
+      resolvePauseRef.current?.()
+      resolvePauseRef.current = null
+      if (timerRef.current) clearInterval(timerRef.current)
+    }
+  }, [])
+
+  useEffect(() => {
     if (files.length === 0) return
     const f = files[0]
     if (f.status !== "uploading" && f.status !== "paused") return

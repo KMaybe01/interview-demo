@@ -2,7 +2,7 @@ import { App as AntApp, ConfigProvider, Spin } from "antd"
 import { Suspense } from "react"
 import { Route, Routes } from "react-router-dom"
 import MainLayout from "./layouts/MainLayout.tsx"
-import { routes } from "./routes/index.tsx"
+import { routes } from "./routes"
 
 export default function App() {
   return (
