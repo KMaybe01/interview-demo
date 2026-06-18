@@ -92,8 +92,8 @@ export default function AlertWebSocket() {
   const transportRef = useRef<import("../utils/wsTransport.ts").ReconnectingTransport | null>(null)
   const aliveRef = useRef(true)
   const chartActiveRef = useRef(true)
-  const startChartLoopRef = useRef<() => void>(() => {})
-  const stopChartLoopRef = useRef<() => void>(() => {})
+  const startChartLoopRef = useRef<() => void>(() => { /* empty */ })
+  const stopChartLoopRef = useRef<() => void>(() => { /* empty */ })
   const seenRef = useRef<Set<string>>(new Set())
   const bufferRef = useRef<AlertMessage[]>([])
   const rafRef = useRef(0)
@@ -168,7 +168,7 @@ export default function AlertWebSocket() {
         setHeartbeatAlive(alive)
         if (alive && disconnectTimeRef.current > 0) {
           setRecovered(true)
-          setTimeout(() => setRecovered(false), 3000)
+          setTimeout(() => { setRecovered(false); }, 3000)
           disconnectTimeRef.current = 0
         }
       },
@@ -621,7 +621,7 @@ export default function AlertWebSocket() {
             rowHeight={48}
             rowComponent={AlertRow}
             rowProps={{ data: displayAlerts }}
-            style={{ height: 520 }}
+            style={{ height: 350 }}
           />
         )}
       </Card>

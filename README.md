@@ -204,6 +204,7 @@ dist/
 | `/api/sse/logs`        | GET    | SSE 日志流                  |
 | `/api/auth/login`      | POST   | 登录获取双 Token            |
 | `/api/auth/refresh`    | POST   | 轮换 Refresh Token + 返回新双 Token |
+| `/healthz`             | GET    | 健康检查（存活/就绪探针）     |
 | `/api/auth/check`      | GET    | 验证 Access Token 有效性     |
 | `/api/auth/used-tokens`| GET    | 已轮换 Refresh Token 计数   |
 | `/api/schema/validate` | POST   | 后端 Schema + 业务语义校验   |
@@ -336,7 +337,7 @@ helm rollback interview-demo 1 -n interview-demo
 
 | 部署      | 存活探针                      | 就绪探针                      |
 | --------- | ----------------------------- | ----------------------------- |
-| backend   | `GET /api/auth/check` 10s     | `GET /api/auth/check` 5s      |
+| backend   | `GET /healthz` 10s            | `GET /healthz` 5s             |
 | frontend  | `GET /` 10s                   | `GET /` 5s                    |
 
 ## 学习参考指南

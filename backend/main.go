@@ -29,6 +29,9 @@ func main() {
 		api.GET("/upload/sessions", handlers.ListUploadSessions)
 	}
 
+	r.GET("/healthz", func(c *gin.Context) {
+		c.JSON(200, gin.H{"status": "ok"})
+	})
 	r.GET("/ws/alerts", handlers.AlertDispatcher)
 	r.GET("/api/alerts", handlers.AlertDispatcher)
 

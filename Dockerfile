@@ -1,10 +1,10 @@
 # Stage 1: Build frontend
-FROM node:22-alpine AS frontend-builder
+FROM oven/bun:1.3 AS frontend-builder
 WORKDIR /app
-COPY frontend/package*.json ./
-RUN npm ci --legacy-peer-deps
+COPY frontend/package.json frontend/bun.lock ./
+RUN bun install --frozen-lockfile
 COPY frontend/ .
-RUN npm run build
+RUN bun run build
 
 # Stage 2: Build backend
 FROM golang:1.26-alpine AS backend-builder
@@ -24,9 +24,9 @@ HEALTHCHECK --interval=10s --timeout=3s --start-period=5s --retries=3 \
 
 # Stage 4: Backend runtime
 FROM alpine:3.19 AS backend
-RUN apk --no-cache add ca-certificates tzdata
+RUN apk --no-cache add ca-certificates tzdata wget
 COPY --from=backend-builder /server /server
 EXPOSE 8080
 HEALTHCHECK --interval=10s --timeout=3s --start-period=5s --retries=3 \
-  CMD wget -qO- http://localhost:8080/api/auth/check || exit 1
+  CMD wget -qO- http://localhost:8080/healthz || exit 1
 CMD ["/server"]
