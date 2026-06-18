@@ -24,10 +24,10 @@ React 19 + Go 1.26 全栈演示平台，覆盖 12 个高级技术场景（WebSoc
 ```bash
 # 前端开发
 cd frontend
-npm run dev          # Vite 开发服务器 (localhost:5173, /api → :8080)
-npm run build        # tsc -b + vite build
-npm run lint         # Biome 格式化 + 检查
-npm run format       # Biome 格式化
+bun run dev          # Vite 开发服务器 (localhost:5173, /api → :8080)
+bun run build        # tsc -b + vite build
+bun run lint         # Biome 格式化 + 检查
+bun run format       # Biome 格式化
 
 # 后端开发
 cd backend
@@ -258,12 +258,12 @@ export const useXxxStore = create<XxxState>()(
 
 ```bash
 cd frontend
-npm run build          # 必须通过 (tsc -b + vite build)
-npm run lint           # Biome 无 error
+bun run build          # 必须通过 (tsc -b + vite build)
+bun run lint           # Biome 无 error
 ```
 
 - `tsc --noEmit` 做类型检查
-- `npm run build` 做完整构建
+- `bun run build` 做完整构建
 - 所有代码变更后必须跑构建验证
 
 ---

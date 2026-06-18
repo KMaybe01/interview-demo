@@ -145,6 +145,7 @@ export default function GisRendering() {
     return () => {
       map.un("moveend", refreshViewport)
       map.setTarget(undefined)
+      dataCache.current = []
       clusterSourceRef.current = null
       vectorSourceRef.current = null
       mapInstance.current = null
