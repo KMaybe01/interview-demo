@@ -137,7 +137,7 @@ export default function WebWorkerMerge() {
     const pendingJobs: number[] = []
 
     for (let i = 0; i < Math.min(POOL_SIZE, partitions.length); i++) {
-      const worker = new Worker(new URL("../workers/merge.worker.ts", import.meta.url), {
+      const worker = new Worker(new URL("../utils/merge.worker.ts", import.meta.url), {
         type: "module",
       })
       availableWorkers.push(worker)

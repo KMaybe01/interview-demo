@@ -1,7 +1,7 @@
 import { Layout, Menu, Typography } from "antd"
 import { useState } from "react"
 import { Outlet, useLocation, useNavigate } from "react-router-dom"
-import { routes } from "../routes/index.tsx"
+import { routes } from "../routes"
 
 const { Header, Sider, Content } = Layout
 const { Title } = Typography
