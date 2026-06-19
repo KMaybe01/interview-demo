@@ -88,8 +88,10 @@ function MonitorPage({ pageKey, isActive }: { pageKey: string; isActive: boolean
   }, [pageKey, setLoading, updateData, allData, page.data, clearStale])
 
   useEffect(() => {
-    if ((activeRef.current || isStale) && isActive) {
+    const isTtlExpired = page.loadedAt != null && Date.now() - page.loadedAt > 30000
+    if ((activeRef.current || isStale || isTtlExpired) && isActive) {
       setLoading(pageKey, true)
+      if (isTtlExpired) clearStale(pageKey)
       const timer = setTimeout(() => {
         updateData(pageKey, { services: allData })
         clearStale(pageKey)
@@ -99,7 +101,7 @@ function MonitorPage({ pageKey, isActive }: { pageKey: string; isActive: boolean
       }
     }
     activeRef.current = isActive
-  }, [isActive, isStale, pageKey, setLoading, updateData, allData, clearStale])
+  }, [isActive, isStale, pageKey, setLoading, updateData, allData, page.loadedAt, clearStale])
 
   const filtered = useMemo(() => {
     let list = allData
@@ -432,8 +434,10 @@ function LogsPage({ pageKey, isActive }: { pageKey: string; isActive: boolean })
   }, [pageKey, setLoading, updateData, allLogs, page.data, clearStale])
 
   useEffect(() => {
-    if ((activeRef.current || isStale) && isActive) {
+    const isTtlExpired = page.loadedAt != null && Date.now() - page.loadedAt > 30000
+    if ((activeRef.current || isStale || isTtlExpired) && isActive) {
       setLoading(pageKey, true)
+      if (isTtlExpired) clearStale(pageKey)
       const timer = setTimeout(() => {
         updateData(pageKey, { logs: allLogs })
         clearStale(pageKey)
@@ -443,7 +447,7 @@ function LogsPage({ pageKey, isActive }: { pageKey: string; isActive: boolean })
       }
     }
     activeRef.current = isActive
-  }, [isActive, isStale, pageKey, setLoading, updateData, allLogs, clearStale])
+  }, [isActive, isStale, pageKey, setLoading, updateData, allLogs, page.loadedAt, clearStale])
 
   const filtered = useMemo(() => {
     let list = allLogs

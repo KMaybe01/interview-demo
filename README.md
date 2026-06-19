@@ -127,12 +127,12 @@ interview-demo/
 | -- | ------------------- | ------------------------------------------------------------------------ |
 | 1  | 告警 WebSocket      | 多协议传输层 (WebSocket→SSE→Polling 降级) + 手动 Segmented 切换 + 直连后端 + 二进制协议 + 背压控制 + 消息合并 + 心跳保活 + 断线重连 + 消息去重 + RAF 节流 + ECharts 实时趋势 |
 | 2  | JSON Schema 动态表单 | 自定义递归渲染引擎: 条件显隐 / 数组列表 / 自定义/异步校验 / 字段联动 / ajv / 循环检测 / 实时 JSON 编辑与双向同步 |
-| 3  | LRU 路由缓存         | 3 页 Tab 切换 + DOM display:none 保持状态 + LRU 淘汰 + 写后失效缓存一致性 + 过期自动刷新 |
+| 3  | LRU 路由缓存         | 3 页 Tab 切换 + DOM display:none 保持状态 + LRU 淘汰 + staleKeys 写后失效 + activeRef 两阶段 useEffect + 惰性刷新 + 淘汰通知 |
 | 4  | Web Worker 分治合并  | Worker Pool + 自适应分区 + 有序归并缓冲区 + 主线程 Array.sort 对比         |
 | 5  | GIS 十万级点位渲染   | OpenLayers Cluster 聚类 + BBOX 视口剪裁 + dataCache + moveend 惰性刷新   |
-| 6  | 百万行日志流式解密   | 生产/消费模式 + XOR 加解密 + 虚拟滚动                                     |
-| 7  | RBAC 位编码权限      | 位运算权限编码: 6 种权限, 5 个预设角色, 三层联动 (菜单/路由/按钮)           |
-| 8  | 双 Token 无感刷新    | 请求拦截器 + 并发队列锁 + Promise gate + Refresh Token Rotation + Replay 检测 |
+| 6  | 百万行日志流式解密   | 生产/消费模式 + RSA 密钥交换 + AES-256-GCM 解密 + 虚拟滚动                |
+| 7  | RBAC 位编码权限      | 位运算权限编码: 6 种权限 (READ/WRITE/DELETE/EXPORT/IMPORT/ADMIN), 5 个预设角色 (GUEST/EDITOR/MODERATOR/ADMIN/SUPER), 菜单/路由/按钮三层可视化联动 |
+| 8  | 双 Token 无感刷新    | 演示页面: Promise gate + 并发队列 + Refresh Token Rotation + Replay 检测 + Token 生命周期可视化 |
 | 9  | SSE 日志流           | ReadableStream + AbortController + RAF 节流 + 暂停/恢复连接               |
 | 10 | 请求加载 Signal      | Signal 级别请求追踪 + 方法-路径匹配树                                     |
 | 11 | 树形数据操作引擎     | 递归 CRUD + 拖拽排序 + 节点校验 + 批量操作                                |
