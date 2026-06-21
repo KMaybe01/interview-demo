@@ -14,7 +14,8 @@ import {
   Tree,
   Typography,
 } from "antd"
-import { useMemo, useState } from "react"
+import { Spin } from "antd"
+import { useCallback, useEffect, useMemo, useState } from "react"
 import {
   getPermissionsFromCode,
   getRoleName,
@@ -100,6 +101,7 @@ interface RouteRow {
   grantedPerms: PermissionKey[]
   deniedPerms: PermissionKey[]
   accessible: boolean
+  backendAccessible: boolean
 }
 
 interface ButtonRow {
@@ -109,6 +111,7 @@ interface ButtonRow {
   requiredPermissions: PermissionKey[]
   checks: Record<PermissionKey, boolean>
   accessible: boolean
+  backendAccessible: boolean
 }
 
 function flattenWithCodes(
@@ -206,7 +209,7 @@ const ROLES_DATA = Object.entries(Roles).map(([name, code]) => {
 
 const BUTTON_PERMS: PermissionKey[] = ["READ", "WRITE", "DELETE", "ADMIN"]
 
-const ROUTE_COLUMNS: TableColumnsType<RouteRow> = [
+const BASE_ROUTE_COLUMNS: TableColumnsType<RouteRow> = [
   {
     title: "Route",
     dataIndex: "title",
@@ -249,36 +252,9 @@ const ROUTE_COLUMNS: TableColumnsType<RouteRow> = [
       </Space>
     ),
   },
-  {
-    title: "Access",
-    key: "status",
-    align: "center",
-    render: (_: unknown, record: RouteRow) =>
-      record.accessible ? (
-        <Tag icon={<CheckCircleOutlined />} color="success">
-          Enabled
-        </Tag>
-      ) : (
-        <Tag icon={<CloseCircleOutlined />} color="error">
-          Disabled
-        </Tag>
-      ),
-  },
 ]
 
-const PERM_COLUMNS_TABLE = BUTTON_PERMS.map((p) => ({
-  title: p,
-  key: p,
-  align: "center" as const,
-  render: (_: unknown, record: ButtonRow) =>
-    record.checks[p] ? (
-      <CheckCircleOutlined style={{ color: "#52c41a", fontSize: 14 }} />
-    ) : (
-      <CloseCircleOutlined style={{ color: "#ff4d4f", fontSize: 14 }} />
-    ),
-}))
-
-const BUTTON_COLUMNS: TableColumnsType<ButtonRow> = [
+const BASE_BUTTON_COLUMNS: TableColumnsType<ButtonRow> = [
   {
     title: "Action",
     dataIndex: "title",
@@ -297,22 +273,6 @@ const BUTTON_COLUMNS: TableColumnsType<ButtonRow> = [
         ))}
       </Space>
     ),
-  },
-  ...PERM_COLUMNS_TABLE,
-  {
-    title: "Access",
-    key: "status",
-    align: "center",
-    render: (_: unknown, record: ButtonRow) =>
-      record.accessible ? (
-        <Tag icon={<CheckCircleOutlined />} color="success">
-          Enabled
-        </Tag>
-      ) : (
-        <Tag icon={<CloseCircleOutlined />} color="error">
-          Disabled
-        </Tag>
-      ),
   },
 ]
 
@@ -351,8 +311,54 @@ export default function RbacPermission() {
 
   const activePermissions = useMemo(() => getPermissionsFromCode(roleCode), [roleCode])
   const roleName = useMemo(() => getRoleName(roleCode), [roleCode])
-
   const treeData = useMemo(() => buildTreeData(ROOT_NODES, roleCode), [roleCode])
+
+  const [backendResults, setBackendResults] = useState<Record<string, boolean> | null>(null)
+  const [backendLoading, setBackendLoading] = useState(false)
+  const [backendError, setBackendError] = useState<string | null>(null)
+
+  const checkBackend = useCallback(async (code: number) => {
+    setBackendLoading(true)
+    setBackendError(null)
+    try {
+      const nodes = ALL_NODES.map((n) => ({
+        key: n.key,
+        requiredPerms: n.requiredPermissions.map((p) => Permissions[p]),
+      }))
+      const res = await fetch("/api/rbac/check", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ roleCode: code, nodes }),
+      })
+      if (!res.ok) throw new Error(`HTTP ${res.status}`)
+      const json = await res.json()
+      const map: Record<string, boolean> = {}
+      for (const r of json.results) {
+        map[r.key] = r.accessible
+      }
+      setBackendError(null)
+      setBackendResults(map)
+    } catch (e: unknown) {
+      setBackendResults(null)
+      setBackendError(e instanceof Error ? e.message : "Backend check failed")
+    } finally {
+      setBackendLoading(false)
+    }
+  }, [])
+
+  useEffect(() => {
+    checkBackend(roleCode)
+  }, [roleCode, checkBackend])
+
+  const allMatch = useMemo(() => {
+    if (!backendResults) return null
+    for (const node of ALL_NODES) {
+      const frontend = node.requiredPermissions.every((p) => hasPermission(roleCode, Permissions[p]))
+      const backend = backendResults[node.key]
+      if (frontend !== backend) return false
+    }
+    return true
+  }, [backendResults, roleCode])
 
   const routeData: RouteRow[] = useMemo(() => {
     return ALL_NODES.filter((n) => n.depth === 1).map((node) => {
@@ -362,6 +368,7 @@ export default function RbacPermission() {
       const denied = node.requiredPermissions.filter(
         (p) => !hasPermission(roleCode, Permissions[p]),
       )
+      const accessible = denied.length === 0
       return {
         key: node.key,
         title: node.title,
@@ -369,10 +376,11 @@ export default function RbacPermission() {
         requiredPermissions: node.requiredPermissions,
         grantedPerms: granted,
         deniedPerms: denied,
-        accessible: denied.length === 0,
+        accessible,
+        backendAccessible: backendResults?.[node.key] ?? accessible,
       }
     })
-  }, [roleCode])
+  }, [roleCode, backendResults])
 
   const buttonData: ButtonRow[] = useMemo(() => {
     return ALL_NODES.filter((n) => n.depth === 2).map((node) => {
@@ -394,9 +402,87 @@ export default function RbacPermission() {
         requiredPermissions: node.requiredPermissions,
         checks,
         accessible,
+        backendAccessible: backendResults?.[node.key] ?? accessible,
       }
     })
-  }, [roleCode])
+  }, [roleCode, backendResults])
+
+  const routeColumns: TableColumnsType<RouteRow> = useMemo(() => [
+    ...BASE_ROUTE_COLUMNS,
+    {
+      title: "Access",
+      key: "status",
+      align: "center",
+      render: (_: unknown, record: RouteRow) =>
+        record.accessible ? (
+          <Tag icon={<CheckCircleOutlined />} color="success">
+            Enabled
+          </Tag>
+        ) : (
+          <Tag icon={<CloseCircleOutlined />} color="error">
+            Disabled
+          </Tag>
+        ),
+    },
+    {
+      title: "Backend",
+      key: "backend",
+      align: "center",
+      render: (_: unknown, record: RouteRow) =>
+        backendLoading ? (
+          <Spin size="small" />
+        ) : !backendResults ? null : record.accessible === record.backendAccessible ? (
+          <CheckCircleOutlined style={{ color: "#52c41a", fontSize: 14 }} />
+        ) : (
+          <CloseCircleOutlined style={{ color: "#ff4d4f", fontSize: 14 }} />
+        ),
+    },
+  ], [backendLoading, backendResults])
+
+  const permColumnsTable = useMemo(() => BUTTON_PERMS.map((p) => ({
+    title: p,
+    key: p,
+    align: "center" as const,
+    render: (_: unknown, record: ButtonRow) =>
+      record.checks[p] ? (
+        <CheckCircleOutlined style={{ color: "#52c41a", fontSize: 14 }} />
+      ) : (
+        <CloseCircleOutlined style={{ color: "#ff4d4f", fontSize: 14 }} />
+      ),
+  })), [])
+
+  const buttonColumns: TableColumnsType<ButtonRow> = useMemo(() => [
+    ...BASE_BUTTON_COLUMNS,
+    ...permColumnsTable,
+    {
+      title: "Access",
+      key: "status",
+      align: "center",
+      render: (_: unknown, record: ButtonRow) =>
+        record.accessible ? (
+          <Tag icon={<CheckCircleOutlined />} color="success">
+            Enabled
+          </Tag>
+        ) : (
+          <Tag icon={<CloseCircleOutlined />} color="error">
+            Disabled
+          </Tag>
+        ),
+    },
+    {
+      title: "Backend",
+      key: "backend",
+      align: "center",
+      render: (_: unknown, record: ButtonRow) =>
+        backendLoading ? (
+          <Spin size="small" />
+        ) : !backendResults ? null : record.accessible === record.backendAccessible ? (
+          <CheckCircleOutlined style={{ color: "#52c41a", fontSize: 14 }} />
+        ) : (
+          <CloseCircleOutlined style={{ color: "#ff4d4f", fontSize: 14 }} />
+        ),
+    },
+  ], [backendLoading, backendResults, permColumnsTable])
 
   const roleBinary = roleCode.toString(2).padStart(6, "0")
   const roleBits = roleBinary.split("").map((b) => b === "1")
@@ -428,6 +514,17 @@ export default function RbacPermission() {
             <Tag style={{ fontFamily: "monospace" }}>
               0x{roleCode.toString(16).toUpperCase().padStart(2, "0")}
             </Tag>
+          </Space>
+          <Space size={4}>
+            {backendLoading ? (
+              <Spin size="small" />
+            ) : backendError ? (
+              <Tag color="error">{backendError}</Tag>
+            ) : backendResults === null ? null : (
+              <Tag color={allMatch ? "success" : "error"} icon={allMatch ? undefined : undefined}>
+                {allMatch ? "Backend Verified" : "Backend Mismatch"}
+              </Tag>
+            )}
           </Space>
         </Space>
       </Card>
@@ -669,7 +766,7 @@ export default function RbacPermission() {
           >
             <Table
               dataSource={routeData}
-              columns={ROUTE_COLUMNS}
+              columns={routeColumns}
               pagination={false}
               size="small"
               rowKey="key"
@@ -689,7 +786,7 @@ export default function RbacPermission() {
           >
             <Table
               dataSource={buttonData}
-              columns={BUTTON_COLUMNS}
+              columns={buttonColumns}
               pagination={false}
               size="small"
               rowKey="key"

@@ -131,7 +131,7 @@ interview-demo/
 | 4  | Web Worker 分治合并  | Worker Pool + 自适应分区 + 有序归并缓冲区 + 主线程 Array.sort 对比         |
 | 5  | GIS 十万级点位渲染   | OpenLayers Cluster 聚类 + BBOX 视口剪裁 + dataCache + moveend 惰性刷新   |
 | 6  | 百万行日志流式解密   | 生产/消费模式 + RSA 密钥交换 + AES-256-GCM 解密 + 虚拟滚动                |
-| 7  | RBAC 位编码权限      | 位运算权限编码: 6 种权限 (READ/WRITE/DELETE/EXPORT/IMPORT/ADMIN), 5 个预设角色 (GUEST/EDITOR/MODERATOR/ADMIN/SUPER), 菜单/路由/按钮三层可视化联动 |
+| 7  | RBAC 位编码权限      | 位运算权限编码: 6 种权限 (READ/WRITE/DELETE/EXPORT/IMPORT/ADMIN), 5 个预设角色 (GUEST/EDITOR/MODERATOR/ADMIN/SUPER), 菜单/路由/按钮三层可视化联动 + 后端 API(`POST /api/rbac/check`) 双重校验 + 前后端一致性对比列 |
 | 8  | 双 Token 无感刷新    | 演示页面: Promise gate + 并发队列 + Refresh Token Rotation + Replay 检测 + Token 生命周期可视化 |
 | 9  | SSE 日志流           | ReadableStream + AbortController + RAF 节流 + 暂停/恢复连接               |
 | 10 | 请求加载 Signal      | Signal 级别请求追踪 + 方法-路径匹配树                                     |
@@ -212,6 +212,7 @@ dist/
 | `/api/upload/chunk`    | POST   | 上传单个分片 (SHA-256 校验)  |
 | `/api/upload/complete` | POST   | 分片合并 + 完整性验证        |
 | `/api/upload/status/:uploadId` | GET | 查询某个上传的已接收分片列表 |
+| `/api/rbac/check`     | POST   | RBAC 权限后端校验（roleCode + nodes → 逐节点 accessible 结果） |
 | `/api/upload/sessions` | GET    | 列出所有进行中的上传会话      |
 
 ## 代码校验 (GitHub Actions)
