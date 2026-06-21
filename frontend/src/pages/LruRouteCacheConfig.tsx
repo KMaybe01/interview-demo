@@ -1,22 +1,15 @@
 import { ReloadOutlined, SaveOutlined } from "@ant-design/icons"
-import { Button, Checkbox, Col, Input, InputNumber, notification, Row, Select, Spin, Typography } from "antd"
+import { Button, Checkbox, Input, InputNumber, notification, Select, Spin, Typography } from "antd"
 import { useCallback, useEffect, useRef } from "react"
 import { useLruCacheStore } from "../stores/lruRouteStore.ts"
 
 const { Text } = Typography
 
-export default function ConfigPage({
-  pageKey,
-  isActive,
-}: {
-  pageKey: string
-  isActive: boolean
-}) {
+export default function ConfigPage({ pageKey, isActive }: { pageKey: string; isActive: boolean }) {
   const { pages, staleKeys, updateData, setLoading, updateFormValue, invalidateAll, clearStale } =
     useLruCacheStore()
   const page = pages[pageKey]
   const dataLoadedRef = useRef(false)
-  const activeRef = useRef(false)
   const savedRef = useRef(false)
   const isStale = staleKeys.includes(pageKey)
 
@@ -38,11 +31,16 @@ export default function ConfigPage({
   const fetchConfig = useCallback(() => {
     setLoading(pageKey, true)
     clearStale(pageKey)
-    fetch("/api/config")
+    void fetch("/api/config")
       .then((res) => res.json())
       .then((json) => {
-        updateData(pageKey, json)
-        fillFormFromConfig(json)
+        const data = json as Record<string, unknown>
+        updateData(pageKey, data)
+        fillFormFromConfig(
+          data as {
+            config: { clusterName: string; replicas: number; enableTls: boolean; logLevel: string }
+          },
+        )
       })
   }, [pageKey, setLoading, updateData, fillFormFromConfig, clearStale])
 

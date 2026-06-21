@@ -15,13 +15,7 @@ interface ServiceRow {
   p99: number
 }
 
-export default function MonitorPage({
-  pageKey,
-  isActive,
-}: {
-  pageKey: string
-  isActive: boolean
-}) {
+export default function MonitorPage({ pageKey, isActive }: { pageKey: string; isActive: boolean }) {
   const { pages, staleKeys, updateData, setLoading, setScrollTop, updateFormValue, clearStale } =
     useLruCacheStore()
   const page = pages[pageKey]
@@ -43,10 +37,10 @@ export default function MonitorPage({
   const fetchServices = useCallback(() => {
     setLoading(pageKey, true)
     clearStale(pageKey)
-    fetch("/api/services")
+    void fetch("/api/services")
       .then((res) => res.json())
       .then((json) => {
-        updateData(pageKey, json)
+        updateData(pageKey, json as Record<string, unknown>)
       })
   }, [pageKey, setLoading, updateData, clearStale])
 
@@ -66,7 +60,7 @@ export default function MonitorPage({
     }
   }, [isActive, isStale, pageKey, page.loadedAt, fetchServices, clearStale])
 
-  const services = (page.data?.services as ServiceRow[]) ?? []
+  const services = (page.data?.services ?? []) as ServiceRow[]
 
   const filtered = useMemo(() => {
     let list = services

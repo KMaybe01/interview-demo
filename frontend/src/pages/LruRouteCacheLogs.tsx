@@ -20,13 +20,7 @@ const levelColor: Record<string, string> = {
   DEBUG: "#1677ff",
 }
 
-export default function LogsPage({
-  pageKey,
-  isActive,
-}: {
-  pageKey: string
-  isActive: boolean
-}) {
+export default function LogsPage({ pageKey, isActive }: { pageKey: string; isActive: boolean }) {
   const { pages, staleKeys, updateData, setLoading, setScrollTop, updateFormValue, clearStale } =
     useLruCacheStore()
   const page = pages[pageKey]
@@ -47,10 +41,10 @@ export default function LogsPage({
   const fetchLogs = useCallback(() => {
     setLoading(pageKey, true)
     clearStale(pageKey)
-    fetch("/api/logs")
+    void fetch("/api/logs")
       .then((res) => res.json())
       .then((json) => {
-        updateData(pageKey, json)
+        updateData(pageKey, json as Record<string, unknown>)
       })
   }, [pageKey, setLoading, updateData, clearStale])
 
@@ -70,7 +64,7 @@ export default function LogsPage({
     }
   }, [isActive, isStale, pageKey, page.loadedAt, fetchLogs, clearStale])
 
-  const logs = (page.data?.logs as LogEntry[]) ?? []
+  const logs = (page.data?.logs ?? []) as LogEntry[]
 
   const filtered = useMemo(() => {
     let list = logs

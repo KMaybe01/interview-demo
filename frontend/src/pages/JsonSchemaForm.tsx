@@ -12,7 +12,7 @@ import {
   Tag,
   Typography,
 } from "antd"
-import { useCallback, useRef, useState } from "react"
+import { useCallback, useMemo, useRef, useState } from "react"
 import DynamicForm, { type DynamicFormHandle } from "../components/dynamic-form/DynamicForm.tsx"
 import ArrayField from "../components/dynamic-form/fields/ArrayField.tsx"
 import DateTimeField from "../components/dynamic-form/fields/DateTimeField.tsx"
@@ -375,6 +375,14 @@ export default function JsonSchemaFormPage() {
   const [backendErrors, setBackendErrors] = useState<Record<string, string>>({})
   const formRef = useRef<DynamicFormHandle>(null)
   const [liveData, setLiveData] = useState<Record<string, unknown>>(initialData)
+  const debounceRef = useRef<ReturnType<typeof setTimeout>>(undefined)
+  const handleFormChange = useCallback((data: Record<string, unknown>) => {
+    if (debounceRef.current) clearTimeout(debounceRef.current)
+    debounceRef.current = setTimeout(() => {
+      setLiveData(data)
+    }, 150)
+  }, [])
+  const liveDataJson = useMemo(() => JSON.stringify(liveData, null, 2), [liveData])
   const [jsonEditing, setJsonEditing] = useState(false)
   const [editJsonText, setEditJsonText] = useState("")
   const [activeTab, setActiveTab] = useState("form")
@@ -471,13 +479,13 @@ export default function JsonSchemaFormPage() {
               initialData={initialData}
               onBackendValidate={handleBackendValidate}
               onSubmit={handleSubmit}
-              onChange={setLiveData}
+              onChange={handleFormChange}
               backendErrors={Object.keys(backendErrors).length > 0 ? backendErrors : undefined}
             />
           </Card>
         </Col>
         <Col xs={24} lg={10}>
-          <Card size="small" styles={{ body: { padding: 0 } }}>
+          <Card size="small">
             <Tabs
               activeKey={activeTab}
               onChange={setActiveTab}
@@ -637,7 +645,9 @@ export default function JsonSchemaFormPage() {
                         {jsonEditing ? (
                           <Input.TextArea
                             value={editJsonText}
-                            onChange={(e) => setEditJsonText(e.target.value)}
+                            onChange={(e) => {
+                              setEditJsonText(e.target.value)
+                            }}
                             rows={20}
                             style={{
                               fontFamily: "'Courier New', monospace",
@@ -655,7 +665,7 @@ export default function JsonSchemaFormPage() {
                               margin: 0,
                             }}
                           >
-                            {JSON.stringify(liveData, null, 2)}
+                            {liveDataJson}
                           </pre>
                         )}
                       </div>

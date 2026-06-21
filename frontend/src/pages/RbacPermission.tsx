@@ -1,20 +1,12 @@
-import { CheckCircleOutlined, CloseCircleOutlined, LockOutlined } from "@ant-design/icons"
-import type { TableColumnsType } from "antd"
 import {
-  Badge,
-  Card,
-  Col,
-  Collapse,
-  Descriptions,
-  Row,
-  Select,
-  Space,
-  Table,
-  Tag,
-  Tree,
-  Typography,
-} from "antd"
-import { Spin } from "antd"
+  CheckCircleOutlined,
+  CloseCircleOutlined,
+  DownOutlined,
+  LockOutlined,
+  RightOutlined,
+} from "@ant-design/icons"
+import type { TableColumnsType } from "antd"
+import { Badge, Card, Descriptions, Select, Space, Spin, Table, Tag, Tree, Typography } from "antd"
 import { useCallback, useEffect, useMemo, useState } from "react"
 import {
   getPermissionsFromCode,
@@ -316,6 +308,11 @@ export default function RbacPermission() {
   const [backendResults, setBackendResults] = useState<Record<string, boolean> | null>(null)
   const [backendLoading, setBackendLoading] = useState(false)
   const [backendError, setBackendError] = useState<string | null>(null)
+  const [collapsed, setCollapsed] = useState<Record<string, boolean>>({})
+
+  const toggleCollapse = useCallback((key: string) => {
+    setCollapsed((prev) => ({ ...prev, [key]: !prev[key] }))
+  }, [])
 
   const checkBackend = useCallback(async (code: number) => {
     setBackendLoading(true)
@@ -330,8 +327,8 @@ export default function RbacPermission() {
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify({ roleCode: code, nodes }),
       })
-      if (!res.ok) throw new Error(`HTTP ${res.status}`)
-      const json = await res.json()
+      if (!res.ok) throw new Error(`HTTP ${String(res.status)}`)
+      const json = (await res.json()) as { results: { key: string; accessible: boolean }[] }
       const map: Record<string, boolean> = {}
       for (const r of json.results) {
         map[r.key] = r.accessible
@@ -347,13 +344,15 @@ export default function RbacPermission() {
   }, [])
 
   useEffect(() => {
-    checkBackend(roleCode)
+    void checkBackend(roleCode)
   }, [roleCode, checkBackend])
 
   const allMatch = useMemo(() => {
     if (!backendResults) return null
     for (const node of ALL_NODES) {
-      const frontend = node.requiredPermissions.every((p) => hasPermission(roleCode, Permissions[p]))
+      const frontend = node.requiredPermissions.every((p) =>
+        hasPermission(roleCode, Permissions[p]),
+      )
       const backend = backendResults[node.key]
       if (frontend !== backend) return false
     }
@@ -361,7 +360,7 @@ export default function RbacPermission() {
   }, [backendResults, roleCode])
 
   const routeData: RouteRow[] = useMemo(() => {
-    return ALL_NODES.filter((n) => n.depth === 1).map((node) => {
+    return ALL_NODES.filter((n) => n.depth === 1).map(({ children: _, ...node }) => {
       const granted = node.requiredPermissions.filter((p) =>
         hasPermission(roleCode, Permissions[p]),
       )
@@ -383,7 +382,7 @@ export default function RbacPermission() {
   }, [roleCode, backendResults])
 
   const buttonData: ButtonRow[] = useMemo(() => {
-    return ALL_NODES.filter((n) => n.depth === 2).map((node) => {
+    return ALL_NODES.filter((n) => n.depth === 2).map(({ children: _, ...node }) => {
       const checks: Record<PermissionKey, boolean> = {
         READ: hasPermission(roleCode, Permissions.READ),
         WRITE: hasPermission(roleCode, Permissions.WRITE),
@@ -407,90 +406,100 @@ export default function RbacPermission() {
     })
   }, [roleCode, backendResults])
 
-  const routeColumns: TableColumnsType<RouteRow> = useMemo(() => [
-    ...BASE_ROUTE_COLUMNS,
-    {
-      title: "Access",
-      key: "status",
-      align: "center",
-      render: (_: unknown, record: RouteRow) =>
-        record.accessible ? (
-          <Tag icon={<CheckCircleOutlined />} color="success">
-            Enabled
-          </Tag>
-        ) : (
-          <Tag icon={<CloseCircleOutlined />} color="error">
-            Disabled
-          </Tag>
-        ),
-    },
-    {
-      title: "Backend",
-      key: "backend",
-      align: "center",
-      render: (_: unknown, record: RouteRow) =>
-        backendLoading ? (
-          <Spin size="small" />
-        ) : !backendResults ? null : record.accessible === record.backendAccessible ? (
-          <CheckCircleOutlined style={{ color: "#52c41a", fontSize: 14 }} />
-        ) : (
-          <CloseCircleOutlined style={{ color: "#ff4d4f", fontSize: 14 }} />
-        ),
-    },
-  ], [backendLoading, backendResults])
+  const routeColumns: TableColumnsType<RouteRow> = useMemo(
+    () => [
+      ...BASE_ROUTE_COLUMNS,
+      {
+        title: "Access",
+        key: "status",
+        align: "center",
+        render: (_: unknown, record: RouteRow) =>
+          record.accessible ? (
+            <Tag icon={<CheckCircleOutlined />} color="success">
+              Enabled
+            </Tag>
+          ) : (
+            <Tag icon={<CloseCircleOutlined />} color="error">
+              Disabled
+            </Tag>
+          ),
+      },
+      {
+        title: "Backend",
+        key: "backend",
+        align: "center",
+        render: (_: unknown, record: RouteRow) =>
+          backendLoading ? (
+            <Spin size="small" />
+          ) : !backendResults ? null : record.accessible === record.backendAccessible ? (
+            <CheckCircleOutlined style={{ color: "#52c41a", fontSize: 14 }} />
+          ) : (
+            <CloseCircleOutlined style={{ color: "#ff4d4f", fontSize: 14 }} />
+          ),
+      },
+    ],
+    [backendLoading, backendResults],
+  )
 
-  const permColumnsTable = useMemo(() => BUTTON_PERMS.map((p) => ({
-    title: p,
-    key: p,
-    align: "center" as const,
-    render: (_: unknown, record: ButtonRow) =>
-      record.checks[p] ? (
-        <CheckCircleOutlined style={{ color: "#52c41a", fontSize: 14 }} />
-      ) : (
-        <CloseCircleOutlined style={{ color: "#ff4d4f", fontSize: 14 }} />
-      ),
-  })), [])
+  const permColumnsTable = useMemo(
+    () =>
+      BUTTON_PERMS.map((p) => ({
+        title: p,
+        key: p,
+        align: "center" as const,
+        render: (_: unknown, record: ButtonRow) =>
+          record.checks[p] ? (
+            <CheckCircleOutlined style={{ color: "#52c41a", fontSize: 14 }} />
+          ) : (
+            <CloseCircleOutlined style={{ color: "#ff4d4f", fontSize: 14 }} />
+          ),
+      })),
+    [],
+  )
 
-  const buttonColumns: TableColumnsType<ButtonRow> = useMemo(() => [
-    ...BASE_BUTTON_COLUMNS,
-    ...permColumnsTable,
-    {
-      title: "Access",
-      key: "status",
-      align: "center",
-      render: (_: unknown, record: ButtonRow) =>
-        record.accessible ? (
-          <Tag icon={<CheckCircleOutlined />} color="success">
-            Enabled
-          </Tag>
-        ) : (
-          <Tag icon={<CloseCircleOutlined />} color="error">
-            Disabled
-          </Tag>
-        ),
-    },
-    {
-      title: "Backend",
-      key: "backend",
-      align: "center",
-      render: (_: unknown, record: ButtonRow) =>
-        backendLoading ? (
-          <Spin size="small" />
-        ) : !backendResults ? null : record.accessible === record.backendAccessible ? (
-          <CheckCircleOutlined style={{ color: "#52c41a", fontSize: 14 }} />
-        ) : (
-          <CloseCircleOutlined style={{ color: "#ff4d4f", fontSize: 14 }} />
-        ),
-    },
-  ], [backendLoading, backendResults, permColumnsTable])
+  const buttonColumns: TableColumnsType<ButtonRow> = useMemo(
+    () => [
+      ...BASE_BUTTON_COLUMNS,
+      ...permColumnsTable,
+      {
+        title: "Access",
+        key: "status",
+        align: "center",
+        render: (_: unknown, record: ButtonRow) =>
+          record.accessible ? (
+            <Tag icon={<CheckCircleOutlined />} color="success">
+              Enabled
+            </Tag>
+          ) : (
+            <Tag icon={<CloseCircleOutlined />} color="error">
+              Disabled
+            </Tag>
+          ),
+      },
+      {
+        title: "Backend",
+        key: "backend",
+        align: "center",
+        render: (_: unknown, record: ButtonRow) =>
+          backendLoading ? (
+            <Spin size="small" />
+          ) : !backendResults ? null : record.accessible === record.backendAccessible ? (
+            <CheckCircleOutlined style={{ color: "#52c41a", fontSize: 14 }} />
+          ) : (
+            <CloseCircleOutlined style={{ color: "#ff4d4f", fontSize: 14 }} />
+          ),
+      },
+    ],
+    [backendLoading, backendResults, permColumnsTable],
+  )
 
   const roleBinary = roleCode.toString(2).padStart(6, "0")
   const roleBits = roleBinary.split("").map((b) => b === "1")
 
   return (
-    <div style={{ display: "flex", flexDirection: "column", gap: 16 }}>
+    <div style={{ display: "flex", flexDirection: "column", gap: 16, width: "100%" }}>
       {/* Role selector */}
-      <Card>
+      <Card size="small" style={{ width: "100%" }}>
         <Space>
           <LockOutlined />
           <Text strong>Role Preset:</Text>
@@ -520,7 +529,7 @@ export default function RbacPermission() {
               <Spin size="small" />
             ) : backendError ? (
               <Tag color="error">{backendError}</Tag>
-            ) : backendResults === null ? null : (
+            ) : backendResults == null ? null : (
               <Tag color={allMatch ? "success" : "error"} icon={allMatch ? undefined : undefined}>
                 {allMatch ? "Backend Verified" : "Backend Mismatch"}
               </Tag>
@@ -530,240 +539,285 @@ export default function RbacPermission() {
       </Card>
 
       {/* Data source panel */}
-      <Collapse
-        ghost
-        expandIconPlacement="end"
-        items={[
-          {
-            key: "datasource",
-            label: (
-              <Space>
-                <Text strong>Data Source</Text>
-                <Tag>Bit Encoding</Tag>
-              </Space>
-            ),
-            children: (
-              <div style={{ display: "flex", flexDirection: "column", gap: 16, paddingTop: 8 }}>
-                {/* Principle explanation */}
-                <Card
-                  size="small"
-                  title={<Text strong>Principle: Bitwise Permission Encoding</Text>}
-                >
-                  <div style={{ display: "flex", flexDirection: "column", gap: 12 }}>
-                    <Text>
-                      Each permission is assigned to a unique <Text code>bit position</Text> in an
-                      integer. A role&apos;s permissions are stored as a single{" "}
-                      <Text code>bitmask</Text> — an integer where each <Text code>1</Text> bit
-                      means that permission is granted, and <Text code>0</Text> means denied.
-                    </Text>
-                    <div style={{ display: "flex", gap: 24, flexWrap: "wrap" }}>
-                      <div>
-                        <Text strong style={{ fontSize: 13 }}>
-                          ① Permission → Bit
-                        </Text>
-                        <div
-                          style={{
-                            fontFamily: "monospace",
-                            fontSize: 12,
-                            lineHeight: 2,
-                            marginTop: 4,
-                          }}
-                        >
-                          <div>READ = 1 {"<<"} 0 = 0b000001</div>
-                          <div>WRITE = 1 {"<<"} 1 = 0b000010</div>
-                          <div>DELETE = 1 {"<<"} 2 = 0b000100</div>
-                          <div>EXPORT = 1 {"<<"} 3 = 0b001000</div>
-                          <div>IMPORT = 1 {"<<"} 4 = 0b010000</div>
-                          <div>ADMIN = 1 {"<<"} 5 = 0b100000</div>
-                        </div>
-                      </div>
-                      <div>
-                        <Text strong style={{ fontSize: 13 }}>
-                          ② Role → Bitmask (OR)
-                        </Text>
-                        <div
-                          style={{
-                            fontFamily: "monospace",
-                            fontSize: 12,
-                            lineHeight: 2,
-                            marginTop: 4,
-                          }}
-                        >
-                          <div>GUEST = READ = 0b000001</div>
-                          <div>EDITOR = READ | WRITE = 0b000011</div>
-                          <div>MODERATOR= READ | WRITE | DELETE = 0b000111</div>
-                          <div>ADMIN = READ | WRITE | DELETE | ADMIN = 0b100111</div>
-                          <div>SUPER = ALL 6 bits = 0b111111</div>
-                        </div>
-                      </div>
-                      <div>
-                        <Text strong style={{ fontSize: 13 }}>
-                          ③ Check → AND
-                        </Text>
-                        <div
-                          style={{
-                            fontFamily: "monospace",
-                            fontSize: 12,
-                            lineHeight: 2,
-                            marginTop: 4,
-                          }}
-                        >
-                          <div>{"hasPermission(code, perm)"}</div>
-                          <div style={{ color: "#888" }}>{"// (code & perm) === perm"}</div>
-                          <div> </div>
-                          <div>EDITOR & DELETE</div>
-                          <div>{"= 0b000011 & 0b000100"}</div>
-                          <div>{"= 0b000000 !== DELETE"}</div>
-                          <div style={{ color: "#ff4d4f" }}>→ false (denied)</div>
-                        </div>
-                      </div>
+      <Card
+        size="small"
+        style={{ width: "100%" }}
+        title={
+          <button
+            type="button"
+            style={{
+              cursor: "pointer",
+              userSelect: "none",
+              background: "none",
+              border: "none",
+              padding: 0,
+              color: "inherit",
+              fontSize: "inherit",
+            }}
+            onClick={() => {
+              toggleCollapse("datasource")
+            }}
+          >
+            <Space>
+              {collapsed.datasource ? <RightOutlined /> : <DownOutlined />}
+              <Text strong>DataSource</Text>
+              <Tag>位编码</Tag>
+            </Space>
+          </button>
+        }
+      >
+        {!collapsed.datasource && (
+          <div style={{ display: "flex", flexDirection: "column", gap: 16 }}>
+            {/* Principle explanation */}
+            <div style={{ display: "flex", flexDirection: "column", gap: 12 }}>
+              <Text>
+                每个权限被分配到一个唯一的 <Text code>位</Text>。角色的权限存储为单个
+                <Text code>位掩码</Text>，其中每个 <Text code>1</Text> 表示该权限已授予，
+                <Text code>0</Text> 表示拒绝。
+              </Text>
+              <div style={{ display: "flex", gap: 24, flexWrap: "wrap" }}>
+                <div>
+                  <Text strong style={{ fontSize: 13 }}>
+                    ① 权限 → 位
+                  </Text>
+                  <div
+                    style={{
+                      fontFamily: "monospace",
+                      fontSize: 12,
+                      lineHeight: 2,
+                      marginTop: 4,
+                    }}
+                  >
+                    <div>READ = 1 {"<<"} 0 = 0b000001</div>
+                    <div>WRITE = 1 {"<<"} 1 = 0b000010</div>
+                    <div>DELETE = 1 {"<<"} 2 = 0b000100</div>
+                    <div>EXPORT = 1 {"<<"} 3 = 0b001000</div>
+                    <div>IMPORT = 1 {"<<"} 4 = 0b010000</div>
+                    <div>ADMIN = 1 {"<<"} 5 = 0b100000</div>
+                  </div>
+                </div>
+                <div>
+                  <Text strong style={{ fontSize: 13 }}>
+                    ② 角色 → 位掩码（或）
+                  </Text>
+                  <div
+                    style={{
+                      fontFamily: "monospace",
+                      fontSize: 12,
+                      lineHeight: 2,
+                      marginTop: 4,
+                    }}
+                  >
+                    <div>GUEST = READ = 0b000001</div>
+                    <div>EDITOR = READ | WRITE = 0b000011</div>
+                    <div>MODERATOR= READ | WRITE | DELETE = 0b000111</div>
+                    <div>ADMIN = READ | WRITE | DELETE | ADMIN = 0b100111</div>
+                    <div>SUPER = 全部 6 位 = 0b111111</div>
+                  </div>
+                </div>
+                <div>
+                  <Text strong style={{ fontSize: 13 }}>
+                    ③ 校验 → 与
+                  </Text>
+                  <div
+                    style={{
+                      fontFamily: "monospace",
+                      fontSize: 12,
+                      lineHeight: 2,
+                      marginTop: 4,
+                    }}
+                  >
+                    <div>{"hasPermission(code, perm)"}</div>
+                    <div style={{ color: "#888" }}>
+                      {"// (code & perm) === perm  // 检查是否包含"}
                     </div>
+                    <div> </div>
+                    <div>EDITOR & DELETE</div>
+                    <div>{"= 0b000011 & 0b000100"}</div>
+                    <div>{"= 0b000000 !== DELETE"}</div>
+                    <div style={{ color: "#ff4d4f" }}>→ false（拒绝）</div>
+                  </div>
+                </div>
+              </div>
+              <div
+                style={{
+                  backgroundColor: "#f6f8fa",
+                  padding: "8px 12px",
+                  borderRadius: 6,
+                  fontSize: 13,
+                }}
+              >
+                <Text type="secondary">
+                  <Text strong>为什么用位编码？</Text>{" "}
+                  用一个整数替代了整个权限集合。权限校验只需要一条 CPU 指令 (<Text code>AND</Text>)
+                  — O(1)，无需遍历。添加/删除权限使用
+                  <Text code>OR</Text> / <Text code>AND NOT</Text>。
+                  整个权限系统仅需一个数据库列即可存储（INTEGER）。
+                </Text>
+              </div>
+            </div>
+
+            {/* Permission bit positions */}
+            <Card size="small" style={{ width: "100%" }}>
+              <Descriptions title="权限位位置" column={3} size="small" bordered>
+                {PERM_BIT_POSITIONS.map(([key, val, bit]) => (
+                  <Descriptions.Item key={key} label={<Tag color={PERM_COLORS[key]}>{key}</Tag>}>
+                    <Text code>
+                      位 {bit} = {val}
+                    </Text>
+                  </Descriptions.Item>
+                ))}
+              </Descriptions>
+            </Card>
+
+            {/* Role definitions */}
+            <Card size="small" style={{ width: "100%" }}>
+              <Descriptions title="角色定义（位掩码）" column={3} size="small" bordered>
+                {ROLES_DATA.map((r) => (
+                  <Descriptions.Item key={r.name} label={r.name}>
+                    <Space>
+                      <Tag style={{ fontFamily: "monospace" }}>0b{r.binary}</Tag>
+                      <Text code>0x{r.code.toString(16).toUpperCase().padStart(2, "0")}</Text>
+                      <Text type="secondary">
+                        {r.perms.map((p) => PERMISSION_LABELS[p]).join(", ") || "None"}
+                      </Text>
+                    </Space>
+                  </Descriptions.Item>
+                ))}
+              </Descriptions>
+            </Card>
+
+            {/* Current role bit visualization */}
+            <div style={{ display: "flex", gap: 8, alignItems: "center", flexWrap: "wrap" }}>
+              {(Object.entries(Permissions) as [PermissionKey, number][])
+                .sort(([, a], [, b]) => a - b)
+                .map(([key, val], i) => {
+                  const granted = hasPermission(roleCode, val)
+                  return (
                     <div
+                      key={key}
                       style={{
-                        backgroundColor: "#f6f8fa",
-                        padding: "8px 12px",
-                        borderRadius: 6,
-                        fontSize: 13,
+                        display: "flex",
+                        flexDirection: "column",
+                        alignItems: "center",
+                        gap: 4,
                       }}
                     >
-                      <Text type="secondary">
-                        <Text strong>Why bit encoding?</Text> A single integer replaces an entire
-                        set/list of permission strings. Checking ANY permission is a single CPU
-                        instruction (<Text code>AND</Text>) — O(1), no iteration. Adding/removing
-                        permissions uses <Text code>OR</Text> / <Text code>AND NOT</Text>. The
-                        entire permission system fits in one database column (INTEGER).
+                      <Tag color={PERM_COLORS[key]}>{key}</Tag>
+                      <div
+                        style={{
+                          width: 40,
+                          height: 40,
+                          borderRadius: 6,
+                          display: "flex",
+                          alignItems: "center",
+                          justifyContent: "center",
+                          fontSize: 18,
+                          fontWeight: 700,
+                          fontFamily: "monospace",
+                          backgroundColor: granted ? "#f6ffed" : "#fff2f0",
+                          border: `2px solid ${granted ? "#52c41a" : "#ff4d4f"}`,
+                          color: granted ? "#52c41a" : "#ff4d4f",
+                        }}
+                      >
+                        {roleBits[i] ? "1" : "0"}
+                      </div>
+                      <Text type="secondary" style={{ fontSize: 11 }}>
+                        Bit {i}
                       </Text>
                     </div>
-                  </div>
-                </Card>
-
-                {/* Permission bit positions */}
-                <Descriptions title="Permission Bit Positions" column={3} size="small" bordered>
-                  {PERM_BIT_POSITIONS.map(([key, val, bit]) => (
-                    <Descriptions.Item key={key} label={<Tag color={PERM_COLORS[key]}>{key}</Tag>}>
-                      <Text code>
-                        Bit {bit} = {val}
-                      </Text>
-                    </Descriptions.Item>
-                  ))}
-                </Descriptions>
-
-                {/* Role definitions */}
-                <Descriptions title="Role Definitions (Bitmask)" column={3} size="small" bordered>
-                  {ROLES_DATA.map((r) => (
-                    <Descriptions.Item key={r.name} label={r.name}>
-                      <Space>
-                        <Tag style={{ fontFamily: "monospace" }}>0b{r.binary}</Tag>
-                        <Text code>0x{r.code.toString(16).toUpperCase().padStart(2, "0")}</Text>
-                        <Text type="secondary">
-                          {r.perms.map((p) => PERMISSION_LABELS[p]).join(", ") || "None"}
-                        </Text>
-                      </Space>
-                    </Descriptions.Item>
-                  ))}
-                </Descriptions>
-
-                {/* Current role bit visualization */}
-                <Card size="small" title={<Text strong>Current Bitmask: {roleName}</Text>}>
-                  <div style={{ display: "flex", gap: 8, alignItems: "center", flexWrap: "wrap" }}>
-                    {(Object.entries(Permissions) as [PermissionKey, number][])
-                      .sort(([, a], [, b]) => a - b)
-                      .map(([key, val], i) => {
-                        const granted = hasPermission(roleCode, val)
-                        return (
-                          <div
-                            key={key}
-                            style={{
-                              display: "flex",
-                              flexDirection: "column",
-                              alignItems: "center",
-                              gap: 4,
-                            }}
-                          >
-                            <Tag color={PERM_COLORS[key]}>{key}</Tag>
-                            <div
-                              style={{
-                                width: 40,
-                                height: 40,
-                                borderRadius: 6,
-                                display: "flex",
-                                alignItems: "center",
-                                justifyContent: "center",
-                                fontSize: 18,
-                                fontWeight: 700,
-                                fontFamily: "monospace",
-                                backgroundColor: granted ? "#f6ffed" : "#fff2f0",
-                                border: `2px solid ${granted ? "#52c41a" : "#ff4d4f"}`,
-                                color: granted ? "#52c41a" : "#ff4d4f",
-                              }}
-                            >
-                              {roleBits[i] ? "1" : "0"}
-                            </div>
-                            <Text type="secondary" style={{ fontSize: 11 }}>
-                              Bit {i}
-                            </Text>
-                          </div>
-                        )
-                      })}
-                    <div style={{ marginLeft: 16 }}>
-                      <div style={{ fontFamily: "monospace", fontSize: 13, lineHeight: 1.8 }}>
-                        <Text type="secondary">Bin: </Text>
-                        <Text code>0b{roleBinary}</Text>
-                      </div>
-                      <div style={{ fontFamily: "monospace", fontSize: 13, lineHeight: 1.8 }}>
-                        <Text type="secondary">Hex: </Text>
-                        <Text code>0x{roleCode.toString(16).toUpperCase().padStart(2, "0")}</Text>
-                      </div>
-                      <div style={{ fontFamily: "monospace", fontSize: 13, lineHeight: 1.8 }}>
-                        <Text type="secondary">Dec: </Text>
-                        <Text code>{roleCode}</Text>
-                      </div>
-                    </div>
-                  </div>
-                </Card>
-
-                {/* Flattened node table */}
-                <Card size="small" title={<Text strong>Flattened Permission Nodes</Text>}>
-                  <Table
-                    dataSource={ALL_NODES}
-                    columns={DATA_SOURCE_NODE_COLUMNS}
-                    pagination={false}
-                    size="small"
-                    rowKey="key"
-                    scroll={{ x: "max-content" }}
-                  />
-                </Card>
+                  )
+                })}
+              <div style={{ marginLeft: 16 }}>
+                <div style={{ fontFamily: "monospace", fontSize: 13, lineHeight: 1.8 }}>
+                  <Text type="secondary">Bin: </Text>
+                  <Text code>0b{roleBinary}</Text>
+                </div>
+                <div style={{ fontFamily: "monospace", fontSize: 13, lineHeight: 1.8 }}>
+                  <Text type="secondary">Hex: </Text>
+                  <Text code>0x{roleCode.toString(16).toUpperCase().padStart(2, "0")}</Text>
+                </div>
+                <div style={{ fontFamily: "monospace", fontSize: 13, lineHeight: 1.8 }}>
+                  <Text type="secondary">Dec: </Text>
+                  <Text code>{roleCode}</Text>
+                </div>
               </div>
-            ),
-          },
-        ]}
-      />
+            </div>
+
+            {/* Flattened node table */}
+            <Table
+              dataSource={ALL_NODES.map(({ children: _, ...n }) => n)}
+              columns={DATA_SOURCE_NODE_COLUMNS}
+              pagination={false}
+              size="small"
+              rowKey="key"
+              scroll={{ x: "max-content" }}
+            />
+          </div>
+        )}
+      </Card>
 
       {/* Three-layer view */}
-      <Row gutter={16}>
-        <Col span={8}>
-          <Card
-            title={
+      <div style={{ display: "flex", flexDirection: "column", gap: 16, width: "100%" }}>
+        <Card
+          size="small"
+          style={{ width: "100%" }}
+          title={
+            <button
+              type="button"
+              style={{
+                cursor: "pointer",
+                userSelect: "none",
+                background: "none",
+                border: "none",
+                padding: 0,
+                color: "inherit",
+                fontSize: "inherit",
+              }}
+              onClick={() => {
+                toggleCollapse("menu")
+              }}
+            >
               <Space>
+                {collapsed.menu ? <RightOutlined /> : <DownOutlined />}
                 <Text strong>Menu Layer</Text>
                 <Tag>Hierarchy</Tag>
               </Space>
-            }
-            size="small"
-          >
+            </button>
+          }
+        >
+          {!collapsed.menu && (
             <Tree treeData={treeData} defaultExpandAll showIcon selectable={false} />
-          </Card>
-        </Col>
-        <Col span={8}>
-          <Card
-            title={
+          )}
+        </Card>
+        <Card
+          size="small"
+          style={{ width: "100%" }}
+          title={
+            <button
+              type="button"
+              style={{
+                cursor: "pointer",
+                userSelect: "none",
+                background: "none",
+                border: "none",
+                padding: 0,
+                color: "inherit",
+                fontSize: "inherit",
+              }}
+              onClick={() => {
+                toggleCollapse("route")
+              }}
+            >
               <Space>
+                {collapsed.route ? <RightOutlined /> : <DownOutlined />}
                 <Text strong>Route Layer</Text>
                 <Tag>canAccess</Tag>
               </Space>
-            }
-            size="small"
-          >
+            </button>
+          }
+        >
+          {!collapsed.route && (
             <Table
               dataSource={routeData}
               columns={routeColumns}
@@ -772,18 +826,36 @@ export default function RbacPermission() {
               rowKey="key"
               scroll={{ x: "max-content" }}
             />
-          </Card>
-        </Col>
-        <Col span={8}>
-          <Card
-            title={
+          )}
+        </Card>
+        <Card
+          size="small"
+          style={{ width: "100%" }}
+          title={
+            <button
+              type="button"
+              style={{
+                cursor: "pointer",
+                userSelect: "none",
+                background: "none",
+                border: "none",
+                padding: 0,
+                color: "inherit",
+                fontSize: "inherit",
+              }}
+              onClick={() => {
+                toggleCollapse("button")
+              }}
+            >
               <Space>
+                {collapsed.button ? <RightOutlined /> : <DownOutlined />}
                 <Text strong>Button Layer</Text>
                 <Tag>Actions</Tag>
               </Space>
-            }
-            size="small"
-          >
+            </button>
+          }
+        >
+          {!collapsed.button && (
             <Table
               dataSource={buttonData}
               columns={buttonColumns}
@@ -792,9 +864,9 @@ export default function RbacPermission() {
               rowKey="key"
               scroll={{ x: "max-content" }}
             />
-          </Card>
-        </Col>
-      </Row>
+          )}
+        </Card>
+      </div>
     </div>
   )
 }

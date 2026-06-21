@@ -31,6 +31,13 @@ func main() {
 		api.GET("/services", handlers.GetServices)
 		api.GET("/config", handlers.GetConfig)
 		api.GET("/logs", handlers.GetLogs)
+		api.POST("/vitals/report", handlers.ReportVitals)
+		api.GET("/vitals/summary", handlers.GetVitalsSummary)
+		api.GET("/vitals/history", handlers.GetVitalsHistory)
+		api.POST("/vitals/page-report", handlers.ReportPage)
+		api.GET("/vitals/pages", handlers.GetPageSummary)
+		api.GET("/vitals/page-history", handlers.GetPageHistory)
+		api.GET("/request-loading/demo", handlers.DemoRequest)
 	}
 
 	r.GET("/healthz", func(c *gin.Context) {

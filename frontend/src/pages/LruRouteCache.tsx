@@ -1,6 +1,5 @@
 import { CloseOutlined, ReloadOutlined } from "@ant-design/icons"
-import { Badge, Button, Card, Space, Spin, Tag, Typography } from "antd"
-import { notification } from "antd"
+import { Badge, Button, Card, notification, Space, Spin, Tag, Typography } from "antd"
 import type { ReactElement } from "react"
 import { useCallback, useEffect, useState } from "react"
 import { useLruCacheStore } from "../stores/lruRouteStore.ts"
@@ -46,7 +45,9 @@ function CacheCountdown({ loadedAt }: { loadedAt: number | null }) {
 
     tick()
     const id = setInterval(tick, 1000)
-    return () => clearInterval(id)
+    return () => {
+      clearInterval(id)
+    }
   }, [loadedAt])
 
   if (loadedAt == null || remaining <= 0) return null

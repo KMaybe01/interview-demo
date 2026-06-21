@@ -19,6 +19,7 @@ import {
   Typography,
 } from "antd"
 import { useCallback, useEffect, useRef, useState } from "react"
+import { http } from "../utils/fetchClient.ts"
 import {
   clearTokens,
   getAccessToken,
@@ -61,7 +62,11 @@ export default function TokenRefresh() {
   const tokenIdRef = useRef(0)
 
   const addLog = useCallback((msg: string) => {
-    setLog((prev) => [...prev, `[${new Date().toLocaleTimeString()}] ${msg}`])
+    const entry = `[${new Date().toLocaleTimeString()}] ${msg}`
+    setLog((prev) => {
+      const next = [...prev, entry]
+      return next.length > 150 ? next.slice(-100) : next
+    })
   }, [])
 
   const addTokenRecord = useCallback(
@@ -97,11 +102,11 @@ export default function TokenRefresh() {
 
     addLog("🔄 POST /api/auth/refresh — 携带 Refresh Token 请求轮换...")
 
-    const res = await fetch("/api/auth/refresh", {
-      method: "POST",
-      headers: { "Content-Type": "application/json" },
-      body: JSON.stringify({ refresh_token: storedRefresh }),
-    })
+    const res = await http.post(
+      "/api/auth/refresh",
+      { refresh_token: storedRefresh },
+      { validateStatus: () => true },
+    )
 
     if (res.status === 401) {
       setStatus("error")
@@ -113,13 +118,13 @@ export default function TokenRefresh() {
       throw new Error("Refresh Token invalid or reused")
     }
 
-    if (!res.ok) {
+    if (res.status >= 400) {
       setStatus("error")
       addLog(`❌ 刷新失败 HTTP ${String(res.status)}`)
       throw new Error("Refresh failed")
     }
 
-    const data = (await res.json()) as {
+    const data = res.data as {
       access_token: string
       refresh_token: string
       rotation: boolean
@@ -204,9 +209,7 @@ export default function TokenRefresh() {
         setStatus("success")
       })
     } else {
-      void fetch("/api/auth/check", {
-        headers: { Authorization: `Bearer ${stored}` },
-      }).then(async (res) => {
+      void http.get("/api/auth/check", { validateStatus: () => true }).then(async (res) => {
         if (res.status === 401) {
           addLog("⏰ 服务端返回 401，触发无感刷新...")
           return acquireRefresh().then((newToken) => {
@@ -216,7 +219,7 @@ export default function TokenRefresh() {
             setStatus("success")
           })
         }
-        const data = (await res.json()) as { remaining: number }
+        const data = res.data as { remaining: number }
         addLog(`✅ 请求成功，Token 还剩 ${String(data.remaining)}s 过期`)
         setStatus("success")
       })
@@ -231,16 +234,15 @@ export default function TokenRefresh() {
 
     try {
       addLog("🔑 POST /api/auth/login — 登录中...")
-      const res = await fetch("/api/auth/login", {
-        method: "POST",
-        headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({ username: "admin", password: "admin123" }),
+      const res = await http.post("/api/auth/login", {
+        username: "admin",
+        password: "admin123",
       })
-      if (!res.ok) {
+      if (res.status >= 400) {
         addLog("❌ 登录失败")
         return
       }
-      const data = (await res.json()) as { access_token: string; refresh_token: string }
+      const data = res.data as { access_token: string; refresh_token: string }
 
       setAccessToken(data.access_token)
       setRefreshToken(data.refresh_token)
@@ -322,8 +324,8 @@ export default function TokenRefresh() {
     if (!loggedIn) return
     const interval = setInterval(async () => {
       try {
-        const res = await fetch("/api/auth/used-tokens")
-        const data = (await res.json()) as { count: number }
+        const res = await http.get("/api/auth/used-tokens")
+        const data = res.data as { count: number }
         setUsedTokenCount(data.count)
       } catch {
         /* ignore */

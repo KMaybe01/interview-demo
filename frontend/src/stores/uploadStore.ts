@@ -96,13 +96,23 @@ function loadFromStorage(): UploadFileItem[] {
   }
 }
 
+let saveTimer: ReturnType<typeof setTimeout> | undefined
+
+function debouncedSave(files: UploadFileItem[]) {
+  if (saveTimer) clearTimeout(saveTimer)
+  saveTimer = setTimeout(() => {
+    saveToStorage(files)
+    saveTimer = undefined
+  }, 100)
+}
+
 export const useUploadStore = create<UploadState>((set, _get) => ({
   files: [],
 
   addFile: (item) => {
     set((state) => {
       const next = [...state.files, item]
-      saveToStorage(next)
+      debouncedSave(next)
       return { files: next }
     })
   },
@@ -110,7 +120,7 @@ export const useUploadStore = create<UploadState>((set, _get) => ({
   removeFile: (id) => {
     set((state) => {
       const next = state.files.filter((f) => f.id !== id)
-      saveToStorage(next)
+      debouncedSave(next)
       return { files: next }
     })
   },
@@ -118,7 +128,7 @@ export const useUploadStore = create<UploadState>((set, _get) => ({
   updateFile: (id, partial) => {
     set((state) => {
       const next = state.files.map((f) => (f.id === id ? { ...f, ...partial } : f))
-      saveToStorage(next)
+      debouncedSave(next)
       return { files: next }
     })
   },
@@ -132,7 +142,7 @@ export const useUploadStore = create<UploadState>((set, _get) => ({
           chunks: f.chunks.map((c) => (c.index === chunkIndex ? { ...c, ...partial } : c)),
         }
       })
-      saveToStorage(next)
+      debouncedSave(next)
       return { files: next }
     })
   },
@@ -147,12 +157,13 @@ export const useUploadStore = create<UploadState>((set, _get) => ({
       const next = state.files.filter(
         (f) => f.status === "uploading" || f.status === "paused" || f.status === "failed",
       )
-      saveToStorage(next)
+      debouncedSave(next)
       return { files: next }
     })
   },
 
   resetAll: () => {
+    if (saveTimer) clearTimeout(saveTimer)
     try {
       localStorage.removeItem(STORAGE_KEY)
     } catch {

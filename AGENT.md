@@ -245,6 +245,82 @@ export const useXxxStore = create<XxxState>()(
 
 ---
 
+## Web Vitals & 页面渲染监控
+
+### 架构
+
+```
+initVitalsReporter() (main.tsx 启动时调用)
+  → web-vitals 监听 CLS/FCP/INP/LCP/TTFB
+  → POST /api/vitals/report (逐条上报)
+
+PageTracker (App.tsx 中包裹每个路由)
+  → useLocation 监听路由变化
+  → performance.now() 计算渲染耗时
+  → POST /api/vitals/page-report (页面路径 + 渲染时长)
+
+后端 in-memory 存储 → GET /api/vitals/summary|history|pages
+  → WebVitals.tsx 展示: 指标卡片 + ECharts 趋势图 + 页面渲染排行
+```
+
+### 模块
+
+| 文件 | 职责 |
+|------|------|
+| `utils/vitalsReporter.ts` | 订阅 web-vitals 事件, 上报至后端 |
+| `components/PageTracker.tsx` | 包裹每个路由, 上报路径 + 渲染耗时 + Navigation Timing |
+| `pages/WebVitals.tsx` | 可视化页面: 指标卡片 + ECharts 趋势图 + 页面渲染排行 + 访问明细表 |
+| `backend/handlers/vitals.go` | 上报接收 / 汇总 / 历史 / 页面跟踪接口 |
+
+### API
+
+| 方法 | 路径 | 说明 |
+|------|------|------|
+| POST | `/api/vitals/report` | 上报 Web Vitals 指标 (批量) |
+| GET | `/api/vitals/summary` | 最新值 + min/max/avg/count |
+| GET | `/api/vitals/history` | 按指标分组的时间序列 |
+| POST | `/api/vitals/page-report` | 上报页面渲染数据 (路径 + 渲染耗时) |
+| GET | `/api/vitals/pages` | 页面访问汇总 (访问次数 / 平均渲染时长) |
+| GET | `/api/vitals/page-history` | 按路径分组的页面渲染时间序列 |
+
+---
+
+## 登录认证
+
+### 架构
+
+```
+/login  → Login.tsx (无侧边栏, 登录后跳转 /)
+其他    → AuthGuard.tsx (检查登录态) → MainLayout (侧边栏 + Header)
+```
+
+### 模块
+
+| 文件 | 职责 |
+|------|------|
+| `stores/authStore.ts` | Zustand 认证状态 (user, isLoggedIn, login/logout) |
+| `pages/Login.tsx` | 登录表单 (admin/admin123) |
+| `components/AuthGuard.tsx` | 路由守卫, 未登录重定向 /login |
+| `utils/fetchClient.ts` | 统一 fetch 封装, 自动附加 Bearer Token, 401 时自动无感刷新 |
+| `utils/token.ts` | localStorage 读写 access_token / refresh_token |
+
+### 使用 fetchClient
+
+所有经过后端的 API 请求应使用 `fetchClient` 替代原生 `fetch`:
+```typescript
+import { fetchClient } from "../utils/fetchClient.ts"
+
+const res = await fetchClient("/api/some-endpoint", {
+  method: "POST",
+  body: JSON.stringify(payload),
+})
+```
+
+`fetchClient` 自动处理:
+- Authorization header 注入
+- 401 响应 → 无感刷新 Token → 重放请求
+- 刷新失败 → 清除 Token → 重定向 /login
+
 ## 文档
 
 - `README.md`: 项目级文档 (技术栈 / 项目结构 / 演示功能 / 部署 / API)
@@ -260,6 +336,11 @@ export const useXxxStore = create<XxxState>()(
 cd frontend
 bun run build          # 必须通过 (tsc -b + vite build)
 bun run lint           # Biome 无 error
+bun run lint:eslint    # eslint 无 error
+
+cd backend
+go vet ./...       # 通过代码规范校验
+go build -o bin/server.exe .   # build 可运行文件
 ```
 
 - `tsc --noEmit` 做类型检查

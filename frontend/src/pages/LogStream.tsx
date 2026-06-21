@@ -5,6 +5,24 @@ const { Text } = Typography
 
 type Status = "idle" | "connecting" | "key-exchange" | "decrypting" | "done" | "interrupted"
 
+const statisticContentStyle = { content: { fontSize: 18 } }
+const encryptedLineStyle: React.CSSProperties = {
+  color: "#e06c75",
+  opacity: 0.7,
+  whiteSpace: "nowrap" as const,
+}
+const seqStyle: React.CSSProperties = { color: "#d19a66" }
+const sharedLogStyle: React.CSSProperties = {
+  height: 480,
+  overflow: "auto",
+  background: "#1e1e1e",
+  color: "#d4d4d4",
+  fontFamily: "monospace",
+  fontSize: 12,
+  padding: 12,
+  lineHeight: 1.6,
+}
+
 interface DecodeStats {
   totalChunks: number
   decryptedChunks: number
@@ -70,8 +88,9 @@ export default function LogStream() {
         displayRef.current = []
       }
       if (encryptedBufRef.current.length > 0) {
-        setEncryptedLines((prev) => [...prev, ...encryptedBufRef.current])
+        const buf = encryptedBufRef.current
         encryptedBufRef.current = []
+        setEncryptedLines((prev) => [...prev, ...buf].slice(-500))
       }
       const s = statsRef.current
       const now = doneTimeRef.current || performance.now()
@@ -86,13 +105,18 @@ export default function LogStream() {
     })
   }, [])
 
+  const lastProgressRef = useRef(0)
+
   const handleDecryptResult = useCallback(
     (seq: number, decryptedLines: string[]) => {
       const s = statsRef.current
       s.decryptedChunks++
       s.totalLines += decryptedLines.length
 
-      setEncryptedLines((prev) => prev.filter((e) => e.seq !== seq))
+      setEncryptedLines((prev) => {
+        const filtered = prev.filter((e) => e.seq !== seq)
+        return filtered.length > 500 ? filtered.slice(-500) : filtered
+      })
 
       mergeRef.current.set(seq, decryptedLines)
       while (mergeRef.current.has(expectedSeqRef.current)) {
@@ -257,7 +281,11 @@ export default function LogStream() {
 
             const c = evt as { seq: number; data: string; progress: number }
             statsRef.current.totalChunks++
-            setProgress(Math.round(c.progress))
+            const now = performance.now()
+            if (now - lastProgressRef.current > 200) {
+              lastProgressRef.current = now
+              setProgress(Math.round(c.progress))
+            }
 
             const preview = c.data.length > 48 ? `${c.data.slice(0, 48)}...` : c.data
             encryptedBufRef.current.push({ seq: c.seq, preview })
@@ -316,29 +344,21 @@ export default function LogStream() {
           ? "processing"
           : "default"
 
-  const statusText =
-    status === "idle"
-      ? "就绪"
-      : status === "connecting"
-        ? "连接中..."
-        : status === "key-exchange"
-          ? "密钥交换中..."
-          : status === "decrypting"
-            ? "解密中"
-            : status === "interrupted"
-              ? "已中断"
-              : "解密完成"
-
-  const sharedLogStyle: React.CSSProperties = {
-    height: 480,
-    overflow: "auto",
-    background: "#1e1e1e",
-    color: "#d4d4d4",
-    fontFamily: "monospace",
-    fontSize: 12,
-    padding: 12,
-    lineHeight: 1.6,
-  }
+  const statusText = useMemo(
+    () =>
+      status === "idle"
+        ? "就绪"
+        : status === "connecting"
+          ? "连接中..."
+          : status === "key-exchange"
+            ? "密钥交换中..."
+            : status === "decrypting"
+              ? "解密中"
+              : status === "interrupted"
+                ? "已中断"
+                : "解密完成",
+    [status],
+  )
 
   return (
     <div>
@@ -365,24 +385,20 @@ export default function LogStream() {
           </Space>
           <Row gutter={16}>
             <Col span={4}>
-              <Statistic
-                title="Worker 数"
-                value={workerCount}
-                styles={{ content: { fontSize: 18 } }}
-              />
+              <Statistic title="Worker 数" value={workerCount} styles={statisticContentStyle} />
             </Col>
             <Col span={5}>
               <Statistic
                 title="已解密 Chunks"
                 value={stats.decryptedChunks}
-                styles={{ content: { fontSize: 18 } }}
+                styles={statisticContentStyle}
               />
             </Col>
             <Col span={5}>
               <Statistic
                 title="已解密行数"
                 value={stats.totalLines}
-                styles={{ content: { fontSize: 18 } }}
+                styles={statisticContentStyle}
               />
             </Col>
             <Col span={5}>
@@ -390,14 +406,14 @@ export default function LogStream() {
                 title="解密速度"
                 value={stats.linesPerSec}
                 suffix="行/秒"
-                styles={{ content: { fontSize: 18 } }}
+                styles={statisticContentStyle}
               />
             </Col>
             <Col span={5}>
               <Statistic
                 title="估计数据量"
                 value={`${((stats.totalLines * 100) / 1000000).toFixed(1)}MB`}
-                styles={{ content: { fontSize: 18 } }}
+                styles={statisticContentStyle}
               />
             </Col>
           </Row>
@@ -450,13 +466,8 @@ export default function LogStream() {
                   status !== "done" &&
                   status !== "interrupted" && <Text type="secondary">加密数据将在此显示</Text>}
                 {encryptedLines.map((entry) => (
-                  <div
-                    key={entry.seq}
-                    style={{ color: "#e06c75", opacity: 0.7, whiteSpace: "nowrap" }}
-                  >
-                    <span style={{ color: "#d19a66" }}>
-                      [#{String(entry.seq).padStart(4, "0")}]
-                    </span>{" "}
+                  <div key={entry.seq} style={encryptedLineStyle}>
+                    <span style={seqStyle}>[#{String(entry.seq).padStart(4, "0")}]</span>{" "}
                     {entry.preview}
                   </div>
                 ))}

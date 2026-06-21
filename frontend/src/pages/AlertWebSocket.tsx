@@ -44,7 +44,15 @@ const ALERT_TYPE: Record<AlertLevel, "success" | "info" | "warning" | "error"> =
 const LEVEL_ORDER: AlertLevel[] = ["critical", "major", "minor", "info"]
 const DISPLAY_LIMIT = 2000
 
-const AlertRow = ({ index, style, data }: { index: number; style: React.CSSProperties; data: AlertMessage[] }) => {
+const AlertRow = ({
+  index,
+  style,
+  data,
+}: {
+  index: number
+  style: React.CSSProperties
+  data: AlertMessage[]
+}) => {
   const a = data[index]
   const tag = LEVEL_TAG[a.level]
   const catColor = CATEGORY_COLORS[a.category] || "#8c8c8c"
@@ -92,8 +100,12 @@ export default function AlertWebSocket() {
   const transportRef = useRef<import("../utils/wsTransport.ts").ReconnectingTransport | null>(null)
   const aliveRef = useRef(true)
   const chartActiveRef = useRef(true)
-  const startChartLoopRef = useRef<() => void>(() => { /* empty */ })
-  const stopChartLoopRef = useRef<() => void>(() => { /* empty */ })
+  const startChartLoopRef = useRef<() => void>(() => {
+    /* empty */
+  })
+  const stopChartLoopRef = useRef<() => void>(() => {
+    /* empty */
+  })
   const seenRef = useRef<Set<string>>(new Set())
   const bufferRef = useRef<AlertMessage[]>([])
   const rafRef = useRef(0)
@@ -168,7 +180,9 @@ export default function AlertWebSocket() {
         setHeartbeatAlive(alive)
         if (alive && disconnectTimeRef.current > 0) {
           setRecovered(true)
-          setTimeout(() => { setRecovered(false); }, 3000)
+          setTimeout(() => {
+            setRecovered(false)
+          }, 3000)
           disconnectTimeRef.current = 0
         }
       },
@@ -195,11 +209,11 @@ export default function AlertWebSocket() {
       setIsPaused(false)
       if (delayMs > 0) {
         setTimeout(() => {
-          const t = transportRef.current || initTransport()
+          const t = transportRef.current ?? initTransport()
           t.connect()
         }, delayMs)
       } else {
-        const t = transportRef.current || initTransport()
+        const t = transportRef.current ?? initTransport()
         t.connect()
       }
     },
@@ -228,7 +242,7 @@ export default function AlertWebSocket() {
     pausedRef.current = false
     setIsPaused(false)
     startChartLoopRef.current()
-    const t = transportRef.current || initTransport()
+    const t = transportRef.current ?? initTransport()
     t.connect()
   }, [initTransport])
 
@@ -408,11 +422,12 @@ export default function AlertWebSocket() {
             : `${transportType} 未连接`
 
   const displayAlerts = useMemo(() => {
-    const sorted = levelFilter === "all"
-      ? [...alerts].sort((a, b) => PRIORITY[a.level] - PRIORITY[b.level])
-      : alerts
-          .filter((a) => a.level === levelFilter)
-          .sort((a, b) => PRIORITY[a.level] - PRIORITY[b.level])
+    const sorted =
+      levelFilter === "all"
+        ? [...alerts].sort((a, b) => PRIORITY[a.level] - PRIORITY[b.level])
+        : alerts
+            .filter((a) => a.level === levelFilter)
+            .sort((a, b) => PRIORITY[a.level] - PRIORITY[b.level])
     return sorted.slice(0, DISPLAY_LIMIT)
   }, [alerts, levelFilter])
 

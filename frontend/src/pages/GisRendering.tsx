@@ -1,4 +1,6 @@
 import { Card, Col, Row, Slider, Space, Statistic, Tag } from "antd"
+import { Zoom } from "ol/control"
+import "ol/ol.css"
 import Feature from "ol/Feature"
 import Point from "ol/geom/Point"
 import TileLayer from "ol/layer/Tile"
@@ -131,11 +133,12 @@ export default function GisRendering() {
 
     const map = new OLMap({
       target: mapRef.current,
-      layers: [new TileLayer({ source: new OSM() }), vectorLayer],
+      layers: [new TileLayer({ source: new OSM({ attributions: [] }) }), vectorLayer],
       view: new View({
         center: [116.397, 39.908],
         zoom: 12,
       }),
+      controls: [new Zoom()],
     })
     mapInstance.current = map
 
@@ -150,7 +153,7 @@ export default function GisRendering() {
       vectorSourceRef.current = null
       mapInstance.current = null
     }
-  }, [refreshViewport, clusterDist])
+  }, [refreshViewport])
 
   useEffect(() => {
     clusterSourceRef.current?.setDistance(clusterDist)

@@ -28,7 +28,7 @@ export function parseMessage(data: string | ArrayBuffer): AlertMessage | null {
   ) as AlertMessage["topic"]
   const category = typeof raw.category === "string" ? raw.category : "system"
   const level = typeof raw.level === "string" ? (LEVEL_ALIAS[raw.level] ?? "info") : "info"
-  const message = typeof raw.message === "string" ? raw.message : String(raw)
+  const message = typeof raw.message === "string" ? raw.message : JSON.stringify(raw)
   const time = typeof raw.time === "string" ? raw.time : new Date().toLocaleTimeString()
 
   return { id, seq, topic, category, level, message, time }
@@ -62,7 +62,7 @@ function decodeBinary(buf: ArrayBuffer): Record<string, unknown> | null {
 
 export class BackpressureController {
   private draining = false
-  private queue: Array<{ data: string; resolve: () => void }> = []
+  private queue: { data: string; resolve: () => void }[] = []
   private readonly highWater = 1024 * 1024 // 1MB
   private readonly lowWater = 256 * 1024 // 256KB
 
@@ -93,7 +93,9 @@ export class BackpressureController {
         return
       }
       if (ws.bufferedAmount > this.lowWater) {
-        requestAnimationFrame(() => next())
+        requestAnimationFrame(() => {
+          next()
+        })
         return
       }
       const item = this.queue.shift()
@@ -103,7 +105,9 @@ export class BackpressureController {
       }
       ws.send(item.data)
       item.resolve()
-      requestAnimationFrame(() => next())
+      requestAnimationFrame(() => {
+        next()
+      })
     }
     next()
   }
@@ -136,7 +140,9 @@ export class MessageBatcher {
   add(data: string): void {
     this.buffer.push(data)
     if (this.buffer.length === 1) {
-      this.timer = setTimeout(() => this.flush(), this.maxDelay)
+      this.timer = setTimeout(() => {
+        this.flush()
+      }, this.maxDelay)
     }
     const size = this.buffer.reduce((s, d) => s + d.length, 0)
     if (size >= this.maxSize) {
@@ -186,7 +192,7 @@ export class HeartbeatController {
       this.onAlive?.(false)
       const data = JSON.stringify({ type: "ping" })
       if (this.backpressure) {
-        this.backpressure.send(ws, data).catch(() => {})
+        this.backpressure.send(ws, data).catch(() => undefined)
       } else {
         ws.send(data)
       }
@@ -242,11 +248,11 @@ export interface TransportCallbacks {
 }
 
 export interface Transport {
-  connect(): void
-  disconnect(): void
-  getType(): string
-  isConnected(): boolean
-  setCallbacks(cbs: TransportCallbacks): void
+  connect: () => void
+  disconnect: () => void
+  getType: () => string
+  isConnected: () => boolean
+  setCallbacks: (cbs: TransportCallbacks) => void
 }
 
 // ─── WebSocket Transport ──────────────────────────────────────────────────
@@ -266,7 +272,9 @@ export class WebSocketTransport implements Transport {
   setCallbacks(cbs: TransportCallbacks): void {
     this.callbacks = cbs
     this.heartbeat.onHeartbeat(
-      (alive) => cbs.onHeartbeat(alive),
+      (alive) => {
+        cbs.onHeartbeat(alive)
+      },
       () => this.ws?.close(),
     )
     this.heartbeat.setBackpressure(this.backpressure)
@@ -429,18 +437,18 @@ export class PollingTransport implements Transport {
     this.polling = true
     this.callbacks?.onStatus("connected")
     this.callbacks?.onHeartbeat(true)
-    this.poll()
+    void this.poll()
   }
 
   private async poll(): Promise<void> {
     while (this.polling) {
       this.abortController = new AbortController()
       try {
-        const res = await fetch(`${this.url}&seq=${this.lastSeq}`, {
+        const res = await fetch(`${this.url}&seq=${String(this.lastSeq)}`, {
           signal: this.abortController.signal,
         })
-        if (!res.ok) throw new Error(`HTTP ${res.status}`)
-        const data = (await res.json()) as Array<Record<string, unknown>>
+        if (!res.ok) throw new Error(`HTTP ${String(res.status)}`)
+        const data = (await res.json()) as Record<string, unknown>[]
         for (const raw of data) {
           const msg = parseMessage(JSON.stringify(raw))
           if (msg) {
@@ -454,7 +462,7 @@ export class PollingTransport implements Transport {
         await new Promise((r) => setTimeout(r, 3000))
         this.callbacks?.onStatus("connected")
       }
-      if (this.polling) await new Promise((r) => setTimeout(r, 1000))
+      await new Promise((r) => setTimeout(r, 1000))
     }
   }
 
@@ -583,17 +591,23 @@ export class ReconnectingTransport {
               if (this.disconnectTime === 0) this.disconnectTime = Date.now()
               this.callbacks?.onStatus("reconnecting")
               this.callbacks?.onRetry(this.retryCount, delay)
-              this.retryTimer = setTimeout(() => this.tryActive(), delay)
+              this.retryTimer = setTimeout(() => {
+                this.tryActive()
+              }, delay)
             } else {
               this.retryCount = 0
               this.logInterruption?.(this.disconnectTime > 0 ? Date.now() - this.disconnectTime : 0)
               this.activeIndex++ // fallback to SSE
-              this.retryTimer = setTimeout(() => this.tryActive(), 100)
+              this.retryTimer = setTimeout(() => {
+                this.tryActive()
+              }, 100)
             }
           } else {
             // SSE/Polling: fallback to next transport
             this.activeIndex++
-            this.retryTimer = setTimeout(() => this.tryActive(), 100)
+            this.retryTimer = setTimeout(() => {
+              this.tryActive()
+            }, 100)
           }
         } else {
           this.callbacks?.onStatus(status)

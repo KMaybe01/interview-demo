@@ -7,6 +7,7 @@ import {
   FileTextOutlined,
   FormOutlined,
   KeyOutlined,
+  LineChartOutlined,
   NodeIndexOutlined,
   PartitionOutlined,
   SafetyOutlined,
@@ -100,5 +101,11 @@ export const routes: RouteConfig[] = [
     name: "大文件分片上传",
     icon: UploadOutlined,
     element: lazy(() => import("../pages/ChunkedUpload.tsx")),
+  },
+  {
+    path: "/web-vitals",
+    name: "Web Vitals 性能采集",
+    icon: LineChartOutlined,
+    element: lazy(() => import("../pages/WebVitals.tsx")),
   },
 ]

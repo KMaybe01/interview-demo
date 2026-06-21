@@ -20,14 +20,14 @@ import {
   Row,
   Space,
   Statistic,
-  Table,
   Tag,
   Typography,
   Upload,
 } from "antd"
-import { useCallback, useEffect, useRef, useState } from "react"
+import React, { useCallback, useEffect, useMemo, useRef, useState } from "react"
+import { List } from "react-window"
 import { useUploadStore } from "../stores"
-import type { ChunkInfo, ChunkStatus, UploadResult } from "../stores/uploadStore.ts"
+import type { ChunkInfo, UploadFileItem, UploadResult } from "../stores/uploadStore"
 
 const { Text } = Typography
 const { Dragger } = Upload
@@ -53,6 +53,66 @@ function formatDuration(ms: number): string {
   return `${String(m)}m ${String(s)}s`
 }
 
+const ChunkRow = ({
+  index,
+  style,
+  data,
+}: {
+  index: number
+  style: React.CSSProperties
+  data: ChunkInfo[]
+}) => {
+  const c = data[index]
+  const statusTag = (() => {
+    if (c.status === "pending") return <Tag style={{ margin: 0, fontSize: 11 }}>等待</Tag>
+    if (c.status === "hashing")
+      return (
+        <Tag style={{ margin: 0, fontSize: 11 }} icon={<LoadingOutlined />} color="blue">
+          哈希中
+        </Tag>
+      )
+    if (c.status === "uploading")
+      return (
+        <Tag style={{ margin: 0, fontSize: 11 }} icon={<LoadingOutlined />} color="processing">
+          上传中
+        </Tag>
+      )
+    if (c.status === "done")
+      return (
+        <Tag style={{ margin: 0, fontSize: 11 }} icon={<CheckCircleFilled />} color="success">
+          完成
+        </Tag>
+      )
+    return (
+      <Tag style={{ margin: 0, fontSize: 11 }} icon={<CloseCircleFilled />} color="error">
+        失败
+      </Tag>
+    )
+  })()
+  return (
+    <div
+      style={{
+        ...style,
+        display: "flex",
+        alignItems: "center",
+        gap: 8,
+        fontSize: 12,
+        borderBottom: "1px solid #fafafa",
+      }}
+    >
+      <span style={{ width: 80, flexShrink: 0, fontFamily: "'Courier New', monospace" }}>
+        #{String(c.index).padStart(3, "0")}
+      </span>
+      <span style={{ width: 90, flexShrink: 0 }}>{formatBytes(c.size)}</span>
+      <span style={{ width: 120, flexShrink: 0 }}>{statusTag}</span>
+      <span style={{ width: 100, flexShrink: 0 }}>{c.speed > 0 ? formatSpeed(c.speed) : "-"}</span>
+      <span style={{ width: 60, flexShrink: 0 }}>
+        {c.retries > 0 ? <Badge count={c.retries} size="small" /> : "-"}
+      </span>
+    </div>
+  )
+}
+
 async function computeHash(blob: Blob): Promise<string> {
   const buffer = await blob.arrayBuffer()
   const hash = await crypto.subtle.digest("SHA-256", buffer)
@@ -61,55 +121,111 @@ async function computeHash(blob: Blob): Promise<string> {
     .join("")
 }
 
-async function computeFileHash(file: File, chunkSize: number): Promise<string> {
-  const totalChunks = Math.ceil(file.size / chunkSize)
-  let combined: Uint8Array
-  {
-    const chunks: Uint8Array[] = []
-    let totalSize = 0
-    for (let i = 0; i < totalChunks; i++) {
-      const offset = i * chunkSize
-      const size = Math.min(chunkSize, file.size - offset)
-      const buf = await file.slice(offset, offset + size).arrayBuffer()
-      chunks.push(new Uint8Array(buf))
-      totalSize += buf.byteLength
+function computeFileHash(file: File, chunkSize: number): Promise<string> {
+  return new Promise((resolve, reject) => {
+    const worker = new Worker(new URL("../utils/hash.worker.ts", import.meta.url), {
+      type: "module",
+    })
+    worker.onmessage = (e: MessageEvent<{ type: string; hash?: string; error?: string }>) => {
+      if (e.data.type === "result" && e.data.hash) {
+        worker.terminate()
+        resolve(e.data.hash)
+      } else if (e.data.type === "error") {
+        worker.terminate()
+        reject(new Error(e.data.error ?? "Unknown worker error"))
+      }
     }
-    combined = new Uint8Array(totalSize)
-    let pos = 0
-    for (const c of chunks) {
-      combined.set(c, pos)
-      pos += c.byteLength
+    worker.onerror = () => {
+      worker.terminate()
+      reject(new Error("Worker error"))
     }
-  }
-  const hash = await crypto.subtle.digest("SHA-256", combined.buffer as ArrayBuffer)
-  return Array.from(new Uint8Array(hash))
-    .map((b) => b.toString(16).padStart(2, "0"))
-    .join("")
+    void (async () => {
+      try {
+        const totalChunks = Math.ceil(file.size / chunkSize)
+        for (let i = 0; i < totalChunks; i++) {
+          const offset = i * chunkSize
+          const size = Math.min(chunkSize, file.size - offset)
+          const buffer = await file.slice(offset, offset + size).arrayBuffer()
+          worker.postMessage({ type: "file", buffer }, [buffer])
+        }
+        worker.postMessage({ type: "finalize" })
+      } catch (err) {
+        worker.terminate()
+        reject(err instanceof Error ? err : new Error(String(err)))
+      }
+    })()
+  })
 }
 
 const defaultChunkSize = 5 * 1024 * 1024
 
+const DraggerCard = React.memo(function DraggerCard({
+  isResume,
+  onDrop,
+}: {
+  isResume: boolean
+  onDrop: (f: File) => void
+}) {
+  const beforeUpload = useCallback(
+    (f: File | (Blob & { uid: string })) => {
+      onDrop(f as File)
+      return false
+    },
+    [onDrop],
+  )
+  return (
+    <Card size="small" title="选择文件">
+      <Dragger accept="*" showUploadList={false} beforeUpload={beforeUpload}>
+        <p className="ant-upload-drag-icon">
+          <InboxOutlined />
+        </p>
+        <p className="ant-upload-text">点击或拖拽文件到此处</p>
+        <p className="ant-upload-hint">支持断点续传 — 上传中断后刷新页面重新拖入相同文件即可续传</p>
+      </Dragger>
+      {isResume && (
+        <Tag color="orange" style={{ marginTop: 8 }}>
+          检测到未完成的上传，点击&quot;续传&quot;继续
+        </Tag>
+      )}
+    </Card>
+  )
+})
+
+const ToolbarActions = React.memo(function ToolbarActions({
+  hasFiles,
+  onClearToolbar,
+  onResetAll,
+}: {
+  hasFiles: boolean
+  onClearToolbar: () => void
+  onResetAll: () => void
+}) {
+  if (!hasFiles) return null
+  return (
+    <div style={{ display: "flex", justifyContent: "flex-end", gap: 8 }}>
+      <Button size="small" icon={<ClearOutlined />} onClick={onClearToolbar}>
+        清除已完成
+      </Button>
+      <Button size="small" danger icon={<DeleteOutlined />} onClick={onResetAll}>
+        重置全部
+      </Button>
+    </div>
+  )
+})
+
 export default function ChunkedUpload() {
-  const {
-    files,
-    addFile,
-    removeFile,
-    updateFile,
-    updateChunk,
-    loadFromStorage,
-    clearCompleted,
-    resetAll,
-  } = useUploadStore()
+  const { files, removeFile, updateFile, updateChunk, loadFromStorage, resetAll } = useUploadStore()
   const [fileObj, setFileObj] = useState<File | null>(null)
   const [chunkSize] = useState(defaultChunkSize)
   const [concurrency, setConcurrency] = useState(4)
-  const [chunkOpen, setChunkOpen] = useState(true)
+  const [chunkOpen, setChunkOpen] = useState(false)
   const [isResume, setIsResume] = useState(false)
 
   const abortRef = useRef(false)
   const pausedRef = useRef(false)
   const resolvePauseRef = useRef<(() => void) | null>(null)
   const timerRef = useRef<ReturnType<typeof setInterval> | undefined>(undefined)
+  const checkAbort = (): boolean => abortRef.current
 
   useEffect(() => {
     loadFromStorage()
@@ -143,7 +259,7 @@ export default function ChunkedUpload() {
         updateFile(f.id, {
           chunks: f.chunks.map((c) => ({
             ...c,
-            status: done.has(c.index) ? ("done" as ChunkStatus) : ("pending" as ChunkStatus),
+            status: done.has(c.index) ? "done" : "pending",
           })),
         })
       } catch {
@@ -155,14 +271,15 @@ export default function ChunkedUpload() {
 
   const handleDrop = useCallback(
     (raw: File) => {
-      const existing = files.find(
+      const { files: currentFiles, addFile: storeAddFile } = useUploadStore.getState()
+      const existing = currentFiles.find(
         (f) => f.filename === raw.name && f.fileSize === raw.size && f.status !== "done",
       )
       if (existing) {
         if (existing.status === "failed") {
           updateFile(existing.id, {
             status: "pending",
-            chunks: existing.chunks.map((c) => ({ ...c, status: "pending" as ChunkStatus })),
+            chunks: existing.chunks.map((c) => ({ ...c, status: "pending" })),
           })
         }
         setFileObj(raw)
@@ -184,8 +301,8 @@ export default function ChunkedUpload() {
           startTime: 0,
         })
       }
-      const id = `local_${Date.now()}_${Math.random().toString(36).slice(2, 8)}`
-      addFile({
+      const id = `local_${String(Date.now())}_${Math.random().toString(36).slice(2, 8)}`
+      storeAddFile({
         id,
         uploadId: "",
         filename: raw.name,
@@ -205,12 +322,13 @@ export default function ChunkedUpload() {
       setFileObj(raw)
       setIsResume(false)
     },
-    [files, chunkSize, addFile],
+    [chunkSize, updateFile],
   )
 
   const startUpload = useCallback(async () => {
-    if (!fileObj || files.length === 0) return
-    const item = files[0]
+    const { files: currentFiles } = useUploadStore.getState()
+    if (!fileObj || currentFiles.length === 0) return
+    const item = currentFiles[0]
     if (item.status !== "pending") return
 
     updateFile(item.id, { status: "uploading" })
@@ -219,8 +337,8 @@ export default function ChunkedUpload() {
     const startTime = performance.now()
 
     timerRef.current = setInterval(() => {
-      const f = files[0]
-      if (f) updateFile(f.id, { elapsed: performance.now() - startTime })
+      const { files: f } = useUploadStore.getState()
+      if (f[0]) updateFile(f[0].id, { elapsed: performance.now() - startTime })
     }, 200)
 
     let completedCount = 0
@@ -230,7 +348,7 @@ export default function ChunkedUpload() {
       let fileHash = item.fileHash
       if (!fileHash) {
         fileHash = await computeFileHash(fileObj, chunkSize)
-        if (abortRef.current) return
+        if (checkAbort()) return
         updateFile(item.id, { fileHash })
       }
 
@@ -247,18 +365,18 @@ export default function ChunkedUpload() {
           }),
         })
         if (!initRes.ok) {
-          throw new Error(((await initRes.json()) as { error: string }).error ?? "Init failed")
+          throw new Error(((await initRes.json()) as { error?: string }).error ?? "Init failed")
         }
         const initData = (await initRes.json()) as { uploadId: string }
         currentInitId = initData.uploadId
-        if (abortRef.current) return
+        if (checkAbort()) return
         updateFile(item.id, { uploadId: currentInitId })
       }
 
       completedCount = item.chunks.filter((c) => c.status === "done").length
 
       const uploadOne = async (chunkIdx: number): Promise<void> => {
-        if (abortRef.current || !fileObj) return
+        if (checkAbort()) return
         if (item.chunks[chunkIdx]?.status === "done") return
 
         const offset = chunkIdx * chunkSize
@@ -267,16 +385,16 @@ export default function ChunkedUpload() {
 
         updateChunk(item.id, chunkIdx, { status: "hashing" })
         const hash = await computeHash(blob)
-        if (abortRef.current) return
+        if (checkAbort()) return
 
         for (let attempt = 0; attempt <= 3; attempt++) {
-          if (abortRef.current) return
-          while (pausedRef.current && !abortRef.current) {
+          if (checkAbort()) return
+          while (pausedRef.current && !checkAbort()) {
             await new Promise<void>((r) => {
               resolvePauseRef.current = r
             })
           }
-          if (abortRef.current) return
+          if (checkAbort()) return
 
           const blob2 = fileObj.slice(offset, offset + size)
           const chunkStart = performance.now()
@@ -313,13 +431,13 @@ export default function ChunkedUpload() {
 
       const inflight = new Set<Promise<void>>()
       for (let i = 0; i < item.totalChunks; i++) {
-        if (abortRef.current || abortRef.current) break
+        if (checkAbort()) break
         while (inflight.size >= concurrency) await Promise.race(inflight)
         const p = uploadOne(i).finally(() => inflight.delete(p))
         inflight.add(p)
       }
       await Promise.all(inflight)
-      if (abortRef.current) return
+      if (checkAbort()) return
 
       const completeRes = await fetch("/api/upload/complete", {
         method: "POST",
@@ -328,7 +446,7 @@ export default function ChunkedUpload() {
       })
       if (!completeRes.ok) {
         throw new Error(
-          ((await completeRes.json()) as { error: string }).error ?? "Complete failed",
+          ((await completeRes.json()) as { error?: string }).error ?? "Complete failed",
         )
       }
       updateFile(item.id, {
@@ -341,19 +459,21 @@ export default function ChunkedUpload() {
     } finally {
       if (timerRef.current) clearInterval(timerRef.current)
     }
-  }, [fileObj, files, chunkSize, concurrency, updateFile, updateChunk])
+  }, [fileObj, chunkSize, concurrency, updateFile, updateChunk])
 
   const pause = useCallback(() => {
     pausedRef.current = true
-    if (files[0]) updateFile(files[0].id, { status: "paused" })
-  }, [files, updateFile])
+    const { files: f } = useUploadStore.getState()
+    if (f[0]) updateFile(f[0].id, { status: "paused" })
+  }, [updateFile])
 
   const resume = useCallback(() => {
     pausedRef.current = false
     resolvePauseRef.current?.()
     resolvePauseRef.current = null
-    if (files[0]) updateFile(files[0].id, { status: "uploading" })
-  }, [files, updateFile])
+    const { files: f } = useUploadStore.getState()
+    if (f[0]) updateFile(f[0].id, { status: "uploading" })
+  }, [updateFile])
 
   const abort = useCallback(() => {
     abortRef.current = true
@@ -361,68 +481,41 @@ export default function ChunkedUpload() {
     resolvePauseRef.current?.()
     resolvePauseRef.current = null
     if (timerRef.current) clearInterval(timerRef.current)
-    if (files[0]) updateFile(files[0].id, { status: "failed" })
-  }, [files, updateFile])
+    const { files: f } = useUploadStore.getState()
+    if (f[0]) updateFile(f[0].id, { status: "failed" })
+  }, [updateFile])
 
-  const item = files[0] ?? null
-  const doneChunks = item?.chunks.filter((c) => c.status === "done").length ?? 0
+  const item = useMemo(() => files[0] as UploadFileItem | undefined, [files])
+  const doneChunks = useMemo(
+    () => (item?.chunks ?? []).filter((c) => c.status === "done").length,
+    [item?.chunks],
+  )
+
+  const handleClearToolbar = useCallback(() => {
+    const { clearCompleted: storeClear } = useUploadStore.getState()
+    storeClear()
+    if (item != null && item.status !== "uploading" && item.status !== "paused") {
+      setFileObj(null)
+      setIsResume(false)
+    }
+  }, [item])
+
+  const handleResetToolbar = useCallback(() => {
+    resetAll()
+    setFileObj(null)
+    setIsResume(false)
+  }, [resetAll])
 
   return (
     <div>
-      <Space direction="vertical" style={{ width: "100%" }}>
-        <Card size="small" title="选择文件">
-          <Dragger
-            accept="*"
-            showUploadList={false}
-            beforeUpload={(f) => {
-              handleDrop(f as File)
-              return false
-            }}
-          >
-            <p className="ant-upload-drag-icon">
-              <InboxOutlined />
-            </p>
-            <p className="ant-upload-text">点击或拖拽文件到此处</p>
-            <p className="ant-upload-hint">
-              支持断点续传 — 上传中断后刷新页面重新拖入相同文件即可续传
-            </p>
-          </Dragger>
-          {isResume && (
-            <Tag color="orange" style={{ marginTop: 8 }}>
-              检测到未完成的上传，点击"续传"继续
-            </Tag>
-          )}
-        </Card>
+      <Space orientation="vertical" style={{ width: "100%" }}>
+        <DraggerCard isResume={isResume} onDrop={handleDrop} />
 
-        {files.length > 0 && (
-          <div style={{ display: "flex", justifyContent: "flex-end", gap: 8 }}>
-            <Button
-              size="small"
-              icon={<ClearOutlined />}
-              onClick={() => {
-                clearCompleted()
-                if (item && item.status !== "uploading" && item.status !== "paused") {
-                  setFileObj(null)
-                  setIsResume(false)
-                }
-              }}
-            >
-              清除已完成
-            </Button>
-            <Button
-              size="small"
-              danger
-              icon={<DeleteOutlined />}
-              onClick={() => {
-                resetAll()
-                setFileObj(null)
-                setIsResume(false)
-              }}
-            >
-              重置全部
-            </Button>
-          </div>
-        )}
+        <ToolbarActions
+          hasFiles={files.length > 0}
+          onClearToolbar={handleClearToolbar}
+          onResetAll={handleResetToolbar}
+        />
 
         {item && (
           <Card
@@ -443,7 +536,7 @@ export default function ChunkedUpload() {
                   min={1}
                   max={50}
                   value={chunkSize / 1024 / 1024}
-                  onChange={(_v) => {} /* keep default */}
+                  onChange={(_v) => undefined}
                   disabled
                   style={{ width: 56 }}
                 />
@@ -465,7 +558,7 @@ export default function ChunkedUpload() {
                   <Button
                     type="primary"
                     size="small"
-                    icon={isResume ? <PlayCircleOutlined /> : <PlayCircleOutlined />}
+                    icon={<PlayCircleOutlined />}
                     onClick={() => {
                       void startUpload()
                     }}
@@ -504,7 +597,7 @@ export default function ChunkedUpload() {
                         progress: 0,
                         chunks: item.chunks.map((c) => ({
                           ...c,
-                          status: "pending" as ChunkStatus,
+                          status: "pending",
                         })),
                       })
                       setIsResume(true)
@@ -556,7 +649,7 @@ export default function ChunkedUpload() {
                     <Statistic
                       title="速度"
                       value={formatSpeed(item.speed)}
-                      valueStyle={{ fontSize: 14 }}
+                      styles={{ content: { fontSize: 14 } }}
                     />
                   </Col>
                   <Col span={6}>
@@ -564,14 +657,14 @@ export default function ChunkedUpload() {
                       title="已上传"
                       value={formatBytes(item.uploadedBytes)}
                       suffix={`/ ${formatBytes(item.fileSize)}`}
-                      valueStyle={{ fontSize: 14 }}
+                      styles={{ content: { fontSize: 14 } }}
                     />
                   </Col>
                   <Col span={6}>
                     <Statistic
                       title="已用时间"
                       value={formatDuration(item.elapsed)}
-                      valueStyle={{ fontSize: 14 }}
+                      styles={{ content: { fontSize: 14 } }}
                     />
                   </Col>
                   <Col span={6}>
@@ -585,7 +678,7 @@ export default function ChunkedUpload() {
                             )
                           : "-"
                       }
-                      valueStyle={{ fontSize: 14 }}
+                      styles={{ content: { fontSize: 14 } }}
                     />
                   </Col>
                 </Row>
@@ -597,83 +690,43 @@ export default function ChunkedUpload() {
                 type="link"
                 size="small"
                 icon={<DownOutlined />}
-                onClick={() => setChunkOpen((v) => !v)}
+                onClick={() => {
+                  setChunkOpen((v) => !v)
+                }}
                 style={{ padding: 0, marginBottom: chunkOpen ? 8 : 0 }}
               >
                 <Text type="secondary" style={{ fontSize: 12 }}>
                   分片详情 ({String(item.totalChunks)} 片，已完成 {String(doneChunks)} 片)
                 </Text>
               </Button>
-              {chunkOpen && (
-                <Table
-                  dataSource={item.chunks}
-                  columns={[
-                    {
-                      title: "分片 #",
-                      dataIndex: "index",
-                      key: "index",
-                      width: 80,
-                      render: (v: number) => <Text code>#{String(v).padStart(3, "0")}</Text>,
-                    },
-                    {
-                      title: "大小",
-                      dataIndex: "size",
-                      key: "size",
-                      width: 100,
-                      render: (v: number) => formatBytes(v),
-                    },
-                    {
-                      title: "状态",
-                      dataIndex: "status",
-                      key: "status",
-                      width: 120,
-                      render: (v: ChunkStatus) => {
-                        if (v === "pending") return <Tag>等待</Tag>
-                        if (v === "hashing")
-                          return (
-                            <Tag icon={<LoadingOutlined />} color="blue">
-                              哈希中
-                            </Tag>
-                          )
-                        if (v === "uploading")
-                          return (
-                            <Tag icon={<LoadingOutlined />} color="processing">
-                              上传中
-                            </Tag>
-                          )
-                        if (v === "done")
-                          return (
-                            <Tag icon={<CheckCircleFilled />} color="success">
-                              完成
-                            </Tag>
-                          )
-                        return (
-                          <Tag icon={<CloseCircleFilled />} color="error">
-                            失败
-                          </Tag>
-                        )
-                      },
-                    },
-                    {
-                      title: "速度",
-                      dataIndex: "speed",
-                      key: "speed",
-                      width: 100,
-                      render: (v: number) => (v > 0 ? formatSpeed(v) : "-"),
-                    },
-                    {
-                      title: "重试",
-                      dataIndex: "retries",
-                      key: "retries",
-                      width: 60,
-                      render: (v: number) => (v > 0 ? <Badge count={v} size="small" /> : "-"),
-                    },
-                  ]}
-                  rowKey="index"
-                  size="small"
-                  pagination={false}
-                  scroll={{ y: 200 }}
-                />
+              {chunkOpen && item.chunks.length > 0 && (
+                <div>
+                  <div
+                    style={{
+                      display: "flex",
+                      gap: 8,
+                      padding: "4px 0",
+                      fontWeight: 600,
+                      fontSize: 12,
+                      color: "#888",
+                      borderBottom: "1px solid #f0f0f0",
+                      marginBottom: 4,
+                    }}
+                  >
+                    <span style={{ width: 80, flexShrink: 0 }}>分片 #</span>
+                    <span style={{ width: 90, flexShrink: 0 }}>大小</span>
+                    <span style={{ width: 120, flexShrink: 0 }}>状态</span>
+                    <span style={{ width: 100, flexShrink: 0 }}>速度</span>
+                    <span style={{ width: 60, flexShrink: 0 }}>重试</span>
+                  </div>
+                  <List<{ data: ChunkInfo[] }>
+                    rowCount={item.chunks.length}
+                    rowHeight={32}
+                    rowComponent={ChunkRow}
+                    rowProps={{ data: item.chunks }}
+                    style={{ height: Math.min(240, item.chunks.length * 32) }}
+                  />
+                </div>
               )}
             </div>
 
