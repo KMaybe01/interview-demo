@@ -27,6 +27,9 @@ func main() {
 		api.POST("/upload/complete", handlers.CompleteUpload)
 		api.GET("/upload/status/:uploadId", handlers.GetUploadStatus)
 		api.GET("/upload/sessions", handlers.ListUploadSessions)
+		api.GET("/services", handlers.GetServices)
+		api.GET("/config", handlers.GetConfig)
+		api.GET("/logs", handlers.GetLogs)
 	}
 
 	r.GET("/healthz", func(c *gin.Context) {
