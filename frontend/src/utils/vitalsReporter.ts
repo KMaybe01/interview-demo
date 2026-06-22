@@ -12,7 +12,7 @@ interface VitalReport {
   version: string
 }
 
-let reportBuffer: VitalReport[] = []
+const reportBuffer: VitalReport[] = []
 let flushTimer: ReturnType<typeof setTimeout> | null = null
 
 function flushReports(): void {

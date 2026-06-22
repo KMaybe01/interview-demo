@@ -15,7 +15,8 @@ React 19 + Go 1.26 全栈演示平台，覆盖 12 个高级技术场景（WebSoc
 | 前端 | React 19, TypeScript 6, Vite 8, Ant Design 6, Zustand 5, React Router 7 , bun |
 | 格式/检查 | Biome 2.5 (space 缩进 2, 无分号, 行宽 100, trailing commas) + ESLint 9               |
 | 后端 | Go 1.26, Gin 1.12, Gorilla WebSocket, golang-jwt                              |
-| 部署 | Docker 多阶段构建, Helm Chart, GitLab CI/CD                                        |
+| CI/CD | GitHub Actions (lint/test/tsc) + GitLab CI (validate→build→package→deploy)        |
+| 部署 | Docker 多阶段构建, Helm Chart, K8s 滚动更新                                          |
 
 ---
 
@@ -334,18 +335,31 @@ const res = await fetchClient("/api/some-endpoint", {
 
 ```bash
 cd frontend
-bun run build          # 必须通过 (tsc -b + vite build)
+bun install
 bun run lint           # Biome 无 error
-bun run lint:eslint    # eslint 无 error
+bun run lint:eslint    # ESLint 无 error
+bunx tsc -b --noEmit   # TypeScript 类型检查
+bun run build          # tsc -b + vite build
 
 cd backend
-go vet ./...       # 通过代码规范校验
+go vet ./...           # 代码规范校验
+go test -count=1 ./handlers/   # 后端测试 (82 个)
 go build -o bin/server.exe .   # build 可运行文件
 ```
 
-- `tsc --noEmit` 做类型检查
-- `bun run build` 做完整构建
 - 所有代码变更后必须跑构建验证
+
+## GitHub Actions — Lint Checks
+
+每次 Push / PR 到 `main` 自动触发，配置文件 `.github/workflows/lint.yml`：
+
+| Job | Command | Working Directory |
+|-----|---------|-------------------|
+| `lint-backend` | `go vet ./...` | `backend/` |
+| `test-backend` | `go test -count=1 ./handlers/` | `backend/` |
+| `lint-frontend` | `bun run lint` | `frontend/` |
+| `lint-frontend-eslint` | `bun run lint:eslint` | `frontend/` |
+| `tsc-frontend` | `bunx tsc -b --noEmit` | `frontend/` |
 
 ---
 

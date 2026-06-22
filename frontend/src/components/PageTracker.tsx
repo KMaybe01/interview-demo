@@ -76,5 +76,5 @@ export default function PageTracker({ children }: { children: React.ReactNode })
     reportedRef.current = false
   }, [location.pathname])
 
-  return <>{children}</>
+  return children
 }

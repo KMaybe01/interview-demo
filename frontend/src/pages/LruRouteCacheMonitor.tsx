@@ -66,10 +66,8 @@ export default function MonitorPage({ pageKey, isActive }: { pageKey: string; is
     }
   }, [])
 
-  const services = (page.data?.services ?? []) as ServiceRow[]
-
   const filtered = useMemo(() => {
-    let list = services
+    let list = (page.data?.services ?? []) as ServiceRow[]
     if (searchText) {
       list = list.filter((s) => s.name.includes(searchText))
     }
@@ -80,7 +78,7 @@ export default function MonitorPage({ pageKey, isActive }: { pageKey: string; is
       list = list.filter((s) => s.region === regionFilter)
     }
     return list
-  }, [services, searchText, statusFilter, regionFilter])
+  }, [page.data?.services, searchText, statusFilter, regionFilter])
 
   const columns: TableColumnsType<ServiceRow> = [
     { title: "服务名", dataIndex: "name", key: "name", width: 140 },

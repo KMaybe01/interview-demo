@@ -109,14 +109,14 @@ export default function Login() {
               key={i}
               style={{
                 position: "absolute",
-                top: `${30 + i * 15}%`,
-                left: `${20 + i * 18}%`,
+                top: `${String(30 + i * 15)}%`,
+                left: `${String(20 + i * 18)}%`,
                 width: 120 + i * 40,
                 height: 120 + i * 40,
                 borderRadius: "50%",
                 border: "2px solid rgba(102,126,234,0.15)",
-                animation: `ripple ${4 + i * 1.5}s ease-out infinite`,
-                animationDelay: `${i * 1.2}s`,
+                animation: `ripple ${String(4 + i * 1.5)}s ease-out infinite`,
+                animationDelay: `${String(i * 1.2)}s`,
               }}
             />
           ))}
@@ -217,8 +217,7 @@ export default function Login() {
                   description="若非本人操作，请立即修改密码"
                   type="warning"
                   showIcon
-                  closable
-                  onClose={() => { setShowSessionAlert(false); }}
+                  closable={{ onClose: () => { setShowSessionAlert(false); } }}
                 />
               </Form.Item>
             )}

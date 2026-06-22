@@ -25,7 +25,7 @@ async function doRefresh(): Promise<string> {
   } catch (err) {
     const status = axios.isAxiosError(err) ? err.response?.status : null
     if (status === 401) {
-      const code = axios.isAxiosError(err) ? (err.response?.data as Record<string, unknown>)?.code : null
+      const code = axios.isAxiosError(err) ? (err.response?.data as Record<string, unknown>).code : null
       if (code === "SESSION_REPLACED") {
         clearTokens()
         refreshPromise = null
@@ -33,15 +33,16 @@ async function doRefresh(): Promise<string> {
           isRedirecting = true
           location.href = "/login?session_replaced=1"
         }
+        // eslint-disable-next-line preserve-caught-error
         throw new Error("Session replaced")
       }
       clearTokens()
     }
     refreshPromise = null
-    const refreshErr = new Error(
+    // eslint-disable-next-line preserve-caught-error
+    throw new Error(
       status === 401 ? "Refresh Token invalid or reused" : "Refresh failed",
     )
-    throw refreshErr
   }
 }
 

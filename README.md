@@ -17,8 +17,8 @@ React 19 + Go 1.26 全栈演示项目，涵盖 **13 个高级技术场景**，�
 | 后端     | Go 1.26, Gin 1.12, Gorilla WebSocket, golang-jwt (双 Token 无感刷新)     |
 | GIS      | OpenLayers 10.9 (Cluster + BBOX)                                        |
 | 表单     | 自定义递归渲染引擎 (非 @rjsf)                                            |
-| 运行     | Bun 1.3                                                                 |
-| CI/CD    | GitLab CI + Docker (多阶段构建)                                         |
+| 运行时   | Bun 1.3（前端依赖安装 + 脚本执行 + CI/CD）                              |
+| CI/CD    | GitHub Actions + GitLab CI + Docker (多阶段构建)                        |
 | 部署     | Kubernetes Helm (滚动更新, zero-downtime), Nginx Ingress                |
 
 ## 项目结构
@@ -253,14 +253,17 @@ dist/
 
 ## 代码校验 (GitHub Actions)
 
-每次 Push / Pull Request 到 `main` 分支时自动触发：
+每次 Push / Pull Request 到 `main` 分支时自动触发（并发运行，可自动取消重复提交）：
 
-| Job           | 命令                | 工具        |
-| ------------- | ------------------- | ----------- |
-| lint-backend  | `go vet ./...`      | Go vet      |
-| lint-frontend | `npm run lint`      | Biome 2.5   |
+| Job                | 命令                      | 工具           |
+| ------------------ | ------------------------- | -------------- |
+| lint-backend       | `go vet ./...`            | Go vet         |
+| test-backend       | `go test ./handlers/`     | Go test (82 个) |
+| lint-frontend      | `bun run lint`            | Biome 2.5      |
+| lint-frontend-eslint | `bun run lint:eslint`   | ESLint 9       |
+| tsc-frontend       | `bunx tsc -b --noEmit`    | TypeScript 6   |
 
-配置文件: `.github/workflows/lint.yml`
+> 前端使用 Bun 1.3 作为运行时安装依赖和执行脚本。配置文件: `.github/workflows/lint.yml`
 
 ## CI/CD + K8s 部署
 
@@ -278,7 +281,7 @@ dist/
 
 | Stage              | 基础镜像        | 产出                              |
 | ------------------ | --------------- | --------------------------------- |
-| `frontend-builder` | node:22-alpine  | `tsc -b && vite build` → `dist/` |
+| `frontend-builder` | oven/bun:1.3   | `bun install && bun run build` → `dist/` |
 | `backend-builder`  | golang:1.26     | `CGO_ENABLED=0 go build` → 二进制 |
 | `frontend`         | nginx:alpine    | `dist/` + `nginx.conf` → :80      |
 | `backend`          | alpine:3.19     | 二进制 + ca-certificates → :8080  |
@@ -301,9 +304,10 @@ docker compose up --build
 | Stage      | Job              | 说明                                  |
 | ---------- | ---------------- | ------------------------------------- |
 | validate   | lint-backend     | `go vet ./...`                        |
+| validate   | test-backend     | `go test ./handlers/`                 |
 | validate   | lint-frontend    | `biome check --write src/`           |
 | build      | build-backend    | `go build -o bin/server .`            |
-| build      | build-frontend   | `npm ci && npm run build`             |
+| build      | build-frontend   | `bun install && bun run build`        |
 | package    | docker-backend   | 多阶段构建 backend 镜像并推送 Registry |
 | package    | docker-frontend  | 多阶段构建 frontend 镜像并推送 Registry |
 | deploy     | deploy-k8s       | `helm upgrade --install` + `--wait`    |

@@ -70,10 +70,8 @@ export default function LogsPage({ pageKey, isActive }: { pageKey: string; isAct
     }
   }, [])
 
-  const logs = (page.data?.logs ?? []) as LogEntry[]
-
   const filtered = useMemo(() => {
-    let list = logs
+    let list = (page.data?.logs ?? []) as LogEntry[]
     if (searchQuery !== "") {
       list = list.filter((l) => l.message.toLowerCase().includes(searchQuery.toLowerCase()))
     }
@@ -81,7 +79,7 @@ export default function LogsPage({ pageKey, isActive }: { pageKey: string; isAct
       list = list.filter((l) => l.level === logLevelFilter)
     }
     return list
-  }, [logs, searchQuery, logLevelFilter])
+  }, [page.data?.logs, searchQuery, logLevelFilter])
 
   const handleRefresh = useCallback(() => {
     fetchLogs()

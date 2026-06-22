@@ -48,7 +48,7 @@ const METHOD_COLOR: Record<string, string> = {
 }
 
 const STATUS_CONFIG: Record<RequestStatus, { color: string; icon: ReactNode; label: string }> = {
-  pending: { color: "processing", icon: <></>, label: "请求中" },
+  pending: { color: "processing", icon: <span />, label: "请求中" },
   resolved: { color: "success", icon: <CheckCircleOutlined />, label: "完成" },
   rejected: { color: "error", icon: <CloseCircleOutlined />, label: "失败" },
   cancelled: { color: "default", icon: <MinusCircleOutlined />, label: "已取消" },
