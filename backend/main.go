@@ -26,6 +26,7 @@ func main() {
 		api.POST("/upload/chunk", handlers.UploadChunk)
 		api.POST("/upload/complete", handlers.CompleteUpload)
 		api.GET("/upload/status/:uploadId", handlers.GetUploadStatus)
+		api.GET("/upload/download/:uploadId", handlers.DownloadUpload)
 		api.GET("/upload/sessions", handlers.ListUploadSessions)
 		api.POST("/rbac/check", handlers.CheckPermissions)
 		api.GET("/services", handlers.GetServices)

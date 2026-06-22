@@ -3,6 +3,7 @@ import {
   ClearOutlined,
   CloseCircleFilled,
   DeleteOutlined,
+  DownloadOutlined,
   DownOutlined,
   InboxOutlined,
   LoadingOutlined,
@@ -719,6 +720,15 @@ export default function ChunkedUpload() {
                   <Tag color={item.result.integrityOK ? "success" : "error"}>
                     {item.result.integrityOK ? "完整性验证通过" : "完整性验证失败"}
                   </Tag>
+                  <Button
+                    size="small"
+                    type="primary"
+                    icon={<DownloadOutlined />}
+                    href={`/api/upload/download/${item.uploadId}`}
+                    target="_blank"
+                  >
+                    下载文件
+                  </Button>
                 </Space>
               </div>
             )}

@@ -158,6 +158,30 @@ func GetUploadStatus(c *gin.Context) {
 	})
 }
 
+func DownloadUpload(c *gin.Context) {
+	uploadID := c.Param("uploadId")
+	val, ok := uploadSessions.Load(uploadID)
+	if !ok {
+		c.JSON(404, gin.H{"error": "Upload session not found"})
+		return
+	}
+	session := val.(*UploadSession)
+	if session.Filename == "" {
+		c.JSON(404, gin.H{"error": "Filename not found"})
+		return
+	}
+
+	filePath := filepath.Join(uploadDir, fmt.Sprintf("%s_%s", uploadID, session.Filename))
+	if _, err := os.Stat(filePath); os.IsNotExist(err) {
+		c.JSON(404, gin.H{"error": "File not found"})
+		return
+	}
+
+	c.Header("Content-Disposition", fmt.Sprintf(`attachment; filename="%s"`, session.Filename))
+	c.Header("Content-Type", "application/octet-stream")
+	c.File(filePath)
+}
+
 func ListUploadSessions(c *gin.Context) {
 	var sessions []map[string]interface{}
 	uploadSessions.Range(func(key, val interface{}) bool {
@@ -306,7 +330,6 @@ func CompleteUpload(c *gin.Context) {
 	integrityOK := session.FileHash == "" || session.FileHash == fileHash
 
 	os.RemoveAll(chunkDir)
-	uploadSessions.Delete(req.UploadID)
 	saveSessions()
 
 	c.JSON(200, gin.H{
