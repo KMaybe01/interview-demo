@@ -25,6 +25,16 @@ async function doRefresh(): Promise<string> {
   } catch (err) {
     const status = axios.isAxiosError(err) ? err.response?.status : null
     if (status === 401) {
+      const code = axios.isAxiosError(err) ? (err.response?.data as Record<string, unknown>)?.code : null
+      if (code === "SESSION_REPLACED") {
+        clearTokens()
+        refreshPromise = null
+        if (!isLoginPage()) {
+          isRedirecting = true
+          location.href = "/login?session_replaced=1"
+        }
+        throw new Error("Session replaced")
+      }
       clearTokens()
     }
     refreshPromise = null
@@ -69,6 +79,10 @@ function parseSimpleToken(token: string): { exp: number } | null {
   }
 }
 
+function isLoginPage(): boolean {
+  return window.location.pathname === "/login"
+}
+
 const http = axios.create({
   timeout: 30000,
 })
@@ -101,9 +115,19 @@ http.interceptors.response.use(
     const status = error.response?.status
 
     if (status === 401 && !originalRequest._retry) {
+      const data = error.response?.data as Record<string, unknown> | undefined
+      if (data?.code === "SESSION_REPLACED") {
+        clearTokens()
+        if (!isRedirecting && !isLoginPage()) {
+          isRedirecting = true
+          window.location.href = "/login?session_replaced=1"
+        }
+        return Promise.reject(error)
+      }
+
       const token = getAccessToken()
       if (token == null) {
-        if (!isRedirecting) {
+        if (!isRedirecting && !isLoginPage()) {
           isRedirecting = true
           window.location.href = "/login"
         }
@@ -127,7 +151,7 @@ http.interceptors.response.use(
         }
         return await http(originalRequest)
       } catch {
-        if (!isRedirecting) {
+        if (!isRedirecting && !isLoginPage()) {
           isRedirecting = true
           clearTokens()
           window.location.href = "/login"

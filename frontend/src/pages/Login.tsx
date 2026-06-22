@@ -1,7 +1,7 @@
 import { LockOutlined, SafetyOutlined, UserOutlined } from "@ant-design/icons"
-import { Button, Card, Form, Input, message, Typography } from "antd"
+import { Alert, Button, Card, Form, Input, message, Typography } from "antd"
 import axios from "axios"
-import { useCallback, useState } from "react"
+import { useCallback, useEffect, useRef, useState } from "react"
 import { useNavigate } from "react-router-dom"
 import { useAuthStore } from "../stores"
 import { http } from "../utils/fetchClient.ts"
@@ -32,8 +32,25 @@ const styles = `
 
 export default function Login() {
   const [loading, setLoading] = useState(false)
+  const [showSessionAlert, setShowSessionAlert] = useState(
+    new URLSearchParams(location.search).get("session_replaced") === "1",
+  )
   const navigate = useNavigate()
   const login = useAuthStore((s) => s.login)
+
+  const alertTimerRef = useRef<ReturnType<typeof setTimeout> | null>(null)
+
+  useEffect(() => {
+    if (showSessionAlert) {
+      const params = new URLSearchParams(location.search)
+      params.delete("session_replaced")
+      window.history.replaceState(null, "", "?" + params.toString())
+      alertTimerRef.current = setTimeout(() => { setShowSessionAlert(false); }, 8000)
+    }
+    return () => {
+      if (alertTimerRef.current) clearTimeout(alertTimerRef.current)
+    }
+  }, [showSessionAlert])
 
   const handleSubmit = useCallback(
     async (values: { username: string; password: string }) => {
@@ -193,6 +210,18 @@ export default function Login() {
             size="large"
             autoComplete="off"
           >
+            {showSessionAlert && (
+              <Form.Item style={{ marginBottom: 16 }}>
+                <Alert
+                  title="您的账号已在其他设备登录"
+                  description="若非本人操作，请立即修改密码"
+                  type="warning"
+                  showIcon
+                  closable
+                  onClose={() => { setShowSessionAlert(false); }}
+                />
+              </Form.Item>
+            )}
             <Form.Item name="username" rules={[{ required: true, message: "请输入用户名" }]}>
               <Input
                 prefix={<UserOutlined style={{ color: "#bfbfbf" }} />}

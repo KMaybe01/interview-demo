@@ -1,6 +1,7 @@
 package handlers
 
 import (
+	"fmt"
 	"net/http"
 	"sync"
 	"time"
@@ -16,6 +17,8 @@ var usedRefreshTokens = struct {
 	sync.RWMutex
 }{m: make(map[string]bool)}
 
+var activeSessions sync.Map
+
 type LoginRequest struct {
 	Username string `json:"username" binding:"required"`
 	Password string `json:"password" binding:"required"`
@@ -27,12 +30,27 @@ type TokenResponse struct {
 	ExpiresIn    int    `json:"expires_in"`
 }
 
-func createToken(sub string, duration time.Duration) (string, error) {
+func createToken(sub string, duration time.Duration, nonce ...string) (string, error) {
 	claims := jwt.MapClaims{
 		"sub":  sub,
 		"iat":  time.Now().Unix(),
 		"exp":  time.Now().Add(duration).Unix(),
 		"role": "admin",
+	}
+	if len(nonce) > 0 {
+		claims["nonce"] = nonce[0]
+	}
+	token := jwt.NewWithClaims(jwt.SigningMethodHS256, claims)
+	return token.SignedString(jwtSecret)
+}
+
+func createRefreshToken(sub, nonce string, duration time.Duration) (string, error) {
+	claims := jwt.MapClaims{
+		"sub":   sub,
+		"nonce": nonce,
+		"iat":   time.Now().Unix(),
+		"exp":   time.Now().Add(duration).Unix(),
+		"role":  "admin",
 	}
 	token := jwt.NewWithClaims(jwt.SigningMethodHS256, claims)
 	return token.SignedString(jwtSecret)
@@ -64,8 +82,11 @@ func Login(c *gin.Context) {
 		return
 	}
 
-	accessToken, _ := createToken("user_001", 1*time.Minute)
-	refreshToken, _ := createToken("user_001", 1*time.Hour)
+	nonce := fmt.Sprintf("%d", time.Now().UnixNano())
+	activeSessions.Store("user_001", nonce)
+
+	accessToken, _ := createToken("user_001", 1*time.Minute, nonce)
+	refreshToken, _ := createRefreshToken("user_001", nonce, 1*time.Hour)
 
 	c.JSON(http.StatusOK, TokenResponse{
 		AccessToken:  accessToken,
@@ -105,9 +126,20 @@ func RefreshToken(c *gin.Context) {
 	}
 
 	sub, _ := (*claims)["sub"].(string)
+	nonceFromToken, _ := (*claims)["nonce"].(string)
 
-	newAccessToken, _ := createToken(sub, 1*time.Minute)
-	newRefreshToken, _ := createToken(sub, 1*time.Hour)
+	storedNonce, ok := activeSessions.Load(sub)
+	if ok && nonceFromToken != storedNonce.(string) {
+		c.JSON(http.StatusUnauthorized, gin.H{
+			"error":   "此账号已在其他设备登录",
+			"code":    "SESSION_REPLACED",
+			"message": "您的账号已在其他设备登录，请重新登录",
+		})
+		return
+	}
+
+	newAccessToken, _ := createToken(sub, 1*time.Minute, nonceFromToken)
+	newRefreshToken, _ := createRefreshToken(sub, nonceFromToken, 1*time.Hour)
 
 	usedRefreshTokens.Lock()
 	usedRefreshTokens.m[req.RefreshToken] = true
@@ -147,6 +179,39 @@ func CheckToken(c *gin.Context) {
 		"sub":       sub,
 		"remaining": remaining,
 	})
+}
+
+func AuthMiddleware() gin.HandlerFunc {
+	return func(c *gin.Context) {
+		tokenStr := c.GetHeader("Authorization")
+		if tokenStr == "" || len(tokenStr) < 7 {
+			c.AbortWithStatusJSON(http.StatusUnauthorized, gin.H{"error": "未提供 Token"})
+			return
+		}
+
+		tokenStr = tokenStr[7:]
+		claims, err := parseAndValidateToken(tokenStr)
+		if err != nil {
+			c.AbortWithStatusJSON(http.StatusUnauthorized, gin.H{"error": "Token 无效或已过期"})
+			return
+		}
+
+		sub, _ := (*claims)["sub"].(string)
+		nonceFromToken, _ := (*claims)["nonce"].(string)
+
+		storedNonce, ok := activeSessions.Load(sub)
+		if ok && nonceFromToken != storedNonce.(string) {
+			c.AbortWithStatusJSON(http.StatusUnauthorized, gin.H{
+				"error":   "此账号已在其他设备登录",
+				"code":    "SESSION_REPLACED",
+				"message": "您的账号已在其他设备登录，请重新登录",
+			})
+			return
+		}
+
+		c.Set("sub", sub)
+		c.Next()
+	}
 }
 
 func GetUsedTokenCount(c *gin.Context) {
