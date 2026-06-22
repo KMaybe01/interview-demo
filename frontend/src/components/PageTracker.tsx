@@ -25,56 +25,57 @@ const navigationTimings: ReadonlyMap<string, number> = (() => {
 
 export default function PageTracker({ children }: { children: React.ReactNode }) {
   const location = useLocation()
+  const pathname = location.pathname
   const renderStartRef = useRef(performance.now())
   const reportedRef = useRef(false)
   const prevPathRef = useRef("")
+  const referrerRef = useRef("")
+
+  if (prevPathRef.current !== pathname) {
+    referrerRef.current = prevPathRef.current
+    prevPathRef.current = pathname
+    reportedRef.current = false
+    renderStartRef.current = performance.now()
+  }
 
   useEffect(() => {
+    if (reportedRef.current) return
+    reportedRef.current = true
+
     const renderEnd = performance.now()
     const renderDuration = renderEnd - renderStartRef.current
-    const path = location.pathname
-    const pageName = getPageName(path)
+    const pageName = getPageName(pathname)
 
-    if (!reportedRef.current) {
-      reportedRef.current = true
-      const v = getVitalsSnapshot()
+    const v = getVitalsSnapshot()
+    http
+      .post("/api/vitals/page-report", [
+        {
+          path: pathname,
+          pageName,
+          renderDuration: Math.round(renderDuration * 100) / 100,
+          lcp: v.LCP,
+          inp: v.INP,
+          cls: v.CLS,
+          referrer: referrerRef.current,
+        },
+      ])
+      .catch(() => undefined)
+
+    if (navigationTimings.size > 0 && pathname !== "/login") {
       http
-        .post("/api/vitals/page-report", [
-          {
-            path,
-            pageName,
-            renderDuration: Math.round(renderDuration * 100) / 100,
-            lcp: v.LCP,
-            inp: v.INP,
-            cls: v.CLS,
-            referrer: prevPathRef.current,
-          },
-        ])
+        .post(
+          "/api/vitals/report",
+          Array.from(navigationTimings.entries()).map(([metric, value]) => ({
+            metric,
+            value: Math.round(value * 100) / 100,
+            rating: "good",
+            url: pathname,
+            version: "navigation",
+          })),
+        )
         .catch(() => undefined)
-
-      if (navigationTimings.size > 0 && path !== "/login") {
-        http
-          .post(
-            "/api/vitals/report",
-            Array.from(navigationTimings.entries()).map(([metric, value]) => ({
-              metric,
-              value: Math.round(value * 100) / 100,
-              rating: "good",
-              url: path,
-              version: "navigation",
-            })),
-          )
-          .catch(() => undefined)
-      }
     }
-
-    prevPathRef.current = path
-  }, [location.pathname])
-
-  useEffect(() => {
-    renderStartRef.current = performance.now()
-    reportedRef.current = false
-  }, [location.pathname])
+  }, [pathname])
 
   return children
 }

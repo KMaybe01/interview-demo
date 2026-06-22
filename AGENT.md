@@ -260,6 +260,10 @@ PageTracker (App.tsx 中包裹每个路由)
   → performance.now() 计算渲染耗时
   → POST /api/vitals/page-report (页面路径 + 渲染时长)
 
+StrictMode 保护: 单 effect + render-time 重置 `reportedRef`
+  → 避免开发环境 double-invoke 导致重复请求
+  → 类似场景（如 JsonSchemaForm schema 加载）用 `fetchedRef` guard
+
 后端 in-memory 存储 → GET /api/vitals/summary|history|pages
   → WebVitals.tsx 展示: 指标卡片 + ECharts 趋势图 + 页面渲染排行
 ```

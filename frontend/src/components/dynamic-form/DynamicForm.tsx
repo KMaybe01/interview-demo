@@ -209,7 +209,7 @@ const DynamicForm = forwardRef<DynamicFormHandle, DynamicFormProps>(function Dyn
       }
       setErrors(errorMap)
       notification.error({
-        message: "表单校验失败",
+        title: "表单校验失败",
         description: `共有 ${String(result.length)} 个错误`,
       })
       setSubmitting(false)
@@ -248,7 +248,7 @@ const DynamicForm = forwardRef<DynamicFormHandle, DynamicFormProps>(function Dyn
       }
       setErrors(errorMap)
       notification.error({
-        message: "异步校验失败",
+        title: "异步校验失败",
         description: `共有 ${String(asyncResults.length)} 个错误`,
       })
       setSubmitting(false)
@@ -265,14 +265,14 @@ const DynamicForm = forwardRef<DynamicFormHandle, DynamicFormProps>(function Dyn
           }
           setErrors(errorMap)
           notification.warning({
-            message: "后端业务校验失败",
+            title: "后端业务校验失败",
             description: `共有 ${String(backendResults.length)} 个业务规则错误`,
           })
           setSubmitting(false)
           return
         }
       } catch {
-        notification.error({ message: "后端校验请求失败", description: "请检查网络连接和后端服务" })
+        notification.error({ title: "后端校验请求失败", description: "请检查网络连接和后端服务" })
         setSubmitting(false)
         return
       }
@@ -281,7 +281,7 @@ const DynamicForm = forwardRef<DynamicFormHandle, DynamicFormProps>(function Dyn
     setSubmitted(true)
     setErrors({})
     onSubmit?.(data)
-    notification.success({ message: "表单提交成功", description: "数据已通过校验" })
+    notification.success({ title: "表单提交成功", description: "数据已通过校验" })
     setSubmitting(false)
   }
 

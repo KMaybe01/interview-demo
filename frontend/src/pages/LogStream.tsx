@@ -43,6 +43,7 @@ interface DecodeStats {
   totalLines: number
   elapsed: number
   linesPerSec: number
+  totalTime: number
 }
 
 interface SSEMessage {
@@ -71,6 +72,7 @@ export default function LogStream() {
     totalLines: 0,
     elapsed: 0,
     linesPerSec: 0,
+    totalTime: 0,
   })
 
   const abortRef = useRef<AbortController | null>(null)
@@ -115,6 +117,7 @@ export default function LogStream() {
         totalLines: s.totalLines,
         elapsed,
         linesPerSec: elapsed > 0 ? Math.round(s.totalLines / elapsed) : 0,
+        totalTime: doneTimeRef.current ? (doneTimeRef.current - startTimeRef.current) / 1000 : 0,
       })
     })
   }, [])
@@ -290,6 +293,7 @@ export default function LogStream() {
             if (evt.type === "done") {
               doneTimeRef.current = performance.now()
               setStatus("done")
+              scheduleFlush()
               continue
             }
 
@@ -401,21 +405,21 @@ export default function LogStream() {
             <Col span={4}>
               <Statistic title="Worker 数" value={workerCount} styles={statisticContentStyle} />
             </Col>
-            <Col span={5}>
+            <Col span={4}>
               <Statistic
                 title="已解密 Chunks"
                 value={stats.decryptedChunks}
                 styles={statisticContentStyle}
               />
             </Col>
-            <Col span={5}>
+            <Col span={4}>
               <Statistic
                 title="已解密行数"
                 value={stats.totalLines}
                 styles={statisticContentStyle}
               />
             </Col>
-            <Col span={5}>
+            <Col span={4}>
               <Statistic
                 title="解密速度"
                 value={stats.linesPerSec}
@@ -423,7 +427,19 @@ export default function LogStream() {
                 styles={statisticContentStyle}
               />
             </Col>
-            <Col span={5}>
+            <Col span={4}>
+              <Statistic
+                title="解密耗时"
+                value={
+                  status === "done" || status === "interrupted"
+                    ? stats.totalTime.toFixed(2)
+                    : stats.elapsed.toFixed(1)
+                }
+                suffix="秒"
+                styles={statisticContentStyle}
+              />
+            </Col>
+            <Col span={4}>
               <Statistic
                 title="估计数据量"
                 value={`${((stats.totalLines * 100) / 1000000).toFixed(1)}MB`}
@@ -496,7 +512,7 @@ export default function LogStream() {
             >
               <div ref={containerRef} onScroll={handleScroll} style={sharedLogStyle}>
                 {lines.length === 0 && status === "idle" && (
-                  <Text type="secondary">点击「开始解密」启动百万行日志流式解密</Text>
+                  <Text type="secondary">点击「开始解密」启动十万行日志流解密</Text>
                 )}
                 {lines.length === 0 && status === "connecting" && (
                   <Text type="secondary">正在建立 SSE 连接...</Text>

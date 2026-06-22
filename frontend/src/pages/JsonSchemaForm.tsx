@@ -1,4 +1,5 @@
 import {
+  Alert,
   Button,
   Card,
   Collapse,
@@ -7,11 +8,12 @@ import {
   message,
   notification,
   Space,
+  Spin,
   Tabs,
   Tag,
   Typography,
 } from "antd"
-import { useCallback, useMemo, useRef, useState } from "react"
+import { useCallback, useEffect, useMemo, useRef, useState } from "react"
 import DynamicForm, { type DynamicFormHandle } from "../components/dynamic-form/DynamicForm.tsx"
 import ArrayField from "../components/dynamic-form/fields/ArrayField.tsx"
 import DateTimeField from "../components/dynamic-form/fields/DateTimeField.tsx"
@@ -36,346 +38,95 @@ registerField("array", ArrayField)
 
 const ipPattern = /^(\d{1,3}\.){3}\d{1,3}$/
 
-const networkSchema: FormSchema = {
-  type: "tabs",
-  key: "root",
-  tabs: [
-    {
-      title: "基站配置",
-      key: "cell",
-      children: [
-        {
-          type: "card",
-          key: "basic",
-          title: "基本信息",
-          description: "基站核心参数",
-          children: [
-            {
-              type: "leaf",
-              key: "basic-fields",
-              properties: {
-                cellName: {
-                  type: "string",
-                  key: "cellName",
-                  title: "基站名称",
-                  required: true,
-                  placeholder: "例如: SMF-01",
-                  minLength: 2,
-                  maxLength: 32,
-                },
-                fullCellName: {
-                  type: "string",
-                  key: "fullCellName",
-                  title: "完整基站名称",
-                  description: "自动生成",
-                  placeholder: "由基站类型和名称自动拼接",
-                  dependencies: ["cellName", "cellType"],
-                  autoFill: (d) => {
-                    const typeLabel =
-                      d.cellType === "macro"
-                        ? "宏"
-                        : d.cellType === "micro"
-                          ? "微"
-                          : d.cellType === "pico"
-                            ? "皮"
-                            : "家庭"
-                    const name = typeof d.cellName === "string" ? d.cellName : ""
-                    return `${typeLabel}基站-${name}`
-                  },
-                },
-                cellId: {
-                  type: "string",
-                  key: "cellId",
-                  title: "基站 ID",
-                  required: true,
-                  placeholder: "例如: CELL-001",
-                  asyncValidation: async (value) => {
-                    await new Promise((r) => {
-                      setTimeout(r, 1000)
-                    })
-                    if (String(value) === "CELL-999") {
-                      return "基站 ID CELL-999 已被占用"
-                    }
-                    return undefined
-                  },
-                },
-                cellType: {
-                  type: "select",
-                  key: "cellType",
-                  title: "基站类型",
-                  required: true,
-                  options: [
-                    { label: "宏基站 (Macro)", value: "macro" },
-                    { label: "微基站 (Micro)", value: "micro" },
-                    { label: "皮基站 (Pico)", value: "pico" },
-                    { label: "家庭基站 (Femto)", value: "femto" },
-                  ],
-                  placeholder: "选择基站类型",
-                },
-                status: {
-                  type: "select",
-                  key: "status",
-                  title: "运行状态",
-                  options: [
-                    { label: "在线", value: "online" },
-                    { label: "离线", value: "offline" },
-                    { label: "维护", value: "maintenance" },
-                  ],
-                  placeholder: "选择状态",
-                },
-              },
-            },
-          ],
-        },
-        {
-          type: "card",
-          key: "network",
-          title: "网络配置",
-          description: "IP 与传输参数",
-          children: [
-            {
-              type: "leaf",
-              key: "network-fields",
-              properties: {
-                ipAddress: {
-                  type: "string",
-                  key: "ipAddress",
-                  title: "管理 IP",
-                  required: true,
-                  placeholder: "例如: 192.168.1.100",
-                  validation: (value) => {
-                    if (typeof value === "string" && value && !ipPattern.test(value)) {
-                      return "IP 地址格式无效 (需为 x.x.x.x 格式)"
-                    }
-                    return undefined
-                  },
-                },
-                port: {
-                  type: "number",
-                  key: "port",
-                  title: "端口号",
-                  required: true,
-                  min: 1024,
-                  max: 65535,
-                  placeholder: "例如: 8080",
-                },
-                mcc: {
-                  type: "string",
-                  key: "mcc",
-                  title: "MCC (移动国家码)",
-                  minLength: 3,
-                  maxLength: 3,
-                  placeholder: "例如: 460",
-                },
-                mnc: {
-                  type: "string",
-                  key: "mnc",
-                  title: "MNC (移动网络码)",
-                  minLength: 2,
-                  maxLength: 3,
-                  placeholder: "例如: 01",
-                },
-                tac: {
-                  type: "number",
-                  key: "tac",
-                  title: "TAC (跟踪区码)",
-                  min: 1,
-                  max: 65535,
-                  placeholder: "例如: 1",
-                },
-              },
-            },
-          ],
-        },
-      ],
-    },
-    {
-      title: "传输配置",
-      key: "transport",
-      children: [
-        {
-          type: "card",
-          key: "sctp-config",
-          title: "SCTP 传输配置",
-          description: "SCTP 端口列表",
-          children: [
-            {
-              type: "leaf",
-              key: "sctp-fields",
-              properties: {
-                sctpPorts: {
-                  type: "array",
-                  key: "sctpPorts",
-                  title: "SCTP 端口",
-                  description: "添加/删除 SCTP 端口对",
-                  required: true,
-                  minItems: 1,
-                  maxItems: 10,
-                  items: {
-                    type: "leaf",
-                    key: "sctp-port-item",
-                    properties: {
-                      localPort: {
-                        type: "number",
-                        key: "localPort",
-                        title: "本地端口",
-                        required: true,
-                        min: 1,
-                        max: 65535,
-                        placeholder: "例如: 38472",
-                      },
-                      remotePort: {
-                        type: "number",
-                        key: "remotePort",
-                        title: "远端端口",
-                        required: true,
-                        min: 1,
-                        max: 65535,
-                        placeholder: "例如: 38472",
-                      },
-                    },
-                  },
-                },
-              },
-            },
-          ],
-        },
-      ],
-    },
-    {
-      title: "业务参数",
-      key: "service",
-      children: [
-        {
-          type: "card",
-          key: "service-config",
-          title: "业务配置",
-          children: [
-            {
-              type: "leaf",
-              key: "service-fields",
-              properties: {
-                maxUsers: {
-                  type: "number",
-                  key: "maxUsers",
-                  title: "最大用户数",
-                  required: true,
-                  min: 1,
-                  max: 100000,
-                  placeholder: "例如: 10000",
-                },
-                bandwidth: {
-                  type: "select",
-                  key: "bandwidth",
-                  title: "带宽 (MHz)",
-                  required: true,
-                  options: [
-                    { label: "5 MHz", value: 5 },
-                    { label: "10 MHz", value: 10 },
-                    { label: "20 MHz", value: 20 },
-                    { label: "40 MHz", value: 40 },
-                    { label: "100 MHz", value: 100 },
-                  ],
-                },
-                enableEncryption: {
-                  type: "switch",
-                  key: "enableEncryption",
-                  title: "启用加密",
-                  default: true,
-                },
-                enableLogging: {
-                  type: "switch",
-                  key: "enableLogging",
-                  title: "启用日志",
-                  default: false,
-                },
-              },
-            },
-          ],
-        },
-        {
-          type: "card",
-          key: "advanced",
-          title: "高级配置",
-          children: [
-            {
-              type: "leaf",
-              key: "advanced-fields",
-              properties: {
-                encryptAlgorithm: {
-                  type: "select",
-                  key: "encryptAlgorithm",
-                  title: "加密算法",
-                  options: [
-                    { label: "AES-256", value: "aes-256" },
-                    { label: "AES-128", value: "aes-128" },
-                    { label: "SM4", value: "sm4" },
-                  ],
-                  placeholder: "选择加密算法",
-                  default: "aes-256",
-                  visible: "enableEncryption === true",
-                },
-                certType: {
-                  type: "select",
-                  key: "certType",
-                  title: "证书类型",
-                  options: [
-                    { label: "自签名", value: "self-signed" },
-                    { label: "CA 签发", value: "ca-signed" },
-                  ],
-                  placeholder: "选择证书类型",
-                  default: "self-signed",
-                  visible: "enableEncryption === true",
-                },
-                certPath: {
-                  type: "string",
-                  key: "certPath",
-                  title: "证书路径",
-                  placeholder: "例如: /etc/certs/server.pem",
-                  visible: 'enableEncryption === true && certType === "ca-signed"',
-                },
-                deployTime: { type: "datetime", key: "deployTime", title: "部署时间" },
-                extraConfig: {
-                  type: "json",
-                  key: "extraConfig",
-                  title: "扩展配置",
-                  description: "JSON 格式自定义参数",
-                },
-              },
-            },
-          ],
-        },
-      ],
-    },
-  ],
-}
-
-const initialData: Record<string, unknown> = {
-  cellName: "SMF-01",
-  cellId: "CELL-001",
-  cellType: "macro",
-  status: "online",
-  ipAddress: "192.168.1.100",
-  port: 8080,
-  mcc: "460",
-  mnc: "01",
-  tac: 1,
-  maxUsers: 10000,
-  bandwidth: 100,
-  enableEncryption: true,
-  enableLogging: false,
-  sctpPorts: [{ localPort: 38472, remotePort: 38472 }],
-  encryptAlgorithm: "aes-256",
-  certType: "self-signed",
-  extraConfig: { nfId: "smf-001", plmn: "46001" },
+function augmentSchema(schema: FormSchema): FormSchema {
+  const walk = (node: FormSchema): FormSchema => {
+    if (node.type === "leaf" && node.properties) {
+      for (const [key, leaf] of Object.entries(node.properties)) {
+        if (key === "ipAddress") {
+          leaf.validation = (value) => {
+            if (typeof value === "string" && value && !ipPattern.test(value)) {
+              return "IP 地址格式无效 (需为 x.x.x.x 格式)"
+            }
+            return undefined
+          }
+        }
+        if (key === "cellId") {
+          leaf.asyncValidation = async (value) => {
+            await new Promise((r) => {
+              setTimeout(r, 1000)
+            })
+            if (String(value) === "CELL-999") {
+              return "基站 ID CELL-999 已被占用"
+            }
+            return undefined
+          }
+        }
+        if (key === "fullCellName") {
+          leaf.autoFill = (d) => {
+            const typeLabel =
+              d.cellType === "macro"
+                ? "宏"
+                : d.cellType === "micro"
+                  ? "微"
+                  : d.cellType === "pico"
+                    ? "皮"
+                    : "家庭"
+            const name = typeof d.cellName === "string" ? d.cellName : ""
+            return `${typeLabel}基站-${name}`
+          }
+        }
+        if (leaf.items) {
+          leaf.items = walk(leaf.items)
+        }
+      }
+    }
+    if (node.children) {
+      node.children = node.children.map(walk)
+    }
+    if (node.tabs) {
+      node.tabs = node.tabs.map((tab) => ({
+        ...tab,
+        children: tab.children.map(walk),
+      }))
+    }
+    return node
+  }
+  return walk(structuredClone(schema))
 }
 
 export default function JsonSchemaFormPage() {
+  const [schema, setSchema] = useState<FormSchema | null>(null)
+  const [initialData, setInitialData] = useState<Record<string, unknown> | null>(null)
+  const [loading, setLoading] = useState(true)
+  const [fetchError, setFetchError] = useState<string | null>(null)
   const [submittedData, setSubmittedData] = useState<Record<string, unknown> | null>(null)
   const [backendErrors, setBackendErrors] = useState<Record<string, string>>({})
   const formRef = useRef<DynamicFormHandle>(null)
-  const [liveData, setLiveData] = useState<Record<string, unknown>>(initialData)
+  const [liveData, setLiveData] = useState<Record<string, unknown>>({})
   const debounceRef = useRef<ReturnType<typeof setTimeout>>(undefined)
+  const fetchedRef = useRef(false)
+
+  useEffect(() => {
+    if (fetchedRef.current) return
+    fetchedRef.current = true
+    http
+      .get<{ schema: Record<string, unknown>; initialData: Record<string, unknown> }>(
+        "/api/schema/config",
+      )
+      .then((res) => {
+        const rawSchema = res.data.schema as unknown as FormSchema
+        const augmented = augmentSchema(rawSchema)
+        setSchema(augmented)
+        setInitialData(res.data.initialData)
+        setLiveData(res.data.initialData)
+      })
+      .catch((err: unknown) => {
+        setFetchError(getErrorMessage(err))
+      })
+      .finally(() => {
+        setLoading(false)
+      })
+  }, [])
   const handleFormChange = useCallback((data: Record<string, unknown>) => {
     if (debounceRef.current) clearTimeout(debounceRef.current)
     debounceRef.current = setTimeout(() => {
@@ -584,109 +335,134 @@ export default function JsonSchemaFormPage() {
         style={{ marginBottom: 16, background: "#fff" }}
         bordered={false}
       />
-      <Tabs
-        activeKey={activeTab}
-        onChange={setActiveTab}
-        items={[
-          {
-            key: "form",
-            label: "表单",
-            children: (
-              <Card
-                title={
-                  <Space style={{ cursor: "pointer" }} onClick={() => { setFormCollapsed(!formCollapsed) }}>
-                    <Text strong>5G 网元配置表单</Text>
-                    <Tag color="blue">{formCollapsed ? "展开" : "折叠"}</Tag>
-                    {formCollapsed && (
-                      <Text type="secondary" style={{ fontSize: 12 }}>
-                        (点击展开)
-                      </Text>
-                    )}
-                  </Space>
-                }
-                size="small"
-              >
-                {!formCollapsed && (
-                  <DynamicForm
-                    ref={formRef}
-                    schema={networkSchema}
-                    initialData={initialData}
-                    onBackendValidate={handleBackendValidate}
-                    onSubmit={handleSubmit}
-                    onChange={handleFormChange}
-                    backendErrors={Object.keys(backendErrors).length > 0 ? backendErrors : undefined}
-                  />
-                )}
-              </Card>
-            ),
-          },
-          {
-            key: "json",
-            label: "JSON 数据",
-            children: (
-              <Card
-                title={
-                  <Space style={{ cursor: "pointer" }} onClick={() => { setJsonCollapsed(!jsonCollapsed) }}>
-                    <Text strong>JSON 数据</Text>
-                    <Tag color="blue">{jsonCollapsed ? "展开" : "折叠"}</Tag>
-                  </Space>
-                }
-                extra={
-                  jsonEditing ? (
-                    <Space>
-                      <Button size="small" type="primary" onClick={handleApplyJson}>
-                        应用
-                      </Button>
-                      <Button size="small" onClick={handleCancelEdit}>
-                        取消
-                      </Button>
-                    </Space>
-                  ) : (
-                    <Space>
-                      <Button size="small" onClick={handleStartEdit}>
-                        编辑
-                      </Button>
-                      <Button size="small" onClick={handleCopyJson}>
-                        复制
-                      </Button>
-                    </Space>
-                  )
-                }
-                size="small"
-              >
-                {!jsonCollapsed && (
-                  <div>
-                    {jsonEditing ? (
-                      <Input.TextArea
-                        value={editJsonText}
-                        onChange={(e) => {
-                          setEditJsonText(e.target.value)
-                        }}
-                        rows={24}
-                        style={{
-                          fontFamily: "'Courier New', monospace",
-                          fontSize: 12,
-                        }}
-                      />
-                    ) : (
-                      <pre
-                        style={{
-                          fontSize: 12,
-                          maxHeight: 600,
-                          overflow: "auto",
-                          margin: 0,
+      {fetchError && (
+        <Alert
+          type="error"
+          title="加载表单配置失败"
+          description={fetchError}
+          showIcon
+          style={{ marginBottom: 16 }}
+        />
+      )}
+      <Card>
+        <Spin spinning={loading} description="正在加载表单配置...">
+          <Tabs
+            activeKey={activeTab}
+            onChange={setActiveTab}
+            items={[
+              {
+                key: "form",
+                label: "表单",
+                children: (
+                  <Card
+                    title={
+                      <Space
+                        style={{ cursor: "pointer" }}
+                        onClick={() => {
+                          setFormCollapsed(!formCollapsed)
                         }}
                       >
-                        {liveDataJson}
-                      </pre>
+                        <Text strong>5G 网元配置表单</Text>
+                        <Tag color="blue">{formCollapsed ? "展开" : "折叠"}</Tag>
+                        {formCollapsed && (
+                          <Text type="secondary" style={{ fontSize: 12 }}>
+                            (点击展开)
+                          </Text>
+                        )}
+                      </Space>
+                    }
+                    size="small"
+                  >
+                    {!formCollapsed && schema && initialData && (
+                      <DynamicForm
+                        ref={formRef}
+                        schema={schema}
+                        initialData={initialData}
+                        onBackendValidate={handleBackendValidate}
+                        onSubmit={handleSubmit}
+                        onChange={handleFormChange}
+                        backendErrors={
+                          Object.keys(backendErrors).length > 0 ? backendErrors : undefined
+                        }
+                      />
                     )}
-                  </div>
-                )}
-              </Card>
-            ),
-          },
-        ]}
-      />
+                  </Card>
+                ),
+              },
+              {
+                key: "json",
+                label: "JSON 数据",
+                children: (
+                  <Card
+                    title={
+                      <Space
+                        style={{ cursor: "pointer" }}
+                        onClick={() => {
+                          setJsonCollapsed(!jsonCollapsed)
+                        }}
+                      >
+                        <Text strong>JSON 数据</Text>
+                        <Tag color="blue">{jsonCollapsed ? "展开" : "折叠"}</Tag>
+                      </Space>
+                    }
+                    extra={
+                      jsonEditing ? (
+                        <Space>
+                          <Button size="small" type="primary" onClick={handleApplyJson}>
+                            应用
+                          </Button>
+                          <Button size="small" onClick={handleCancelEdit}>
+                            取消
+                          </Button>
+                        </Space>
+                      ) : (
+                        <Space>
+                          <Button size="small" onClick={handleStartEdit}>
+                            编辑
+                          </Button>
+                          <Button size="small" onClick={handleCopyJson}>
+                            复制
+                          </Button>
+                        </Space>
+                      )
+                    }
+                    size="small"
+                  >
+                    {!jsonCollapsed && (
+                      <div>
+                        {jsonEditing ? (
+                          <Input.TextArea
+                            value={editJsonText}
+                            onChange={(e) => {
+                              setEditJsonText(e.target.value)
+                            }}
+                            rows={24}
+                            style={{
+                              fontFamily: "'Courier New', monospace",
+                              fontSize: 12,
+                            }}
+                          />
+                        ) : (
+                          <pre
+                            style={{
+                              fontSize: 12,
+                              maxHeight: 600,
+                              overflow: "auto",
+                              margin: 0,
+                            }}
+                          >
+                            {liveDataJson}
+                          </pre>
+                        )}
+                      </div>
+                    )}
+                  </Card>
+                ),
+              },
+            ]}
+          />
+        </Spin>
+      </Card>
       {submittedData && (
         <Card title="提交数据" size="small" style={{ marginTop: 12 }}>
           <pre style={{ fontSize: 12, maxHeight: 400, overflow: "auto", margin: 0 }}>

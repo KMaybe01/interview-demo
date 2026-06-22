@@ -7,6 +7,7 @@ export default defineConfig({
     react(),
     babel({
       presets: [reactCompilerPreset()],
+      exclude: 'node_modules/**',
     }),
   ],
   server: {

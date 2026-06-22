@@ -92,7 +92,7 @@ export const routes: RouteConfig[] = [
   },
   {
     path: "/log-stream",
-    name: "百万行日志流式解密",
+    name: "十万行日志流解密",
     icon: FileTextOutlined,
     element: lazy(() => import("../pages/LogStream.tsx")),
   },

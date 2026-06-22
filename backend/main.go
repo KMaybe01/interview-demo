@@ -26,6 +26,7 @@ func main() {
 		protected.Use(handlers.AuthMiddleware())
 		{
 			protected.GET("/gis/points", handlers.GetGISPoints)
+			protected.GET("/schema/config", handlers.GetSchemaConfig)
 			protected.POST("/schema/validate", handlers.ValidateSchema)
 			protected.POST("/upload/init", handlers.InitUpload)
 			protected.POST("/upload/chunk", handlers.UploadChunk)

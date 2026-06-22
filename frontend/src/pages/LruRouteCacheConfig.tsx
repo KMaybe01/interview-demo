@@ -89,7 +89,7 @@ export default function ConfigPage({ pageKey, isActive }: { pageKey: string; isA
     updateData(pageKey, { config })
     invalidateAll(pageKey)
     notification.success({
-      message: "配置已保存",
+      title: "配置已保存",
       description: "相关页面缓存数据已标记为过期，切换时将自动刷新",
       placement: "topRight",
       duration: 3,

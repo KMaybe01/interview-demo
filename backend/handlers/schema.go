@@ -283,3 +283,322 @@ func formatFloat(f float64) string {
 	}
 	return fmt.Sprintf("%g", f)
 }
+
+func GetSchemaConfig(c *gin.Context) {
+	c.JSON(http.StatusOK, gin.H{
+		"schema": gin.H{
+			"type": "tabs",
+			"key":  "root",
+			"tabs": []gin.H{
+				{
+					"title": "基站配置",
+					"key":   "cell",
+					"children": []gin.H{
+						{
+							"type":        "card",
+							"key":         "basic",
+							"title":       "基本信息",
+							"description": "基站核心参数",
+							"children": []gin.H{
+								{
+									"type": "leaf",
+									"key":  "basic-fields",
+									"properties": gin.H{
+										"cellName": gin.H{
+											"type":        "string",
+											"key":         "cellName",
+											"title":       "基站名称",
+											"required":    true,
+											"placeholder": "例如: SMF-01",
+											"minLength":   float64(2),
+											"maxLength":   float64(32),
+										},
+										"fullCellName": gin.H{
+											"type":         "string",
+											"key":          "fullCellName",
+											"title":        "完整基站名称",
+											"description":  "自动生成",
+											"placeholder":  "由基站类型和名称自动拼接",
+											"dependencies": []string{"cellName", "cellType"},
+										},
+										"cellId": gin.H{
+											"type":        "string",
+											"key":         "cellId",
+											"title":       "基站 ID",
+											"required":    true,
+											"placeholder": "例如: CELL-001",
+										},
+										"cellType": gin.H{
+											"type":     "select",
+											"key":      "cellType",
+											"title":    "基站类型",
+											"required": true,
+											"options": []gin.H{
+												{"label": "宏基站 (Macro)", "value": "macro"},
+												{"label": "微基站 (Micro)", "value": "micro"},
+												{"label": "皮基站 (Pico)", "value": "pico"},
+												{"label": "家庭基站 (Femto)", "value": "femto"},
+											},
+											"placeholder": "选择基站类型",
+										},
+										"status": gin.H{
+											"type":  "select",
+											"key":   "status",
+											"title": "运行状态",
+											"options": []gin.H{
+												{"label": "在线", "value": "online"},
+												{"label": "离线", "value": "offline"},
+												{"label": "维护", "value": "maintenance"},
+											},
+											"placeholder": "选择状态",
+										},
+									},
+								},
+							},
+						},
+						{
+							"type":        "card",
+							"key":         "network",
+							"title":       "网络配置",
+							"description": "IP 与传输参数",
+							"children": []gin.H{
+								{
+									"type": "leaf",
+									"key":  "network-fields",
+									"properties": gin.H{
+										"ipAddress": gin.H{
+											"type":        "string",
+											"key":         "ipAddress",
+											"title":       "管理 IP",
+											"required":    true,
+											"placeholder": "例如: 192.168.1.100",
+										},
+										"port": gin.H{
+											"type":        "number",
+											"key":         "port",
+											"title":       "端口号",
+											"required":    true,
+											"min":         float64(1024),
+											"max":         float64(65535),
+											"placeholder": "例如: 8080",
+										},
+										"mcc": gin.H{
+											"type":        "string",
+											"key":         "mcc",
+											"title":       "MCC (移动国家码)",
+											"minLength":   float64(3),
+											"maxLength":   float64(3),
+											"placeholder": "例如: 460",
+										},
+										"mnc": gin.H{
+											"type":        "string",
+											"key":         "mnc",
+											"title":       "MNC (移动网络码)",
+											"minLength":   float64(2),
+											"maxLength":   float64(3),
+											"placeholder": "例如: 01",
+										},
+										"tac": gin.H{
+											"type":        "number",
+											"key":         "tac",
+											"title":       "TAC (跟踪区码)",
+											"min":         float64(1),
+											"max":         float64(65535),
+											"placeholder": "例如: 1",
+										},
+									},
+								},
+							},
+						},
+					},
+				},
+				{
+					"title": "传输配置",
+					"key":   "transport",
+					"children": []gin.H{
+						{
+							"type":        "card",
+							"key":         "sctp-config",
+							"title":       "SCTP 传输配置",
+							"description": "SCTP 端口列表",
+							"children": []gin.H{
+								{
+									"type": "leaf",
+									"key":  "sctp-fields",
+									"properties": gin.H{
+										"sctpPorts": gin.H{
+											"type":        "array",
+											"key":         "sctpPorts",
+											"title":       "SCTP 端口",
+											"description": "添加/删除 SCTP 端口对",
+											"required":    true,
+											"minItems":    float64(1),
+											"maxItems":    float64(10),
+											"items": gin.H{
+												"type": "leaf",
+												"key":  "sctp-port-item",
+												"properties": gin.H{
+													"localPort": gin.H{
+														"type":        "number",
+														"key":         "localPort",
+														"title":       "本地端口",
+														"required":    true,
+														"min":         float64(1),
+														"max":         float64(65535),
+														"placeholder": "例如: 38472",
+													},
+													"remotePort": gin.H{
+														"type":        "number",
+														"key":         "remotePort",
+														"title":       "远端端口",
+														"required":    true,
+														"min":         float64(1),
+														"max":         float64(65535),
+														"placeholder": "例如: 38472",
+													},
+												},
+											},
+										},
+									},
+								},
+							},
+						},
+					},
+				},
+				{
+					"title": "业务参数",
+					"key":   "service",
+					"children": []gin.H{
+						{
+							"type":  "card",
+							"key":   "service-config",
+							"title": "业务配置",
+							"children": []gin.H{
+								{
+									"type": "leaf",
+									"key":  "service-fields",
+									"properties": gin.H{
+										"maxUsers": gin.H{
+											"type":        "number",
+											"key":         "maxUsers",
+											"title":       "最大用户数",
+											"required":    true,
+											"min":         float64(1),
+											"max":         float64(100000),
+											"placeholder": "例如: 10000",
+										},
+										"bandwidth": gin.H{
+											"type":     "select",
+											"key":      "bandwidth",
+											"title":    "带宽 (MHz)",
+											"required": true,
+											"options": []gin.H{
+												{"label": "5 MHz", "value": float64(5)},
+												{"label": "10 MHz", "value": float64(10)},
+												{"label": "20 MHz", "value": float64(20)},
+												{"label": "40 MHz", "value": float64(40)},
+												{"label": "100 MHz", "value": float64(100)},
+											},
+										},
+										"enableEncryption": gin.H{
+											"type":    "switch",
+											"key":     "enableEncryption",
+											"title":   "启用加密",
+											"default": true,
+										},
+										"enableLogging": gin.H{
+											"type":    "switch",
+											"key":     "enableLogging",
+											"title":   "启用日志",
+											"default": false,
+										},
+									},
+								},
+							},
+						},
+						{
+							"type":  "card",
+							"key":   "advanced",
+							"title": "高级配置",
+							"children": []gin.H{
+								{
+									"type": "leaf",
+									"key":  "advanced-fields",
+									"properties": gin.H{
+										"encryptAlgorithm": gin.H{
+											"type":  "select",
+											"key":   "encryptAlgorithm",
+											"title": "加密算法",
+											"options": []gin.H{
+												{"label": "AES-256", "value": "aes-256"},
+												{"label": "AES-128", "value": "aes-128"},
+												{"label": "SM4", "value": "sm4"},
+											},
+											"placeholder": "选择加密算法",
+											"default":     "aes-256",
+											"visible":     "enableEncryption === true",
+										},
+										"certType": gin.H{
+											"type":  "select",
+											"key":   "certType",
+											"title": "证书类型",
+											"options": []gin.H{
+												{"label": "自签名", "value": "self-signed"},
+												{"label": "CA 签发", "value": "ca-signed"},
+											},
+											"placeholder": "选择证书类型",
+											"default":     "self-signed",
+											"visible":     "enableEncryption === true",
+										},
+										"certPath": gin.H{
+											"type":        "string",
+											"key":         "certPath",
+											"title":       "证书路径",
+											"placeholder": "例如: /etc/certs/server.pem",
+											"visible":     `enableEncryption === true && certType === "ca-signed"`,
+										},
+										"deployTime": gin.H{
+											"type":  "datetime",
+											"key":   "deployTime",
+											"title": "部署时间",
+										},
+										"extraConfig": gin.H{
+											"type":        "json",
+											"key":         "extraConfig",
+											"title":       "扩展配置",
+											"description": "JSON 格式自定义参数",
+										},
+									},
+								},
+							},
+						},
+					},
+				},
+			},
+		},
+		"initialData": gin.H{
+			"cellName":          "SMF-01",
+			"cellId":            "CELL-001",
+			"cellType":          "macro",
+			"status":            "online",
+			"ipAddress":         "192.168.1.100",
+			"port":              float64(8080),
+			"mcc":               "460",
+			"mnc":               "01",
+			"tac":               float64(1),
+			"maxUsers":          float64(10000),
+			"bandwidth":         float64(100),
+			"enableEncryption":  true,
+			"enableLogging":     false,
+			"sctpPorts": []gin.H{
+				{"localPort": float64(38472), "remotePort": float64(38472)},
+			},
+			"encryptAlgorithm": "aes-256",
+			"certType":         "self-signed",
+			"extraConfig": gin.H{
+				"nfId": "smf-001",
+				"plmn": "46001",
+			},
+		},
+	})
+}
