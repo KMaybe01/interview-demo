@@ -202,27 +202,36 @@ export default function TokenRefresh() {
 
     if (isTokenExpired(stored)) {
       addLog("⏰ Access Token 已过期，触发无感刷新...")
-      void acquireRefresh().then((newToken) => {
-        const parsed = parseToken(newToken)
-        const remaining = parsed ? Math.round((parsed.exp * 1000 - Date.now()) / 1000) : 0
-        addLog(`✅ 无感刷新成功，请求使用新 Token 重放，剩余 ${String(remaining)}s`)
-        setStatus("success")
-      }).catch((err: unknown) => { addLog(`❌ 刷新失败: ${String(err)}`); })
+      void acquireRefresh()
+        .then((newToken) => {
+          const parsed = parseToken(newToken)
+          const remaining = parsed ? Math.round((parsed.exp * 1000 - Date.now()) / 1000) : 0
+          addLog(`✅ 无感刷新成功，请求使用新 Token 重放，剩余 ${String(remaining)}s`)
+          setStatus("success")
+        })
+        .catch((err: unknown) => {
+          addLog(`❌ 刷新失败: ${String(err)}`)
+        })
     } else {
-      void http.get("/api/auth/check", { validateStatus: () => true }).then(async (res) => {
-        if (res.status === 401) {
-          addLog("⏰ 服务端返回 401，触发无感刷新...")
-          return acquireRefresh().then((newToken) => {
-            const parsed = parseToken(newToken)
-            const remaining = parsed ? Math.round((parsed.exp * 1000 - Date.now()) / 1000) : 0
-            addLog(`✅ 无感刷新成功，重放请求，剩余 ${String(remaining)}s`)
-            setStatus("success")
-          })
-        }
-        const data = res.data as { remaining: number }
-        addLog(`✅ 请求成功，Token 还剩 ${String(data.remaining)}s 过期`)
-        setStatus("success")
-      }).catch((err: unknown) => { addLog(`❌ 请求失败: ${String(err)}`); })
+      void http
+        .get("/api/auth/check", { validateStatus: () => true })
+        .then(async (res) => {
+          if (res.status === 401) {
+            addLog("⏰ 服务端返回 401，触发无感刷新...")
+            return acquireRefresh().then((newToken) => {
+              const parsed = parseToken(newToken)
+              const remaining = parsed ? Math.round((parsed.exp * 1000 - Date.now()) / 1000) : 0
+              addLog(`✅ 无感刷新成功，重放请求，剩余 ${String(remaining)}s`)
+              setStatus("success")
+            })
+          }
+          const data = res.data as { remaining: number }
+          addLog(`✅ 请求成功，Token 还剩 ${String(data.remaining)}s 过期`)
+          setStatus("success")
+        })
+        .catch((err: unknown) => {
+          addLog(`❌ 请求失败: ${String(err)}`)
+        })
     }
   }, [acquireRefresh, addLog])
 
@@ -347,7 +356,7 @@ export default function TokenRefresh() {
 
   const tokenCodeStyle: React.CSSProperties = { fontSize: 11 }
 
-const tokenHistoryColumns = [
+  const tokenHistoryColumns = [
     {
       title: "#",
       dataIndex: "id",

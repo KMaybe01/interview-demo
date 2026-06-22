@@ -2,6 +2,7 @@ import { ReloadOutlined, SaveOutlined } from "@ant-design/icons"
 import { Button, Checkbox, Input, InputNumber, notification, Select, Spin, Typography } from "antd"
 import { useCallback, useEffect, useRef } from "react"
 import { useLruCacheStore } from "../stores/lruRouteStore.ts"
+import { http } from "../utils/fetchClient.ts"
 
 const { Text } = Typography
 
@@ -27,26 +28,28 @@ export default function ConfigPage({ pageKey, isActive }: { pageKey: string; isA
     [pageKey, updateFormValue],
   )
 
-  const fetchConfig = useCallback(() => {
+  const fetchConfig = useCallback(async () => {
     abortRef.current?.abort()
     const controller = new AbortController()
     abortRef.current = controller
 
     setLoading(pageKey, true)
     clearStale(pageKey)
-    void fetch("/api/config", { signal: controller.signal })
-      .then((res) => res.json())
-      .then((json) => {
-        if (controller.signal.aborted) return
-        const data = json as Record<string, unknown>
-        updateData(pageKey, data)
-        fillFormFromConfig(
-          data as {
-            config: { clusterName: string; replicas: number; enableTls: boolean; logLevel: string }
-          },
-        )
+    try {
+      const res = await http.get<Record<string, unknown>>("/api/config", {
+        signal: controller.signal,
       })
-      .catch(() => undefined)
+      if (controller.signal.aborted) return
+      const data = res.data
+      updateData(pageKey, data)
+      fillFormFromConfig(
+        data as {
+          config: { clusterName: string; replicas: number; enableTls: boolean; logLevel: string }
+        },
+      )
+    } catch {
+      // axios interceptor handles 401 (refresh + redirect)
+    }
   }, [pageKey, setLoading, updateData, fillFormFromConfig, clearStale])
 
   // Combined effect: handles both initial load and stale/TTL refresh
@@ -55,7 +58,7 @@ export default function ConfigPage({ pageKey, isActive }: { pageKey: string; isA
     const isTtlExpired = page.loadedAt != null && Date.now() - page.loadedAt > 30000
     if (!page.data || isStale || isTtlExpired) {
       if (isTtlExpired) clearStale(pageKey)
-      fetchConfig()
+      void fetchConfig()
     }
   }, [isActive, isStale, pageKey, page.data, page.loadedAt, fetchConfig, clearStale])
 
@@ -73,7 +76,7 @@ export default function ConfigPage({ pageKey, isActive }: { pageKey: string; isA
   )
 
   const handleRefresh = useCallback(() => {
-    fetchConfig()
+    void fetchConfig()
   }, [fetchConfig])
 
   const handleSave = useCallback(() => {

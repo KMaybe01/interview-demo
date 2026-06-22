@@ -3,6 +3,7 @@ import type { TableColumnsType } from "antd"
 import { Badge, Button, Input, Select, Spin, Table, Tag, Typography } from "antd"
 import { useCallback, useEffect, useMemo, useRef } from "react"
 import { useLruCacheStore } from "../stores/lruRouteStore.ts"
+import { http } from "../utils/fetchClient.ts"
 
 const { Text } = Typography
 
@@ -34,20 +35,22 @@ export default function MonitorPage({ pageKey, isActive }: { pageKey: string; is
     [pageKey, updateFormValue],
   )
 
-  const fetchServices = useCallback(() => {
+  const fetchServices = useCallback(async () => {
     abortRef.current?.abort()
     const controller = new AbortController()
     abortRef.current = controller
 
     setLoading(pageKey, true)
     clearStale(pageKey)
-    void fetch("/api/services", { signal: controller.signal })
-      .then((res) => res.json())
-      .then((json) => {
-        if (controller.signal.aborted) return
-        updateData(pageKey, json as Record<string, unknown>)
+    try {
+      const res = await http.get<Record<string, unknown>>("/api/services", {
+        signal: controller.signal,
       })
-      .catch(() => undefined)
+      if (controller.signal.aborted) return
+      updateData(pageKey, res.data)
+    } catch {
+      // axios interceptor handles 401 (refresh + redirect)
+    }
   }, [pageKey, setLoading, updateData, clearStale])
 
   // Combined effect: handles both initial load and stale/TTL refresh
@@ -56,7 +59,7 @@ export default function MonitorPage({ pageKey, isActive }: { pageKey: string; is
     const isTtlExpired = page.loadedAt != null && Date.now() - page.loadedAt > 30000
     if (!page.data || isStale || isTtlExpired) {
       if (isTtlExpired) clearStale(pageKey)
-      fetchServices()
+      void fetchServices()
     }
   }, [isActive, isStale, pageKey, page.data, page.loadedAt, fetchServices, clearStale])
 
@@ -102,7 +105,7 @@ export default function MonitorPage({ pageKey, isActive }: { pageKey: string; is
   ]
 
   const handleRefresh = useCallback(() => {
-    fetchServices()
+    void fetchServices()
   }, [fetchServices])
 
   const handleScroll = useCallback(() => {

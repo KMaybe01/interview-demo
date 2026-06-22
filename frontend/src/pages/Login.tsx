@@ -44,8 +44,10 @@ export default function Login() {
     if (showSessionAlert) {
       const params = new URLSearchParams(location.search)
       params.delete("session_replaced")
-      window.history.replaceState(null, "", "?" + params.toString())
-      alertTimerRef.current = setTimeout(() => { setShowSessionAlert(false); }, 8000)
+      window.history.replaceState(null, "", `?${params.toString()}`)
+      alertTimerRef.current = setTimeout(() => {
+        setShowSessionAlert(false)
+      }, 8000)
     }
     return () => {
       if (alertTimerRef.current) clearTimeout(alertTimerRef.current)
@@ -217,7 +219,11 @@ export default function Login() {
                   description="若非本人操作，请立即修改密码"
                   type="warning"
                   showIcon
-                  closable={{ onClose: () => { setShowSessionAlert(false); } }}
+                  closable={{
+                    onClose: () => {
+                      setShowSessionAlert(false)
+                    },
+                  }}
                 />
               </Form.Item>
             )}

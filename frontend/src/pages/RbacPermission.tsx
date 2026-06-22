@@ -8,6 +8,7 @@ import {
 import type { TableColumnsType } from "antd"
 import { Badge, Card, Descriptions, Select, Space, Spin, Table, Tag, Tree, Typography } from "antd"
 import { useCallback, useEffect, useMemo, useState } from "react"
+import { getErrorMessage, http } from "../utils/fetchClient.ts"
 import {
   getPermissionsFromCode,
   getRoleName,
@@ -332,22 +333,18 @@ export default function RbacPermission() {
         key: n.key,
         requiredPerms: n.requiredPermissions.map((p) => Permissions[p]),
       }))
-      const res = await fetch("/api/rbac/check", {
-        method: "POST",
-        headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({ roleCode: code, nodes }),
-      })
-      if (!res.ok) throw new Error(`HTTP ${String(res.status)}`)
-      const json = (await res.json()) as { results: { key: string; accessible: boolean }[] }
+      const res = await http.post<{ results: { key: string; accessible: boolean }[] }>(
+        "/api/rbac/check",
+        { roleCode: code, nodes },
+      )
       const map: Record<string, boolean> = {}
-      for (const r of json.results) {
+      for (const r of res.data.results) {
         map[r.key] = r.accessible
       }
-      setBackendError(null)
       setBackendResults(map)
     } catch (e: unknown) {
       setBackendResults(null)
-      setBackendError(e instanceof Error ? e.message : "Backend check failed")
+      setBackendError(getErrorMessage(e))
     } finally {
       setBackendLoading(false)
     }

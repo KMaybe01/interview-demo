@@ -25,7 +25,9 @@ async function doRefresh(): Promise<string> {
   } catch (err) {
     const status = axios.isAxiosError(err) ? err.response?.status : null
     if (status === 401) {
-      const code = axios.isAxiosError(err) ? (err.response?.data as Record<string, unknown>).code : null
+      const code = axios.isAxiosError(err)
+        ? (err.response?.data as Record<string, unknown>).code
+        : null
       if (code === "SESSION_REPLACED") {
         clearTokens()
         refreshPromise = null
@@ -40,9 +42,7 @@ async function doRefresh(): Promise<string> {
     }
     refreshPromise = null
     // eslint-disable-next-line preserve-caught-error
-    throw new Error(
-      status === 401 ? "Refresh Token invalid or reused" : "Refresh failed",
-    )
+    throw new Error(status === 401 ? "Refresh Token invalid or reused" : "Refresh failed")
   }
 }
 

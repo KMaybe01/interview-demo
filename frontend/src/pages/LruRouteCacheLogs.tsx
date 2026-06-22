@@ -2,6 +2,7 @@ import { ReloadOutlined, SearchOutlined } from "@ant-design/icons"
 import { Button, Input, Select, Spin, Tag, Typography } from "antd"
 import { useCallback, useEffect, useMemo, useRef } from "react"
 import { useLruCacheStore } from "../stores/lruRouteStore.ts"
+import { http } from "../utils/fetchClient.ts"
 
 const { Text } = Typography
 
@@ -38,20 +39,22 @@ export default function LogsPage({ pageKey, isActive }: { pageKey: string; isAct
     [pageKey, updateFormValue],
   )
 
-  const fetchLogs = useCallback(() => {
+  const fetchLogs = useCallback(async () => {
     abortRef.current?.abort()
     const controller = new AbortController()
     abortRef.current = controller
 
     setLoading(pageKey, true)
     clearStale(pageKey)
-    void fetch("/api/logs", { signal: controller.signal })
-      .then((res) => res.json())
-      .then((json) => {
-        if (controller.signal.aborted) return
-        updateData(pageKey, json as Record<string, unknown>)
+    try {
+      const res = await http.get<Record<string, unknown>>("/api/logs", {
+        signal: controller.signal,
       })
-      .catch(() => undefined)
+      if (controller.signal.aborted) return
+      updateData(pageKey, res.data)
+    } catch {
+      // axios interceptor handles 401 (refresh + redirect)
+    }
   }, [pageKey, setLoading, updateData, clearStale])
 
   // Combined effect: handles both initial load and stale/TTL refresh
@@ -60,7 +63,7 @@ export default function LogsPage({ pageKey, isActive }: { pageKey: string; isAct
     const isTtlExpired = page.loadedAt != null && Date.now() - page.loadedAt > 30000
     if (!page.data || isStale || isTtlExpired) {
       if (isTtlExpired) clearStale(pageKey)
-      fetchLogs()
+      void fetchLogs()
     }
   }, [isActive, isStale, pageKey, page.data, page.loadedAt, fetchLogs, clearStale])
 
@@ -82,7 +85,7 @@ export default function LogsPage({ pageKey, isActive }: { pageKey: string; isAct
   }, [page.data?.logs, searchQuery, logLevelFilter])
 
   const handleRefresh = useCallback(() => {
-    fetchLogs()
+    void fetchLogs()
   }, [fetchLogs])
 
   const handleScroll = useCallback(() => {

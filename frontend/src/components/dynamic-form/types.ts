@@ -103,9 +103,7 @@ export function flattenSchema(schema: FormSchema): LeafSchema[] {
       if (node.properties) {
         for (const leaf of Object.values(node.properties)) {
           result.push(leaf)
-          if (leaf.items) {
-            walk(leaf.items)
-          }
+          // array items are nested — skip; ArrayField handles its own validation
         }
       }
     }

@@ -282,9 +282,7 @@ export default function RequestLoading() {
         width: 100,
         render: (d: number | null) =>
           d != null ? (
-            <Tag color={d < 2000 ? "green" : d < 4000 ? "orange" : "red"}>
-              {formatDuration(d)}
-            </Tag>
+            <Tag color={d < 2000 ? "green" : d < 4000 ? "orange" : "red"}>{formatDuration(d)}</Tag>
           ) : (
             "-"
           ),

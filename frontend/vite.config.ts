@@ -30,7 +30,7 @@ export default defineConfig({
     modulePreload: {
       polyfill: false,
     },
-    chunkSizeWarningLimit: 600,
+    chunkSizeWarningLimit: 1200,
     rolldownOptions: {
       output: {
         entryFileNames: 'assets/[name]-[hash].js',
@@ -45,8 +45,18 @@ export default defineConfig({
             },
             {
               name: 'antd',
-              test: /node_modules[\/\\](antd|@ant-design)/,
+              test: /node_modules[\/\\]antd[\/\\]/,
               priority: 25,
+            },
+            {
+              name: 'antd-icons',
+              test: /node_modules[\/\\]@ant-design[\/\\]icons/,
+              priority: 26,
+            },
+            {
+              name: 'antd-cssinjs',
+              test: /node_modules[\/\\]@ant-design[\/\\]cssinjs/,
+              priority: 26,
             },
             {
               name: 'echarts',

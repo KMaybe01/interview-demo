@@ -188,42 +188,44 @@ bun run lint:eslint    # ESLint 严格模式检查
 
 ```
 dist/
-├── index.html                             0.76 kB       (HTML 入口)
+├── index.html                             0.94 kB       (HTML 入口)
 ├── assets/
-│   ├── rolldown-runtime-*.js              0.81 kB       (Rolldown 运行时)
-│   ├── index-*.js                        20.36 kB       (应用入口: 路由+布局)
-│   ├── vendor-react-*.js                235.64 kB       [缓存] React / Zustand / Router
-│   ├── vendor-common-*.js               49.02 kB        [缓存] 公共依赖
-│   ├── antd-*.js                     1,123.68 kB       [缓存] Ant Design
-│   ├── echarts-*.js                  1,093.85 kB       [缓存] ECharts
-│   ├── gis-*.js                        298.75 kB       [缓存] OpenLayers
-│   ├── form-*.js                       109.96 kB       [缓存] 表单引擎
+│   ├── rolldown-runtime-*.js              0.82 kB       (Rolldown 运行时)
+│   ├── index-*.js                        23.70 kB       (应用入口: 路由+布局)
+│   ├── vendor-react-*.js                241.29 kB       [缓存] React / Zustand / Router
+│   ├── vendor-common-*.js               50.20 kB        [缓存] 公共依赖
+│   ├── antd-*.js                     1,004.30 kB       [缓存] Ant Design (core)
+│   ├── antd-icons-*.js                 106.74 kB       [缓存] Ant Design 图标
+│   ├── antd-cssinjs-*.js               32.36 kB        [缓存] Ant Design CSS-in-JS
+│   ├── echarts-*.js                  1,120.10 kB       [缓存] ECharts (仅懒加载页)
+│   ├── gis-*.js                        306.00 kB       [缓存] OpenLayers
+│   ├── form-*.js                       112.59 kB       [缓存] 表单引擎
 │   │
 │   ├── pages/ (React.lazy 懒加载)                        首屏不加载
-│   │   ├── Dashboard-*.js                1.06 kB        仪表盘
-│   │   ├── RequestLoading-*.js           2.07 kB        请求加载 Signal
-│   │   ├── SseLogStream-*.js             3.83 kB        SSE 日志流
-│   │   ├── GisRendering-*.js             5.00 kB        GIS 点位渲染
-│   │   ├── WebWorkerMerge-*.js           5.25 kB        Worker 分治合并
-│   │   ├── WebVitals-*.js                5.85 kB        Web Vitals 性能采集
-│   │   ├── TokenRefresh-*.js             8.60 kB        无感刷新
-│   │   ├── LogStream-*.js                8.66 kB        日志流式解密
-│   │   ├── TreeDataEngine-*.js           9.25 kB        树形数据操作
-│   │   ├── RbacPermission-*.js          13.57 kB        RBAC 位编码权限
-│   │   ├── ChunkedUpload-*.js           14.11 kB        大文件断点续传
-│   │   ├── AlertWebSocket-*.js          18.28 kB        WebSocket 告警
-│   │   ├── LruRouteCache-*.js           25.18 kB        LRU 路由缓存
-│   │   └── JsonSchemaForm-*.js          29.03 kB        动态表单引擎
+│   │   ├── Dashboard-*.js                1.07 kB        仪表盘
+│   │   ├── RequestLoading-*.js           9.75 kB        请求加载 Signal
+│   │   ├── SseLogStream-*.js             4.02 kB        SSE 日志流
+│   │   ├── GisRendering-*.js             3.66 kB        GIS 点位渲染
+│   │   ├── WebWorkerMerge-*.js           5.40 kB        Worker 分治合并
+│   │   ├── WebVitals-*.js                6.08 kB        Web Vitals 性能采集
+│   │   ├── TokenRefresh-*.js             8.78 kB        无感刷新
+│   │   ├── LogStream-*.js                8.95 kB        日志流式解密
+│   │   ├── TreeDataEngine-*.js           9.49 kB        树形数据操作
+│   │   ├── RbacPermission-*.js          14.81 kB        RBAC 位编码权限
+│   │   ├── ChunkedUpload-*.js           14.23 kB        大文件断点续传
+│   │   ├── AlertWebSocket-*.js          18.71 kB        WebSocket 告警
+│   │   ├── LruRouteCache-*.js           25.97 kB        LRU 路由缓存
+│   │   └── JsonSchemaForm-*.js          29.69 kB        动态表单引擎
 │   │
 │   └── workers/
 │       ├── merge.worker-*.js             0.35 kB        归并排序 Worker
-│       ├── decrypt.worker-*.js           0.47 kB        日志解密 Worker
-│       └── hash.worker-*.js              0.48 kB        SHA-256 分片哈希 Worker
+│       ├── decrypt.worker-*.js           0.48 kB        日志解密 Worker
+│       └── hash.worker-*.js              0.38 kB        SHA-256 分片哈希 Worker
 ```
 
-- **代码分割**: 14 页面通过 `React.lazy()` 独立 chunk，`codeSplitting.groups` 按优先级分割 vendor
+- **代码分割**: 14 页面通过 `React.lazy()` 独立 chunk，`codeSplitting.groups` 按优先级分割 vendor（antd-icons/antd-cssinjs 从 antd 主包分离，缓存粒度更细）
 - **缓存策略**: antd/echarts/gis 等大型库独立缓存，版本不变即 `304 Not Modified`
-- **构建时间**: ~3.2s (3911 modules, Rolldown Rust bundler)
+- **构建时间**: ~3.47s (3990 modules, Rolldown Rust bundler)
 - **对比**: 单 bundle 3,034 kB → 首屏 ~50 kB (↓98%)
 
 | 路由                   | 方法   | 说明                        |
