@@ -28,11 +28,11 @@ function getType(key: string): string {
 }
 
 function getDelay(key: string): number {
-  return RESOURCE_DELAYS[key].delay
+  return RESOURCE_DELAYS[key]?.delay ?? 1000
 }
 
 function getFailRate(key: string): number {
-  return RESOURCE_DELAYS[key].failRate
+  return RESOURCE_DELAYS[key]?.failRate ?? 0
 }
 
 export function createRequestResource(key: string, method: string, path: string): RequestResource {

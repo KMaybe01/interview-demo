@@ -207,7 +207,7 @@ export default function TokenRefresh() {
         const remaining = parsed ? Math.round((parsed.exp * 1000 - Date.now()) / 1000) : 0
         addLog(`✅ 无感刷新成功，请求使用新 Token 重放，剩余 ${String(remaining)}s`)
         setStatus("success")
-      })
+      }).catch((err: unknown) => { addLog(`❌ 刷新失败: ${String(err)}`); })
     } else {
       void http.get("/api/auth/check", { validateStatus: () => true }).then(async (res) => {
         if (res.status === 401) {
@@ -222,7 +222,7 @@ export default function TokenRefresh() {
         const data = res.data as { remaining: number }
         addLog(`✅ 请求成功，Token 还剩 ${String(data.remaining)}s 过期`)
         setStatus("success")
-      })
+      }).catch((err: unknown) => { addLog(`❌ 请求失败: ${String(err)}`); })
     }
   }, [acquireRefresh, addLog])
 
@@ -345,7 +345,9 @@ export default function TokenRefresh() {
     addLog("📦 并发发送 3 个请求，验证队列合并机制")
   }, [simulateRequest, addLog])
 
-  const tokenHistoryColumns = [
+  const tokenCodeStyle: React.CSSProperties = { fontSize: 11 }
+
+const tokenHistoryColumns = [
     {
       title: "#",
       dataIndex: "id",
@@ -385,7 +387,7 @@ export default function TokenRefresh() {
       key: "token",
       ellipsis: true,
       render: (v: string) => (
-        <Text code style={{ fontSize: 11 }}>
+        <Text code style={tokenCodeStyle}>
           {v.slice(0, 40)}...
         </Text>
       ),

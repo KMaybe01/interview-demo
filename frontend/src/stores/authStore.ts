@@ -22,9 +22,11 @@ function initUser(): UserInfo | null {
   return { sub: payload.sub, role: payload.role }
 }
 
+const initialUser = initUser()
+
 export const useAuthStore = create<AuthState>((set) => ({
-  user: initUser(),
-  isLoggedIn: initUser() != null,
+  user: initialUser,
+  isLoggedIn: initialUser != null,
   setUser: (user) => {
     set({ user, isLoggedIn: user != null })
   },

@@ -4,7 +4,30 @@ import { updateVitalsSnapshot } from "./vitalsSnapshot.ts"
 
 const BATCH_INTERVAL = 3000
 
-const pendingReports = new Map<string, number>()
+interface VitalReport {
+  metric: string
+  value: number
+  rating: string
+  url: string
+  version: string
+}
+
+let reportBuffer: VitalReport[] = []
+let flushTimer: ReturnType<typeof setTimeout> | null = null
+
+function flushReports(): void {
+  if (reportBuffer.length === 0) return
+  const batch = reportBuffer.splice(0)
+  http.post("/api/vitals/report", batch).catch(() => undefined)
+}
+
+function scheduleFlush(): void {
+  if (flushTimer != null) return
+  flushTimer = setTimeout(() => {
+    flushTimer = null
+    flushReports()
+  }, BATCH_INTERVAL)
+}
 
 function getRating(value: number, metric: string): string {
   switch (metric) {
@@ -23,23 +46,15 @@ function getRating(value: number, metric: string): string {
 }
 
 function report(name: string, value: number) {
-  const now = Date.now()
-  const payload = [
-    {
-      metric: name,
-      value,
-      rating: getRating(value, name),
-      url: window.location.pathname,
-      version: "web-vitals-5",
-    },
-  ]
-
   updateVitalsSnapshot(name, value)
-
-  const key = `${name}@${String(Math.floor(now / BATCH_INTERVAL))}`
-  pendingReports.set(key, (pendingReports.get(key) ?? 0) + 1)
-
-  http.post("/api/vitals/report", payload).catch(() => undefined)
+  reportBuffer.push({
+    metric: name,
+    value,
+    rating: getRating(value, name),
+    url: window.location.pathname,
+    version: "web-vitals-5",
+  })
+  scheduleFlush()
 }
 
 export function initVitalsReporter(): void {

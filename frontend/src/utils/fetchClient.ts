@@ -28,9 +28,10 @@ async function doRefresh(): Promise<string> {
       clearTokens()
     }
     refreshPromise = null
-    throw new Error(status === 401 ? "Refresh Token invalid or reused" : "Refresh failed", {
-      cause: err,
-    })
+    const refreshErr = new Error(
+      status === 401 ? "Refresh Token invalid or reused" : "Refresh failed",
+    )
+    throw refreshErr
   }
 }
 

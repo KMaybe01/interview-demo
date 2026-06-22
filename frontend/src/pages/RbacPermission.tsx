@@ -298,6 +298,16 @@ const DATA_SOURCE_NODE_COLUMNS: TableColumnsType<FlatNode> = [
   },
 ]
 
+const collapseBtnStyle: React.CSSProperties = {
+  cursor: "pointer",
+  userSelect: "none",
+  background: "none",
+  border: "none",
+  padding: 0,
+  color: "inherit",
+  fontSize: "inherit",
+}
+
 export default function RbacPermission() {
   const [roleCode, setRoleCode] = useState(Roles.EDITOR)
 
@@ -545,15 +555,7 @@ export default function RbacPermission() {
         title={
           <button
             type="button"
-            style={{
-              cursor: "pointer",
-              userSelect: "none",
-              background: "none",
-              border: "none",
-              padding: 0,
-              color: "inherit",
-              fontSize: "inherit",
-            }}
+            style={collapseBtnStyle}
             onClick={() => {
               toggleCollapse("datasource")
             }}

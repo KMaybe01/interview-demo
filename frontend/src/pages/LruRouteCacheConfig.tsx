@@ -9,8 +9,7 @@ export default function ConfigPage({ pageKey, isActive }: { pageKey: string; isA
   const { pages, staleKeys, updateData, setLoading, updateFormValue, invalidateAll, clearStale } =
     useLruCacheStore()
   const page = pages[pageKey]
-  const dataLoadedRef = useRef(false)
-  const savedRef = useRef(false)
+  const abortRef = useRef<AbortController | null>(null)
   const isStale = staleKeys.includes(pageKey)
 
   const formValues = page.formValues
@@ -29,11 +28,16 @@ export default function ConfigPage({ pageKey, isActive }: { pageKey: string; isA
   )
 
   const fetchConfig = useCallback(() => {
+    abortRef.current?.abort()
+    const controller = new AbortController()
+    abortRef.current = controller
+
     setLoading(pageKey, true)
     clearStale(pageKey)
-    void fetch("/api/config")
+    void fetch("/api/config", { signal: controller.signal })
       .then((res) => res.json())
       .then((json) => {
+        if (controller.signal.aborted) return
         const data = json as Record<string, unknown>
         updateData(pageKey, data)
         fillFormFromConfig(
@@ -42,23 +46,24 @@ export default function ConfigPage({ pageKey, isActive }: { pageKey: string; isA
           },
         )
       })
+      .catch(() => undefined)
   }, [pageKey, setLoading, updateData, fillFormFromConfig, clearStale])
 
-  useEffect(() => {
-    if (dataLoadedRef.current && page.data) return
-    dataLoadedRef.current = true
-    fetchConfig()
-  }, [pageKey, page.data, fetchConfig])
-
+  // Combined effect: handles both initial load and stale/TTL refresh
   useEffect(() => {
     if (!isActive) return
-
     const isTtlExpired = page.loadedAt != null && Date.now() - page.loadedAt > 30000
-    if (isStale || isTtlExpired) {
+    if (!page.data || isStale || isTtlExpired) {
       if (isTtlExpired) clearStale(pageKey)
       fetchConfig()
     }
-  }, [isActive, isStale, pageKey, page.loadedAt, fetchConfig, clearStale])
+  }, [isActive, isStale, pageKey, page.data, page.loadedAt, fetchConfig, clearStale])
+
+  useEffect(() => {
+    return () => {
+      abortRef.current?.abort()
+    }
+  }, [])
 
   const setField = useCallback(
     (path: string, value: unknown) => {
@@ -72,7 +77,6 @@ export default function ConfigPage({ pageKey, isActive }: { pageKey: string; isA
   }, [fetchConfig])
 
   const handleSave = useCallback(() => {
-    savedRef.current = true
     const config = {
       clusterName: formValues.clusterName,
       replicas: formValues.replicas,

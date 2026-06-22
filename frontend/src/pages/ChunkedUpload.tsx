@@ -413,7 +413,7 @@ export default function ChunkedUpload() {
             return
           } catch {
             updateChunk(item.id, chunkIdx, { status: "failed", retries: attempt + 1 })
-            if (attempt < 3) await new Promise((r) => setTimeout(r, 1000 * (attempt + 1)))
+            if (attempt < 3) await new Promise((r) => setTimeout(r, Math.min(1000 * Math.pow(2, attempt), 30000)))
           }
         }
       }

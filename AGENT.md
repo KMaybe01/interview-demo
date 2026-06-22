@@ -10,12 +10,12 @@ React 19 + Go 1.26 全栈演示平台，覆盖 12 个高级技术场景（WebSoc
 
 ## 技术栈
 
-| 层级 | 技术 |
-|------|------|
-| 前端 | React 19, TypeScript 6, Vite 8, Ant Design 6, Zustand 5, React Router 7 |
-| 格式/检查 | Biome 2.5 (space 缩进 2, 无分号, 行宽 100, trailing commas) + ESLint 9 |
-| 后端 | Go 1.26, Gin 1.12, Gorilla WebSocket, golang-jwt |
-| 部署 | Docker 多阶段构建, Helm Chart, GitLab CI/CD |
+| 层级 | 技术                                                                            |
+|------|-------------------------------------------------------------------------------|
+| 前端 | React 19, TypeScript 6, Vite 8, Ant Design 6, Zustand 5, React Router 7 , bun |
+| 格式/检查 | Biome 2.5 (space 缩进 2, 无分号, 行宽 100, trailing commas) + ESLint 9               |
+| 后端 | Go 1.26, Gin 1.12, Gorilla WebSocket, golang-jwt                              |
+| 部署 | Docker 多阶段构建, Helm Chart, GitLab CI/CD                                        |
 
 ---
 

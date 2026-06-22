@@ -23,6 +23,20 @@ const sharedLogStyle: React.CSSProperties = {
   lineHeight: 1.6,
 }
 
+const logLineStyles: Record<string, React.CSSProperties> = {
+  error: { color: "#f48771" },
+  warn: { color: "#cca700" },
+  debug: { color: "#6a9955" },
+  default: { color: "#d4d4d4" },
+}
+
+function getLogLineStyle(line: string): React.CSSProperties {
+  if (line.startsWith("[ERROR]")) return logLineStyles.error
+  if (line.startsWith("[WARN]")) return logLineStyles.warn
+  if (line.startsWith("[DEBUG]")) return logLineStyles.debug
+  return logLineStyles.default
+}
+
 interface DecodeStats {
   totalChunks: number
   decryptedChunks: number
@@ -333,7 +347,7 @@ export default function LogStream() {
     if (el) {
       el.scrollTop = el.scrollHeight
     }
-  }, [lines])
+  }, [lines.length])
 
   const statusBadge: "success" | "default" | "processing" | "warning" =
     status === "done"
@@ -500,13 +514,9 @@ export default function LogStream() {
                   <Text type="secondary">解密被中断，无已解密数据</Text>
                 )}
                 {lines.map((line, i) => {
-                  let color = "#d4d4d4"
-                  if (line.startsWith("[ERROR]")) color = "#f48771"
-                  else if (line.startsWith("[WARN]")) color = "#cca700"
-                  else if (line.startsWith("[DEBUG]")) color = "#6a9955"
                   return (
                     // biome-ignore lint/suspicious/noArrayIndexKey: static log output, no stable id
-                    <div key={i} style={{ color }}>
+                    <div key={i} style={getLogLineStyle(line)}>
                       {line}
                     </div>
                   )

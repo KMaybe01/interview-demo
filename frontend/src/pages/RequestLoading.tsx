@@ -255,6 +255,87 @@ export default function RequestLoading() {
   const pending = useMemo(() => requests.filter((r) => r.status === "pending"), [requests])
   const completed = useMemo(() => requests.filter((r) => r.status !== "pending"), [requests])
 
+  const historyColumns = useMemo(
+    () => [
+      {
+        title: "方法",
+        dataIndex: "method",
+        key: "method",
+        width: 80,
+        render: (method: string) => (
+          <Tag color={METHOD_COLOR[method] ?? "default"} style={{ margin: 0 }}>
+            {method}
+          </Tag>
+        ),
+      },
+      {
+        title: "路径",
+        dataIndex: "path",
+        key: "path",
+        width: 200,
+        render: (path: string) => <Text code>{path}</Text>,
+      },
+      {
+        title: "耗时",
+        dataIndex: "duration",
+        key: "duration",
+        width: 100,
+        render: (d: number | null) =>
+          d != null ? (
+            <Tag color={d < 2000 ? "green" : d < 4000 ? "orange" : "red"}>
+              {formatDuration(d)}
+            </Tag>
+          ) : (
+            "-"
+          ),
+      },
+      {
+        title: "状态",
+        dataIndex: "status",
+        key: "status",
+        width: 80,
+        render: (status: RequestStatus) => {
+          const cfg = STATUS_CONFIG[status]
+          return (
+            <Tag color={cfg.color} icon={status !== "pending" ? cfg.icon : undefined}>
+              {cfg.label}
+            </Tag>
+          )
+        },
+      },
+      {
+        title: "错误信息",
+        dataIndex: "error",
+        key: "error",
+        render: (error: string | null) =>
+          error ? (
+            <Text type="danger" style={{ fontSize: 12 }}>
+              {error}
+            </Text>
+          ) : (
+            "-"
+          ),
+      },
+      {
+        title: "操作",
+        key: "action",
+        width: 80,
+        render: (_: unknown, rec: RequestRecord) => (
+          <Button
+            size="small"
+            icon={<ClearOutlined />}
+            onClick={() => {
+              removeRequest(rec.key)
+            }}
+          >
+            清除
+          </Button>
+        ),
+      },
+    ],
+    [removeRequest],
+  )
+
   return (
     <div>
       <Space orientation="vertical" style={{ width: "100%" }}>
@@ -352,83 +433,7 @@ export default function RequestLoading() {
           >
             <Table
               dataSource={completed}
-              columns={[
-                {
-                  title: "方法",
-                  dataIndex: "method",
-                  key: "method",
-                  width: 80,
-                  render: (method: string) => (
-                    <Tag color={METHOD_COLOR[method] ?? "default"} style={{ margin: 0 }}>
-                      {method}
-                    </Tag>
-                  ),
-                },
-                {
-                  title: "路径",
-                  dataIndex: "path",
-                  key: "path",
-                  width: 200,
-                  render: (path: string) => <Text code>{path}</Text>,
-                },
-                {
-                  title: "耗时",
-                  dataIndex: "duration",
-                  key: "duration",
-                  width: 100,
-                  render: (d: number | null) =>
-                    d != null ? (
-                      <Tag color={d < 2000 ? "green" : d < 4000 ? "orange" : "red"}>
-                        {formatDuration(d)}
-                      </Tag>
-                    ) : (
-                      "-"
-                    ),
-                },
-                {
-                  title: "状态",
-                  dataIndex: "status",
-                  key: "status",
-                  width: 80,
-                  render: (status: RequestStatus) => {
-                    const cfg = STATUS_CONFIG[status]
-                    return (
-                      <Tag color={cfg.color} icon={status !== "pending" ? cfg.icon : undefined}>
-                        {cfg.label}
-                      </Tag>
-                    )
-                  },
-                },
-                {
-                  title: "错误信息",
-                  dataIndex: "error",
-                  key: "error",
-                  render: (error: string | null) =>
-                    error ? (
-                      <Text type="danger" style={{ fontSize: 12 }}>
-                        {error}
-                      </Text>
-                    ) : (
-                      "-"
-                    ),
-                },
-                {
-                  title: "操作",
-                  key: "action",
-                  width: 80,
-                  render: (_: unknown, rec: RequestRecord) => (
-                    <Button
-                      size="small"
-                      icon={<ClearOutlined />}
-                      onClick={() => {
-                        removeRequest(rec.key)
-                      }}
-                    >
-                      清除
-                    </Button>
-                  ),
-                },
-              ]}
+              columns={historyColumns}
               rowKey="key"
               pagination={false}
               size="small"

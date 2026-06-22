@@ -9,23 +9,25 @@ function getPageName(pathname: string): string {
   return r?.name ?? pathname
 }
 
-const navigationTimings = new Map<string, number>()
-let prevPath = ""
-
-if (typeof performance.getEntriesByType === "function") {
-  const navEntries = performance.getEntriesByType("navigation")
-  if (navEntries.length > 0) {
-    const nav = navEntries[0]
-    navigationTimings.set("domContentLoaded", nav.domContentLoadedEventEnd - nav.startTime)
-    navigationTimings.set("domComplete", nav.domComplete - nav.startTime)
-    navigationTimings.set("load", nav.loadEventEnd - nav.startTime)
+const navigationTimings: ReadonlyMap<string, number> = (() => {
+  const timings = new Map<string, number>()
+  if (typeof performance.getEntriesByType === "function") {
+    const navEntries = performance.getEntriesByType("navigation")
+    if (navEntries.length > 0) {
+      const nav = navEntries[0]
+      timings.set("domContentLoaded", nav.domContentLoadedEventEnd - nav.startTime)
+      timings.set("domComplete", nav.domComplete - nav.startTime)
+      timings.set("load", nav.loadEventEnd - nav.startTime)
+    }
   }
-}
+  return timings
+})()
 
 export default function PageTracker({ children }: { children: React.ReactNode }) {
   const location = useLocation()
   const renderStartRef = useRef(performance.now())
   const reportedRef = useRef(false)
+  const prevPathRef = useRef("")
 
   useEffect(() => {
     const renderEnd = performance.now()
@@ -45,20 +47,16 @@ export default function PageTracker({ children }: { children: React.ReactNode })
             lcp: v.LCP,
             inp: v.INP,
             cls: v.CLS,
-            referrer: prevPath,
+            referrer: prevPathRef.current,
           },
         ])
         .catch(() => undefined)
 
-      const navTimes: Record<string, number> = {}
-      navigationTimings.forEach((v, k) => {
-        navTimes[k] = v
-      })
-      if (Object.keys(navTimes).length > 0 && path !== "/login") {
+      if (navigationTimings.size > 0 && path !== "/login") {
         http
           .post(
             "/api/vitals/report",
-            Object.entries(navTimes).map(([metric, value]) => ({
+            Array.from(navigationTimings.entries()).map(([metric, value]) => ({
               metric,
               value: Math.round(value * 100) / 100,
               rating: "good",
@@ -68,15 +66,9 @@ export default function PageTracker({ children }: { children: React.ReactNode })
           )
           .catch(() => undefined)
       }
-
-      navigationTimings.clear()
     }
 
-    prevPath = path
-
-    return () => {
-      prevPath = path
-    }
+    prevPathRef.current = path
   }, [location.pathname])
 
   useEffect(() => {

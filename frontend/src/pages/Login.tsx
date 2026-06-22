@@ -26,6 +26,8 @@ const styles = `
   0% { transform: scale(1); opacity: 0.5; }
   100% { transform: scale(3); opacity: 0; }
 }
+.github-link { color: #bfbfbf; text-decoration: none; transition: color 0.2s; }
+.github-link:hover { color: #667eea !important; }
 `
 
 export default function Login() {
@@ -264,13 +266,7 @@ export default function Login() {
             href="https://github.com/KMaybe01/interview-demo.git/"
             target="_blank"
             rel="noopener noreferrer"
-            style={{ color: "#bfbfbf", textDecoration: "none" }}
-            onMouseEnter={(e) => {
-              e.currentTarget.style.color = "#667eea"
-            }}
-            onMouseLeave={(e) => {
-              e.currentTarget.style.color = "#bfbfbf"
-            }}
+            className="github-link"
           >
             GitHub 仓库
           </a>

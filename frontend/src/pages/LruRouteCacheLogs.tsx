@@ -25,7 +25,7 @@ export default function LogsPage({ pageKey, isActive }: { pageKey: string; isAct
     useLruCacheStore()
   const page = pages[pageKey]
   const containerRef = useRef<HTMLDivElement>(null)
-  const dataLoadedRef = useRef(false)
+  const abortRef = useRef<AbortController | null>(null)
   const isStale = staleKeys.includes(pageKey)
 
   const searchQuery: string = (page.formValues.query as string | undefined) ?? ""
@@ -39,30 +39,36 @@ export default function LogsPage({ pageKey, isActive }: { pageKey: string; isAct
   )
 
   const fetchLogs = useCallback(() => {
+    abortRef.current?.abort()
+    const controller = new AbortController()
+    abortRef.current = controller
+
     setLoading(pageKey, true)
     clearStale(pageKey)
-    void fetch("/api/logs")
+    void fetch("/api/logs", { signal: controller.signal })
       .then((res) => res.json())
       .then((json) => {
+        if (controller.signal.aborted) return
         updateData(pageKey, json as Record<string, unknown>)
       })
+      .catch(() => undefined)
   }, [pageKey, setLoading, updateData, clearStale])
 
-  useEffect(() => {
-    if (dataLoadedRef.current && page.data) return
-    dataLoadedRef.current = true
-    fetchLogs()
-  }, [pageKey, page.data, fetchLogs])
-
+  // Combined effect: handles both initial load and stale/TTL refresh
   useEffect(() => {
     if (!isActive) return
-
     const isTtlExpired = page.loadedAt != null && Date.now() - page.loadedAt > 30000
-    if (isStale || isTtlExpired) {
+    if (!page.data || isStale || isTtlExpired) {
       if (isTtlExpired) clearStale(pageKey)
       fetchLogs()
     }
-  }, [isActive, isStale, pageKey, page.loadedAt, fetchLogs, clearStale])
+  }, [isActive, isStale, pageKey, page.data, page.loadedAt, fetchLogs, clearStale])
+
+  useEffect(() => {
+    return () => {
+      abortRef.current?.abort()
+    }
+  }, [])
 
   const logs = (page.data?.logs ?? []) as LogEntry[]
 

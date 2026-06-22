@@ -22,6 +22,18 @@ function parseLine(text: string): LogLine {
   }
 }
 
+const sseLogLineStyles: Record<string, React.CSSProperties> = {
+  error: { color: "#f48771" },
+  warn: { color: "#cca700" },
+  default: { color: "#d4d4d4" },
+}
+
+function getSseLogStyle(line: LogLine): React.CSSProperties {
+  if (line.isError) return sseLogLineStyles.error
+  if (line.isWarn) return sseLogLineStyles.warn
+  return sseLogLineStyles.default
+}
+
 export default function SseLogStream() {
   const [logs, setLogs] = useState<LogLine[]>([])
   const [connected, setConnected] = useState(false)
@@ -251,12 +263,9 @@ export default function SseLogStream() {
               <Text type="secondary">{'SSE 已暂停，点击"恢复"重新连接'}</Text>
             )}
             {filteredLogs.map((line, i) => {
-              let color = "#d4d4d4"
-              if (line.isError) color = "#f48771"
-              else if (line.isWarn) color = "#cca700"
               return (
                 // biome-ignore lint/suspicious/noArrayIndexKey: static log output, no stable id
-                <div key={i} style={{ color }}>
+                <div key={i} style={getSseLogStyle(line)}>
                   {line.text}
                 </div>
               )

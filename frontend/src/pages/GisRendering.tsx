@@ -51,6 +51,7 @@ export default function GisRendering() {
   const [renderTime, setRenderTime] = useState(0)
   const [loading, setLoading] = useState(false)
   const [visibleCount, setVisibleCount] = useState(0)
+  const moveEndTimer = useRef<ReturnType<typeof setTimeout> | null>(null)
 
   const refreshViewport = useCallback(() => {
     const map = mapInstance.current
@@ -142,11 +143,17 @@ export default function GisRendering() {
     })
     mapInstance.current = map
 
-    map.on("moveend", refreshViewport)
+    const debouncedRefresh = () => {
+      if (moveEndTimer.current != null) clearTimeout(moveEndTimer.current)
+      moveEndTimer.current = setTimeout(refreshViewport, 50)
+    }
+
+    map.on("moveend", debouncedRefresh)
     refreshViewport()
 
     return () => {
-      map.un("moveend", refreshViewport)
+      if (moveEndTimer.current != null) clearTimeout(moveEndTimer.current)
+      map.un("moveend", debouncedRefresh)
       map.setTarget(undefined)
       dataCache.current = []
       clusterSourceRef.current = null
