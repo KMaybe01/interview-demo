@@ -349,6 +349,11 @@ go build -o bin/server.exe .   # build 可运行文件
 
 ---
 
+## 文档更新
+- 代码修改 更新README.md
+- 代码修改 docs目录下所有文档
+
+---
 ## Git 提交
 
 - 遵循现有 commit message 风格 (中英文均可)

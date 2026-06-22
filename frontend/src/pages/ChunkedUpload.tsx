@@ -28,6 +28,7 @@ import React, { useCallback, useEffect, useMemo, useRef, useState } from "react"
 import { List } from "react-window"
 import { useUploadStore } from "../stores"
 import type { ChunkInfo, UploadFileItem, UploadResult } from "../stores/uploadStore"
+import { http } from "../utils/fetchClient.ts"
 
 const { Text } = Typography
 const { Dragger } = Upload
@@ -249,12 +250,8 @@ export default function ChunkedUpload() {
     if (!serverId) return
     void (async () => {
       try {
-        const res = await fetch(`/api/upload/status/${serverId}`)
-        if (!res.ok) {
-          removeFile(f.id)
-          return
-        }
-        const data = (await res.json()) as { received: number[] }
+        const res = await http.get(`/api/upload/status/${serverId}`)
+        const data = res.data as { received: number[] }
         const done = new Set(data.received)
         updateFile(f.id, {
           chunks: f.chunks.map((c) => ({
@@ -353,21 +350,14 @@ export default function ChunkedUpload() {
       }
 
       if (!currentInitId) {
-        const initRes = await fetch("/api/upload/init", {
-          method: "POST",
-          headers: { "Content-Type": "application/json" },
-          body: JSON.stringify({
-            filename: item.filename,
-            fileSize: item.fileSize,
-            chunkSize,
-            totalChunks: item.totalChunks,
-            fileHash,
-          }),
+        const initRes = await http.post("/api/upload/init", {
+          filename: item.filename,
+          fileSize: item.fileSize,
+          chunkSize,
+          totalChunks: item.totalChunks,
+          fileHash,
         })
-        if (!initRes.ok) {
-          throw new Error(((await initRes.json()) as { error?: string }).error ?? "Init failed")
-        }
-        const initData = (await initRes.json()) as { uploadId: string }
+        const initData = initRes.data as { uploadId: string }
         currentInitId = initData.uploadId
         if (checkAbort()) return
         updateFile(item.id, { uploadId: currentInitId })
@@ -406,8 +396,7 @@ export default function ChunkedUpload() {
             formData.append("chunkIndex", String(chunkIdx))
             formData.append("hash", hash)
             formData.append("chunk", blob2, `chunk_${String(chunkIdx)}`)
-            const res = await fetch("/api/upload/chunk", { method: "POST", body: formData })
-            if (!res.ok) throw new Error(((await res.json()) as { error: string }).error)
+            await http.post("/api/upload/chunk", formData)
 
             const chunkSpeed = size / ((performance.now() - chunkStart) / 1000)
             updateChunk(item.id, chunkIdx, {
@@ -439,18 +428,9 @@ export default function ChunkedUpload() {
       await Promise.all(inflight)
       if (checkAbort()) return
 
-      const completeRes = await fetch("/api/upload/complete", {
-        method: "POST",
-        headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({ uploadId: currentInitId }),
-      })
-      if (!completeRes.ok) {
-        throw new Error(
-          ((await completeRes.json()) as { error?: string }).error ?? "Complete failed",
-        )
-      }
+      const completeRes = await http.post("/api/upload/complete", { uploadId: currentInitId })
       updateFile(item.id, {
-        result: (await completeRes.json()) as UploadResult,
+        result: completeRes.data as UploadResult,
         status: "done",
         progress: 100,
       })

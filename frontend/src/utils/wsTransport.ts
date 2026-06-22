@@ -1,4 +1,5 @@
 import type { AlertLevel, AlertMessage } from "../stores/alertStore.ts"
+import { http } from "./fetchClient.ts"
 
 // ─── Protocol ────────────────────────────────────────────────────────────
 
@@ -444,11 +445,10 @@ export class PollingTransport implements Transport {
     while (this.polling) {
       this.abortController = new AbortController()
       try {
-        const res = await fetch(`${this.url}&seq=${String(this.lastSeq)}`, {
+        const res = await http.get(`${this.url}&seq=${String(this.lastSeq)}`, {
           signal: this.abortController.signal,
         })
-        if (!res.ok) throw new Error(`HTTP ${String(res.status)}`)
-        const data = (await res.json()) as Record<string, unknown>[]
+        const data = res.data as Record<string, unknown>[]
         for (const raw of data) {
           const msg = parseMessage(JSON.stringify(raw))
           if (msg) {

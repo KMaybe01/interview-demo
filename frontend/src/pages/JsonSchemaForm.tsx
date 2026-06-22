@@ -23,6 +23,7 @@ import StringField from "../components/dynamic-form/fields/StringField.tsx"
 import SwitchField from "../components/dynamic-form/fields/SwitchField.tsx"
 import { registerField } from "../components/dynamic-form/registry.tsx"
 import type { FormSchema } from "../components/dynamic-form/types.ts"
+import { http, getErrorMessage } from "../utils/fetchClient.ts"
 
 const { Text, Title } = Typography
 
@@ -392,19 +393,15 @@ export default function JsonSchemaFormPage() {
       data: Record<string, unknown>,
     ): Promise<{ path: string; message: string; source: string }[]> => {
       try {
-        const res = await fetch("/api/schema/validate", {
-          method: "POST",
-          headers: { "Content-Type": "application/json" },
-          body: JSON.stringify({ data }),
-        })
-        if (!res.ok) {
+        const res = await http.post("/api/schema/validate", { data }, { validateStatus: () => true })
+        if (res.status >= 400) {
           notification.error({
-            message: "后端校验请求失败",
+            title: "后端校验请求失败",
             description: `HTTP ${String(res.status)}`,
           })
           return []
         }
-        const result = (await res.json()) as {
+        const result = res.data as {
           valid: boolean
           errors: { path: string; message: string; source: string }[]
         }
@@ -416,8 +413,11 @@ export default function JsonSchemaFormPage() {
           return map
         })
         return result.errors
-      } catch {
-        notification.error({ message: "后端校验网络错误", description: "请检查后端服务是否运行" })
+      } catch (err) {
+        notification.error({
+          title: "后端校验网络错误",
+          description: getErrorMessage(err),
+        })
         return []
       }
     },

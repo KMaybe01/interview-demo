@@ -1,5 +1,5 @@
 import axios, { type AxiosError, type AxiosRequestConfig, type AxiosResponse } from "axios"
-import { clearTokens, getAccessToken, getRefreshToken, setTokens } from "./token.ts"
+import { clearTokens, getAccessToken, getRefreshToken, isTokenExpired, setTokens } from "./token.ts"
 
 interface PendingItem {
   resolve: (token: string) => void
@@ -70,14 +70,26 @@ function parseSimpleToken(token: string): { exp: number } | null {
 
 const http = axios.create({
   timeout: 30000,
-  headers: { "Content-Type": "application/json" },
 })
 
-http.interceptors.request.use((config) => {
+http.interceptors.request.use(async (config) => {
   const token = getAccessToken()
-  if (token != null) {
-    config.headers.Authorization = `Bearer ${token}`
+  if (token == null) return config
+
+  // Proactive wait: if token is expired and a refresh is already in flight,
+  // wait for the new token instead of sending a request doomed to 401
+  if (isTokenExpired(token) && refreshPromise != null) {
+    try {
+      const newToken = await acquireRefresh()
+      config.headers.Authorization = `Bearer ${newToken}`
+      return config
+    } catch {
+      // Refresh in flight failed → let request go with old token,
+      // response interceptor will handle the 401 and redirect
+    }
   }
+
+  config.headers.Authorization = `Bearer ${token}`
   return config
 })
 
@@ -97,8 +109,11 @@ http.interceptors.response.use(
         return Promise.reject(error)
       }
 
+      // Only attempt refresh if the token is actually expired
+      // (30s buffer for clock drift). If token still has >30s life,
+      // a 401 here is not about expiry (e.g. permissions revoked).
       const parsed = parseSimpleToken(token)
-      if (parsed && parsed.exp * 1000 > Date.now() - 5000) {
+      if (parsed && parsed.exp * 1000 > Date.now() + 30000) {
         return Promise.reject(error)
       }
 
@@ -123,6 +138,26 @@ http.interceptors.response.use(
     return Promise.reject(error)
   },
 )
+
+export function getErrorMessage(error: unknown): string {
+  if (axios.isAxiosError(error)) {
+    const data = error.response?.data as { error?: string; message?: string } | undefined
+    if (data?.error) return data.error
+    if (data?.message) return data.message
+    if (error.response?.status === 400) return "请求参数错误"
+    if (error.response?.status === 403) return "没有权限访问该资源"
+    if (error.response?.status === 404) return "请求的资源不存在"
+    if (error.response?.status === 409) return "资源冲突"
+    if (error.response?.status === 422) return "请求数据校验失败"
+    if (error.response?.status === 429) return "请求过于频繁，请稍后重试"
+    if (error.response?.status && error.response.status >= 500) return "服务器内部错误"
+    if (!error.response) return "网络错误，请检查后端服务是否正常运行"
+    // eslint-disable-next-line @typescript-eslint/restrict-template-expressions
+    return `请求失败 (${error.response.status})`
+  }
+  if (error instanceof Error) return error.message
+  return "发生未知错误"
+}
 
 export async function fetchClient(
   url: string,
