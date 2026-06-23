@@ -1,10 +1,9 @@
 import { LockOutlined, SafetyOutlined, UserOutlined } from "@ant-design/icons"
 import { Alert, Button, Card, Form, Input, message, Typography } from "antd"
-import axios from "axios"
 import { useCallback, useEffect, useRef, useState } from "react"
 import { useNavigate } from "react-router-dom"
 import { useAuthStore } from "../stores"
-import { http } from "../utils/fetchClient.ts"
+import { getErrorMessage, http } from "../utils/fetchClient.ts"
 import { parseToken, setTokens } from "../utils/token.ts"
 
 const { Title, Text } = Typography
@@ -71,10 +70,7 @@ export default function Login() {
         message.success("登录成功")
         void navigate("/", { replace: true })
       } catch (err) {
-        const msg = axios.isAxiosError(err)
-          ? ((err.response?.data as { error?: string }).error ?? "登录失败")
-          : "网络错误，请检查后端服务"
-        message.error(msg)
+        message.error(getErrorMessage(err))
       } finally {
         setLoading(false)
       }

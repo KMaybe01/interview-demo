@@ -15,6 +15,14 @@ stages:
   - package
   - deploy
 
+cache:
+  key: ${CI_COMMIT_REF_SLUG}
+  paths:
+    - backend/bin/
+    - frontend/node_modules/
+    - ~/.cache/go-build/
+    - ~/.bun/install/cache/
+
 before_script:
   - apk add --no-cache go
   - curl -fsSL https://bun.sh/install | bash

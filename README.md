@@ -4,7 +4,7 @@
 
 ## 项目概述
 
-React 19 + Go 1.26 全栈演示项目，涵盖 **13 个高级技术场景**，聚焦前端工程化、性能优化与架构设计。
+React 19 + Go 1.26 全栈演示项目，涵盖 **14 个高级技术场景**（含仪表盘 + 13 个核心演示），聚焦前端工程化、性能优化与架构设计。
 
 **Keywords:** 无感刷新 · Token Rotation · 递归表单引擎 · 双重校验 · 实时 JSON 编辑 · WebSocket 心跳 · LRU 路由缓存 · Web Worker 分治 · OpenLayers 聚类 · RBAC 位编码 · SSE 流式日志 · 请求加载 Signal · 树形数据引擎 · 大文件断点续传 · Web Vitals + 页面渲染监控
 
@@ -69,20 +69,21 @@ interview-demo/
 │   │   │   ├── requestLoadingStore.ts # 请求加载 Signal
 │   │   │   └── uploadStore.ts      # 分片上传 (persist + localStorage)
 │   │   ├── routes/
-│   │   │   └── index.tsx           # 13 条路由配置 (不含 /login 和 /)
+│   │   │   └── index.tsx           # 14 条路由配置 (含 / 仪表盘 + 13 演示页)
 │   │   └── utils/                   # 工具函数
 │   │       ├── fetchClient.ts      # 统一请求封装（自动附加 Token + 401 无感刷新）
 │   │       ├── token.ts            # JWT Token 工具
 │   │       ├── lru.ts              # LRUCache 泛型类
 │   │       ├── rbac.ts             # RBAC 位运算权限
 │   │       ├── wsTransport.ts      # WebSocket 传输层: 二进制协议/背压/心跳/降级链
+│   │       ├── hash.worker.ts      # SHA-256 分片哈希 Worker
 │   │       ├── merge.worker.ts     # 归并排序 Worker
-│   │       └── decrypt.worker.ts   # 日志解密 Worker
+│   │       └── decrypt.worker.ts   # 日志解密 Worker (RSA 密钥对生成 + AES-256-GCM)
 │   ├── public/
 │   │   ├── favicon.svg
 │   │   └── icons.svg
 │   ├── dist/                        # 构建产物 (代码分割, 按需加载)
-│   ├── vite.config.ts              # Vite + React + Babel + /api 代理
+│   ├── vite.config.ts              # Vite 8 + React + Babel Compiler + Rolldown 代码分割 + /api 代理
 │   ├── tsconfig.json               # TypeScript 配置入口
 │   ├── tsconfig.app.json
 │   ├── tsconfig.node.json
@@ -99,7 +100,7 @@ interview-demo/
 │   │   ├── gis.go                  # GIS 点位数据
 │   │   ├── schema.go               # Schema 后端业务校验
 │   │   ├── sse.go                  # SSE 日志流
-│   │   ├── encrypted_logs.go       # 加密日志流
+│   │   ├── encrypted_logs.go       # 加密日志流 (客户端公钥加密 AES 密钥)
 │   │   ├── vitals.go               # Web Vitals + 页面路由/渲染采集与存储
 │   │   └── upload.go               # 分片上传 / 状态查询 / 合并
 │   ├── middleware/
@@ -119,8 +120,8 @@ interview-demo/
 │       ├── frontend-deployment.yaml# 2 副本, nginx :80
 │       ├── frontend-service.yaml   # ClusterIP :80
 │       └── ingress.yaml            # /api /ws → backend, / → frontend
-├── Dockerfile                      # 多阶段构建 (frontend-builder → backend-builder → frontend/backend)
-├── nginx.conf                      # Nginx 反向代理 (静态文件 + /api + /ws WebSocket)
+├── Dockerfile                      # 多阶段构建 (frontend-builder → backend-builder → frontend/backend, Go -ldflags="-s -w")
+├── nginx.conf                      # Nginx 反向代理 (安全头 / SSE proxy_buffering off / 大 body 100m / gzip / WebSocket)
 ├── .gitlab-ci.yml                  # GitLab CI/CD 流水线 (validate → build → package → deploy)
 └── README.md
 ```
@@ -134,7 +135,7 @@ interview-demo/
 | 3  | LRU 路由缓存         | 3 页 Tab 切换 + DOM display:none 保持状态 + LRU 淘汰 + staleKeys 写后失效 + activeRef 两阶段 useEffect + 惰性刷新 + 淘汰通知 |
 | 4  | Web Worker 分治合并  | Worker Pool + 自适应分区 + 有序归并缓冲区 + 主线程 Array.sort 对比         |
 | 5  | GIS 十万级点位渲染   | OpenLayers Cluster 聚类 + BBOX 视口剪裁 + dataCache + moveend 惰性刷新   |
-| 6  | 十万行日志流解密   | 生产/消费模式 + RSA 密钥交换 + AES-256-GCM 解密 + 虚拟滚动                |
+| 6  | 十万行日志流解密   | 客户端 RSA 密钥对生成 + 服务端用客户端公钥加密 AES 密钥 + AES-256-GCM Worker 并行解密 + 虚拟滚动 |
 | 7  | RBAC 位编码权限      | 位运算权限编码: 6 种权限 (READ/WRITE/DELETE/EXPORT/IMPORT/ADMIN), 5 个预设角色 (GUEST/EDITOR/MODERATOR/ADMIN/SUPER), 菜单/路由/按钮三层可视化联动 + 后端 API(`POST /api/rbac/check`) 双重校验 + 前后端一致性对比列 |
 | 8  | 双 Token 无感刷新    | 演示页面: Promise gate + 并发队列 + Refresh Token Rotation + Replay 检测 + Token 生命周期可视化 |
 | 9  | SSE 日志流           | ReadableStream + AbortController + RAF 节流 + 暂停/恢复连接               |

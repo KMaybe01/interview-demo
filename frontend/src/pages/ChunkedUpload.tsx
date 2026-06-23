@@ -216,7 +216,7 @@ const ToolbarActions = React.memo(function ToolbarActions({
 })
 
 export default function ChunkedUpload() {
-  const { files, removeFile, updateFile, updateChunk, loadFromStorage, resetAll } = useUploadStore()
+  const { files, removeFile, updateFile, updateChunk, resetAll } = useUploadStore()
   const [fileObj, setFileObj] = useState<File | null>(null)
   const [chunkSize] = useState(defaultChunkSize)
   const [concurrency, setConcurrency] = useState(4)
@@ -228,10 +228,6 @@ export default function ChunkedUpload() {
   const resolvePauseRef = useRef<(() => void) | null>(null)
   const timerRef = useRef<ReturnType<typeof setInterval> | undefined>(undefined)
   const checkAbort = (): boolean => abortRef.current
-
-  useEffect(() => {
-    loadFromStorage()
-  }, [loadFromStorage])
 
   useEffect(() => {
     return () => {

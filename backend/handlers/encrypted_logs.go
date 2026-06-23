@@ -38,7 +38,6 @@ type initEvent struct {
 	Type         string `json:"type"`
 	Key          string `json:"key,omitempty"`
 	EncryptedKey string `json:"encryptedKey,omitempty"`
-	PrivateKey   string `json:"privateKey,omitempty"`
 }
 
 type chunkEvent struct {
@@ -61,14 +60,12 @@ func EncryptedLogStream(c *gin.Context) {
 		return
 	}
 
-	// 1. RSA public key (SPKI DER, base64)
-	pubKeyDER, err := x509.MarshalPKIXPublicKey(rsaPublicKey)
-	if err != nil {
-		return
-	}
-	initPub, _ := json.Marshal(initEvent{Type: "rsa-public-key", Key: base64.StdEncoding.EncodeToString(pubKeyDER)})
-	fmt.Fprintf(c.Writer, "data: %s\n\n", initPub)
-	flusher.Flush()
+	// 1. Check for client-provided RSA public key (query param: clientKey, SPKI DER base64)
+	//    The client (decrypt.worker.ts) generates an ephemeral RSA key pair and sends
+	//    its public key here. The server encrypts the AES key with the client's public key,
+	//    so only the client can decrypt it — no private key is ever transmitted.
+	clientKeyB64 := c.DefaultQuery("clientKey", "")
+	useClientKey := clientKeyB64 != ""
 
 	// 2. Generate ephemeral AES-256-GCM key
 	aesKey := make([]byte, 32)
@@ -76,26 +73,55 @@ func EncryptedLogStream(c *gin.Context) {
 		return
 	}
 
-	// 3. Encrypt AES key with RSA-OAEP (SHA-256)
-	encryptedAESKey, err := rsa.EncryptOAEP(sha256.New(), rand.Reader, rsaPublicKey, aesKey, nil)
-	if err != nil {
-		return
+	if useClientKey {
+		// Proper flow: encrypt AES key with CLIENT's public key
+		clientKeyDER, err := base64.StdEncoding.DecodeString(clientKeyB64)
+		if err != nil {
+			return
+		}
+		clientPubKey, err := x509.ParsePKIXPublicKey(clientKeyDER)
+		if err != nil {
+			return
+		}
+		rsaClientPub, ok := clientPubKey.(*rsa.PublicKey)
+		if !ok {
+			return
+		}
+
+		encryptedAESKey, err := rsa.EncryptOAEP(sha256.New(), rand.Reader, rsaClientPub, aesKey, nil)
+		if err != nil {
+			return
+		}
+		initExchange, _ := json.Marshal(initEvent{
+			Type:         "key-exchange",
+			EncryptedKey: base64.StdEncoding.EncodeToString(encryptedAESKey),
+		})
+		fmt.Fprintf(c.Writer, "data: %s\n\n", initExchange)
+		flusher.Flush()
+	} else {
+		// Fallback: send server's RSA public key + AES key encrypted with server's public key
+		// (legacy mode, kept for backward compatibility)
+		pubKeyDER, err := x509.MarshalPKIXPublicKey(rsaPublicKey)
+		if err != nil {
+			return
+		}
+		initPub, _ := json.Marshal(initEvent{Type: "rsa-public-key", Key: base64.StdEncoding.EncodeToString(pubKeyDER)})
+		fmt.Fprintf(c.Writer, "data: %s\n\n", initPub)
+		flusher.Flush()
+
+		encryptedAESKey, err := rsa.EncryptOAEP(sha256.New(), rand.Reader, rsaPublicKey, aesKey, nil)
+		if err != nil {
+			return
+		}
+		initExchange, _ := json.Marshal(initEvent{
+			Type:         "key-exchange",
+			EncryptedKey: base64.StdEncoding.EncodeToString(encryptedAESKey),
+		})
+		fmt.Fprintf(c.Writer, "data: %s\n\n", initExchange)
+		flusher.Flush()
 	}
 
-	// 4. Send RSA private key (PKCS8) + encrypted AES key to client
-	privKeyDER, err := x509.MarshalPKCS8PrivateKey(rsaPrivateKey)
-	if err != nil {
-		return
-	}
-	initExchange, _ := json.Marshal(initEvent{
-		Type:         "key-exchange",
-		EncryptedKey: base64.StdEncoding.EncodeToString(encryptedAESKey),
-		PrivateKey:   base64.StdEncoding.EncodeToString(privKeyDER),
-	})
-	fmt.Fprintf(c.Writer, "data: %s\n\n", initExchange)
-	flusher.Flush()
-
-	// 5. Stream encrypted log chunks (simulate 25MB / 250000 lines)
+	// 3. Stream encrypted log chunks (simulate 25MB / 250000 lines)
 	totalLines := 250000
 	chunkSize := 100
 	totalChunks := (totalLines + chunkSize - 1) / chunkSize
