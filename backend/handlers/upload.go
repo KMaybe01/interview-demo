@@ -158,6 +158,14 @@ func GetUploadStatus(c *gin.Context) {
 	})
 }
 
+func sanitizeFilename(name string) string {
+	cleaned := filepath.Base(name)
+	if cleaned == "." || cleaned == "/" {
+		return "unnamed_file"
+	}
+	return cleaned
+}
+
 func DownloadUpload(c *gin.Context) {
 	uploadID := c.Param("uploadId")
 	val, ok := uploadSessions.Load(uploadID)
@@ -166,18 +174,19 @@ func DownloadUpload(c *gin.Context) {
 		return
 	}
 	session := val.(*UploadSession)
-	if session.Filename == "" {
+	safeName := sanitizeFilename(session.Filename)
+	if safeName == "" {
 		c.JSON(404, gin.H{"error": "Filename not found"})
 		return
 	}
 
-	filePath := filepath.Join(uploadDir, fmt.Sprintf("%s_%s", uploadID, session.Filename))
+	filePath := filepath.Join(uploadDir, fmt.Sprintf("%s_%s", uploadID, safeName))
 	if _, err := os.Stat(filePath); os.IsNotExist(err) {
 		c.JSON(404, gin.H{"error": "File not found"})
 		return
 	}
 
-	c.Header("Content-Disposition", fmt.Sprintf(`attachment; filename="%s"`, session.Filename))
+	c.Header("Content-Disposition", fmt.Sprintf(`attachment; filename="%s"`, safeName))
 	c.Header("Content-Type", "application/octet-stream")
 	c.File(filePath)
 }

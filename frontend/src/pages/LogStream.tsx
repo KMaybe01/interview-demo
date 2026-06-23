@@ -49,7 +49,6 @@ interface DecodeStats {
 interface SSEMessage {
   type?: string
   key?: string
-  privateKey?: string
   encryptedKey?: string
   seq?: number
   data?: string
@@ -166,7 +165,7 @@ export default function LogStream() {
     }
   }, [])
 
-  const initWorkers = useCallback(
+  const initWorkersFromAes = useCallback(
     (aesKey: ArrayBuffer) => {
       for (const w of workersRef.current) {
         w.terminate()
@@ -230,6 +229,114 @@ export default function LogStream() {
     setStatus("interrupted")
   }, [])
 
+  const performKeyExchange = useCallback(
+    (
+      signal: AbortSignal,
+    ): Promise<{
+      aesKey: ArrayBuffer
+      reader: ReadableStreamDefaultReader<Uint8Array>
+      remainder: string
+    }> => {
+      return new Promise((resolve, reject) => {
+        const keyWorker = new Worker(new URL("../utils/decrypt.worker.ts", import.meta.url), {
+          type: "module",
+        })
+
+        keyWorker.onmessage = async (e) => {
+          const msg = e.data as { type: string; publicKey?: string; message?: string }
+          if (msg.type === "error") {
+            keyWorker.terminate()
+            reject(new Error(msg.message ?? "Key exchange failed"))
+            return
+          }
+          if (msg.type === "key-generated" && msg.publicKey) {
+            try {
+              setStatus("key-exchange")
+              const resp = await fetch(
+                `/api/sse/encrypted-logs?clientKey=${encodeURIComponent(msg.publicKey)}`,
+                { signal },
+              )
+              if (!resp.ok) {
+                reject(new Error("SSE connection failed"))
+                return
+              }
+              const reader = resp.body?.getReader()
+              if (!reader) {
+                reject(new Error("No reader"))
+                return
+              }
+              const decoder = new TextDecoder("utf-8")
+              let buf = ""
+
+              while (!signal.aborted) {
+                const { done, value } = await reader.read()
+                if (done) break
+                buf += decoder.decode(value, { stream: true })
+                const lines = buf.split("\n")
+                buf = lines.pop() ?? ""
+
+                for (let i = 0; i < lines.length; i++) {
+                  const line = lines[i]
+                  if (!line.startsWith("data: ")) continue
+                  const evt = JSON.parse(line.slice(6)) as SSEMessage
+                  if (evt.type === "key-exchange" && evt.encryptedKey) {
+                    const encKeyRaw = Uint8Array.from(atob(evt.encryptedKey), (c) =>
+                      c.charCodeAt(0),
+                    )
+                    keyWorker.postMessage({ type: "init", key: encKeyRaw.buffer }, [
+                      encKeyRaw.buffer,
+                    ])
+                    const remaining = lines.slice(i + 1).join("\n")
+                    const remainderBuf = buf ? remaining + "\n" + buf : remaining
+                    keyWorker.onmessage = (e2) => {
+                      const rawKey = e2.data as {
+                        type?: string
+                        key?: ArrayBuffer
+                        message?: string
+                      }
+                      if (rawKey.type === "error") {
+                        reader.cancel().catch(() => undefined)
+                        keyWorker.terminate()
+                        reject(new Error(rawKey.message ?? "RSA decrypt failed"))
+                        return
+                      }
+                      keyWorker.terminate()
+                      if (!rawKey.key) {
+                        reject(new Error("No AES key returned from worker"))
+                        return
+                      }
+                      resolve({
+                        aesKey: rawKey.key,
+                        reader,
+                        remainder: remainderBuf,
+                      })
+                    }
+                    return
+                  }
+                }
+              }
+            } catch (err) {
+              keyWorker.terminate()
+              reject(err instanceof Error ? err : new Error(String(err)))
+            }
+          }
+        }
+
+        signal.addEventListener(
+          "abort",
+          () => {
+            keyWorker.terminate()
+            reject(new DOMException("Aborted", "AbortError"))
+          },
+          { once: true },
+        )
+
+        keyWorker.postMessage({ type: "generate-key" })
+      })
+    },
+    [],
+  )
+
   const start = useCallback(() => {
     disconnect()
     setStatus("connecting")
@@ -245,12 +352,16 @@ export default function LogStream() {
 
     const run = async (): Promise<void> => {
       try {
-        const response = await fetch("/api/sse/encrypted-logs", { signal: abort.signal })
-        if (!response.ok) return
-        const reader = response.body?.getReader()
-        if (!reader) return
+        const {
+          aesKey,
+          reader,
+          remainder: initialRemainder,
+        } = await performKeyExchange(abort.signal)
+        initWorkersFromAes(aesKey)
+        setStatus("decrypting")
+
         const decoder = new TextDecoder("utf-8")
-        let remainder = ""
+        let remainder = initialRemainder
 
         while (!abort.signal.aborted) {
           const { done, value } = await reader.read()
@@ -263,30 +374,7 @@ export default function LogStream() {
             if (!msgLine.startsWith("data: ")) continue
             const evt = JSON.parse(msgLine.slice(6)) as SSEMessage
 
-            if (evt.type === "rsa-public-key") {
-              setStatus("key-exchange")
-              continue
-            }
-
-            if (evt.type === "key-exchange") {
-              const p = evt as { privateKey: string; encryptedKey: string }
-              const privKeyRaw = Uint8Array.from(atob(p.privateKey), (c) => c.charCodeAt(0))
-              const encKeyRaw = Uint8Array.from(atob(p.encryptedKey), (c) => c.charCodeAt(0))
-
-              const privateKey = await crypto.subtle.importKey(
-                "pkcs8",
-                privKeyRaw,
-                { name: "RSA-OAEP", hash: "SHA-256" },
-                false,
-                ["decrypt"],
-              )
-              const aesKey = await crypto.subtle.decrypt(
-                { name: "RSA-OAEP" },
-                privateKey,
-                encKeyRaw,
-              )
-              initWorkers(aesKey)
-              setStatus("decrypting")
+            if (evt.type !== "done" && (evt.seq == null || evt.data == null)) {
               continue
             }
 
@@ -325,7 +413,7 @@ export default function LogStream() {
     timerRef.current = setInterval(() => {
       scheduleFlush()
     }, 500)
-  }, [disconnect, initWorkers, dispatchJob, scheduleFlush])
+  }, [disconnect, initWorkersFromAes, dispatchJob, scheduleFlush, performKeyExchange])
 
   useEffect(() => {
     statusRef.current = status

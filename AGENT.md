@@ -2,7 +2,7 @@
 
 ## 项目简介
 
-React 19 + Go 1.26 全栈演示平台，覆盖 12 个高级技术场景（WebSocket/SSE/Token Refresh/动态表单/GIS/Web Worker/LRU/RBAC/分片上传/日志流/树操作/请求追踪）。
+React 19 + Go 1.26 全栈演示平台，覆盖 14 个高级技术场景（WebSocket/SSE/Token Refresh/动态表单/GIS/Web Worker/LRU/RBAC/分片上传/日志流/树操作/请求追踪/Web Vitals + Dashboard）。
 
 **仓库**: `https://github.com/KMaybe01/interview-demo`
 
@@ -233,7 +233,7 @@ export const useXxxStore = create<XxxState>()(
 ```
 
 - 简单页面级状态: `useState` + `useRef`
-- 全局共享: Zustand
+- 全局共享: Zustand（通过 `src/stores/index.ts` 桶文件导出）
 - 持久化: Zustand `persist` 中间件 (uploadStore)
 
 ---
@@ -309,6 +309,16 @@ StrictMode 保护: 单 effect + render-time 重置 `reportedRef`
 | `utils/fetchClient.ts` | 统一 fetch 封装, 自动附加 Bearer Token, 401 时自动无感刷新 |
 | `utils/token.ts` | localStorage 读写 access_token / refresh_token |
 
+### Web Workers
+
+| Worker | 机制 | 职责 |
+|--------|------|------|
+| `merge.worker.ts` | 自实现归并排序 | Worker Pool + 自适应分区 + 有序归并缓冲区 |
+| `decrypt.worker.ts` | AES-GCM 解密 + RSA 密钥对生成 | 生产/消费模式 + 客户端生成 RSA 密钥对，服务端用客户端公钥加密 AES 密钥 |
+| `hash.worker.ts` | SHA-256 哈希 | 分片文件渐进式哈希计算 |
+
+---
+
 ### 使用 fetchClient
 
 所有经过后端的 API 请求应使用 `fetchClient` 替代原生 `fetch`:
@@ -364,6 +374,17 @@ go build -o bin/server.exe .   # build 可运行文件
 | `lint-frontend` | `bun run lint` | `frontend/` |
 | `lint-frontend-eslint` | `bun run lint:eslint` | `frontend/` |
 | `tsc-frontend` | `bunx tsc -b --noEmit` | `frontend/` |
+
+---
+
+## Store 导入规范
+
+```typescript
+// 全部通过桶文件导出路径 (已注册):
+import { useAuthStore, useUploadStore, useLruCacheStore } from "../stores"  // 通过 index.ts 桶文件
+```
+
+所有新增 store 需在 `src/stores/index.ts` 桶文件中添加导出。
 
 ---
 

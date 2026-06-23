@@ -1,4 +1,5 @@
 import { create } from "zustand"
+import { persist } from "zustand/middleware"
 
 export type ChunkStatus = "pending" | "hashing" | "uploading" | "done" | "failed"
 
@@ -46,129 +47,56 @@ interface UploadState {
   removeFile: (id: string) => void
   updateFile: (id: string, partial: Partial<UploadFileItem>) => void
   updateChunk: (fileId: string, chunkIndex: number, partial: Partial<ChunkInfo>) => void
-  loadFromStorage: () => void
   clearCompleted: () => void
   resetAll: () => void
 }
 
-const STORAGE_KEY = "upload_sessions"
+export const useUploadStore = create<UploadState>()(
+  persist(
+    (set) => ({
+      files: [],
 
-function saveToStorage(files: UploadFileItem[]) {
-  const serializable = files.map((f) => ({
-    id: f.id,
-    uploadId: f.uploadId,
-    filename: f.filename,
-    fileSize: f.fileSize,
-    chunkSize: f.chunkSize,
-    totalChunks: f.totalChunks,
-    fileHash: f.fileHash,
-    status: f.status,
-    progress: f.progress,
-    uploadedBytes: f.uploadedBytes,
-    speed: f.speed,
-    elapsed: f.elapsed,
-    chunks: f.chunks.map((c) => ({
-      index: c.index,
-      status: c.status,
-      hash: c.hash,
-      size: c.size,
-      retries: c.retries,
-      speed: c.speed,
-      startTime: c.startTime,
-    })),
-    result: f.result,
-    createdAt: f.createdAt,
-  }))
-  try {
-    localStorage.setItem(STORAGE_KEY, JSON.stringify(serializable))
-  } catch {
-    // storage full or unavailable
-  }
-}
+      addFile: (item) => {
+        set((state) => ({ files: [...state.files, item] }))
+      },
 
-function loadFromStorage(): UploadFileItem[] {
-  try {
-    const raw = localStorage.getItem(STORAGE_KEY)
-    if (!raw) return []
-    return JSON.parse(raw) as UploadFileItem[]
-  } catch {
-    return []
-  }
-}
+      removeFile: (id) => {
+        set((state) => ({ files: state.files.filter((f) => f.id !== id) }))
+      },
 
-let saveTimer: ReturnType<typeof setTimeout> | undefined
+      updateFile: (id, partial) => {
+        set((state) => ({
+          files: state.files.map((f) => (f.id === id ? { ...f, ...partial } : f)),
+        }))
+      },
 
-function debouncedSave(files: UploadFileItem[]) {
-  if (saveTimer) clearTimeout(saveTimer)
-  saveTimer = setTimeout(() => {
-    saveToStorage(files)
-    saveTimer = undefined
-  }, 100)
-}
+      updateChunk: (fileId, chunkIndex, partial) => {
+        set((state) => ({
+          files: state.files.map((f) => {
+            if (f.id !== fileId) return f
+            return {
+              ...f,
+              chunks: f.chunks.map((c) => (c.index === chunkIndex ? { ...c, ...partial } : c)),
+            }
+          }),
+        }))
+      },
 
-export const useUploadStore = create<UploadState>((set, _get) => ({
-  files: [],
+      clearCompleted: () => {
+        set((state) => ({
+          files: state.files.filter(
+            (f) => f.status === "uploading" || f.status === "paused" || f.status === "failed",
+          ),
+        }))
+      },
 
-  addFile: (item) => {
-    set((state) => {
-      const next = [...state.files, item]
-      debouncedSave(next)
-      return { files: next }
-    })
-  },
-
-  removeFile: (id) => {
-    set((state) => {
-      const next = state.files.filter((f) => f.id !== id)
-      debouncedSave(next)
-      return { files: next }
-    })
-  },
-
-  updateFile: (id, partial) => {
-    set((state) => {
-      const next = state.files.map((f) => (f.id === id ? { ...f, ...partial } : f))
-      debouncedSave(next)
-      return { files: next }
-    })
-  },
-
-  updateChunk: (fileId, chunkIndex, partial) => {
-    set((state) => {
-      const next = state.files.map((f) => {
-        if (f.id !== fileId) return f
-        return {
-          ...f,
-          chunks: f.chunks.map((c) => (c.index === chunkIndex ? { ...c, ...partial } : c)),
-        }
-      })
-      debouncedSave(next)
-      return { files: next }
-    })
-  },
-
-  loadFromStorage: () => {
-    const saved = loadFromStorage()
-    set({ files: saved })
-  },
-
-  clearCompleted: () => {
-    set((state) => {
-      const next = state.files.filter(
-        (f) => f.status === "uploading" || f.status === "paused" || f.status === "failed",
-      )
-      debouncedSave(next)
-      return { files: next }
-    })
-  },
-
-  resetAll: () => {
-    if (saveTimer) clearTimeout(saveTimer)
-    try {
-      localStorage.removeItem(STORAGE_KEY)
-    } catch {
-      /* ignore */
-    }
-    set({ files: [] })
-  },
-}))
+      resetAll: () => {
+        set({ files: [] })
+      },
+    }),
+    {
+      name: "upload_sessions",
+      skipHydration: false,
+    },
+  ),
+)

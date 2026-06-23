@@ -109,7 +109,7 @@ export default function LruRouteCache() {
   useEffect(() => {
     if (evictedPage) {
       notification.warning({
-        message: `页面已淘汰`,
+        title: `页面已淘汰`,
         description: `"${PAGE_CONFIGS.find((p) => p.key === evictedPage)?.label ?? evictedPage}" 已被 LRU 淘汰，打开后将重新加载数据`,
         placement: "topRight",
         duration: 3,
