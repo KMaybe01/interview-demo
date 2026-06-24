@@ -287,7 +287,7 @@ export default function LogStream() {
                       encKeyRaw.buffer,
                     ])
                     const remaining = lines.slice(i + 1).join("\n")
-                    const remainderBuf = buf ? remaining + "\n" + buf : remaining
+                    const remainderBuf = buf ? `${remaining}\n${buf}` : remaining
                     keyWorker.onmessage = (e2) => {
                       const rawKey = e2.data as {
                         type?: string

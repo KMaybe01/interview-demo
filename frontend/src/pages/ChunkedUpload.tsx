@@ -227,6 +227,8 @@ export default function ChunkedUpload() {
   const pausedRef = useRef(false)
   const resolvePauseRef = useRef<(() => void) | null>(null)
   const timerRef = useRef<ReturnType<typeof setInterval> | undefined>(undefined)
+  const uploadingRef = useRef(false)
+  const uploadGenRef = useRef(0)
   const checkAbort = (): boolean => abortRef.current
 
   useEffect(() => {
@@ -266,18 +268,20 @@ export default function ChunkedUpload() {
   const handleDrop = useCallback(
     (raw: File) => {
       const { files: currentFiles, addFile: storeAddFile } = useUploadStore.getState()
-      const existing = currentFiles.find(
-        (f) => f.filename === raw.name && f.fileSize === raw.size && f.status !== "done",
-      )
+
+      const existing = currentFiles.find((f) => f.filename === raw.name && f.fileSize === raw.size)
       if (existing) {
-        if (existing.status === "failed") {
-          updateFile(existing.id, {
-            status: "pending",
-            chunks: existing.chunks.map((c) => ({ ...c, status: "pending" })),
-          })
-        }
+        updateFile(existing.id, {
+          status: "pending",
+          progress: 0,
+          uploadedBytes: 0,
+          speed: 0,
+          elapsed: 0,
+          result: null,
+          chunks: existing.chunks.map((c) => ({ ...c, status: "pending" })),
+        })
         setFileObj(raw)
-        setIsResume(true)
+        setIsResume(existing.status !== "done")
         return
       }
 
@@ -320,25 +324,33 @@ export default function ChunkedUpload() {
   )
 
   const startUpload = useCallback(async () => {
+    if (uploadingRef.current) return
+    uploadingRef.current = true
+    const gen = ++uploadGenRef.current
     const { files: currentFiles } = useUploadStore.getState()
-    if (!fileObj || currentFiles.length === 0) return
+    if (!fileObj || currentFiles.length === 0) {
+      uploadingRef.current = false
+      return
+    }
     const item = currentFiles[0]
-    if (item.status !== "pending") return
-
-    updateFile(item.id, { status: "uploading" })
-    abortRef.current = false
-    pausedRef.current = false
-    const startTime = performance.now()
-
-    timerRef.current = setInterval(() => {
-      const { files: f } = useUploadStore.getState()
-      if (f[0]) updateFile(f[0].id, { elapsed: performance.now() - startTime })
-    }, 200)
-
-    let completedCount = 0
-    let currentInitId = item.uploadId
-
+    if (item.status !== "pending") {
+      uploadingRef.current = false
+      return
+    }
     try {
+      updateFile(item.id, { status: "uploading" })
+      abortRef.current = false
+      pausedRef.current = false
+      const startTime = performance.now()
+
+      timerRef.current = setInterval(() => {
+        const { files: f } = useUploadStore.getState()
+        if (f[0]) updateFile(f[0].id, { elapsed: performance.now() - startTime })
+      }, 200)
+
+      let completedCount = 0
+      let currentInitId = item.uploadId
+
       let fileHash = item.fileHash
       if (!fileHash) {
         fileHash = await computeFileHash(fileObj, chunkSize)
@@ -409,6 +421,7 @@ export default function ChunkedUpload() {
             })
             return
           } catch {
+            if (checkAbort()) return
             updateChunk(item.id, chunkIdx, { status: "failed", retries: attempt + 1 })
             if (attempt < 3)
               await new Promise((r) => setTimeout(r, Math.min(1000 * 2 ** attempt, 30000)))
@@ -435,7 +448,10 @@ export default function ChunkedUpload() {
     } catch {
       updateFile(item.id, { status: "failed" })
     } finally {
-      if (timerRef.current) clearInterval(timerRef.current)
+      if (gen === uploadGenRef.current) {
+        if (timerRef.current) clearInterval(timerRef.current)
+        uploadingRef.current = false
+      }
     }
   }, [fileObj, chunkSize, concurrency, updateFile, updateChunk])
 
@@ -455,6 +471,8 @@ export default function ChunkedUpload() {
 
   const abort = useCallback(() => {
     abortRef.current = true
+    uploadingRef.current = false
+    uploadGenRef.current++
     pausedRef.current = false
     resolvePauseRef.current?.()
     resolvePauseRef.current = null

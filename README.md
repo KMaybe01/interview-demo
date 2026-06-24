@@ -141,7 +141,7 @@ interview-demo/
 | 9  | SSE 日志流           | ReadableStream + AbortController + RAF 节流 + 暂停/恢复连接               |
 | 10 | 请求加载 Signal      | Signal 级别请求追踪 + 方法-路径匹配树                                     |
 | 11 | 树形数据操作引擎     | 递归 CRUD + 拖拽排序 + 节点校验 + 批量操作                                |
-| 12 | 大文件断点续传       | SHA-256 分片哈希 + 并发分片上传 + 完整性校验 + 暂停/恢复/停止 + 刷新持久化 + 清除已完成 + 重置全部 |
+| 12 | 大文件断点续传       | SHA-256 分片哈希 + 并发分片上传 + 完整性校验 + 暂停/恢复/停止 + 刷新持久化 + 清除已完成 + 重置全部 + 代际锁防并发竞态 + 停止后即时重试 + 后端 mutex 数据竞争修复 |
 | 13 | Web Vitals + 页面渲染监控 | web-vitals 5 采集 CLS/FCP/INP/LCP/TTFB → PageTracker 自动上报路径+渲染耗时（单 effect + render-time 重置 `reportedRef` 防 StrictMode 重复请求）→ 后端存储 → ECharts 卡片/趋势图/排行/访问明细 |
 
 ## 快速启动

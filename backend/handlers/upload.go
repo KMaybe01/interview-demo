@@ -22,6 +22,18 @@ var (
 )
 
 type UploadSession struct {
+	mu          sync.Mutex
+	ID          string       `json:"id"`
+	Filename    string       `json:"filename"`
+	FileSize    int64        `json:"fileSize"`
+	ChunkSize   int64        `json:"chunkSize"`
+	TotalChunks int          `json:"totalChunks"`
+	Received    map[int]bool `json:"received"`
+	FileHash    string       `json:"fileHash"`
+	CreatedAt   time.Time    `json:"createdAt"`
+}
+
+type sessionSnapshot struct {
 	ID          string       `json:"id"`
 	Filename    string       `json:"filename"`
 	FileSize    int64        `json:"fileSize"`
@@ -33,12 +45,28 @@ type UploadSession struct {
 }
 
 func saveSessions() {
-	data := make(map[string]*UploadSession)
+	snapshots := make(map[string]*sessionSnapshot)
 	uploadSessions.Range(func(key, val interface{}) bool {
-		data[key.(string)] = val.(*UploadSession)
+		session := val.(*UploadSession)
+		session.mu.Lock()
+		recv := make(map[int]bool, len(session.Received))
+		for k, v := range session.Received {
+			recv[k] = v
+		}
+		snapshots[key.(string)] = &sessionSnapshot{
+			ID:          session.ID,
+			Filename:    session.Filename,
+			FileSize:    session.FileSize,
+			ChunkSize:   session.ChunkSize,
+			TotalChunks: session.TotalChunks,
+			Received:    recv,
+			FileHash:    session.FileHash,
+			CreatedAt:   session.CreatedAt,
+		}
+		session.mu.Unlock()
 		return true
 	})
-	raw, err := json.Marshal(data)
+	raw, err := json.Marshal(snapshots)
 	if err != nil {
 		return
 	}
@@ -137,13 +165,14 @@ func GetUploadStatus(c *gin.Context) {
 		return
 	}
 	session := val.(*UploadSession)
-
+	session.mu.Lock()
 	received := make([]int, 0, len(session.Received))
 	for i := 0; i < session.TotalChunks; i++ {
 		if session.Received[i] {
 			received = append(received, i)
 		}
 	}
+	session.mu.Unlock()
 
 	c.JSON(200, gin.H{
 		"uploadId":      session.ID,
@@ -195,6 +224,7 @@ func ListUploadSessions(c *gin.Context) {
 	var sessions []map[string]interface{}
 	uploadSessions.Range(func(key, val interface{}) bool {
 		session := val.(*UploadSession)
+		session.mu.Lock()
 		sessions = append(sessions, map[string]interface{}{
 			"uploadId":      session.ID,
 			"filename":      session.Filename,
@@ -203,6 +233,7 @@ func ListUploadSessions(c *gin.Context) {
 			"receivedCount": len(session.Received),
 			"createdAt":     session.CreatedAt,
 		})
+		session.mu.Unlock()
 		return true
 	})
 	if sessions == nil {
@@ -265,8 +296,10 @@ func UploadChunk(c *gin.Context) {
 		return
 	}
 
+	session.mu.Lock()
 	session.Received[chunkIndex] = true
 	received := len(session.Received)
+	session.mu.Unlock()
 	saveSessions()
 
 	c.JSON(200, gin.H{
@@ -290,7 +323,7 @@ func CompleteUpload(c *gin.Context) {
 		return
 	}
 	session := val.(*UploadSession)
-
+	session.mu.Lock()
 	receivedCount := len(session.Received)
 	if receivedCount != session.TotalChunks {
 		missing := make([]int, 0, session.TotalChunks-receivedCount)
@@ -299,12 +332,14 @@ func CompleteUpload(c *gin.Context) {
 				missing = append(missing, i)
 			}
 		}
+		session.mu.Unlock()
 		c.JSON(400, gin.H{
 			"error":   "Not all chunks received",
 			"missing": missing,
 		})
 		return
 	}
+	session.mu.Unlock()
 
 	chunkDir := filepath.Join(uploadDir, req.UploadID)
 	outputName := fmt.Sprintf("%s_%s", req.UploadID, session.Filename)
