@@ -25,7 +25,7 @@ import {
   Typography,
   Upload,
 } from "antd"
-import React, { useCallback, useEffect, useMemo, useRef, useState } from "react"
+import React, { useCallback, useEffect, useRef, useState } from "react"
 import { List } from "react-window"
 import { useUploadStore } from "../stores"
 import type { ChunkInfo, UploadFileItem, UploadResult } from "../stores/uploadStore"
@@ -242,14 +242,15 @@ export default function ChunkedUpload() {
   }, [])
 
   useEffect(() => {
+    const ac = new AbortController()
     if (files.length === 0) return
     const f = files[0]
     if (f.status !== "uploading" && f.status !== "paused") return
     const serverId = f.uploadId || f.id
     if (!serverId) return
-    void (async () => {
-      try {
-        const res = await http.get(`/api/upload/status/${serverId}`)
+    http
+      .get(`/api/upload/status/${serverId}`, { signal: ac.signal })
+      .then((res) => {
         const data = res.data as { received: number[] }
         const done = new Set(data.received)
         updateFile(f.id, {
@@ -258,10 +259,13 @@ export default function ChunkedUpload() {
             status: done.has(c.index) ? "done" : "pending",
           })),
         })
-      } catch {
+      })
+      .catch(() => {
         removeFile(f.id)
-      }
-    })()
+      })
+    return () => {
+      ac.abort()
+    }
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [])
 
@@ -481,11 +485,36 @@ export default function ChunkedUpload() {
     if (f[0]) updateFile(f[0].id, { status: "failed" })
   }, [updateFile])
 
-  const item = useMemo(() => files[0] as UploadFileItem | undefined, [files])
-  const doneChunks = useMemo(
-    () => (item?.chunks ?? []).filter((c) => c.status === "done").length,
-    [item?.chunks],
-  )
+  const handleConcurrencyChange = useCallback((v: number | null) => {
+    if (v != null) setConcurrency(v)
+  }, [])
+
+  const handleStartClick = useCallback(() => {
+    void startUpload()
+  }, [startUpload])
+
+  const item = files[0] as UploadFileItem | undefined
+  const doneChunks = item?.chunks.filter((c) => c.status === "done").length ?? 0
+
+  const handleRetryClick = useCallback(() => {
+    if (!item) return
+    updateFile(item.id, {
+      status: "pending",
+      progress: 0,
+      chunks: item.chunks.map((c) => ({
+        ...c,
+        status: "pending",
+      })),
+    })
+    setIsResume(true)
+  }, [item, updateFile])
+
+  const handleRemoveClick = useCallback(() => {
+    if (!item) return
+    removeFile(item.id)
+    setFileObj(null)
+    setIsResume(false)
+  }, [item, removeFile])
 
   const handleClearToolbar = useCallback(() => {
     const { clearCompleted: storeClear } = useUploadStore.getState()
@@ -544,9 +573,7 @@ export default function ChunkedUpload() {
                   min={1}
                   max={10}
                   value={concurrency}
-                  onChange={(v) => {
-                    if (v != null) setConcurrency(v)
-                  }}
+                  onChange={handleConcurrencyChange}
                   disabled={item.status === "uploading"}
                   style={{ width: 56 }}
                 />
@@ -555,9 +582,7 @@ export default function ChunkedUpload() {
                     type="primary"
                     size="small"
                     icon={<PlayCircleOutlined />}
-                    onClick={() => {
-                      void startUpload()
-                    }}
+                    onClick={handleStartClick}
                   >
                     {isResume ? "续传" : "上传"}
                   </Button>
@@ -587,44 +612,18 @@ export default function ChunkedUpload() {
                     type="primary"
                     size="small"
                     icon={<PlayCircleOutlined />}
-                    onClick={() => {
-                      updateFile(item.id, {
-                        status: "pending",
-                        progress: 0,
-                        chunks: item.chunks.map((c) => ({
-                          ...c,
-                          status: "pending",
-                        })),
-                      })
-                      setIsResume(true)
-                    }}
+                    onClick={handleRetryClick}
                   >
                     重试
                   </Button>
                 )}
                 {item.status === "done" && (
-                  <Button
-                    size="small"
-                    icon={<StopOutlined />}
-                    onClick={() => {
-                      removeFile(item.id)
-                      setFileObj(null)
-                      setIsResume(false)
-                    }}
-                  >
+                  <Button size="small" icon={<StopOutlined />} onClick={handleRemoveClick}>
                     清除
                   </Button>
                 )}
                 {item.status === "failed" && (
-                  <Button
-                    size="small"
-                    icon={<StopOutlined />}
-                    onClick={() => {
-                      removeFile(item.id)
-                      setFileObj(null)
-                      setIsResume(false)
-                    }}
-                  >
+                  <Button size="small" icon={<StopOutlined />} onClick={handleRemoveClick}>
                     清除
                   </Button>
                 )}

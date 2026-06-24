@@ -1,6 +1,6 @@
 import { LogoutOutlined, UserOutlined } from "@ant-design/icons"
 import { Avatar, Button, Dropdown, Layout, Menu, Typography } from "antd"
-import { useCallback, useState } from "react"
+import { useCallback, useMemo, useState } from "react"
 import { Outlet, useLocation, useNavigate } from "react-router-dom"
 import { routes } from "../routes"
 import { useAuthStore } from "../stores"
@@ -22,11 +22,15 @@ export default function MainLayout() {
     void navigate("/login", { replace: true })
   }, [logout, navigate])
 
-  const menuItems = routes.map((r) => ({
-    key: r.path,
-    icon: <r.icon />,
-    label: r.name,
-  }))
+  const menuItems = useMemo(
+    () =>
+      routes.map((r) => ({
+        key: r.path,
+        icon: <r.icon />,
+        label: r.name,
+      })),
+    [],
+  )
 
   return (
     <Layout style={{ height: "100vh" }}>

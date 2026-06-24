@@ -129,6 +129,7 @@ export class BackpressureController {
 
 export class MessageBatcher {
   private buffer: string[] = []
+  private bufferSize = 0
   private timer: ReturnType<typeof setTimeout> | null = null
   private readonly maxDelay = 16
   private readonly maxSize = 1024 * 64
@@ -140,13 +141,13 @@ export class MessageBatcher {
 
   add(data: string): void {
     this.buffer.push(data)
+    this.bufferSize += data.length
     if (this.buffer.length === 1) {
       this.timer = setTimeout(() => {
         this.flush()
       }, this.maxDelay)
     }
-    const size = this.buffer.reduce((s, d) => s + d.length, 0)
-    if (size >= this.maxSize) {
+    if (this.bufferSize >= this.maxSize) {
       if (this.timer) clearTimeout(this.timer)
       this.flush()
     }
@@ -154,7 +155,9 @@ export class MessageBatcher {
 
   private flush(): void {
     if (this.buffer.length === 0) return
-    const batch = this.buffer.splice(0)
+    const batch = this.buffer
+    this.buffer = []
+    this.bufferSize = 0
     this.timer = null
     this.flushHandler?.(batch)
   }
@@ -162,6 +165,7 @@ export class MessageBatcher {
   reset(): void {
     if (this.timer) clearTimeout(this.timer)
     this.buffer = []
+    this.bufferSize = 0
     this.timer = null
   }
 }
@@ -332,7 +336,7 @@ export class WebSocketTransport implements Transport {
     }
 
     ws.onerror = () => {
-      ws.close()
+      // 'error' is always followed by 'onclose' — no action needed
     }
 
     this.ws = ws

@@ -107,6 +107,12 @@ export default function JsonSchemaFormPage() {
   const fetchedRef = useRef(false)
 
   useEffect(() => {
+    return () => {
+      if (debounceRef.current) clearTimeout(debounceRef.current)
+    }
+  }, [])
+
+  useEffect(() => {
     if (fetchedRef.current) return
     fetchedRef.current = true
     http
@@ -121,6 +127,7 @@ export default function JsonSchemaFormPage() {
         setLiveData(res.data.initialData)
       })
       .catch((err: unknown) => {
+        fetchedRef.current = false
         setFetchError(getErrorMessage(err))
       })
       .finally(() => {

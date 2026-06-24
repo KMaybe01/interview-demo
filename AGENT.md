@@ -364,7 +364,7 @@ StrictMode 保护: 单 effect + render-time 重置 `reportedRef`
 |------|------|
 | `stores/authStore.ts` | Zustand 认证状态 (user, isLoggedIn, login/logout) |
 | `pages/Login.tsx` | 登录表单 (admin/admin123) |
-| `components/AuthGuard.tsx` | 路由守卫, 未登录重定向 /login |
+| `components/AuthGuard.tsx` | 路由守卫, ref 同步初始化免闪烁, 未登录重定向 /login |
 | `utils/fetchClient.ts` | 统一 fetch 封装, 自动附加 Bearer Token, 401 时自动无感刷新 |
 | `utils/token.ts` | localStorage 读写 access_token / refresh_token |
 

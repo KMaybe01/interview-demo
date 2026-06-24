@@ -55,16 +55,17 @@ export default function TokenRefresh() {
   const [status, setStatus] = useState<"idle" | "refreshing" | "success" | "error">("idle")
   const [refreshCount, setRefreshCount] = useState(0)
   const [queueLength, setQueueLength] = useState(0)
-  const [log, setLog] = useState<string[]>([])
+  const [log, setLog] = useState<{ id: number; text: string }[]>([])
   const [tokenHistory, setTokenHistory] = useState<TokenRecord[]>([])
   const [timeLeft, setTimeLeft] = useState(0)
   const [usedTokenCount, setUsedTokenCount] = useState(0)
   const tokenIdRef = useRef(0)
+  const logIdRef = useRef(0)
 
   const addLog = useCallback((msg: string) => {
     const entry = `[${new Date().toLocaleTimeString()}] ${msg}`
     setLog((prev) => {
-      const next = [...prev, entry]
+      const next = [...prev, { id: ++logIdRef.current, text: entry }]
       return next.length > 150 ? next.slice(-100) : next
     })
   }, [])
@@ -524,9 +525,8 @@ export default function TokenRefresh() {
                   fontSize: 12,
                 }}
               >
-                {log.map((l, i) => (
-                  // biome-ignore lint/suspicious/noArrayIndexKey: static log output, no stable id
-                  <div key={i}>{l}</div>
+                {log.map((l) => (
+                  <div key={l.id}>{l.text}</div>
                 ))}
                 {log.length === 0 && <Text type="secondary">暂无日志</Text>}
               </div>

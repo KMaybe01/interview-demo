@@ -183,17 +183,7 @@ function RequestCard({ resource }: { resource: RequestResource }) {
 export default function RequestLoading() {
   const { requests, addRequest, recordCancelled, removeRequest, clearCompleted } =
     useRequestLoadingStore()
-  const [, setNow] = useState(Date.now())
   const resourcesRef = useRef<Map<string, RequestResource>>(new Map())
-
-  useEffect(() => {
-    const id = setInterval(() => {
-      setNow(Date.now())
-    }, 200)
-    return () => {
-      clearInterval(id)
-    }
-  }, [])
 
   useEffect(() => {
     const allPending = new Set(requests.filter((r) => r.status === "pending").map((r) => r.key))

@@ -135,7 +135,10 @@ export default function AlertWebSocket() {
           unique.push(msg)
         }
       }
-      if (seenRef.current.size > 5000) seenRef.current = new Set()
+      if (seenRef.current.size > 5000) {
+        const entries = [...seenRef.current]
+        seenRef.current = new Set(entries.slice(entries.length - 2500))
+      }
       if (unique.length > 0) {
         unique.sort((a, b) => PRIORITY[a.level] - PRIORITY[b.level])
         const now = Date.now()
@@ -314,7 +317,7 @@ export default function AlertWebSocket() {
     const handleResize = () => {
       chart.resize()
     }
-    window.addEventListener("resize", handleResize)
+    window.addEventListener("resize", handleResize, { passive: true })
     return () => {
       window.removeEventListener("resize", handleResize)
       chart.dispose()
@@ -422,13 +425,8 @@ export default function AlertWebSocket() {
             : `${transportType} 未连接`
 
   const displayAlerts = useMemo(() => {
-    const sorted =
-      levelFilter === "all"
-        ? [...alerts].sort((a, b) => PRIORITY[a.level] - PRIORITY[b.level])
-        : alerts
-            .filter((a) => a.level === levelFilter)
-            .sort((a, b) => PRIORITY[a.level] - PRIORITY[b.level])
-    return sorted.slice(0, DISPLAY_LIMIT)
+    const filtered = levelFilter === "all" ? alerts : alerts.filter((a) => a.level === levelFilter)
+    return filtered.slice(0, DISPLAY_LIMIT)
   }, [alerts, levelFilter])
 
   const qps = useMemo(() => {

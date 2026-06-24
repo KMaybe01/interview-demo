@@ -63,7 +63,7 @@ interface EncryptedEntry {
 export default function LogStream() {
   const [status, setStatus] = useState<Status>("idle")
   const [progress, setProgress] = useState(0)
-  const [lines, setLines] = useState<string[]>([])
+  const [lines, setLines] = useState<{ id: number; text: string }[]>([])
   const [encryptedLines, setEncryptedLines] = useState<EncryptedEntry[]>([])
   const [stats, setStats] = useState<DecodeStats>({
     totalChunks: 0,
@@ -83,6 +83,7 @@ export default function LogStream() {
   const displayRef = useRef<string[]>([])
   const encryptedBufRef = useRef<EncryptedEntry[]>([])
   const rafRef = useRef<number>(0)
+  const lineIdRef = useRef(0)
   const containerRef = useRef<HTMLDivElement>(null)
   const encContainerRef = useRef<HTMLDivElement>(null)
   const userScrolledRef = useRef(false)
@@ -98,8 +99,13 @@ export default function LogStream() {
     if (rafRef.current) return
     rafRef.current = requestAnimationFrame(() => {
       rafRef.current = 0
+      setProgress(progressRef.current)
       if (displayRef.current.length > 0) {
-        setLines((prev) => [...prev, ...displayRef.current].slice(-2000))
+        setLines((prev) =>
+          [...prev, ...displayRef.current.map((text) => ({ id: ++lineIdRef.current, text }))].slice(
+            -2000,
+          ),
+        )
         displayRef.current = []
       }
       if (encryptedBufRef.current.length > 0) {
@@ -122,6 +128,7 @@ export default function LogStream() {
   }, [])
 
   const lastProgressRef = useRef(0)
+  const progressRef = useRef(0)
 
   const handleDecryptResult = useCallback(
     (seq: number, decryptedLines: string[]) => {
@@ -390,7 +397,7 @@ export default function LogStream() {
             const now = performance.now()
             if (now - lastProgressRef.current > 200) {
               lastProgressRef.current = now
-              setProgress(Math.round(c.progress))
+              progressRef.current = Math.round(c.progress)
             }
 
             const preview = c.data.length > 48 ? `${c.data.slice(0, 48)}...` : c.data
@@ -617,11 +624,10 @@ export default function LogStream() {
                 {lines.length === 0 && status === "interrupted" && (
                   <Text type="secondary">解密被中断，无已解密数据</Text>
                 )}
-                {lines.map((line, i) => {
+                {lines.map((line) => {
                   return (
-                    // biome-ignore lint/suspicious/noArrayIndexKey: static log output, no stable id
-                    <div key={i} style={getLogLineStyle(line)}>
-                      {line}
+                    <div key={line.id} style={getLogLineStyle(line.text)}>
+                      {line.text}
                     </div>
                   )
                 })}

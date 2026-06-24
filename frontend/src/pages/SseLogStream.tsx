@@ -7,13 +7,16 @@ const { Text } = Typography
 type LogLevel = "all" | "info" | "warn" | "error" | "debug"
 
 interface LogLine {
+  id: number
   text: string
   level: string
   isError: boolean
   isWarn: boolean
 }
 
-function parseLine(text: string): LogLine {
+type RawLogLine = Omit<LogLine, "id">
+
+function parseLine(text: string): RawLogLine {
   return {
     text,
     level: text.startsWith("[") ? text.slice(1, text.indexOf("]")) : "",
@@ -40,18 +43,20 @@ export default function SseLogStream() {
   const [paused, setPaused] = useState(false)
   const [level, setLevel] = useState<LogLevel>("all")
   const [intervalMs, setIntervalMs] = useState(200)
-  const bufferRef = useRef<LogLine[]>([])
+  const bufferRef = useRef<RawLogLine[]>([])
   const abortRef = useRef<AbortController | null>(null)
   const containerRef = useRef<HTMLDivElement>(null)
   const rafRef = useRef<number | null>(null)
   const userScrolledRef = useRef(false)
   const lastFlushRef = useRef(0)
+  const lineIdRef = useRef(0)
   const intervalRef = useRef(intervalMs)
 
   const flush = useCallback(() => {
     const batch = bufferRef.current
     if (batch.length > 0) {
-      setLogs((prev) => [...prev, ...batch].slice(-500))
+      const withIds = batch.map((line) => ({ ...line, id: ++lineIdRef.current }))
+      setLogs((prev) => [...prev, ...withIds].slice(-500))
       bufferRef.current = []
     }
   }, [])
@@ -262,10 +267,9 @@ export default function SseLogStream() {
             {paused && filteredLogs.length === 0 && (
               <Text type="secondary">{'SSE 已暂停，点击"恢复"重新连接'}</Text>
             )}
-            {filteredLogs.map((line, i) => {
+            {filteredLogs.map((line) => {
               return (
-                // biome-ignore lint/suspicious/noArrayIndexKey: static log output, no stable id
-                <div key={i} style={getSseLogStyle(line)}>
+                <div key={line.id} style={getSseLogStyle(line)}>
                   {line.text}
                 </div>
               )
