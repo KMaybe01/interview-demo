@@ -1,1 +1,8 @@
 cd frontend && npx lint-staged
+
+# TypeScript 类型检查
+cd frontend && bunx tsc -b --noEmit
+
+# Go 后端校验
+cd ../backend && go vet ./...
+cd ../backend && go build -o /dev/null ./...

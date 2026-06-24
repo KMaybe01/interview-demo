@@ -167,6 +167,65 @@ export default function MyPage() {
 
 ---
 
+## 上传并发防护模式
+
+### 前端代际锁 (Generation Lock)
+
+防止 `startUpload` 并发执行导致 `abortRef` 互相覆盖：
+
+```typescript
+const uploadingRef = useRef(false)
+const uploadGenRef = useRef(0)
+
+const startUpload = useCallback(async () => {
+  if (uploadingRef.current) return
+  uploadingRef.current = true
+  const gen = ++uploadGenRef.current
+  try {
+    // ... 上传逻辑 ...
+  } finally {
+    if (gen === uploadGenRef.current) {
+      clearInterval(timerRef.current)
+      uploadingRef.current = false
+    }
+  }
+}, [])
+
+const abort = useCallback(() => {
+  abortRef.current = true
+  uploadingRef.current = false
+  uploadGenRef.current++
+  // ...
+}, [])
+```
+
+### 后端 Mutex 保护 UploadSession
+
+```go
+type UploadSession struct {
+  mu          sync.Mutex
+  Received    map[int]bool
+  // ...
+}
+
+// 所有对 Received 的读写加锁
+func UploadChunk(c *gin.Context) {
+  session.mu.Lock()
+  session.Received[chunkIndex] = true
+  session.mu.Unlock()
+}
+
+// saveSessions 深拷贝快照后释放锁再序列化
+func saveSessions() {
+  session.mu.Lock()
+  recv := copyMap(session.Received)
+  session.mu.Unlock()
+  json.Marshal(snapshot{Received: recv})
+}
+```
+
+---
+
 ## 动态表单引擎
 
 路径: `src/components/dynamic-form/`
