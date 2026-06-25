@@ -67,7 +67,7 @@ function StatBox({
   valueColor?: string
 }) {
   return (
-    <div style={{ background: "#fafafa", borderRadius: 6, padding: "8px 14px", minWidth: 180 }}>
+    <div style={{ borderRadius: 6, padding: "8px 14px", minWidth: 180 }}>
       <Text type="secondary" style={{ fontSize: 11 }}>
         {label}
       </Text>

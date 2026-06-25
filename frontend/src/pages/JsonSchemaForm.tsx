@@ -12,6 +12,7 @@ import {
   Tabs,
   Tag,
   Typography,
+  theme,
 } from "antd"
 import { useCallback, useEffect, useMemo, useRef, useState } from "react"
 import DynamicForm, { type DynamicFormHandle } from "../components/dynamic-form/DynamicForm.tsx"
@@ -95,6 +96,7 @@ function augmentSchema(schema: FormSchema): FormSchema {
 }
 
 export default function JsonSchemaFormPage() {
+  const { token } = theme.useToken()
   const [schema, setSchema] = useState<FormSchema | null>(null)
   const [initialData, setInitialData] = useState<Record<string, unknown> | null>(null)
   const [loading, setLoading] = useState(true)
@@ -229,7 +231,7 @@ export default function JsonSchemaFormPage() {
                     style={{
                       fontFamily: "monospace",
                       fontSize: 12,
-                      background: "#f5f5f5",
+                      background: token.colorFillContent,
                       padding: 8,
                       borderRadius: 4,
                       marginTop: 4,
@@ -297,7 +299,7 @@ export default function JsonSchemaFormPage() {
                     style={{
                       fontSize: 12,
                       marginTop: 4,
-                      background: "#f5f5f5",
+                      background: token.colorFillContent,
                       padding: 8,
                       borderRadius: 4,
                     }}
@@ -339,7 +341,7 @@ export default function JsonSchemaFormPage() {
         ]}
         defaultActiveKey={[]}
         size="small"
-        style={{ marginBottom: 16, background: "#fff" }}
+        style={{ marginBottom: 16 }}
         bordered={false}
       />
       {fetchError && (
