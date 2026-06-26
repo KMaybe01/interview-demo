@@ -52,6 +52,14 @@ func main() {
 			protected.GET("/vitals/pages", handlers.GetPageSummary)
 			protected.GET("/vitals/page-history", handlers.GetPageHistory)
 			protected.GET("/request-loading/demo", handlers.DemoRequest)
+			protected.POST("/payments/create", handlers.CreatePayment)
+			protected.POST("/payments/process/:id", handlers.ProcessPayment)
+			protected.GET("/payments/order/:id", handlers.GetOrder)
+			protected.GET("/payments/orders", handlers.ListOrders)
+			protected.POST("/payments/transition/:id", handlers.TransitionPayment)
+			protected.POST("/payments/idempotency-test", handlers.IdempotencyTest)
+			protected.POST("/payments/security-check", handlers.SecurityCheck)
+			protected.POST("/payments/retry-demo", handlers.RetryDemo)
 		}
 	}
 

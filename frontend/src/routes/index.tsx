@@ -2,6 +2,7 @@ import {
   AlertOutlined,
   ApartmentOutlined,
   ApiOutlined,
+  CreditCardOutlined,
   DashboardOutlined,
   EnvironmentOutlined,
   FileTextOutlined,
@@ -101,6 +102,13 @@ export const routes: RouteConfig[] = [
     name: "大文件分片上传",
     icon: UploadOutlined,
     element: lazy(() => import("../pages/ChunkedUpload.tsx")),
+  },
+
+  {
+    path: "/unipay",
+    name: "UniPay 统一支付中台",
+    icon: CreditCardOutlined,
+    element: lazy(() => import("../pages/UniPay.tsx")),
   },
   {
     path: "/web-vitals",

@@ -11,10 +11,11 @@ const stored = localStorage.getItem("theme-mode") as ThemeMode | null
 
 export const useThemeStore = create<ThemeState>((set) => ({
   mode: stored ?? "light",
-  toggle: () =>
-    { set((s) => {
+  toggle: () => {
+    set((s) => {
       const next = s.mode === "light" ? "dark" : "light"
       localStorage.setItem("theme-mode", next)
       return { mode: next }
-    }); },
+    })
+  },
 }))
