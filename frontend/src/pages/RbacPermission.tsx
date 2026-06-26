@@ -319,7 +319,7 @@ export default function RbacPermission() {
   const [backendResults, setBackendResults] = useState<Record<string, boolean> | null>(null)
   const [backendLoading, setBackendLoading] = useState(false)
   const [backendError, setBackendError] = useState<string | null>(null)
-  const [collapsed, setCollapsed] = useState<Record<string, boolean>>({})
+  const [collapsed, setCollapsed] = useState<Record<string, boolean>>({ datasource: true })
 
   const toggleCollapse = useCallback((key: string) => {
     setCollapsed((prev) => ({ ...prev, [key]: !prev[key] }))

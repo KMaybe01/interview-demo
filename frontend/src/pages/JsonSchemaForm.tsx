@@ -1,8 +1,8 @@
+import { CaretDownOutlined, CaretRightOutlined } from "@ant-design/icons"
 import {
   Alert,
   Button,
   Card,
-  Collapse,
   Divider,
   Input,
   message,
@@ -148,6 +148,7 @@ export default function JsonSchemaFormPage() {
   const [activeTab, setActiveTab] = useState("form")
   const [formCollapsed, setFormCollapsed] = useState(false)
   const [jsonCollapsed, setJsonCollapsed] = useState(false)
+  const [guideCollapsed, setGuideCollapsed] = useState(true)
 
   const handleBackendValidate = useCallback(
     async (
@@ -218,132 +219,146 @@ export default function JsonSchemaFormPage() {
         </Title>
         <Text type="secondary">递归渲染引擎 | 8 种字段类型 | 前后端双重校验</Text>
       </div>
-      <Collapse
-        items={[
-          {
-            key: "info",
-            label: <Text strong>架构说明 / 演示指南</Text>,
-            children: (
-              <div style={{ display: "flex", flexDirection: "column", gap: 12 }}>
-                <div>
-                  <Text strong>递归渲染流程</Text>
-                  <div
-                    style={{
-                      fontFamily: "monospace",
-                      fontSize: 12,
-                      background: token.colorFillContent,
-                      padding: 8,
-                      borderRadius: 4,
-                      marginTop: 4,
-                    }}
-                  >
-                    renderTabs → renderCard → renderForm → renderLeaf
-                  </div>
-                </div>
-                <Divider style={{ margin: "4px 0" }} />
-                <div>
-                  <Text strong>控件注册表</Text>
-                  <div style={{ marginTop: 4, display: "flex", flexWrap: "wrap", gap: 4 }}>
-                    {[
-                      { type: "string", label: "String", color: "blue" },
-                      { type: "number", label: "Number", color: "cyan" },
-                      { type: "select", label: "Select", color: "geekblue" },
-                      { type: "switch", label: "Switch", color: "purple" },
-                      { type: "datetime", label: "DateTime", color: "orange" },
-                      { type: "json", label: "JSON", color: "magenta" },
-                      { type: "array", label: "Array", color: "lime" },
-                    ].map((t) => (
-                      <Tag key={t.type} color={t.color}>
-                        {t.label}
-                      </Tag>
-                    ))}
-                  </div>
-                  <Text type="secondary" style={{ fontSize: 11 }}>
-                    运行时 register() 可扩展自定义控件
-                  </Text>
-                </div>
-                <Divider style={{ margin: "4px 0" }} />
-                <div>
-                  <Text strong>前端校验</Text>
-                  <div style={{ fontSize: 12, marginTop: 2 }}>
-                    <Tag color="gold">ajv</Tag> Schema 结构校验 (类型/必填/枚举)
-                    <br />
-                    <Tag color="cyan">自定义</Tag> IP 格式、端口范围
-                    <br />
-                    <Tag color="purple">异步</Tag> Cell ID 唯一性 (1s 模拟)
-                    <br />
-                    <Tag color="volcano">显隐</Tag> 加密字段条件联动
-                    <br />
-                    <Tag color="geekblue">联动</Tag> 基站名称自动填充
-                  </div>
-                </div>
-                <Divider style={{ margin: "4px 0" }} />
-                <div>
-                  <Text strong>后端业务校验</Text>
-                  <div style={{ fontSize: 12, marginTop: 2 }}>
-                    <Tag color="red">业务</Tag> IP 地址合法性 + 回环地址检测
-                    <br />
-                    <Tag color="red">业务</Tag> Cell ID 格式 (CELL-xxx)
-                    <br />
-                    <Tag color="red">业务</Tag> MCC/MNC 联动 + 国家码白名单
-                    <br />
-                    <Tag color="red">业务</Tag> 端口号与基站类型关联规则
-                    <br />
-                    <Tag color="red">业务</Tag> 带宽标准值校验
-                  </div>
-                </div>
-                <Divider style={{ margin: "4px 0" }} />
-                <div>
-                  <Text strong>双重校验策略</Text>
-                  <div
-                    style={{
-                      fontSize: 12,
-                      marginTop: 4,
-                      background: token.colorFillContent,
-                      padding: 8,
-                      borderRadius: 4,
-                    }}
-                  >
-                    前端校验 = 黄色提示（格式错误）
-                    <br />
-                    后端校验 = 红色错误（业务冲突）
-                    <br />
-                    前端通过后才允许提交
-                    <br />
-                    后端错误 setFields 精准映射到控件
-                  </div>
-                </div>
-                <Divider style={{ margin: "4px 0" }} />
-                <div>
-                  <Text strong>演示说明</Text>
-                  <ul style={{ fontSize: 12, margin: 0, paddingLeft: 16, lineHeight: 1.8 }}>
-                    <li>
-                      <Text code>传输配置</Text> Tab: SCTP 端口数组 (添加/删除)
-                    </li>
-                    <li>
-                      <Text code>启用加密</Text>: 切换后显隐联动加密算法/证书字段
-                    </li>
-                    <li>
-                      <Text code>完整基站名称</Text>: 自动填充 (cellType + cellName)
-                    </li>
-                    <li>
-                      <Text code>基站 ID</Text> 输入 CELL-999: 异步校验拒绝
-                    </li>
-                    <li>
-                      <Text code>IP 127.x.x.x</Text>: 后端拦截回环地址
-                    </li>
-                    <li>先通过前端校验 → 后端业务校验 → 提交成功</li>
-                  </ul>
-                </div>
-              </div>
-            ),
-          },
-        ]}
-        defaultActiveKey={[]}
+      <Card
         size="small"
+        title={
+          <button
+            type="button"
+            onClick={() => {
+              setGuideCollapsed((v) => !v)
+            }}
+            style={{
+              cursor: "pointer",
+              background: "none",
+              border: "none",
+              padding: 0,
+              width: "100%",
+              textAlign: "left",
+            }}
+          >
+            <Space>
+              {guideCollapsed ? <CaretRightOutlined /> : <CaretDownOutlined />}
+              <Text strong>架构说明 / 演示指南</Text>
+            </Space>
+          </button>
+        }
         style={{ marginBottom: 16 }}
-        bordered={false}
-      />
+      >
+        {!guideCollapsed && (
+          <div style={{ display: "flex", flexDirection: "column", gap: 12 }}>
+            <div>
+              <Text strong>递归渲染流程</Text>
+              <div
+                style={{
+                  fontFamily: "monospace",
+                  fontSize: 12,
+                  background: token.colorFillContent,
+                  padding: 8,
+                  borderRadius: 4,
+                  marginTop: 4,
+                }}
+              >
+                renderTabs → renderCard → renderForm → renderLeaf
+              </div>
+            </div>
+            <Divider style={{ margin: "4px 0" }} />
+            <div>
+              <Text strong>控件注册表</Text>
+              <div style={{ marginTop: 4, display: "flex", flexWrap: "wrap", gap: 4 }}>
+                {[
+                  { type: "string", label: "String", color: "blue" },
+                  { type: "number", label: "Number", color: "cyan" },
+                  { type: "select", label: "Select", color: "geekblue" },
+                  { type: "switch", label: "Switch", color: "purple" },
+                  { type: "datetime", label: "DateTime", color: "orange" },
+                  { type: "json", label: "JSON", color: "magenta" },
+                  { type: "array", label: "Array", color: "lime" },
+                ].map((t) => (
+                  <Tag key={t.type} color={t.color}>
+                    {t.label}
+                  </Tag>
+                ))}
+              </div>
+              <Text type="secondary" style={{ fontSize: 11 }}>
+                运行时 register() 可扩展自定义控件
+              </Text>
+            </div>
+            <Divider style={{ margin: "4px 0" }} />
+            <div>
+              <Text strong>前端校验</Text>
+              <div style={{ fontSize: 12, marginTop: 2 }}>
+                <Tag color="gold">ajv</Tag> Schema 结构校验 (类型/必填/枚举)
+                <br />
+                <Tag color="cyan">自定义</Tag> IP 格式、端口范围
+                <br />
+                <Tag color="purple">异步</Tag> Cell ID 唯一性 (1s 模拟)
+                <br />
+                <Tag color="volcano">显隐</Tag> 加密字段条件联动
+                <br />
+                <Tag color="geekblue">联动</Tag> 基站名称自动填充
+              </div>
+            </div>
+            <Divider style={{ margin: "4px 0" }} />
+            <div>
+              <Text strong>后端业务校验</Text>
+              <div style={{ fontSize: 12, marginTop: 2 }}>
+                <Tag color="red">业务</Tag> IP 地址合法性 + 回环地址检测
+                <br />
+                <Tag color="red">业务</Tag> Cell ID 格式 (CELL-xxx)
+                <br />
+                <Tag color="red">业务</Tag> MCC/MNC 联动 + 国家码白名单
+                <br />
+                <Tag color="red">业务</Tag> 端口号与基站类型关联规则
+                <br />
+                <Tag color="red">业务</Tag> 带宽标准值校验
+              </div>
+            </div>
+            <Divider style={{ margin: "4px 0" }} />
+            <div>
+              <Text strong>双重校验策略</Text>
+              <div
+                style={{
+                  fontSize: 12,
+                  marginTop: 4,
+                  background: token.colorFillContent,
+                  padding: 8,
+                  borderRadius: 4,
+                }}
+              >
+                前端校验 = 黄色提示（格式错误）
+                <br />
+                后端校验 = 红色错误（业务冲突）
+                <br />
+                前端通过后才允许提交
+                <br />
+                后端错误 setFields 精准映射到控件
+              </div>
+            </div>
+            <Divider style={{ margin: "4px 0" }} />
+            <div>
+              <Text strong>演示说明</Text>
+              <ul style={{ fontSize: 12, margin: 0, paddingLeft: 16, lineHeight: 1.8 }}>
+                <li>
+                  <Text code>传输配置</Text> Tab: SCTP 端口数组 (添加/删除)
+                </li>
+                <li>
+                  <Text code>启用加密</Text>: 切换后显隐联动加密算法/证书字段
+                </li>
+                <li>
+                  <Text code>完整基站名称</Text>: 自动填充 (cellType + cellName)
+                </li>
+                <li>
+                  <Text code>基站 ID</Text> 输入 CELL-999: 异步校验拒绝
+                </li>
+                <li>
+                  <Text code>IP 127.x.x.x</Text>: 后端拦截回环地址
+                </li>
+                <li>先通过前端校验 → 后端业务校验 → 提交成功</li>
+              </ul>
+            </div>
+          </div>
+        )}
+      </Card>
       {fetchError && (
         <Alert
           type="error"

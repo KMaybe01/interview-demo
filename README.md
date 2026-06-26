@@ -4,9 +4,9 @@
 
 ## 项目概述
 
-React 19 + Go 1.26 全栈演示项目，涵盖 **14 个高级技术场景**（含仪表盘 + 13 个核心演示），聚焦前端工程化、性能优化与架构设计。
+React 19 + Go 1.26 全栈演示项目，涵盖 **15 个高级技术场景**（含仪表盘 + 14 个核心演示），聚焦前端工程化、性能优化与架构设计。
 
-**Keywords:** 无感刷新 · Token Rotation · 递归表单引擎 · 双重校验 · 实时 JSON 编辑 · WebSocket 心跳 · LRU 路由缓存 · Web Worker 分治 · OpenLayers 聚类 · RBAC 位编码 · SSE 流式日志 · 请求加载 Signal · 树形数据引擎 · 大文件断点续传 · Web Vitals + 页面渲染监控
+**Keywords:** 无感刷新 · Token Rotation · 递归表单引擎 · 双重校验 · 实时 JSON 编辑 · WebSocket 心跳 · LRU 路由缓存 · Web Worker 分治 · OpenLayers 聚类 · RBAC 位编码 · SSE 流式日志 · 请求加载 Signal · 树形数据引擎 · 大文件断点续传 · Web Vitals + 页面渲染监控 · 统一支付中台
 
 ## 技术栈
 
@@ -30,7 +30,7 @@ interview-demo/
 │   │   ├── main.tsx                # React 入口 (StrictMode, BrowserRouter)
 │   │   ├── App.tsx                 # 根组件 (Ant Design ConfigProvider, 路由)
 │   │   ├── assets/                 # 静态资源 (图片)
-│   │   ├── pages/                  # 15 个页面 (含仪表盘 + 登录)
+│   │   ├── pages/                  # 19 个页面 (含仪表盘 + 登录)
 │   │   │   ├── Dashboard.tsx       # / 仪表盘
 │   │   │   ├── Login.tsx           # /login 登录页面
 │   │   │   ├── JsonSchemaForm.tsx  # /json-schema-form 动态表单 + 实时 JSON 编辑
@@ -45,6 +45,8 @@ interview-demo/
 │   │   │   ├── TokenRefresh.tsx    # /token-refresh 双 Token 无感刷新
 │   │   │   ├── TreeDataEngine.tsx  # /tree-data-engine 树形数据操作
 │   │   │   ├── WebVitals.tsx       # /web-vitals Web Vitals 性能采集
+│   │   │   ├── WebWorkerMerge.tsx  # /web-worker-merge Web Worker 分治合并
+│   │   │   └── UniPay.tsx          # /unipay 统一支付中台
 │   │   ├── components/
 │   │   │   ├── AuthGuard.tsx       # 路由守卫（未登录 → /login）
 │   │   │   ├── PageTracker.tsx     # 页面渲染监控（路径 + 渲染耗时 + Navigation Timing）
@@ -69,7 +71,7 @@ interview-demo/
 │   │   │   ├── requestLoadingStore.ts # 请求加载 Signal
 │   │   │   └── uploadStore.ts      # 分片上传 (persist + localStorage)
 │   │   ├── routes/
-│   │   │   └── index.tsx           # 14 条路由配置 (含 / 仪表盘 + 13 演示页)
+│   │   │   └── index.tsx           # 15 条路由配置 (含 / 仪表盘 + 14 演示页)
 │   │   └── utils/                   # 工具函数
 │   │       ├── fetchClient.ts      # 统一请求封装（自动附加 Token + 401 无感刷新）
 │   │       ├── token.ts            # JWT Token 工具
@@ -102,7 +104,8 @@ interview-demo/
 │   │   ├── sse.go                  # SSE 日志流
 │   │   ├── encrypted_logs.go       # 加密日志流 (客户端公钥加密 AES 密钥)
 │   │   ├── vitals.go               # Web Vitals + 页面路由/渲染采集与存储
-│   │   └── upload.go               # 分片上传 / 状态查询 / 合并
+│   │   ├── upload.go               # 分片上传 / 状态查询 / 合并
+│   │   └── payment.go              # 统一支付中台 (状态机/幂等/重试/对账/安全检测)
 │   ├── middleware/
 │   │   └── (CORS 中间件)
 │   └── uploads/                    # 上传文件临时存储
@@ -143,6 +146,7 @@ interview-demo/
 | 11 | 树形数据操作引擎     | 递归 CRUD + 拖拽排序 + 节点校验 + 批量操作                                |
 | 12 | 大文件断点续传       | SHA-256 分片哈希 + 并发分片上传 + 完整性校验 + 暂停/恢复/停止 + 刷新持久化 + 清除已完成 + 重置全部 + 代际锁防并发竞态 + 停止后即时重试 + 后端 mutex 数据竞争修复 |
 | 13 | Web Vitals + 页面渲染监控 | web-vitals 5 采集 CLS/FCP/INP/LCP/TTFB → PageTracker 自动上报路径+渲染耗时（单 effect + render-time 重置 `reportedRef` 防 StrictMode 重复请求）→ 后端存储 → ECharts 卡片/趋势图/排行/访问明细 |
+| 14 | UniPay 统一支付中台 | 支付状态机 (7 状态 × 6 驱动) + Idempotency-Key 幂等性防重复扣款 + 指数退避重试 (1s/2s/4s, 确定性失败) + T+1 对账 (groupMap 去重 + 自动退款) + 安全检测 (回调伪造 RSA 验签 + 金额篡改二次验价) + Re-pay 重新支付 |
 
 ## 快速启动
 
@@ -208,6 +212,7 @@ dist/
 │       ├── GisRendering-*.js             3.66 kB        GIS 点位渲染
 │       ├── WebWorkerMerge-*.js           5.40 kB        Worker 分治合并
 │       ├── WebVitals-*.js                6.08 kB        Web Vitals 性能采集
+│       ├── UniPay-*.js                  21.42 kB        统一支付中台
 │       ├── TokenRefresh-*.js             8.78 kB        无感刷新
 │       ├── LogStream-*.js                8.95 kB        日志流式解密
 │       ├── TreeDataEngine-*.js           9.49 kB        树形数据操作
@@ -221,7 +226,7 @@ dist/
 │       └── hash.worker-*.js              0.38 kB        SHA-256 分片哈希 Worker
 ```
 
-- **代码分割**: 14 页面通过 `React.lazy()` 独立 chunk，`codeSplitting.groups` 按优先级分割 vendor（antd-icons/antd-cssinjs 从 antd 主包分离，缓存粒度更细）
+- **代码分割**: 15 页面通过 `React.lazy()` 独立 chunk，`codeSplitting.groups` 按优先级分割 vendor（antd-icons/antd-cssinjs 从 antd 主包分离，缓存粒度更细）
 - **缓存策略**: antd/echarts/gis 等大型库独立缓存，版本不变即 `304 Not Modified`
 - **构建时间**: ~3.41s (3990 modules, Rolldown Rust bundler)
 - **对比**: 单 bundle 3,034 kB → 首屏 ~50 kB (↓98%)
@@ -251,6 +256,14 @@ dist/
 | `/api/vitals/pages` | GET | 页面访问汇总 (访问次数 / 平均渲染时长) |
 | `/api/vitals/page-history` | GET | 按路径分组的页面渲染时间序列 |
 | `/api/upload/sessions` | GET    | 列出所有进行中的上传会话      |
+| `/api/payments/create` | POST   | 创建支付订单                 |
+| `/api/payments/:id/process` | POST | 处理支付 (模拟渠道回调)    |
+| `/api/payments/:id` | GET    | 查询订单状态                 |
+| `/api/payments` | GET    | 列出所有订单                 |
+| `/api/payments/:id/transition` | POST | 状态流转 (6 种驱动)      |
+| `/api/payments/idempotency-test` | POST | 幂等性测试              |
+| `/api/payments/security-check` | POST | 安全检测 (伪造/篡改)    |
+| `/api/payments/retry-demo` | POST | 指数退避重试演示          |
 
 ## 代码校验 (GitHub Actions)
 
