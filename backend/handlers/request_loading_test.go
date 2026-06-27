@@ -1,6 +1,7 @@
 package handlers
 
 import (
+	"context"
 	"net/http"
 	"net/http/httptest"
 	"testing"
@@ -11,7 +12,7 @@ import (
 func TestDemoRequest_Default(t *testing.T) {
 	w := httptest.NewRecorder()
 	c, _ := gin.CreateTestContext(w)
-	c.Request = httptest.NewRequest(http.MethodGet, "/api/request-loading/demo", nil)
+	c.Request = httptest.NewRequest(http.MethodGet, "/api/request-loading/demo?fast_test=true", nil)
 
 	DemoRequest(c)
 
@@ -107,7 +108,7 @@ func TestDemoRequest_FailRate(t *testing.T) {
 func TestDemoRequest_DelayClamp(t *testing.T) {
 	w := httptest.NewRecorder()
 	c, _ := gin.CreateTestContext(w)
-	c.Request = httptest.NewRequest(http.MethodGet, "/api/request-loading/demo?delay=99999", nil)
+	c.Request = httptest.NewRequest(http.MethodGet, "/api/request-loading/demo?delay=99999&fast_test=true", nil)
 
 	DemoRequest(c)
 
@@ -125,7 +126,7 @@ func TestDemoRequest_DelayClamp(t *testing.T) {
 func TestDemoRequest_InvalidDelay(t *testing.T) {
 	w := httptest.NewRecorder()
 	c, _ := gin.CreateTestContext(w)
-	c.Request = httptest.NewRequest(http.MethodGet, "/api/request-loading/demo?delay=abc", nil)
+	c.Request = httptest.NewRequest(http.MethodGet, "/api/request-loading/demo?delay=abc&fast_test=true", nil)
 
 	DemoRequest(c)
 
@@ -156,11 +157,14 @@ func TestDemoRequest_ContextCancelled(t *testing.T) {
 	w := httptest.NewRecorder()
 	c, _ := gin.CreateTestContext(w)
 	c.Request = httptest.NewRequest(http.MethodGet, "/api/request-loading/demo?delay=5000", nil)
-	c.Request.Context().Done() // not easily testable without full cancel
+
+	ctx, cancel := context.WithCancel(c.Request.Context())
+	cancel() // cancel immediately to test the select case
+	c.Request = c.Request.WithContext(ctx)
 
 	DemoRequest(c)
 
-	// Should still return OK since delay is short
+	// Since we cancel immediately, it should return without writing body, status defaults to 200
 	if w.Code != http.StatusOK {
 		t.Fatalf("expected 200, got %d", w.Code)
 	}

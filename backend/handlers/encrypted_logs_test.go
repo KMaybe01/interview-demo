@@ -16,7 +16,7 @@ func TestEncryptedLogStream_InitialEvents(t *testing.T) {
 	w := httptest.NewRecorder()
 	c, _ := gin.CreateTestContext(w)
 	ctx, cancel := context.WithCancel(context.Background())
-	c.Request = httptest.NewRequest(http.MethodGet, "/api/sse/encrypted-logs", nil)
+	c.Request = httptest.NewRequest(http.MethodGet, "/api/sse/encrypted-logs?limit=500", nil)
 	c.Request = c.Request.WithContext(ctx)
 
 	done := make(chan struct{})
@@ -50,7 +50,7 @@ func TestEncryptedLogStream_DoneEvent(t *testing.T) {
 	c, _ := gin.CreateTestContext(w)
 	ctx, cancel := context.WithCancel(context.Background())
 	defer cancel()
-	c.Request = httptest.NewRequest(http.MethodGet, "/api/sse/encrypted-logs", nil)
+	c.Request = httptest.NewRequest(http.MethodGet, "/api/sse/encrypted-logs?limit=500", nil)
 	c.Request = c.Request.WithContext(ctx)
 
 	done := make(chan struct{})

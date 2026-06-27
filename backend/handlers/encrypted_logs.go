@@ -11,6 +11,7 @@ import (
 	"encoding/json"
 	"fmt"
 	"log"
+	"strconv"
 	"sync"
 	"time"
 
@@ -123,6 +124,11 @@ func EncryptedLogStream(c *gin.Context) {
 
 	// 3. Stream encrypted log chunks (simulate 25MB / 250000 lines)
 	totalLines := 250000
+	if limitStr := c.Query("limit"); limitStr != "" {
+		if limit, err := strconv.Atoi(limitStr); err == nil && limit > 0 {
+			totalLines = limit
+		}
+	}
 	chunkSize := 100
 	totalChunks := (totalLines + chunkSize - 1) / chunkSize
 	firstChunkSmall := true

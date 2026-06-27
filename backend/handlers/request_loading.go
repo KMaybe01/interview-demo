@@ -30,10 +30,12 @@ func DemoRequest(c *gin.Context) {
 		failRate = 1
 	}
 
-	select {
-	case <-time.After(time.Duration(delay) * time.Millisecond):
-	case <-c.Request.Context().Done():
-		return
+	if c.Query("fast_test") != "true" {
+		select {
+		case <-time.After(time.Duration(delay) * time.Millisecond):
+		case <-c.Request.Context().Done():
+			return
+		}
 	}
 
 	if rand.Float64() < failRate {

@@ -69,6 +69,10 @@ func generateOrderNo() string {
 	return fmt.Sprintf("ORD%d%04d", time.Now().UnixMilli(), orderCounter)
 }
 
+func copyOrder(o *PaymentOrder) PaymentOrder {
+	return *o
+}
+
 func CreatePayment(c *gin.Context) {
 	var req PaymentRequest
 	if err := c.ShouldBindJSON(&req); err != nil {
@@ -83,8 +87,8 @@ func CreatePayment(c *gin.Context) {
 	if req.IdempotencyKey != "" {
 		if cached, ok := idempotentCache[req.IdempotencyKey]; ok {
 			c.JSON(http.StatusOK, gin.H{
-				"cached": true,
-				"order":  cached,
+				"cached":  true,
+				"order":   cached,
 				"message": "幂等 Key 已存在，返回缓存结果",
 			})
 			return
@@ -124,22 +128,22 @@ func ProcessPayment(c *gin.Context) {
 
 	mu.Lock()
 	order, ok := paymentOrders[orderID]
-	mu.Unlock()
-
 	if !ok {
+		mu.Unlock()
 		c.JSON(http.StatusNotFound, gin.H{"error": "订单不存在"})
 		return
 	}
 
 	if order.Status != StatusPending {
+		mu.Unlock()
 		c.JSON(http.StatusBadRequest, gin.H{"error": fmt.Sprintf("当前状态不允许扣款: %s", order.Status)})
 		return
 	}
 
-	mu.Lock()
 	order.Status = StatusProcessing
 	order.Version++
 	order.UpdatedAt = time.Now().Format(time.RFC3339)
+	respOrder := copyOrder(order)
 	mu.Unlock()
 
 	// Simulate async processing
@@ -163,7 +167,7 @@ func ProcessPayment(c *gin.Context) {
 	}(order)
 
 	c.JSON(http.StatusOK, gin.H{
-		"order": order,
+		"order": &respOrder,
 	})
 }
 
@@ -172,21 +176,22 @@ func GetOrder(c *gin.Context) {
 
 	mu.Lock()
 	order, ok := paymentOrders[orderID]
-	mu.Unlock()
-
 	if !ok {
+		mu.Unlock()
 		c.JSON(http.StatusNotFound, gin.H{"error": "订单不存在"})
 		return
 	}
+	respOrder := copyOrder(order)
+	mu.Unlock()
 
-	c.JSON(http.StatusOK, gin.H{"order": order})
+	c.JSON(http.StatusOK, gin.H{"order": &respOrder})
 }
 
 func ListOrders(c *gin.Context) {
 	mu.Lock()
-	orders := make([]*PaymentOrder, 0, len(paymentOrders))
+	orders := make([]PaymentOrder, 0, len(paymentOrders))
 	for _, o := range paymentOrders {
-		orders = append(orders, o)
+		orders = append(orders, copyOrder(o))
 	}
 	mu.Unlock()
 
@@ -256,9 +261,10 @@ func TransitionPayment(c *gin.Context) {
 	order.Status = body.Status
 	order.Version++
 	order.UpdatedAt = time.Now().Format(time.RFC3339)
+	respOrder := copyOrder(order)
 	mu.Unlock()
 
-	c.JSON(http.StatusOK, gin.H{"order": order})
+	c.JSON(http.StatusOK, gin.H{"order": &respOrder})
 }
 
 func IdempotencyTest(c *gin.Context) {
@@ -275,11 +281,12 @@ func IdempotencyTest(c *gin.Context) {
 	mu.Lock()
 	cached, exists := idempotentCache[req.Key]
 	if exists {
+		respOrder := copyOrder(cached)
 		mu.Unlock()
 		c.JSON(http.StatusOK, gin.H{
-			"cached":   true,
-			"order":    cached,
-			"message":  "重复 Idempotency-Key，已返回缓存结果，未产生重复扣款",
+			"cached":    true,
+			"order":     &respOrder,
+			"message":   "重复 Idempotency-Key，已返回缓存结果，未产生重复扣款",
 			"duplicate": true,
 		})
 		return
@@ -299,11 +306,12 @@ func IdempotencyTest(c *gin.Context) {
 
 	idempotentCache[req.Key] = order
 	paymentOrders[order.ID] = order
+	respOrder := copyOrder(order)
 	mu.Unlock()
 
 	c.JSON(http.StatusOK, gin.H{
 		"cached":  false,
-		"order":   order,
+		"order":   &respOrder,
 		"message": "首次请求，支付成功",
 	})
 }
@@ -327,6 +335,10 @@ func SecurityCheck(c *gin.Context) {
 			}
 		}
 	}
+	var orderAmount int64
+	if ok {
+		orderAmount = order.Amount
+	}
 	mu.Unlock()
 
 	checks := make([]string, 0)
@@ -339,7 +351,7 @@ func SecurityCheck(c *gin.Context) {
 		checks = append(checks, "✅ IP 白名单校验通过")
 	}
 
-	if ok && order.Amount != req.Amount {
+	if ok && orderAmount != req.Amount {
 		checks = append(checks, fmt.Sprintf("❌ 金额校验: 请求金额=%d, 订单金额=%d", req.Amount, order.Amount))
 		passed = false
 	} else if ok {
