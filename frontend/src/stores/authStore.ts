@@ -1,5 +1,5 @@
 import { create } from "zustand"
-import { getAccessToken, parseToken } from "../utils/token.ts"
+import { clearTokens, getAccessToken, isTokenExpired, parseToken } from "../utils/token.ts"
 
 export interface UserInfo {
   sub: string
@@ -17,6 +17,10 @@ interface AuthState {
 function initUser(): UserInfo | null {
   const token = getAccessToken()
   if (!token) return null
+  if (isTokenExpired(token)) {
+    clearTokens()
+    return null
+  }
   const payload = parseToken(token)
   if (!payload) return null
   return { sub: payload.sub, role: payload.role }
