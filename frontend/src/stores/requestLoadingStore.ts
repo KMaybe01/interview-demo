@@ -23,41 +23,43 @@ interface LoadingState {
   clearCompleted: () => void
 }
 
-function updateStatus(
-  state: LoadingState,
-  key: string,
+function buildUpdatedRequest(
+  record: RequestRecord,
   status: RequestStatus,
   extra: Partial<RequestRecord> = {},
-): LoadingState {
-  const reqs = state.requests.map((r) => {
-    if (r.key !== key) return r
-    return {
-      ...r,
-      status,
-      duration: extra.duration ?? (status !== "pending" ? performance.now() - r.startTime : null),
-      ...extra,
-    }
-  })
-  return { ...state, requests: reqs }
+): RequestRecord {
+  const duration =
+    extra.duration ?? (status !== "pending" ? performance.now() - record.startTime : null)
+  return { ...record, status, duration, ...extra }
 }
 
 export const useRequestLoadingStore = create<LoadingState>((set) => ({
   requests: [],
 
   addRequest: (rec) => {
-    set((state) => ({ requests: [...state.requests, rec] }))
+    set((state) => ({ requests: state.requests.concat(rec) }))
   },
 
   recordResolved: (key) => {
-    set((state) => updateStatus(state, key, "resolved"))
+    set((state) => ({
+      requests: state.requests.map((r) => (r.key === key ? buildUpdatedRequest(r, "resolved") : r)),
+    }))
   },
 
   recordRejected: (key, error) => {
-    set((state) => updateStatus(state, key, "rejected", { error }))
+    set((state) => ({
+      requests: state.requests.map((r) =>
+        r.key === key ? buildUpdatedRequest(r, "rejected", { error }) : r,
+      ),
+    }))
   },
 
   recordCancelled: (key) => {
-    set((state) => updateStatus(state, key, "cancelled", { error: "请求已取消" }))
+    set((state) => ({
+      requests: state.requests.map((r) =>
+        r.key === key ? buildUpdatedRequest(r, "cancelled", { error: "请求已取消" }) : r,
+      ),
+    }))
   },
 
   removeRequest: (key) => {

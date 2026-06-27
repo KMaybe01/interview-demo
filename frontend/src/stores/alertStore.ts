@@ -59,42 +59,42 @@ export const useAlertStore = create<AlertState>((set) => ({
   addAlerts: (items) => {
     set((state) => {
       const now = Date.now()
-      const newTimestamps = [...state.metrics.timestamps]
-      const newCountByLevel = { ...state.metrics.countByLevel }
-      const newCountByTopic = { ...state.metrics.countByTopic }
-      let newLastSeq = state.metrics.lastSeq
-      let newGaps = state.metrics.gapsDetected
+      const { metrics } = state
+      const newTimestamps = metrics.timestamps.slice()
+
+      const countByLevel = { ...metrics.countByLevel }
+      const countByTopic = { ...metrics.countByTopic }
+      let lastSeq = metrics.lastSeq
+      let gaps = metrics.gapsDetected
 
       for (const item of items) {
-        newCountByLevel[item.level]++
-        newCountByTopic[item.topic]++
+        countByLevel[item.level]++
+        countByTopic[item.topic]++
         newTimestamps.push(now)
         if (item.seq > 0) {
-          if (newLastSeq > 0 && item.seq > newLastSeq + 1) {
-            newGaps++
+          if (lastSeq > 0 && item.seq > lastSeq + 1) {
+            gaps++
           }
-          if (item.seq > newLastSeq) {
-            newLastSeq = item.seq
+          if (item.seq > lastSeq) {
+            lastSeq = item.seq
           }
         }
       }
 
-      const maxTimestamps = 20000
-      const trimmedTimestamps =
-        newTimestamps.length > maxTimestamps
-          ? newTimestamps.slice(newTimestamps.length - maxTimestamps)
-          : newTimestamps
+      if (newTimestamps.length > 20000) {
+        newTimestamps.splice(0, newTimestamps.length - 20000)
+      }
 
       return {
-        alerts: [...items, ...state.alerts],
+        alerts: items.concat(state.alerts),
         metrics: {
-          ...state.metrics,
-          totalReceived: state.metrics.totalReceived + items.length,
-          countByLevel: newCountByLevel,
-          countByTopic: newCountByTopic,
-          timestamps: trimmedTimestamps,
-          lastSeq: newLastSeq,
-          gapsDetected: newGaps,
+          ...metrics,
+          totalReceived: metrics.totalReceived + items.length,
+          countByLevel,
+          countByTopic,
+          timestamps: newTimestamps,
+          lastSeq,
+          gapsDetected: gaps,
         },
       }
     })
