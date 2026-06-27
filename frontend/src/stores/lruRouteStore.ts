@@ -1,5 +1,9 @@
 import { create } from "zustand"
 
+function applyExclude<T extends Record<string, unknown>>(obj: T, key: string): T {
+  return Object.fromEntries(Object.entries(obj).filter(([k]) => k !== key)) as T
+}
+
 export interface PageState {
   data: Record<string, unknown> | null
   loading: boolean
@@ -38,23 +42,21 @@ export const useLruCacheStore = create<LruRouteState>((set, get) => ({
   staleKeys: [],
 
   setActive: (key) => {
-    const state = get()
-    const newOrder = state.order.filter((k) => k !== key)
+    const { order: currentOrder, pages: currentPages, maxPages, staleKeys: currentStale } = get()
+    const newOrder = currentOrder.filter((k) => k !== key)
     newOrder.push(key)
 
-    const toEvict = newOrder.length > state.maxPages ? newOrder[0] : null
+    const toEvict = newOrder.length > maxPages ? newOrder[0] : null
 
     if (toEvict && toEvict !== key) {
       newOrder.shift()
-      const remaining = Object.fromEntries(
-        Object.entries(state.pages).filter(([k]) => k !== toEvict),
-      ) as Record<string, PageState>
+      const remaining = applyExclude(currentPages, toEvict)
       set({
         activePage: key,
         order: newOrder,
         pages: remaining,
         evictedPage: toEvict,
-        staleKeys: state.staleKeys.filter((k) => k !== toEvict),
+        staleKeys: currentStale.filter((k) => k !== toEvict),
       })
     } else {
       set({ activePage: key, order: newOrder })
@@ -62,46 +64,45 @@ export const useLruCacheStore = create<LruRouteState>((set, get) => ({
   },
 
   updateData: (key, data) => {
-    if (key in get().pages) {
-      const page = get().pages[key]
-      set({
-        pages: { ...get().pages, [key]: { ...page, data, loading: false, loadedAt: Date.now() } },
-      })
-    }
+    const { pages: currentPages } = get()
+    if (!(key in currentPages)) return
+    const page = currentPages[key]
+    set({
+      pages: { ...currentPages, [key]: { ...page, data, loading: false, loadedAt: Date.now() } },
+    })
   },
 
   setLoading: (key, loading) => {
-    if (key in get().pages) {
-      const page = get().pages[key]
-      set({ pages: { ...get().pages, [key]: { ...page, loading } } })
-    }
+    const { pages: currentPages } = get()
+    if (!(key in currentPages)) return
+    const page = currentPages[key]
+    set({ pages: { ...currentPages, [key]: { ...page, loading } } })
   },
 
   setScrollTop: (key, top) => {
-    if (key in get().pages) {
-      const page = get().pages[key]
-      set({ pages: { ...get().pages, [key]: { ...page, scrollTop: top } } })
-    }
+    const { pages: currentPages } = get()
+    if (!(key in currentPages)) return
+    const page = currentPages[key]
+    set({ pages: { ...currentPages, [key]: { ...page, scrollTop: top } } })
   },
 
   updateFormValue: (key, path, value) => {
-    if (key in get().pages) {
-      const page = get().pages[key]
-      set({
-        pages: {
-          ...get().pages,
-          [key]: { ...page, formValues: { ...page.formValues, [path]: value } },
-        },
-      })
-    }
+    const { pages: currentPages } = get()
+    if (!(key in currentPages)) return
+    const page = currentPages[key]
+    set({
+      pages: {
+        ...currentPages,
+        [key]: { ...page, formValues: { ...page.formValues, [path]: value } },
+      },
+    })
   },
 
   closePage: (key) => {
-    const remaining = Object.fromEntries(
-      Object.entries(get().pages).filter(([k]) => k !== key),
-    ) as Record<string, PageState>
-    const newOrder = get().order.filter((k) => k !== key)
-    let newActive = get().activePage
+    const { pages: currentPages, order: currentOrder, activePage: currentActive } = get()
+    const remaining = applyExclude(currentPages, key)
+    const newOrder = currentOrder.filter((k) => k !== key)
+    let newActive = currentActive
     if (newActive === key) {
       newActive = newOrder.length > 0 ? newOrder[newOrder.length - 1] : null
     }
@@ -109,14 +110,15 @@ export const useLruCacheStore = create<LruRouteState>((set, get) => ({
   },
 
   initPage: (key) => {
-    if (key in get().pages) return
+    const { pages: currentPages, order: currentOrder, activePage: currentActive } = get()
+    if (key in currentPages) return
     set({
       pages: {
-        ...get().pages,
+        ...currentPages,
         [key]: { data: null, loading: true, scrollTop: 0, formValues: {}, loadedAt: null },
       },
-      order: [...get().order, key],
-      activePage: get().activePage ?? key,
+      order: [...currentOrder, key],
+      activePage: currentActive ?? key,
     })
   },
 
@@ -125,23 +127,23 @@ export const useLruCacheStore = create<LruRouteState>((set, get) => ({
   },
 
   invalidateCache: (key) => {
-    const state = get()
-    if (!(key in state.pages)) return
-    if (state.staleKeys.includes(key)) return
-    set({ staleKeys: [...state.staleKeys, key] })
+    const { pages: currentPages, staleKeys: currentStale } = get()
+    if (!(key in currentPages)) return
+    if (currentStale.includes(key)) return
+    set({ staleKeys: [...currentStale, key] })
   },
 
   invalidateAll: (except) => {
-    const state = get()
-    const keys = Object.keys(state.pages).filter((k) => k !== except)
-    const newStale = keys.filter((k) => !state.staleKeys.includes(k))
+    const { pages: currentPages, staleKeys: currentStale } = get()
+    const keys = Object.keys(currentPages).filter((k) => k !== except)
+    const newStale = keys.filter((k) => !currentStale.includes(k))
     if (newStale.length === 0) return
-    set({ staleKeys: [...state.staleKeys, ...newStale] })
+    set({ staleKeys: [...currentStale, ...newStale] })
   },
 
   clearStale: (key) => {
-    const state = get()
-    if (!state.staleKeys.includes(key)) return
-    set({ staleKeys: state.staleKeys.filter((k) => k !== key) })
+    const { staleKeys: currentStale } = get()
+    if (!currentStale.includes(key)) return
+    set({ staleKeys: currentStale.filter((k) => k !== key) })
   },
 }))
