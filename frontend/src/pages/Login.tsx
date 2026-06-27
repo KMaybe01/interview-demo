@@ -1,7 +1,7 @@
 import { LockOutlined, SafetyOutlined, UserOutlined } from "@ant-design/icons"
 import { Alert, Button, Card, Form, Input, message, Typography } from "antd"
 import { useCallback, useEffect, useRef, useState } from "react"
-import { useNavigate } from "react-router-dom"
+import { useNavigate, useSearchParams } from "react-router-dom"
 import { useAuthStore } from "../stores"
 import { getErrorMessage, http } from "../utils/fetchClient.ts"
 import { parseToken, setTokens } from "../utils/token.ts"
@@ -31,8 +31,9 @@ const styles = `
 
 export default function Login() {
   const [loading, setLoading] = useState(false)
+  const [searchParams, setSearchParams] = useSearchParams()
   const [showSessionAlert, setShowSessionAlert] = useState(
-    new URLSearchParams(location.search).get("session_replaced") === "1",
+    searchParams.get("session_replaced") === "1",
   )
   const navigate = useNavigate()
   const login = useAuthStore((s) => s.login)
@@ -41,9 +42,13 @@ export default function Login() {
 
   useEffect(() => {
     if (showSessionAlert) {
-      const params = new URLSearchParams(location.search)
-      params.delete("session_replaced")
-      window.history.replaceState(null, "", `?${params.toString()}`)
+      setSearchParams(
+        (prev) => {
+          prev.delete("session_replaced")
+          return prev
+        },
+        { replace: true },
+      )
       alertTimerRef.current = setTimeout(() => {
         setShowSessionAlert(false)
       }, 8000)
@@ -51,7 +56,7 @@ export default function Login() {
     return () => {
       if (alertTimerRef.current) clearTimeout(alertTimerRef.current)
     }
-  }, [showSessionAlert])
+  }, [showSessionAlert, setSearchParams])
 
   const handleSubmit = useCallback(
     async (values: { username: string; password: string }) => {
