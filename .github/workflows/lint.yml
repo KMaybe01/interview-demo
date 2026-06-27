@@ -36,6 +36,11 @@ jobs:
           cache: true
       - run: go test -count=1 ./handlers/
         working-directory: backend
+      - name: Test race
+        run: go test -v -race -coverprofile=coverage.out ./...
+        working-directory: backend
+        env:
+          CGO_ENABLED: 1
 
   lint-frontend:
     runs-on: ubuntu-latest
