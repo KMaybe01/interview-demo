@@ -243,8 +243,9 @@ export default function ChunkedUpload() {
 
   useEffect(() => {
     const ac = new AbortController()
-    if (files.length === 0) return
-    const f = files[0]
+    const { files: currentFiles, updateFile: upd, removeFile: rem } = useUploadStore.getState()
+    if (currentFiles.length === 0) return
+    const f = currentFiles[0]
     if (f.status !== "uploading" && f.status !== "paused") return
     const serverId = f.uploadId || f.id
     if (!serverId) return
@@ -253,7 +254,7 @@ export default function ChunkedUpload() {
       .then((res) => {
         const data = res.data as { received: number[] }
         const done = new Set(data.received)
-        updateFile(f.id, {
+        upd(f.id, {
           chunks: f.chunks.map((c) => ({
             ...c,
             status: done.has(c.index) ? "done" : "pending",
@@ -261,12 +262,11 @@ export default function ChunkedUpload() {
         })
       })
       .catch(() => {
-        removeFile(f.id)
+        rem(f.id)
       })
     return () => {
       ac.abort()
     }
-    // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [])
 
   const handleDrop = useCallback(
