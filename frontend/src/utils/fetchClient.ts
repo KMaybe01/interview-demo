@@ -10,6 +10,14 @@ let refreshPromise: Promise<string> | null = null
 const pendingQueue: PendingItem[] = []
 let isRedirecting = false
 
+function getResponseData(err: AxiosError): Record<string, unknown> | null {
+  const data = err.response?.data
+  if (data && typeof data === "object" && !Array.isArray(data)) {
+    return data as Record<string, unknown>
+  }
+  return null
+}
+
 async function doRefresh(): Promise<string> {
   const storedRefresh = getRefreshToken()
   if (storedRefresh == null) {
@@ -25,9 +33,8 @@ async function doRefresh(): Promise<string> {
   } catch (err) {
     const status = axios.isAxiosError(err) ? err.response?.status : null
     if (status === 401) {
-      const code = axios.isAxiosError(err)
-        ? (err.response?.data as Record<string, unknown>).code
-        : null
+      const apiData = axios.isAxiosError(err) ? getResponseData(err) : null
+      const code = apiData?.code
       if (code === "SESSION_REPLACED") {
         clearTokens()
         refreshPromise = null
@@ -116,8 +123,8 @@ http.interceptors.response.use(
     const status = error.response?.status
 
     if (status === 401 && !originalRequest._retry) {
-      const data = error.response?.data as Record<string, unknown> | undefined
-      if (data?.code === "SESSION_REPLACED") {
+      const apiData = getResponseData(error)
+      if (apiData?.code === "SESSION_REPLACED") {
         clearTokens()
         if (!isRedirecting && !isLoginPage()) {
           isRedirecting = true
@@ -167,9 +174,9 @@ http.interceptors.response.use(
 
 export function getErrorMessage(error: unknown): string {
   if (axios.isAxiosError(error)) {
-    const data = error.response?.data as { error?: string; message?: string } | undefined
-    if (data?.error) return data.error
-    if (data?.message) return data.message
+    const data = getResponseData(error)
+    if (data?.error && typeof data.error === "string") return data.error
+    if (data?.message && typeof data.message === "string") return data.message
     if (error.response?.status === 400) return "请求参数错误"
     if (error.response?.status === 403) return "没有权限访问该资源"
     if (error.response?.status === 404) return "请求的资源不存在"
