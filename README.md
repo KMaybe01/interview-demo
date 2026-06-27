@@ -48,7 +48,7 @@ interview-demo/
 │   │   │   ├── WebWorkerMerge.tsx  # /web-worker-merge Web Worker 分治合并
 │   │   │   └── UniPay.tsx          # /unipay 统一支付中台
 │   │   ├── components/
-│   │   │   ├── AuthGuard.tsx       # 路由守卫（未登录 → /login）
+│   │   │   ├── AuthGuard.tsx       # 路由守卫（基于 Zustand 认证状态）
 │   │   │   ├── PageTracker.tsx     # 页面渲染监控（路径 + 渲染耗时 + Navigation Timing）
 │   │   │   └── dynamic-form/       # 自定义递归表单引擎
 │   │   │       ├── DynamicForm.tsx  # 容器: forwardRef + onChange + 校验调度
@@ -63,12 +63,13 @@ interview-demo/
 │   │   │           ├── DateTimeField.tsx # DatePicker
 │   │   │           ├── JsonField.tsx     # TextArea (JSON)
 │   │   │           └── ArrayField.tsx    # 动态数组 (添加/删除)
-│   │   ├── stores/                  # Zustand 状态管理
+│   │   ├── stores/                  # Zustand 状态管理 (6 stores)
 │   │   │   ├── index.ts            # 桶文件导出
 │   │   │   ├── alertStore.ts       # WebSocket 告警
-│   │   │   ├── authStore.ts        # 登录认证状态
+│   │   │   ├── authStore.ts        # 登录认证状态 (含 Token 过期自检)
 │   │   │   ├── lruRouteStore.ts    # LRU 路由缓存
 │   │   │   ├── requestLoadingStore.ts # 请求加载 Signal
+│   │   │   ├── themeStore.ts       # 主题切换 (light/dark)
 │   │   │   └── uploadStore.ts      # 分片上传 (persist + localStorage)
 │   │   ├── routes/
 │   │   │   └── index.tsx           # 15 条路由配置 (含 / 仪表盘 + 14 演示页)
