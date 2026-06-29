@@ -62,7 +62,11 @@ func TestSSELogStream_InvalidInterval(t *testing.T) {
 	case <-time.After(500 * time.Millisecond):
 		t.Fatal("SSELogStream did not exit after cancel")
 	}
-	// Handler should not panic with invalid interval; no crash is the pass condition
+
+	ct := w.Header().Get("Content-Type")
+	if !strings.HasPrefix(ct, "text/event-stream") {
+		t.Fatalf("expected Content-Type text/event-stream, got %s", ct)
+	}
 }
 
 func TestSSELogStream_FilterLevel(t *testing.T) {

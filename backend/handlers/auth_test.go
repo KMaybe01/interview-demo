@@ -295,22 +295,22 @@ func TestAuthMiddleware_ValidToken(t *testing.T) {
 
 	at := testAccessToken(t, "user_mw", nonce)
 
-	var passed bool
 	mw := AuthMiddleware()
 	w := httptest.NewRecorder()
 	c, _ := gin.CreateTestContext(w)
 	c.Request = httptest.NewRequest(http.MethodGet, "/api/test", nil)
 	c.Request.Header.Set("Authorization", "Bearer "+at)
-	c.Set("test_passed", false)
 	mw(c)
-	passed = c.GetBool("test_passed")
 
-	// No abort occurred
-	if w.Code != http.StatusOK {
-		t.Fatalf("expected 200 (passed), got %d: %s", w.Code, w.Body.String())
+	if c.IsAborted() {
+		t.Fatal("expected context NOT to be aborted for valid token")
 	}
-	if !passed {
-		t.Log("middleware did not set test_passed, but that's fine")
+	sub, exists := c.Get("sub")
+	if !exists {
+		t.Fatal("expected 'sub' to be set in context")
+	}
+	if sub != "user_mw" {
+		t.Fatalf("expected sub 'user_mw', got %v", sub)
 	}
 }
 
