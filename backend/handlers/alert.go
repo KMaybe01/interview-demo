@@ -134,14 +134,14 @@ var logTemplates = []msgTemplate{
 	{"application", "WARN: retry %d/%d for order-%d", []byte{'d', 'd', 'd'}},
 }
 
-var services = []string{"api-gateway", "user-service", "order-service", "inventory-service", "notification-service"}
+var serviceNames = []string{"api-gateway", "user-service", "order-service", "inventory-service", "notification-service"}
 
 func fillTemplate(tmpl msgTemplate) (category, message string) {
 	args := make([]interface{}, len(tmpl.argTypes))
 	for i, t := range tmpl.argTypes {
 		switch t {
 		case 's':
-			args[i] = services[rand.Intn(len(services))]
+			args[i] = serviceNames[rand.Intn(len(serviceNames))]
 		case 'd':
 			args[i] = rand.Intn(1000)
 		case 'f':

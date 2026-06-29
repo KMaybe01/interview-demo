@@ -2,6 +2,7 @@ package main
 
 import (
 	"context"
+	"fmt"
 	"log"
 	"net/http"
 	"os"
@@ -11,6 +12,7 @@ import (
 
 	"interview-demo/backend/handlers"
 	"interview-demo/backend/middleware"
+	"interview-demo/backend/services"
 
 	"github.com/gin-gonic/gin"
 )
@@ -19,6 +21,30 @@ func main() {
 	r := gin.Default()
 	r.MaxMultipartMemory = 100 << 20
 	r.Use(middleware.CORS())
+
+	apiKey := os.Getenv("OPENAI_API_KEY")
+	if apiKey == "" {
+		log.Println("Warning: OPENAI_API_KEY not set")
+	}
+
+	llmService := services.NewLLMService(apiKey)
+	memoryService := services.NewMemoryService()
+	ragService := services.NewRAGService()
+	chunkerManager := services.NewChunkerManager()
+	embeddingService := services.NewEmbeddingService(services.EmbeddingOpenAI)
+	vectorDB := services.NewVectorDatabase()
+	modelManager := services.DefaultModelManager()
+	agentFactory := services.NewAgentFactory(llmService, ragService)
+	agentHandler := handlers.NewAgentHandler(agentFactory, modelManager)
+	chatHandler := handlers.NewChatHandler(llmService, memoryService, ragService, agentFactory, agentHandler.Agents)
+	knowledgeHandler := handlers.NewKnowledgeHandler(ragService, chunkerManager, embeddingService, vectorDB)
+	modelHandler := handlers.NewModelHandler(modelManager)
+
+	docsDir := os.Getenv("DOCS_DIR")
+	if docsDir == "" {
+		docsDir = "../docs"
+	}
+	docLoader := services.NewDocLoader(ragService, chunkerManager, embeddingService, vectorDB)
 
 	api := r.Group("/api")
 	{
@@ -29,6 +55,55 @@ func main() {
 		api.GET("/sse/logs", handlers.SSELogStream)
 		api.GET("/sse/encrypted-logs", handlers.EncryptedLogStream)
 		api.GET("/upload/download/:uploadId", handlers.DownloadUpload)
+
+		api.GET("/health", handlers.HealthCheck)
+
+		api.POST("/chat", handlers.Chat(llmService))
+		api.POST("/chat/stream", chatHandler.ChatStream)
+		api.GET("/chat/history/:conversationId", chatHandler.GetHistory)
+		api.DELETE("/chat/history/:conversationId", chatHandler.ClearHistory)
+
+		api.POST("/knowledge-base", knowledgeHandler.CreateKnowledgeBase)
+		api.GET("/knowledge-base", knowledgeHandler.ListKnowledgeBases)
+		api.GET("/knowledge-base/:id", knowledgeHandler.GetKnowledgeBase)
+		api.DELETE("/knowledge-base/:id", knowledgeHandler.DeleteKnowledgeBase)
+		api.POST("/knowledge-base/:id/document", knowledgeHandler.AddDocument)
+		api.POST("/knowledge-base/:id/documents/batch", knowledgeHandler.BatchAddDocuments)
+		api.GET("/knowledge-base/:id/document", knowledgeHandler.GetDocuments)
+		api.DELETE("/knowledge-base/:id/document/:docId", knowledgeHandler.DeleteDocument)
+		api.POST("/knowledge-base/search", knowledgeHandler.Search)
+		api.POST("/knowledge-base/init-docs", func(c *gin.Context) {
+			docsDir := os.Getenv("DOCS_DIR")
+			if docsDir == "" {
+				docsDir = "../docs"
+			}
+			results, err := docLoader.LoadDocsFromDir(docsDir)
+			if err != nil {
+				c.JSON(500, gin.H{"error": err.Error()})
+				return
+			}
+			totalDocs, totalChunks := 0, 0
+			for _, r := range results {
+				totalDocs += r.DocCount
+				totalChunks += r.ChunkCount
+			}
+			c.JSON(200, gin.H{
+				"knowledgeBases": results,
+				"totalKBs":       len(results),
+				"totalDocs":      totalDocs,
+				"totalChunks":    totalChunks,
+				"message":        fmt.Sprintf("loaded %d knowledge bases, %d docs, %d chunks", len(results), totalDocs, totalChunks),
+			})
+		})
+
+		api.GET("/models", modelHandler.ListModels)
+		api.GET("/models/:id", modelHandler.GetModel)
+		api.POST("/models/:id/chat", modelHandler.Chat)
+
+		api.GET("/agents", agentHandler.ListAgents)
+		api.POST("/agents", agentHandler.CreateAgent)
+		api.POST("/agents/:id/execute", agentHandler.ExecuteAgent)
+		api.DELETE("/agents/:id", agentHandler.DeleteAgent)
 
 		protected := api.Group("")
 		protected.Use(handlers.AuthMiddleware())
@@ -69,6 +144,21 @@ func main() {
 	r.GET("/ws/alerts", handlers.AlertDispatcher)
 	r.GET("/api/alerts", handlers.AlertDispatcher)
 
+	fmt.Println("=====================================")
+	fmt.Printf("Loading docs from: %s\n", docsDir)
+	results, err := docLoader.LoadDocsFromDir(docsDir)
+	if err != nil {
+		fmt.Printf("Doc loading failed: %v\n", err)
+	} else {
+		totalDocs, totalChunks := 0, 0
+		for _, r := range results {
+			totalDocs += r.DocCount
+			totalChunks += r.ChunkCount
+		}
+		fmt.Printf("Docs loaded: %d knowledge bases, %d docs, %d chunks\n", len(results), totalDocs, totalChunks)
+	}
+	fmt.Println("=====================================")
+
 	port := os.Getenv("PORT")
 	if port == "" {
 		port = "8080"
@@ -83,7 +173,7 @@ func main() {
 	signal.Notify(quit, syscall.SIGINT, syscall.SIGTERM)
 
 	go func() {
-		log.Printf("Backend running on :8080")
+		log.Printf("Backend running on :%s", port)
 		if err := srv.ListenAndServe(); err != nil && err != http.ErrServerClosed {
 			log.Fatalf("listen: %s\n", err)
 		}
