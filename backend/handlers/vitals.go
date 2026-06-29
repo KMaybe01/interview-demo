@@ -32,13 +32,13 @@ type VitalsRecord struct {
 }
 
 type VitalsSummary struct {
-	Metric    string  `json:"metric"`
-	Value     float64 `json:"value"`
-	Rating    string  `json:"rating"`
-	Min       float64 `json:"min"`
-	Max       float64 `json:"max"`
-	Avg       float64 `json:"avg"`
-	Count     int     `json:"count"`
+	Metric string  `json:"metric"`
+	Value  float64 `json:"value"`
+	Rating string  `json:"rating"`
+	Min    float64 `json:"min"`
+	Max    float64 `json:"max"`
+	Avg    float64 `json:"avg"`
+	Count  int     `json:"count"`
 }
 
 var (
@@ -178,19 +178,19 @@ type PageRecord struct {
 }
 
 type PageSummary struct {
-	Path            string  `json:"path"`
-	PageName        string  `json:"pageName"`
-	Visits          int     `json:"visits"`
-	AvgRenderMs     float64 `json:"avgRenderMs"`
-	MinRenderMs     float64 `json:"minRenderMs"`
-	MaxRenderMs     float64 `json:"maxRenderMs"`
-	AvgLCP          float64 `json:"avgLCP"`
-	AvgINP          float64 `json:"avgINP"`
-	AvgCLS          float64 `json:"avgCLS"`
-	LatestLCP       float64 `json:"latestLCP"`
-	LatestINP       float64 `json:"latestINP"`
-	LatestCLS       float64 `json:"latestCLS"`
-	LastVisit       int64   `json:"lastVisit"`
+	Path        string  `json:"path"`
+	PageName    string  `json:"pageName"`
+	Visits      int     `json:"visits"`
+	AvgRenderMs float64 `json:"avgRenderMs"`
+	MinRenderMs float64 `json:"minRenderMs"`
+	MaxRenderMs float64 `json:"maxRenderMs"`
+	AvgLCP      float64 `json:"avgLCP"`
+	AvgINP      float64 `json:"avgINP"`
+	AvgCLS      float64 `json:"avgCLS"`
+	LatestLCP   float64 `json:"latestLCP"`
+	LatestINP   float64 `json:"latestINP"`
+	LatestCLS   float64 `json:"latestCLS"`
+	LastVisit   int64   `json:"lastVisit"`
 }
 
 type PageHistoryEntry struct {
@@ -238,18 +238,18 @@ func ReportPage(c *gin.Context) {
 }
 
 type pageAcc struct {
-	count       int
-	sum         float64
-	min         float64
-	max         float64
-	sumLCP      float64
-	sumINP      float64
-	sumCLS      float64
-	latestLCP   float64
-	latestINP   float64
-	latestCLS   float64
-	last        time.Time
-	name        string
+	count     int
+	sum       float64
+	min       float64
+	max       float64
+	sumLCP    float64
+	sumINP    float64
+	sumCLS    float64
+	latestLCP float64
+	latestINP float64
+	latestCLS float64
+	last      time.Time
+	name      string
 }
 
 func GetPageSummary(c *gin.Context) {
