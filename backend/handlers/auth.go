@@ -257,6 +257,8 @@ func CheckToken(c *gin.Context) {
 	})
 }
 
+// AuthMiddleware returns a Gin middleware that validates JWT Bearer tokens
+// and checks session nonce for replay protection.
 func AuthMiddleware() gin.HandlerFunc {
 	return func(c *gin.Context) {
 		tokenStr := c.GetHeader("Authorization")

@@ -67,8 +67,6 @@ func SSELogStream(c *gin.Context) {
 
 		case <-c.Request.Context().Done():
 			return
-		case <-c.Done():
-			return
 		}
 	}
 }

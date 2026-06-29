@@ -16,6 +16,8 @@ func init() {
 	}
 }
 
+// CORS returns a Gin middleware for cross-origin resource sharing.
+// Allowed origin is read from the CORS_ORIGIN environment variable (default: *).
 func CORS() gin.HandlerFunc {
 	return func(c *gin.Context) {
 		c.Header("Access-Control-Allow-Origin", allowedOrigin)
