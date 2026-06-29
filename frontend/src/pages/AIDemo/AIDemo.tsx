@@ -6,22 +6,18 @@ import {
   RobotOutlined,
   SettingOutlined,
 } from "@ant-design/icons"
-import { App as AntApp, Tabs } from "antd"
+import { App as AntApp, Tabs, theme } from "antd"
 import type { ReactNode } from "react"
-import { createContext, useCallback, useContext, useMemo, useState } from "react"
+import { createContext, useCallback, useContext, useEffect, useMemo, useState } from "react"
+import { useThemeStore } from "../../stores"
 import styles from "./AIDemo.module.css"
-import { ErrorBoundary } from "./components/ErrorBoundary"
-
-// ─── Lazy-loaded tab components ─────────────────────────────────────────
-
 import Agents from "./components/Agents"
 import Chat from "./components/Chat"
 import Dashboard from "./components/Dashboard"
+import { ErrorBoundary } from "./components/ErrorBoundary"
 import KnowledgeBase from "./components/KnowledgeBase"
 import Models from "./components/Models"
 import Plugins from "./components/Plugins"
-
-// ─── Message API context (replaces original App.tsx context) ────────────
 
 interface MessageApi {
   success: (msg: string) => void
@@ -38,8 +34,6 @@ const defaultMessageApi: MessageApi = {
 export const MessageApiContext = createContext<MessageApi>(defaultMessageApi)
 export const useMessageApi = () => useContext(MessageApiContext)
 
-// ─── Tab config ──────────────────────────────────────────────────────────
-
 type TabKey = "dashboard" | "chat" | "knowledge" | "models" | "agents" | "plugins"
 
 interface TabConfig {
@@ -49,17 +43,20 @@ interface TabConfig {
   component: ReactNode
 }
 
-// ─── AIDemo Page ─────────────────────────────────────────────────────────
-
 export default function AIDemo() {
   const { message } = AntApp.useApp()
+  const { token } = theme.useToken()
+  const mode = useThemeStore((s) => s.mode)
   const [activeTab, setActiveTab] = useState<TabKey>("dashboard")
+
+  useEffect(() => {
+    document.documentElement.setAttribute("data-theme", mode)
+  }, [mode])
 
   const handleTabChange = useCallback((key: string) => {
     setActiveTab(key as TabKey)
   }, [])
 
-  // Navigate between tabs (passed to Dashboard for quick-actions)
   const navigateToTab = useCallback((key: string) => {
     setActiveTab(key as TabKey)
   }, [])
@@ -83,7 +80,26 @@ export default function AIDemo() {
 
   return (
     <MessageApiContext.Provider value={message}>
-      <div className={styles.container}>
+      <div
+        className={styles.container}
+        style={
+          {
+            "--scrollbar-track-bg": token.colorFillQuaternary,
+            "--scrollbar-thumb-bg": token.colorFill,
+            "--scrollbar-thumb-hover": token.colorFillSecondary,
+            "--chat-hover-bg": token.colorFillTertiary,
+            "--chat-active-bg": token.colorPrimaryBg,
+            "--chat-active-border": token.colorPrimaryBorder,
+            "--modal-item-border": token.colorBorderSecondary,
+            "--modal-item-hover-bg": token.colorFillTertiary,
+            "--modal-item-selected-bg": token.colorPrimaryBg,
+            "--modal-item-selected-border": token.colorPrimaryBorder,
+            "--upload-zone-border": token.colorBorder,
+            "--upload-zone-bg": token.colorFillAlter,
+            "--upload-zone-hover-border": token.colorPrimary,
+          } as React.CSSProperties
+        }
+      >
         <Tabs
           activeKey={activeTab}
           onChange={handleTabChange}
@@ -101,8 +117,8 @@ export default function AIDemo() {
           tabBarStyle={{
             marginBottom: 0,
             paddingLeft: 8,
-            background: "#fff",
-            borderBottom: "1px solid #f0f0f0",
+            background: token.colorBgContainer,
+            borderBottom: `1px solid ${token.colorBorderSecondary}`,
           }}
         />
       </div>
