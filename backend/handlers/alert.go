@@ -6,6 +6,7 @@ import (
 	"log"
 	"math/rand"
 	"net/http"
+	"os"
 	"strconv"
 	"sync"
 	"sync/atomic"
@@ -15,8 +16,22 @@ import (
 	"github.com/gorilla/websocket"
 )
 
+var allowedWSSOrigin string
+
+func init() {
+	allowedWSSOrigin = os.Getenv("CORS_ORIGIN")
+	if allowedWSSOrigin == "" {
+		allowedWSSOrigin = "*"
+	}
+}
+
 var upgrader = websocket.Upgrader{
-	CheckOrigin: func(r *http.Request) bool { return true },
+	CheckOrigin: func(r *http.Request) bool {
+		if allowedWSSOrigin == "*" {
+			return true
+		}
+		return r.Header.Get("Origin") == allowedWSSOrigin
+	},
 }
 
 var seqCounter int64

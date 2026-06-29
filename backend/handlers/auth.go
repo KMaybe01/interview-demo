@@ -3,6 +3,7 @@ package handlers
 import (
 	"fmt"
 	"net/http"
+	"os"
 	"sync"
 	"time"
 
@@ -10,7 +11,29 @@ import (
 	"github.com/golang-jwt/jwt/v5"
 )
 
-var jwtSecret = []byte("interview-demo-secret-key-2026")
+var (
+	jwtSecret     []byte
+	adminUsername string
+	adminPassword string
+)
+
+func init() {
+	jwtSecret = func() []byte {
+		if s := os.Getenv("JWT_SECRET"); s != "" {
+			return []byte(s)
+		}
+		return []byte("interview-demo-secret-key-2026")
+	}()
+	adminUsername = getEnvDefault("AUTH_USERNAME", "admin")
+	adminPassword = getEnvDefault("AUTH_PASSWORD", "admin123")
+}
+
+func getEnvDefault(key, defaultVal string) string {
+	if v := os.Getenv(key); v != "" {
+		return v
+	}
+	return defaultVal
+}
 
 var usedRefreshTokens = struct {
 	m map[string]bool
@@ -58,6 +81,9 @@ func createRefreshToken(sub, nonce string, duration time.Duration) (string, erro
 
 func parseAndValidateToken(tokenStr string) (*jwt.MapClaims, error) {
 	token, err := jwt.Parse(tokenStr, func(token *jwt.Token) (interface{}, error) {
+		if _, ok := token.Method.(*jwt.SigningMethodHMAC); !ok {
+			return nil, fmt.Errorf("unexpected signing method: %v", token.Header["alg"])
+		}
 		return jwtSecret, nil
 	})
 	if err != nil {
@@ -77,7 +103,7 @@ func Login(c *gin.Context) {
 		return
 	}
 
-	if req.Username != "admin" || req.Password != "admin123" {
+	if req.Username != adminUsername || req.Password != adminPassword {
 		c.JSON(http.StatusUnauthorized, gin.H{"error": "用户名或密码错误"})
 		return
 	}
@@ -85,8 +111,16 @@ func Login(c *gin.Context) {
 	nonce := fmt.Sprintf("%d", time.Now().UnixNano())
 	activeSessions.Store("user_001", nonce)
 
-	accessToken, _ := createToken("user_001", 1*time.Minute, nonce)
-	refreshToken, _ := createRefreshToken("user_001", nonce, 1*time.Hour)
+	accessToken, err := createToken("user_001", 1*time.Minute, nonce)
+	if err != nil {
+		c.JSON(http.StatusInternalServerError, gin.H{"error": "创建 Token 失败"})
+		return
+	}
+	refreshToken, err := createRefreshToken("user_001", nonce, 1*time.Hour)
+	if err != nil {
+		c.JSON(http.StatusInternalServerError, gin.H{"error": "创建 Refresh Token 失败"})
+		return
+	}
 
 	c.JSON(http.StatusOK, TokenResponse{
 		AccessToken:  accessToken,
@@ -138,8 +172,16 @@ func RefreshToken(c *gin.Context) {
 		return
 	}
 
-	newAccessToken, _ := createToken(sub, 1*time.Minute, nonceFromToken)
-	newRefreshToken, _ := createRefreshToken(sub, nonceFromToken, 1*time.Hour)
+	newAccessToken, err := createToken(sub, 1*time.Minute, nonceFromToken)
+	if err != nil {
+		c.JSON(http.StatusInternalServerError, gin.H{"error": "创建 Token 失败"})
+		return
+	}
+	newRefreshToken, err := createRefreshToken(sub, nonceFromToken, 1*time.Hour)
+	if err != nil {
+		c.JSON(http.StatusInternalServerError, gin.H{"error": "创建 Refresh Token 失败"})
+		return
+	}
 
 	usedRefreshTokens.Lock()
 	usedRefreshTokens.m[req.RefreshToken] = true
