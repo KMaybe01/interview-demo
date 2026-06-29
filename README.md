@@ -14,6 +14,7 @@ React 19 + Go 1.26 全栈演示项目，涵盖 **15 个高级技术场景**（�
 | -------- | ----------------------------------------------------------------------- |
 | 前端     | React 19, TypeScript 6, Vite 8, Ant Design 6, Zustand 5, React Router 7 |
 | 工具链   | Biome 2.5, ESLint 9 (strictTypeChecked)                                 |
+| 样式     | Ant Design tokens + CSS Modules (Login.module.css)                       |
 | 后端     | Go 1.26, Gin 1.12, Gorilla WebSocket, golang-jwt (双 Token 无感刷新)     |
 | GIS      | OpenLayers 10.9 (Cluster + BBOX)                                        |
 | 表单     | 自定义递归渲染引擎 (非 @rjsf)                                            |
@@ -32,7 +33,7 @@ interview-demo/
 │   │   ├── assets/                 # 静态资源 (图片)
 │   │   ├── pages/                  # 19 个页面 (含仪表盘 + 登录)
 │   │   │   ├── Dashboard.tsx       # / 仪表盘
-│   │   │   ├── Login.tsx           # /login 登录页面
+│   │   │   ├── Login.tsx           # /login 登录页面（CSS Module 模块化样式 + 涟漪动画）
 │   │   │   ├── JsonSchemaForm.tsx  # /json-schema-form 动态表单 + 实时 JSON 编辑
 │   │   │   ├── AlertWebSocket.tsx  # /alert-websocket WebSocket 告警
 │   │   │   ├── ChunkedUpload.tsx   # /chunked-upload 大文件分片上传
@@ -66,7 +67,7 @@ interview-demo/
 │   │   ├── stores/                  # Zustand 状态管理 (6 stores)
 │   │   │   ├── index.ts            # 桶文件导出
 │   │   │   ├── alertStore.ts       # WebSocket 告警
-│   │   │   ├── authStore.ts        # 登录认证状态 (含 Token 过期自检)
+│   │   │   ├── authStore.ts        # 登录认证状态 (hydrate 延迟初始化 + SSR 守卫 + Token 过期自检)
 │   │   │   ├── lruRouteStore.ts    # LRU 路由缓存
 │   │   │   ├── requestLoadingStore.ts # 请求加载 Signal
 │   │   │   ├── themeStore.ts       # 主题切换 (light/dark)
@@ -401,5 +402,32 @@ helm rollback interview-demo 1 -n interview-demo
 | --------- | ----------------------------- | ----------------------------- |
 | backend   | `GET /healthz` 10s            | `GET /healthz` 5s             |
 | frontend  | `GET /` 10s                   | `GET /` 5s                    |
+
+## 代码质量优化 (Code Review — 2026.06)
+
+基于系统性 Code Review，完成了 **12 项改进**，覆盖 Bug 修复、可靠性与架构优化：
+
+### 🔴 Bug 修复 (3 项)
+| 文件 | 问题 | 修复 |
+|------|------|------|
+| `DateTimeField.tsx` | DatePicker `value` 三元表达式始终为 `undefined` | 改为 `dayjs(value)` 解析，支持字符串和 dayjs 对象 |
+| `alertStore.ts` | `alerts` 数组无限增长→长时间运行 OOM | 添加 `MAX_ALERTS = 5000` 上限，`.slice(0, MAX_ALERTS)` 截断 |
+| `Renderer.tsx` | `Space` 组件 `...props.style` 解构错误 | 改为正确的 `{ children, style }` 解构 |
+
+### 🟡 可靠性改进 (6 项)
+| 文件 | 改进 |
+|------|------|
+| `DynamicForm.tsx` | 合并嵌套 `setData` 消除竞态；`flattenSchema` 结果 `useMemo` 缓存，修复 exhaustive-deps |
+| `fetchClient.ts` | `location.href` 硬跳转 → `redirectToLogin()` 统一入口 + `window.location.replace` 避免历史污染 |
+| `token.ts` | `isTokenExpired` 增加 30s buffer 对齐 fetchClient 刷新容忍度 |
+| `uploadStore.ts` | `persist` 添加 `partialize` 过滤运行时字段（speed/elapsed/chunk.startTime） |
+| `PageTracker.tsx` | ref 操作从 render body 移至 `useEffect`，符合 React 纯渲染原则 |
+
+### 🟢 架构优化 (3 项)
+| 文件 | 优化 |
+|------|------|
+| `authStore.ts` | 模块级 `initUser()` → `hydrate()` 延迟初始化 + `window` 守卫，SSR 友好 |
+| `Login.tsx` | 全局 `<style>` 注入 → `Login.module.css` CSS Module，消除动画名全局污染 |
+| `types.ts` | ajv 单例改为 `configureAjv()` 可配置，测试隔离友好 |
 
 
