@@ -11,23 +11,6 @@ import (
 	"github.com/golang-jwt/jwt/v5"
 )
 
-var (
-	jwtSecret     []byte
-	adminUsername string
-	adminPassword string
-)
-
-func init() {
-	jwtSecret = func() []byte {
-		if s := os.Getenv("JWT_SECRET"); s != "" {
-			return []byte(s)
-		}
-		return []byte("interview-demo-secret-key-2026")
-	}()
-	adminUsername = getEnvDefault("AUTH_USERNAME", "admin")
-	adminPassword = getEnvDefault("AUTH_PASSWORD", "admin123")
-}
-
 func getEnvDefault(key, defaultVal string) string {
 	if v := os.Getenv(key); v != "" {
 		return v
@@ -35,48 +18,85 @@ func getEnvDefault(key, defaultVal string) string {
 	return defaultVal
 }
 
-var usedRefreshTokens struct {
-	sync.RWMutex
+type tokenStore struct {
+	mu    sync.RWMutex
 	m     map[string]time.Time
 	limit int
 }
 
-func init() {
-	usedRefreshTokens.m = make(map[string]time.Time)
-	usedRefreshTokens.limit = 10000
-	go usedRefreshTokensCleanup()
+func newTokenStore(limit int) *tokenStore {
+	s := &tokenStore{
+		m:     make(map[string]time.Time),
+		limit: limit,
+	}
+	go s.cleanup()
+	return s
 }
 
-func usedRefreshTokensCleanup() {
+func (s *tokenStore) cleanup() {
 	for {
 		time.Sleep(30 * time.Minute)
-		usedRefreshTokens.Lock()
-		for k, v := range usedRefreshTokens.m {
+		s.mu.Lock()
+		for k, v := range s.m {
 			if time.Since(v) > 1*time.Hour {
-				delete(usedRefreshTokens.m, k)
+				delete(s.m, k)
 			}
 		}
-		usedRefreshTokens.Unlock()
+		s.mu.Unlock()
 	}
 }
 
-func markTokenUsed(token string) {
-	usedRefreshTokens.Lock()
-	usedRefreshTokens.m[token] = time.Now()
-	if len(usedRefreshTokens.m) > usedRefreshTokens.limit {
-		for k, v := range usedRefreshTokens.m {
+func (s *tokenStore) MarkUsed(token string) {
+	s.mu.Lock()
+	s.m[token] = time.Now()
+	if len(s.m) > s.limit {
+		for k, v := range s.m {
 			if time.Since(v) > 10*time.Minute {
-				delete(usedRefreshTokens.m, k)
+				delete(s.m, k)
 			}
-			if len(usedRefreshTokens.m) <= usedRefreshTokens.limit/2 {
+			if len(s.m) <= s.limit/2 {
 				break
 			}
 		}
 	}
-	usedRefreshTokens.Unlock()
+	s.mu.Unlock()
 }
 
-var activeSessions sync.Map
+func (s *tokenStore) IsUsed(token string) bool {
+	s.mu.RLock()
+	_, used := s.m[token]
+	s.mu.RUnlock()
+	return used
+}
+
+func (s *tokenStore) Count() int {
+	s.mu.RLock()
+	count := len(s.m)
+	s.mu.RUnlock()
+	return count
+}
+
+type AuthService struct {
+	jwtSecret     []byte
+	adminUsername string
+	adminPassword string
+	tokenStore    *tokenStore
+	sessions      sync.Map
+}
+
+func NewAuthService() *AuthService {
+	secret := []byte("interview-demo-secret-key-2026")
+	if s := os.Getenv("JWT_SECRET"); s != "" {
+		secret = []byte(s)
+	}
+
+	return &AuthService{
+		jwtSecret:     secret,
+		adminUsername: getEnvDefault("AUTH_USERNAME", "admin"),
+		adminPassword: getEnvDefault("AUTH_PASSWORD", "admin123"),
+		tokenStore:    newTokenStore(10000),
+	}
+}
 
 type LoginRequest struct {
 	Username string `json:"username" binding:"required"`
@@ -89,7 +109,7 @@ type TokenResponse struct {
 	ExpiresIn    int    `json:"expires_in"`
 }
 
-func createToken(sub string, duration time.Duration, nonce ...string) (string, error) {
+func (a *AuthService) createToken(sub string, duration time.Duration, nonce ...string) (string, error) {
 	claims := jwt.MapClaims{
 		"sub":  sub,
 		"iat":  time.Now().Unix(),
@@ -100,10 +120,10 @@ func createToken(sub string, duration time.Duration, nonce ...string) (string, e
 		claims["nonce"] = nonce[0]
 	}
 	token := jwt.NewWithClaims(jwt.SigningMethodHS256, claims)
-	return token.SignedString(jwtSecret)
+	return token.SignedString(a.jwtSecret)
 }
 
-func createRefreshToken(sub, nonce string, duration time.Duration) (string, error) {
+func (a *AuthService) createRefreshToken(sub, nonce string, duration time.Duration) (string, error) {
 	claims := jwt.MapClaims{
 		"sub":   sub,
 		"nonce": nonce,
@@ -112,15 +132,15 @@ func createRefreshToken(sub, nonce string, duration time.Duration) (string, erro
 		"role":  "admin",
 	}
 	token := jwt.NewWithClaims(jwt.SigningMethodHS256, claims)
-	return token.SignedString(jwtSecret)
+	return token.SignedString(a.jwtSecret)
 }
 
-func parseAndValidateToken(tokenStr string) (*jwt.MapClaims, error) {
+func (a *AuthService) parseAndValidateToken(tokenStr string) (*jwt.MapClaims, error) {
 	token, err := jwt.Parse(tokenStr, func(token *jwt.Token) (interface{}, error) {
 		if _, ok := token.Method.(*jwt.SigningMethodHMAC); !ok {
 			return nil, fmt.Errorf("unexpected signing method: %v", token.Header["alg"])
 		}
-		return jwtSecret, nil
+		return a.jwtSecret, nil
 	})
 	if err != nil {
 		return nil, err
@@ -132,27 +152,27 @@ func parseAndValidateToken(tokenStr string) (*jwt.MapClaims, error) {
 	return &claims, nil
 }
 
-func Login(c *gin.Context) {
+func (a *AuthService) Login(c *gin.Context) {
 	var req LoginRequest
 	if err := c.ShouldBindJSON(&req); err != nil {
 		c.JSON(http.StatusBadRequest, gin.H{"error": "参数错误"})
 		return
 	}
 
-	if req.Username != adminUsername || req.Password != adminPassword {
+	if req.Username != a.adminUsername || req.Password != a.adminPassword {
 		c.JSON(http.StatusUnauthorized, gin.H{"error": "用户名或密码错误"})
 		return
 	}
 
 	nonce := fmt.Sprintf("%d", time.Now().UnixNano())
-	activeSessions.Store("user_001", nonce)
+	a.sessions.Store("user_001", nonce)
 
-	accessToken, err := createToken("user_001", 15*time.Minute, nonce)
+	accessToken, err := a.createToken("user_001", 15*time.Minute, nonce)
 	if err != nil {
 		c.JSON(http.StatusInternalServerError, gin.H{"error": "创建 Token 失败"})
 		return
 	}
-	refreshToken, err := createRefreshToken("user_001", nonce, 1*time.Hour)
+	refreshToken, err := a.createRefreshToken("user_001", nonce, 1*time.Hour)
 	if err != nil {
 		c.JSON(http.StatusInternalServerError, gin.H{"error": "创建 Refresh Token 失败"})
 		return
@@ -169,18 +189,14 @@ type RefreshRequest struct {
 	RefreshToken string `json:"refresh_token" binding:"required"`
 }
 
-func RefreshToken(c *gin.Context) {
+func (a *AuthService) RefreshToken(c *gin.Context) {
 	var req RefreshRequest
 	if err := c.ShouldBindJSON(&req); err != nil {
 		c.JSON(http.StatusBadRequest, gin.H{"error": "参数错误"})
 		return
 	}
 
-	usedRefreshTokens.RLock()
-	_, alreadyUsed := usedRefreshTokens.m[req.RefreshToken]
-	usedRefreshTokens.RUnlock()
-
-	if alreadyUsed {
+	if a.tokenStore.IsUsed(req.RefreshToken) {
 		c.JSON(http.StatusUnauthorized, gin.H{
 			"error":   "Refresh Token 已被使用（Replay Attack 检测）",
 			"code":    "TOKEN_REUSED",
@@ -189,7 +205,7 @@ func RefreshToken(c *gin.Context) {
 		return
 	}
 
-	claims, err := parseAndValidateToken(req.RefreshToken)
+	claims, err := a.parseAndValidateToken(req.RefreshToken)
 	if err != nil {
 		c.JSON(http.StatusUnauthorized, gin.H{"error": "Refresh Token 无效或已过期", "code": "TOKEN_INVALID"})
 		return
@@ -198,7 +214,7 @@ func RefreshToken(c *gin.Context) {
 	sub, _ := (*claims)["sub"].(string)
 	nonceFromToken, _ := (*claims)["nonce"].(string)
 
-	storedNonce, ok := activeSessions.Load(sub)
+	storedNonce, ok := a.sessions.Load(sub)
 	if ok && nonceFromToken != storedNonce.(string) {
 		c.JSON(http.StatusUnauthorized, gin.H{
 			"error":   "此账号已在其他设备登录",
@@ -208,18 +224,18 @@ func RefreshToken(c *gin.Context) {
 		return
 	}
 
-	newAccessToken, err := createToken(sub, 15*time.Minute, nonceFromToken)
+	newAccessToken, err := a.createToken(sub, 15*time.Minute, nonceFromToken)
 	if err != nil {
 		c.JSON(http.StatusInternalServerError, gin.H{"error": "创建 Token 失败"})
 		return
 	}
-	newRefreshToken, err := createRefreshToken(sub, nonceFromToken, 1*time.Hour)
+	newRefreshToken, err := a.createRefreshToken(sub, nonceFromToken, 1*time.Hour)
 	if err != nil {
 		c.JSON(http.StatusInternalServerError, gin.H{"error": "创建 Refresh Token 失败"})
 		return
 	}
 
-	markTokenUsed(req.RefreshToken)
+	a.tokenStore.MarkUsed(req.RefreshToken)
 
 	c.JSON(http.StatusOK, gin.H{
 		"access_token":  newAccessToken,
@@ -229,7 +245,7 @@ func RefreshToken(c *gin.Context) {
 	})
 }
 
-func CheckToken(c *gin.Context) {
+func (a *AuthService) CheckToken(c *gin.Context) {
 	tokenStr := c.GetHeader("Authorization")
 	if tokenStr == "" || len(tokenStr) < 7 {
 		c.JSON(http.StatusUnauthorized, gin.H{"valid": false, "error": "未提供 Token"})
@@ -237,7 +253,7 @@ func CheckToken(c *gin.Context) {
 	}
 
 	tokenStr = tokenStr[7:]
-	claims, err := parseAndValidateToken(tokenStr)
+	claims, err := a.parseAndValidateToken(tokenStr)
 	if err != nil {
 		c.JSON(http.StatusUnauthorized, gin.H{"valid": false, "error": "Token 无效或已过期"})
 		return
@@ -259,7 +275,7 @@ func CheckToken(c *gin.Context) {
 
 // AuthMiddleware returns a Gin middleware that validates JWT Bearer tokens
 // and checks session nonce for replay protection.
-func AuthMiddleware() gin.HandlerFunc {
+func (a *AuthService) AuthMiddleware() gin.HandlerFunc {
 	return func(c *gin.Context) {
 		tokenStr := c.GetHeader("Authorization")
 		if tokenStr == "" || len(tokenStr) < 7 {
@@ -268,7 +284,7 @@ func AuthMiddleware() gin.HandlerFunc {
 		}
 
 		tokenStr = tokenStr[7:]
-		claims, err := parseAndValidateToken(tokenStr)
+		claims, err := a.parseAndValidateToken(tokenStr)
 		if err != nil {
 			c.AbortWithStatusJSON(http.StatusUnauthorized, gin.H{"error": "Token 无效或已过期"})
 			return
@@ -277,7 +293,7 @@ func AuthMiddleware() gin.HandlerFunc {
 		sub, _ := (*claims)["sub"].(string)
 		nonceFromToken, _ := (*claims)["nonce"].(string)
 
-		storedNonce, ok := activeSessions.Load(sub)
+		storedNonce, ok := a.sessions.Load(sub)
 		if ok && nonceFromToken != storedNonce.(string) {
 			c.AbortWithStatusJSON(http.StatusUnauthorized, gin.H{
 				"error":   "此账号已在其他设备登录",
@@ -292,9 +308,7 @@ func AuthMiddleware() gin.HandlerFunc {
 	}
 }
 
-func GetUsedTokenCount(c *gin.Context) {
-	usedRefreshTokens.RLock()
-	count := len(usedRefreshTokens.m)
-	usedRefreshTokens.RUnlock()
+func (a *AuthService) GetUsedTokenCount(c *gin.Context) {
+	count := a.tokenStore.Count()
 	c.JSON(http.StatusOK, gin.H{"count": count})
 }

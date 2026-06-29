@@ -197,20 +197,7 @@ func (s *LLMService) ChatStreamWithTools(ctx context.Context, messages []models.
 		model = openai.GPT3Dot5Turbo
 	}
 
-	openaiMessages := make([]openai.ChatCompletionMessage, len(messages))
-	for i, msg := range messages {
-		role := openai.ChatMessageRoleUser
-		if msg.Role == "assistant" {
-			role = openai.ChatMessageRoleAssistant
-		} else if msg.Role == "system" {
-			role = openai.ChatMessageRoleSystem
-		}
-		openaiMessages[i] = openai.ChatCompletionMessage{
-			Role:    role,
-			Content: msg.Content,
-		}
-	}
-
+	openaiMessages := toOpenAIMessages(messages)
 	openaiTools := make([]openai.Tool, len(tools))
 	for i, tool := range tools {
 		openaiTools[i] = openai.Tool{

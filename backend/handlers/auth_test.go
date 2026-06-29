@@ -15,18 +15,23 @@ func init() {
 	gin.SetMode(gin.TestMode)
 }
 
-func testAccessToken(t *testing.T, sub, nonce string) string {
+func newTestAuth(t *testing.T) *AuthService {
 	t.Helper()
-	s, err := createToken(sub, 5*time.Second, nonce)
+	return NewAuthService()
+}
+
+func testAccessToken(t *testing.T, a *AuthService, sub, nonce string) string {
+	t.Helper()
+	s, err := a.createToken(sub, 5*time.Second, nonce)
 	if err != nil {
 		t.Fatalf("createToken: %v", err)
 	}
 	return s
 }
 
-func testRefreshToken(t *testing.T, sub, nonce string) string {
+func testRefreshToken(t *testing.T, a *AuthService, sub, nonce string) string {
 	t.Helper()
-	s, err := createRefreshToken(sub, nonce, 5*time.Second)
+	s, err := a.createRefreshToken(sub, nonce, 5*time.Second)
 	if err != nil {
 		t.Fatalf("createRefreshToken: %v", err)
 	}
@@ -43,13 +48,15 @@ func readBody(t *testing.T, w *httptest.ResponseRecorder, v any) {
 // -- Login --
 
 func TestLogin_Success(t *testing.T) {
+	auth := newTestAuth(t)
+
 	w := httptest.NewRecorder()
 	c, _ := gin.CreateTestContext(w)
 	c.Request = httptest.NewRequest(http.MethodPost, "/api/auth/login",
 		strings.NewReader(`{"username":"admin","password":"admin123"}`))
 	c.Request.Header.Set("Content-Type", "application/json")
 
-	Login(c)
+	auth.Login(c)
 
 	if w.Code != http.StatusOK {
 		t.Fatalf("expected 200, got %d: %s", w.Code, w.Body.String())
@@ -68,13 +75,15 @@ func TestLogin_Success(t *testing.T) {
 }
 
 func TestLogin_WrongPassword(t *testing.T) {
+	auth := newTestAuth(t)
+
 	w := httptest.NewRecorder()
 	c, _ := gin.CreateTestContext(w)
 	c.Request = httptest.NewRequest(http.MethodPost, "/api/auth/login",
 		strings.NewReader(`{"username":"admin","password":"wrong"}`))
 	c.Request.Header.Set("Content-Type", "application/json")
 
-	Login(c)
+	auth.Login(c)
 
 	if w.Code != http.StatusUnauthorized {
 		t.Fatalf("expected 401, got %d: %s", w.Code, w.Body.String())
@@ -82,13 +91,15 @@ func TestLogin_WrongPassword(t *testing.T) {
 }
 
 func TestLogin_MissingBody(t *testing.T) {
+	auth := newTestAuth(t)
+
 	w := httptest.NewRecorder()
 	c, _ := gin.CreateTestContext(w)
 	c.Request = httptest.NewRequest(http.MethodPost, "/api/auth/login",
 		strings.NewReader(`{}`))
 	c.Request.Header.Set("Content-Type", "application/json")
 
-	Login(c)
+	auth.Login(c)
 
 	if w.Code != http.StatusBadRequest {
 		t.Fatalf("expected 400, got %d: %s", w.Code, w.Body.String())
@@ -98,10 +109,11 @@ func TestLogin_MissingBody(t *testing.T) {
 // -- RefreshToken --
 
 func TestRefreshToken_Success(t *testing.T) {
+	auth := newTestAuth(t)
 	nonce := "test-nonce-1"
-	rt := testRefreshToken(t, "user_001", nonce)
-	activeSessions.Store("user_001", nonce)
-	t.Cleanup(func() { activeSessions.Delete("user_001") })
+	rt := testRefreshToken(t, auth, "user_001", nonce)
+	auth.sessions.Store("user_001", nonce)
+	t.Cleanup(func() { auth.sessions.Delete("user_001") })
 
 	w := httptest.NewRecorder()
 	c, _ := gin.CreateTestContext(w)
@@ -109,7 +121,7 @@ func TestRefreshToken_Success(t *testing.T) {
 		strings.NewReader(`{"refresh_token":"`+rt+`"}`))
 	c.Request.Header.Set("Content-Type", "application/json")
 
-	RefreshToken(c)
+	auth.RefreshToken(c)
 
 	if w.Code != http.StatusOK {
 		t.Fatalf("expected 200, got %d: %s", w.Code, w.Body.String())
@@ -132,10 +144,11 @@ func TestRefreshToken_Success(t *testing.T) {
 }
 
 func TestRefreshToken_Replay(t *testing.T) {
+	auth := newTestAuth(t)
 	nonce := "test-nonce-replay"
-	rt := testRefreshToken(t, "user_002", nonce)
-	activeSessions.Store("user_002", nonce)
-	t.Cleanup(func() { activeSessions.Delete("user_002") })
+	rt := testRefreshToken(t, auth, "user_002", nonce)
+	auth.sessions.Store("user_002", nonce)
+	t.Cleanup(func() { auth.sessions.Delete("user_002") })
 
 	// First use – should succeed
 	w1 := httptest.NewRecorder()
@@ -143,7 +156,7 @@ func TestRefreshToken_Replay(t *testing.T) {
 	c1.Request = httptest.NewRequest(http.MethodPost, "/api/auth/refresh",
 		strings.NewReader(`{"refresh_token":"`+rt+`"}`))
 	c1.Request.Header.Set("Content-Type", "application/json")
-	RefreshToken(c1)
+	auth.RefreshToken(c1)
 	if w1.Code != http.StatusOK {
 		t.Fatalf("first refresh expected 200, got %d", w1.Code)
 	}
@@ -154,7 +167,7 @@ func TestRefreshToken_Replay(t *testing.T) {
 	c2.Request = httptest.NewRequest(http.MethodPost, "/api/auth/refresh",
 		strings.NewReader(`{"refresh_token":"`+rt+`"}`))
 	c2.Request.Header.Set("Content-Type", "application/json")
-	RefreshToken(c2)
+	auth.RefreshToken(c2)
 
 	if w2.Code != http.StatusUnauthorized {
 		t.Fatalf("expected 401 for replay, got %d: %s", w2.Code, w2.Body.String())
@@ -167,13 +180,15 @@ func TestRefreshToken_Replay(t *testing.T) {
 }
 
 func TestRefreshToken_InvalidToken(t *testing.T) {
+	auth := newTestAuth(t)
+
 	w := httptest.NewRecorder()
 	c, _ := gin.CreateTestContext(w)
 	c.Request = httptest.NewRequest(http.MethodPost, "/api/auth/refresh",
 		strings.NewReader(`{"refresh_token":"not-a-valid-jwt"}`))
 	c.Request.Header.Set("Content-Type", "application/json")
 
-	RefreshToken(c)
+	auth.RefreshToken(c)
 
 	if w.Code != http.StatusUnauthorized {
 		t.Fatalf("expected 401, got %d: %s", w.Code, w.Body.String())
@@ -181,11 +196,12 @@ func TestRefreshToken_InvalidToken(t *testing.T) {
 }
 
 func TestRefreshToken_SessionReplaced(t *testing.T) {
+	auth := newTestAuth(t)
 	nonce := "test-nonce-old"
-	rt := testRefreshToken(t, "user_003", nonce)
+	rt := testRefreshToken(t, auth, "user_003", nonce)
 	// Simulate new login: store a DIFFERENT nonce
-	activeSessions.Store("user_003", "test-nonce-new")
-	t.Cleanup(func() { activeSessions.Delete("user_003") })
+	auth.sessions.Store("user_003", "test-nonce-new")
+	t.Cleanup(func() { auth.sessions.Delete("user_003") })
 
 	w := httptest.NewRecorder()
 	c, _ := gin.CreateTestContext(w)
@@ -193,7 +209,7 @@ func TestRefreshToken_SessionReplaced(t *testing.T) {
 		strings.NewReader(`{"refresh_token":"`+rt+`"}`))
 	c.Request.Header.Set("Content-Type", "application/json")
 
-	RefreshToken(c)
+	auth.RefreshToken(c)
 
 	if w.Code != http.StatusUnauthorized {
 		t.Fatalf("expected 401, got %d: %s", w.Code, w.Body.String())
@@ -206,13 +222,15 @@ func TestRefreshToken_SessionReplaced(t *testing.T) {
 }
 
 func TestRefreshToken_MissingBody(t *testing.T) {
+	auth := newTestAuth(t)
+
 	w := httptest.NewRecorder()
 	c, _ := gin.CreateTestContext(w)
 	c.Request = httptest.NewRequest(http.MethodPost, "/api/auth/refresh",
 		strings.NewReader(`{}`))
 	c.Request.Header.Set("Content-Type", "application/json")
 
-	RefreshToken(c)
+	auth.RefreshToken(c)
 
 	if w.Code != http.StatusBadRequest {
 		t.Fatalf("expected 400, got %d: %s", w.Code, w.Body.String())
@@ -222,14 +240,15 @@ func TestRefreshToken_MissingBody(t *testing.T) {
 // -- CheckToken --
 
 func TestCheckToken_Valid(t *testing.T) {
-	at := testAccessToken(t, "user_check", "")
+	auth := newTestAuth(t)
+	at := testAccessToken(t, auth, "user_check", "")
 
 	w := httptest.NewRecorder()
 	c, _ := gin.CreateTestContext(w)
 	c.Request = httptest.NewRequest(http.MethodGet, "/api/auth/check", nil)
 	c.Request.Header.Set("Authorization", "Bearer "+at)
 
-	CheckToken(c)
+	auth.CheckToken(c)
 
 	if w.Code != http.StatusOK {
 		t.Fatalf("expected 200, got %d: %s", w.Code, w.Body.String())
@@ -242,11 +261,13 @@ func TestCheckToken_Valid(t *testing.T) {
 }
 
 func TestCheckToken_MissingHeader(t *testing.T) {
+	auth := newTestAuth(t)
+
 	w := httptest.NewRecorder()
 	c, _ := gin.CreateTestContext(w)
 	c.Request = httptest.NewRequest(http.MethodGet, "/api/auth/check", nil)
 
-	CheckToken(c)
+	auth.CheckToken(c)
 
 	if w.Code != http.StatusUnauthorized {
 		t.Fatalf("expected 401, got %d: %s", w.Code, w.Body.String())
@@ -254,12 +275,14 @@ func TestCheckToken_MissingHeader(t *testing.T) {
 }
 
 func TestCheckToken_InvalidToken(t *testing.T) {
+	auth := newTestAuth(t)
+
 	w := httptest.NewRecorder()
 	c, _ := gin.CreateTestContext(w)
 	c.Request = httptest.NewRequest(http.MethodGet, "/api/auth/check", nil)
 	c.Request.Header.Set("Authorization", "Bearer bad-token")
 
-	CheckToken(c)
+	auth.CheckToken(c)
 
 	if w.Code != http.StatusUnauthorized {
 		t.Fatalf("expected 401, got %d: %s", w.Code, w.Body.String())
@@ -269,11 +292,13 @@ func TestCheckToken_InvalidToken(t *testing.T) {
 // -- GetUsedTokenCount --
 
 func TestGetUsedTokenCount(t *testing.T) {
+	auth := newTestAuth(t)
+
 	w := httptest.NewRecorder()
 	c, _ := gin.CreateTestContext(w)
 	c.Request = httptest.NewRequest(http.MethodGet, "/api/auth/used-tokens", nil)
 
-	GetUsedTokenCount(c)
+	auth.GetUsedTokenCount(c)
 
 	if w.Code != http.StatusOK {
 		t.Fatalf("expected 200, got %d: %s", w.Code, w.Body.String())
@@ -289,13 +314,14 @@ func TestGetUsedTokenCount(t *testing.T) {
 // -- AuthMiddleware --
 
 func TestAuthMiddleware_ValidToken(t *testing.T) {
+	auth := newTestAuth(t)
 	nonce := "test-mw-valid"
-	activeSessions.Store("user_mw", nonce)
-	t.Cleanup(func() { activeSessions.Delete("user_mw") })
+	auth.sessions.Store("user_mw", nonce)
+	t.Cleanup(func() { auth.sessions.Delete("user_mw") })
 
-	at := testAccessToken(t, "user_mw", nonce)
+	at := testAccessToken(t, auth, "user_mw", nonce)
 
-	mw := AuthMiddleware()
+	mw := auth.AuthMiddleware()
 	w := httptest.NewRecorder()
 	c, _ := gin.CreateTestContext(w)
 	c.Request = httptest.NewRequest(http.MethodGet, "/api/test", nil)
@@ -315,7 +341,9 @@ func TestAuthMiddleware_ValidToken(t *testing.T) {
 }
 
 func TestAuthMiddleware_MissingHeader(t *testing.T) {
-	mw := AuthMiddleware()
+	auth := newTestAuth(t)
+
+	mw := auth.AuthMiddleware()
 	w := httptest.NewRecorder()
 	c, _ := gin.CreateTestContext(w)
 	c.Request = httptest.NewRequest(http.MethodGet, "/api/test", nil)
@@ -325,14 +353,15 @@ func TestAuthMiddleware_MissingHeader(t *testing.T) {
 	if w.Code != http.StatusUnauthorized {
 		t.Fatalf("expected 401, got %d: %s", w.Code, w.Body.String())
 	}
-	// Verify context was aborted
 	if c.IsAborted() == false {
 		t.Fatal("expected context to be aborted")
 	}
 }
 
 func TestAuthMiddleware_InvalidToken(t *testing.T) {
-	mw := AuthMiddleware()
+	auth := newTestAuth(t)
+
+	mw := auth.AuthMiddleware()
 	w := httptest.NewRecorder()
 	c, _ := gin.CreateTestContext(w)
 	c.Request = httptest.NewRequest(http.MethodGet, "/api/test", nil)
@@ -349,13 +378,14 @@ func TestAuthMiddleware_InvalidToken(t *testing.T) {
 }
 
 func TestAuthMiddleware_SessionReplaced(t *testing.T) {
+	auth := newTestAuth(t)
 	nonce := "test-mw-old"
-	at := testAccessToken(t, "user_mw_replaced", nonce)
+	at := testAccessToken(t, auth, "user_mw_replaced", nonce)
 	// Store a DIFFERENT nonce (simulating new login)
-	activeSessions.Store("user_mw_replaced", "test-mw-new")
-	t.Cleanup(func() { activeSessions.Delete("user_mw_replaced") })
+	auth.sessions.Store("user_mw_replaced", "test-mw-new")
+	t.Cleanup(func() { auth.sessions.Delete("user_mw_replaced") })
 
-	mw := AuthMiddleware()
+	mw := auth.AuthMiddleware()
 	w := httptest.NewRecorder()
 	c, _ := gin.CreateTestContext(w)
 	c.Request = httptest.NewRequest(http.MethodGet, "/api/test", nil)
@@ -377,10 +407,11 @@ func TestAuthMiddleware_SessionReplaced(t *testing.T) {
 }
 
 func TestAuthMiddleware_NoSessionRecord(t *testing.T) {
-	// No activeSessions entry for this user — should pass through
-	at := testAccessToken(t, "user_unknown", "some-nonce")
+	auth := newTestAuth(t)
+	// No sessions entry for this user — should pass through
+	at := testAccessToken(t, auth, "user_unknown", "some-nonce")
 
-	mw := AuthMiddleware()
+	mw := auth.AuthMiddleware()
 	w := httptest.NewRecorder()
 	c, _ := gin.CreateTestContext(w)
 	c.Request = httptest.NewRequest(http.MethodGet, "/api/test", nil)

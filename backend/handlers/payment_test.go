@@ -6,6 +6,7 @@ import (
 	"net/http/httptest"
 	"strings"
 	"testing"
+	"time"
 
 	"github.com/gin-gonic/gin"
 )
@@ -216,13 +217,13 @@ func TestGetOrderAndListOrders(t *testing.T) {
 		ID:        "order-1",
 		OrderNo:   "ORD-1",
 		Status:    StatusPending,
-		CreatedAt: "2023-01-01T00:00:00Z",
+		CreatedAt: time.Date(2023, 1, 1, 0, 0, 0, 0, time.UTC),
 	}
 	paymentOrders["order-2"] = &PaymentOrder{
 		ID:        "order-2",
 		OrderNo:   "ORD-2",
 		Status:    StatusSuccess,
-		CreatedAt: "2023-01-02T00:00:00Z", // Newer
+		CreatedAt: time.Date(2023, 1, 2, 0, 0, 0, 0, time.UTC), // Newer
 	}
 	mu.Unlock()
 
@@ -481,8 +482,9 @@ func TestProcessPayment(t *testing.T) {
 				if !ok {
 					t.Fatalf("expected order object")
 				}
-				if order["status"] != string(StatusProcessing) {
-					t.Errorf("expected status PROCESSING, got %v", order["status"])
+				status := order["status"].(string)
+				if status != string(StatusSuccess) && status != string(StatusFail) {
+					t.Errorf("expected SUCCESS or FAIL, got %v", status)
 				}
 			},
 		},

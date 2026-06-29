@@ -1,10 +1,10 @@
 package handlers
 
 import (
-	"context"
 	"fmt"
 	"math/rand"
 	"net/http"
+	"sort"
 	"sync"
 	"time"
 
@@ -31,8 +31,8 @@ type PaymentOrder struct {
 	Status         PaymentStatus `json:"status"`
 	IdempotencyKey string        `json:"idempotencyKey"`
 	Version        int           `json:"version"`
-	CreatedAt      string        `json:"createdAt"`
-	UpdatedAt      string        `json:"updatedAt"`
+	CreatedAt      time.Time     `json:"createdAt"`
+	UpdatedAt      time.Time     `json:"updatedAt"`
 }
 
 type PaymentRequest struct {
@@ -100,6 +100,7 @@ func CreatePayment(c *gin.Context) {
 		req.OrderNo = generateOrderNo()
 	}
 
+	now := time.Now()
 	order := &PaymentOrder{
 		ID:             fmt.Sprintf("PAY%d", time.Now().UnixNano()),
 		OrderNo:        req.OrderNo,
@@ -108,8 +109,8 @@ func CreatePayment(c *gin.Context) {
 		Status:         StatusPending,
 		IdempotencyKey: req.IdempotencyKey,
 		Version:        1,
-		CreatedAt:      time.Now().Format(time.RFC3339),
-		UpdatedAt:      time.Now().Format(time.RFC3339),
+		CreatedAt:      now,
+		UpdatedAt:      now,
 	}
 
 	paymentOrders[order.ID] = order
@@ -143,33 +144,20 @@ func ProcessPayment(c *gin.Context) {
 
 	order.Status = StatusProcessing
 	order.Version++
-	order.UpdatedAt = time.Now().Format(time.RFC3339)
+	order.UpdatedAt = time.Now()
+
+	// Simulate processing delay
+	time.Sleep(time.Duration(500+rand.Intn(500)) * time.Millisecond)
+
+	if rand.Float32() > 0.3 {
+		order.Status = StatusSuccess
+	} else {
+		order.Status = StatusFail
+	}
+	order.Version++
+	order.UpdatedAt = time.Now()
 	respOrder := copyOrder(order)
 	mu.Unlock()
-
-	// Simulate async processing with request context for cancellation
-	go func(ctx context.Context, o *PaymentOrder) {
-		select {
-		case <-time.After(time.Duration(500+rand.Intn(1500)) * time.Millisecond):
-		case <-ctx.Done():
-			return
-		}
-
-		mu.Lock()
-		defer mu.Unlock()
-
-		if o.Status != StatusProcessing {
-			return
-		}
-
-		if rand.Float32() > 0.3 {
-			o.Status = StatusSuccess
-		} else {
-			o.Status = StatusFail
-		}
-		o.Version++
-		o.UpdatedAt = time.Now().Format(time.RFC3339)
-	}(c.Request.Context(), order)
 
 	c.JSON(http.StatusOK, gin.H{
 		"order": &respOrder,
@@ -200,14 +188,9 @@ func ListOrders(c *gin.Context) {
 	}
 	mu.RUnlock()
 
-	// Sort newest first
-	for i := 0; i < len(orders); i++ {
-		for j := i + 1; j < len(orders); j++ {
-			if orders[i].CreatedAt < orders[j].CreatedAt {
-				orders[i], orders[j] = orders[j], orders[i]
-			}
-		}
-	}
+	sort.Slice(orders, func(i, j int) bool {
+		return orders[i].CreatedAt.After(orders[j].CreatedAt)
+	})
 
 	c.JSON(http.StatusOK, gin.H{"orders": orders})
 }
@@ -265,7 +248,7 @@ func TransitionPayment(c *gin.Context) {
 
 	order.Status = body.Status
 	order.Version++
-	order.UpdatedAt = time.Now().Format(time.RFC3339)
+	order.UpdatedAt = time.Now()
 	respOrder := copyOrder(order)
 	mu.Unlock()
 
@@ -297,6 +280,7 @@ func IdempotencyTest(c *gin.Context) {
 		return
 	}
 
+	now := time.Now()
 	order := &PaymentOrder{
 		ID:             fmt.Sprintf("PAY%d", time.Now().UnixNano()),
 		OrderNo:        req.OrderNo,
@@ -305,8 +289,8 @@ func IdempotencyTest(c *gin.Context) {
 		Status:         StatusSuccess,
 		IdempotencyKey: req.Key,
 		Version:        1,
-		CreatedAt:      time.Now().Format(time.RFC3339),
-		UpdatedAt:      time.Now().Format(time.RFC3339),
+		CreatedAt:      now,
+		UpdatedAt:      now,
 	}
 
 	idempotentCache[req.Key] = order

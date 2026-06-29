@@ -2,8 +2,8 @@ package services
 
 import (
 	"encoding/json"
+	"errors"
 	"math"
-	"os"
 	"sort"
 	"sync"
 	"time"
@@ -11,6 +11,8 @@ import (
 	"github.com/google/uuid"
 	"interview-demo/backend/models"
 )
+
+var ErrCollectionNotFound = errors.New("collection not found")
 
 type EmbeddingModel string
 
@@ -164,7 +166,7 @@ func (db *VectorDatabase) InsertVector(collectionID string, vector []float64, me
 
 	collection, exists := db.collections[collectionID]
 	if !exists {
-		return os.ErrNotExist
+		return ErrCollectionNotFound
 	}
 
 	entry := VectorEntry{
@@ -184,7 +186,7 @@ func (db *VectorDatabase) SearchVector(collectionID string, queryVector []float6
 
 	collection, exists := db.collections[collectionID]
 	if !exists {
-		return nil, os.ErrNotExist
+		return nil, ErrCollectionNotFound
 	}
 
 	if topK <= 0 {
@@ -261,7 +263,7 @@ func (db *VectorDatabase) ExportCollection(id string) ([]byte, error) {
 
 	collection, exists := db.collections[id]
 	if !exists {
-		return nil, os.ErrNotExist
+		return nil, ErrCollectionNotFound
 	}
 
 	return json.Marshal(collection)

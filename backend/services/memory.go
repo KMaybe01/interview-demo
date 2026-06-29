@@ -41,11 +41,11 @@ func (s *MemoryService) Add(conversationID string, msg models.Message) models.Me
 }
 
 func (s *MemoryService) Search(conversationID string, query string, topK int) []models.Memory {
-	s.mu.RLock()
+	s.mu.Lock()
+	defer s.mu.Unlock()
 
 	memories, exists := s.memories[conversationID]
 	if !exists {
-		s.mu.RUnlock()
 		return []models.Memory{}
 	}
 
@@ -71,27 +71,10 @@ func (s *MemoryService) Search(conversationID string, query string, topK int) []
 	}
 
 	result := make([]models.Memory, topK)
-	ids := make([]string, topK)
 	for i := 0; i < topK; i++ {
 		result[i] = scored[i].memory
-		ids[i] = result[i].ID
-	}
-
-	s.mu.RUnlock()
-
-	if len(ids) > 0 {
-		s.mu.Lock()
-		for _, id := range ids {
-			memories := s.memories[conversationID]
-			for i, m := range memories {
-				if m.ID == id {
-					memories[i].AccessedAt = time.Now()
-					memories[i].AccessCount++
-					break
-				}
-			}
-		}
-		s.mu.Unlock()
+		result[i].AccessedAt = time.Now()
+		result[i].AccessCount++
 	}
 
 	return result

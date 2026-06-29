@@ -3,6 +3,7 @@ package handlers
 import (
 	"context"
 	"net/http"
+	"sync"
 	"time"
 
 	"github.com/gin-gonic/gin"
@@ -12,20 +13,24 @@ import (
 type AgentHandler struct {
 	factory *services.AgentFactory
 	manager *services.ModelManager
-	Agents  map[string]*services.EnhancedAgent
+	agents  map[string]*services.EnhancedAgent
+	mu      sync.RWMutex
 }
 
 func NewAgentHandler(factory *services.AgentFactory, manager *services.ModelManager) *AgentHandler {
 	return &AgentHandler{
 		factory: factory,
 		manager: manager,
-		Agents:  make(map[string]*services.EnhancedAgent),
+		agents:  make(map[string]*services.EnhancedAgent),
 	}
 }
 
 func (h *AgentHandler) ListAgents(c *gin.Context) {
+	h.mu.RLock()
+	defer h.mu.RUnlock()
+
 	var result []gin.H
-	for id, agent := range h.Agents {
+	for id, agent := range h.agents {
 		result = append(result, gin.H{
 			"id":          id,
 			"name":        agent.Name,
@@ -71,7 +76,9 @@ func (h *AgentHandler) CreateAgent(c *gin.Context) {
 		agent = h.factory.CreateAgent(services.AgentTypeReAct, req.Name)
 	}
 
-	h.Agents[agent.ID] = agent
+	h.mu.Lock()
+	h.agents[agent.ID] = agent
+	h.mu.Unlock()
 
 	c.JSON(http.StatusCreated, gin.H{
 		"id":        agent.ID,
@@ -85,7 +92,9 @@ func (h *AgentHandler) CreateAgent(c *gin.Context) {
 func (h *AgentHandler) ExecuteAgent(c *gin.Context) {
 	agentID := c.Param("id")
 
-	agent, exists := h.Agents[agentID]
+	h.mu.RLock()
+	agent, exists := h.agents[agentID]
+	h.mu.RUnlock()
 	if !exists {
 		c.JSON(http.StatusNotFound, gin.H{"error": "智能体不存在"})
 		return
@@ -120,7 +129,9 @@ func (h *AgentHandler) ExecuteAgent(c *gin.Context) {
 func (h *AgentHandler) GetAgentLog(c *gin.Context) {
 	agentID := c.Param("id")
 
-	agent, exists := h.Agents[agentID]
+	h.mu.RLock()
+	agent, exists := h.agents[agentID]
+	h.mu.RUnlock()
 	if !exists {
 		c.JSON(http.StatusNotFound, gin.H{"error": "智能体不存在"})
 		return
@@ -135,15 +146,25 @@ func (h *AgentHandler) GetAgentLog(c *gin.Context) {
 	})
 }
 
+func (h *AgentHandler) GetAgent(id string) (*services.EnhancedAgent, bool) {
+	h.mu.RLock()
+	defer h.mu.RUnlock()
+	agent, ok := h.agents[id]
+	return agent, ok
+}
+
 func (h *AgentHandler) DeleteAgent(c *gin.Context) {
 	agentID := c.Param("id")
 
-	if _, exists := h.Agents[agentID]; !exists {
+	h.mu.Lock()
+	defer h.mu.Unlock()
+
+	if _, exists := h.agents[agentID]; !exists {
 		c.JSON(http.StatusNotFound, gin.H{"error": "智能体不存在"})
 		return
 	}
 
-	delete(h.Agents, agentID)
+	delete(h.agents, agentID)
 
 	c.JSON(http.StatusOK, gin.H{"message": "智能体已删除"})
 }

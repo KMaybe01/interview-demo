@@ -17,7 +17,7 @@ type ChatHandler struct {
 	memoryService *services.MemoryService
 	ragService    *services.RAGService
 	agentFactory  *services.AgentFactory
-	agents        map[string]*services.EnhancedAgent
+	agentHandler  *AgentHandler
 }
 
 func NewChatHandler(
@@ -25,14 +25,14 @@ func NewChatHandler(
 	memoryService *services.MemoryService,
 	ragService *services.RAGService,
 	agentFactory *services.AgentFactory,
-	agents map[string]*services.EnhancedAgent,
+	agentHandler *AgentHandler,
 ) *ChatHandler {
 	return &ChatHandler{
 		llmService:    llmService,
 		memoryService: memoryService,
 		ragService:    ragService,
 		agentFactory:  agentFactory,
-		agents:        agents,
+		agentHandler:  agentHandler,
 	}
 }
 
@@ -89,8 +89,10 @@ func (h *ChatHandler) Chat(c *gin.Context) {
 	var err error
 
 	if req.UseAgent {
-		if req.AgentID != "" && h.agents[req.AgentID] != nil {
-			response, err = h.agents[req.AgentID].Execute(context.Background(), req.Content)
+		agent, agentExists := h.agentHandler.GetAgent(req.AgentID)
+
+		if req.AgentID != "" && agentExists {
+			response, err = agent.Execute(context.Background(), req.Content)
 		} else {
 			agentType := services.AgentType(req.AgentType)
 			if agentType == "" {

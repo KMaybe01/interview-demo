@@ -27,6 +27,7 @@ func main() {
 		log.Println("Warning: OPENAI_API_KEY not set")
 	}
 
+	authService := handlers.NewAuthService()
 	llmService := services.NewLLMService(apiKey)
 	memoryService := services.NewMemoryService()
 	ragService := services.NewRAGService()
@@ -36,7 +37,7 @@ func main() {
 	modelManager := services.DefaultModelManager()
 	agentFactory := services.NewAgentFactory(llmService, ragService)
 	agentHandler := handlers.NewAgentHandler(agentFactory, modelManager)
-	chatHandler := handlers.NewChatHandler(llmService, memoryService, ragService, agentFactory, agentHandler.Agents)
+	chatHandler := handlers.NewChatHandler(llmService, memoryService, ragService, agentFactory, agentHandler)
 	knowledgeHandler := handlers.NewKnowledgeHandler(ragService, chunkerManager, embeddingService, vectorDB)
 	modelHandler := handlers.NewModelHandler(modelManager)
 
@@ -48,17 +49,17 @@ func main() {
 
 	api := r.Group("/api")
 	{
-		api.POST("/auth/login", handlers.Login)
-		api.POST("/auth/refresh", handlers.RefreshToken)
-		api.GET("/auth/check", handlers.CheckToken)
-		api.GET("/auth/used-tokens", handlers.GetUsedTokenCount)
+		api.POST("/auth/login", authService.Login)
+		api.POST("/auth/refresh", authService.RefreshToken)
+		api.GET("/auth/check", authService.CheckToken)
+		api.GET("/auth/used-tokens", authService.GetUsedTokenCount)
 		api.GET("/sse/logs", handlers.SSELogStream)
 		api.GET("/sse/encrypted-logs", handlers.EncryptedLogStream)
 		api.GET("/upload/download/:uploadId", handlers.DownloadUpload)
 
 		api.GET("/health", handlers.HealthCheck)
 
-		api.POST("/chat", handlers.Chat(llmService))
+		api.POST("/chat", chatHandler.Chat)
 		api.POST("/chat/stream", chatHandler.ChatStream)
 		api.GET("/chat/history/:conversationId", chatHandler.GetHistory)
 		api.DELETE("/chat/history/:conversationId", chatHandler.ClearHistory)
@@ -106,7 +107,7 @@ func main() {
 		api.DELETE("/agents/:id", agentHandler.DeleteAgent)
 
 		protected := api.Group("")
-		protected.Use(handlers.AuthMiddleware())
+		protected.Use(authService.AuthMiddleware())
 		{
 			protected.GET("/gis/points", handlers.GetGISPoints)
 			protected.GET("/schema/config", handlers.GetSchemaConfig)
@@ -175,7 +176,8 @@ func main() {
 	go func() {
 		log.Printf("Backend running on :%s", port)
 		if err := srv.ListenAndServe(); err != nil && err != http.ErrServerClosed {
-			log.Fatalf("listen: %s\n", err)
+			log.Printf("listen error: %s\n", err)
+			os.Exit(1)
 		}
 	}()
 
