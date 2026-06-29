@@ -20,7 +20,16 @@ var (
 	uploadDir      = "uploads"
 	sessionsFile   = "uploads/sessions.json"
 	cleanupOnce    sync.Once
+	uploadInitOnce sync.Once
 )
+
+func ensureUploadInit() {
+	uploadInitOnce.Do(func() {
+		os.MkdirAll(uploadDir, 0755)
+		loadSessions()
+		startCleanup()
+	})
+}
 
 type UploadSession struct {
 	mu          sync.Mutex
@@ -111,12 +120,6 @@ func startCleanup() {
 	})
 }
 
-func init() {
-	os.MkdirAll(uploadDir, 0755)
-	loadSessions()
-	startCleanup()
-}
-
 type InitUploadRequest struct {
 	Filename    string `json:"filename" binding:"required"`
 	FileSize    int64  `json:"fileSize" binding:"required"`
@@ -130,6 +133,7 @@ type CompleteUploadRequest struct {
 }
 
 func InitUpload(c *gin.Context) {
+	ensureUploadInit()
 	var req InitUploadRequest
 	if err := c.ShouldBindJSON(&req); err != nil {
 		c.JSON(400, gin.H{"error": err.Error()})
@@ -161,6 +165,7 @@ func InitUpload(c *gin.Context) {
 }
 
 func GetUploadStatus(c *gin.Context) {
+	ensureUploadInit()
 	uploadID := c.Param("uploadId")
 	val, ok := uploadSessions.Load(uploadID)
 	if !ok {
@@ -199,6 +204,7 @@ func sanitizeFilename(name string) string {
 }
 
 func DownloadUpload(c *gin.Context) {
+	ensureUploadInit()
 	uploadID := c.Param("uploadId")
 	val, ok := uploadSessions.Load(uploadID)
 	if !ok {
@@ -224,6 +230,7 @@ func DownloadUpload(c *gin.Context) {
 }
 
 func ListUploadSessions(c *gin.Context) {
+	ensureUploadInit()
 	var sessions []map[string]interface{}
 	uploadSessions.Range(func(key, val interface{}) bool {
 		session := val.(*UploadSession)
@@ -246,6 +253,7 @@ func ListUploadSessions(c *gin.Context) {
 }
 
 func UploadChunk(c *gin.Context) {
+	ensureUploadInit()
 	uploadID := c.PostForm("uploadId")
 	chunkIndexStr := c.PostForm("chunkIndex")
 	hash := c.PostForm("hash")
@@ -314,6 +322,7 @@ func UploadChunk(c *gin.Context) {
 }
 
 func CompleteUpload(c *gin.Context) {
+	ensureUploadInit()
 	var req CompleteUploadRequest
 	if err := c.ShouldBindJSON(&req); err != nil {
 		c.JSON(400, gin.H{"error": err.Error()})

@@ -24,15 +24,16 @@ var (
 	rsaOnce       sync.Once
 )
 
-func initRSA() {
+func initRSA() error {
+	var err error
 	rsaOnce.Do(func() {
-		var err error
 		rsaPrivateKey, err = rsa.GenerateKey(rand.Reader, 2048)
 		if err != nil {
-			log.Fatalf("Failed to generate RSA key: %v", err)
+			return
 		}
 		rsaPublicKey = &rsaPrivateKey.PublicKey
 	})
+	return err
 }
 
 type initEvent struct {
@@ -49,7 +50,10 @@ type chunkEvent struct {
 }
 
 func EncryptedLogStream(c *gin.Context) {
-	initRSA()
+	if err := initRSA(); err != nil {
+		log.Printf("RSA init failed: %v", err)
+		return
+	}
 
 	c.Writer.Header().Set("Content-Type", "text/event-stream")
 	c.Writer.Header().Set("Cache-Control", "no-cache")

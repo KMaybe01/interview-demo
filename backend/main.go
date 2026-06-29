@@ -69,8 +69,13 @@ func main() {
 	r.GET("/ws/alerts", handlers.AlertDispatcher)
 	r.GET("/api/alerts", handlers.AlertDispatcher)
 
+	port := os.Getenv("PORT")
+	if port == "" {
+		port = "8080"
+	}
+
 	srv := &http.Server{
-		Addr:    ":8080",
+		Addr:    ":" + port,
 		Handler: r,
 	}
 
