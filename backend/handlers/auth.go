@@ -35,10 +35,46 @@ func getEnvDefault(key, defaultVal string) string {
 	return defaultVal
 }
 
-var usedRefreshTokens = struct {
-	m map[string]bool
+var usedRefreshTokens struct {
 	sync.RWMutex
-}{m: make(map[string]bool)}
+	m     map[string]time.Time
+	limit int
+}
+
+func init() {
+	usedRefreshTokens.m = make(map[string]time.Time)
+	usedRefreshTokens.limit = 10000
+	go usedRefreshTokensCleanup()
+}
+
+func usedRefreshTokensCleanup() {
+	for {
+		time.Sleep(30 * time.Minute)
+		usedRefreshTokens.Lock()
+		for k, v := range usedRefreshTokens.m {
+			if time.Since(v) > 1*time.Hour {
+				delete(usedRefreshTokens.m, k)
+			}
+		}
+		usedRefreshTokens.Unlock()
+	}
+}
+
+func markTokenUsed(token string) {
+	usedRefreshTokens.Lock()
+	usedRefreshTokens.m[token] = time.Now()
+	if len(usedRefreshTokens.m) > usedRefreshTokens.limit {
+		for k, v := range usedRefreshTokens.m {
+			if time.Since(v) > 10*time.Minute {
+				delete(usedRefreshTokens.m, k)
+			}
+			if len(usedRefreshTokens.m) <= usedRefreshTokens.limit/2 {
+				break
+			}
+		}
+	}
+	usedRefreshTokens.Unlock()
+}
 
 var activeSessions sync.Map
 
@@ -183,9 +219,7 @@ func RefreshToken(c *gin.Context) {
 		return
 	}
 
-	usedRefreshTokens.Lock()
-	usedRefreshTokens.m[req.RefreshToken] = true
-	usedRefreshTokens.Unlock()
+	markTokenUsed(req.RefreshToken)
 
 	c.JSON(http.StatusOK, gin.H{
 		"access_token":  newAccessToken,

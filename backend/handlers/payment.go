@@ -1,6 +1,7 @@
 package handlers
 
 import (
+	"context"
 	"fmt"
 	"math/rand"
 	"net/http"
@@ -55,7 +56,7 @@ type SecurityCheckRequest struct {
 var (
 	paymentOrders   = make(map[string]*PaymentOrder)
 	idempotentCache = make(map[string]*PaymentOrder)
-	mu              sync.Mutex
+	mu              sync.RWMutex
 	orderCounter    int
 )
 
@@ -146,9 +147,13 @@ func ProcessPayment(c *gin.Context) {
 	respOrder := copyOrder(order)
 	mu.Unlock()
 
-	// Simulate async processing
-	go func(o *PaymentOrder) {
-		time.Sleep(time.Duration(500+rand.Intn(1500)) * time.Millisecond)
+	// Simulate async processing with request context for cancellation
+	go func(ctx context.Context, o *PaymentOrder) {
+		select {
+		case <-time.After(time.Duration(500+rand.Intn(1500)) * time.Millisecond):
+		case <-ctx.Done():
+			return
+		}
 
 		mu.Lock()
 		defer mu.Unlock()
@@ -164,7 +169,7 @@ func ProcessPayment(c *gin.Context) {
 		}
 		o.Version++
 		o.UpdatedAt = time.Now().Format(time.RFC3339)
-	}(order)
+	}(c.Request.Context(), order)
 
 	c.JSON(http.StatusOK, gin.H{
 		"order": &respOrder,
@@ -174,26 +179,26 @@ func ProcessPayment(c *gin.Context) {
 func GetOrder(c *gin.Context) {
 	orderID := c.Param("id")
 
-	mu.Lock()
+	mu.RLock()
 	order, ok := paymentOrders[orderID]
 	if !ok {
-		mu.Unlock()
+		mu.RUnlock()
 		c.JSON(http.StatusNotFound, gin.H{"error": "订单不存在"})
 		return
 	}
 	respOrder := copyOrder(order)
-	mu.Unlock()
+	mu.RUnlock()
 
 	c.JSON(http.StatusOK, gin.H{"order": &respOrder})
 }
 
 func ListOrders(c *gin.Context) {
-	mu.Lock()
+	mu.RLock()
 	orders := make([]PaymentOrder, 0, len(paymentOrders))
 	for _, o := range paymentOrders {
 		orders = append(orders, copyOrder(o))
 	}
-	mu.Unlock()
+	mu.RUnlock()
 
 	// Sort newest first
 	for i := 0; i < len(orders); i++ {
