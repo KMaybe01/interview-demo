@@ -2,7 +2,6 @@ package handlers
 
 import (
 	"fmt"
-	"io"
 	"log"
 	"math/rand"
 	"strings"
@@ -73,5 +72,3 @@ func SSELogStream(c *gin.Context) {
 		}
 	}
 }
-
-var _ io.Writer = nil

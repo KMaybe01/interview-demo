@@ -93,20 +93,24 @@ func EncryptedLogStream(c *gin.Context) {
 		if err != nil {
 			return
 		}
-		initExchange, _ := json.Marshal(initEvent{
+		initExchange, err := json.Marshal(initEvent{
 			Type:         "key-exchange",
 			EncryptedKey: base64.StdEncoding.EncodeToString(encryptedAESKey),
 		})
+		if err != nil {
+			return
+		}
 		fmt.Fprintf(c.Writer, "data: %s\n\n", initExchange)
 		flusher.Flush()
 	} else {
-		// Fallback: send server's RSA public key + AES key encrypted with server's public key
-		// (legacy mode, kept for backward compatibility)
 		pubKeyDER, err := x509.MarshalPKIXPublicKey(rsaPublicKey)
 		if err != nil {
 			return
 		}
-		initPub, _ := json.Marshal(initEvent{Type: "rsa-public-key", Key: base64.StdEncoding.EncodeToString(pubKeyDER)})
+		initPub, err := json.Marshal(initEvent{Type: "rsa-public-key", Key: base64.StdEncoding.EncodeToString(pubKeyDER)})
+		if err != nil {
+			return
+		}
 		fmt.Fprintf(c.Writer, "data: %s\n\n", initPub)
 		flusher.Flush()
 
@@ -114,10 +118,13 @@ func EncryptedLogStream(c *gin.Context) {
 		if err != nil {
 			return
 		}
-		initExchange, _ := json.Marshal(initEvent{
+		initExchange, err := json.Marshal(initEvent{
 			Type:         "key-exchange",
 			EncryptedKey: base64.StdEncoding.EncodeToString(encryptedAESKey),
 		})
+		if err != nil {
+			return
+		}
 		fmt.Fprintf(c.Writer, "data: %s\n\n", initExchange)
 		flusher.Flush()
 	}
@@ -188,12 +195,15 @@ func EncryptedLogStream(c *gin.Context) {
 
 		chunkData := append(nonce, ciphertext...)
 		progress := float64(chunkIdx+1) / float64(totalChunks) * 100
-		evt, _ := json.Marshal(chunkEvent{
+		evt, err := json.Marshal(chunkEvent{
 			Seq:      chunkIdx,
 			Data:     base64.StdEncoding.EncodeToString(chunkData),
 			Progress: progress,
 			Total:    totalChunks,
 		})
+		if err != nil {
+			continue
+		}
 		fmt.Fprintf(c.Writer, "data: %s\n\n", evt)
 		flusher.Flush()
 

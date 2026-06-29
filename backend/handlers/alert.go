@@ -228,7 +228,10 @@ func computeBatchConfig(rate, workers int) (batchInterval time.Duration, batchSi
 func generateAlertJSON() []byte {
 	topic := topics[rand.Intn(len(topics))]
 	alert := randomMessage(topic)
-	data, _ := json.Marshal(alert)
+	data, err := json.Marshal(alert)
+	if err != nil {
+		return nil
+	}
 	return data
 }
 
@@ -277,11 +280,14 @@ func serveAlertWS(c *gin.Context) {
 				return
 			}
 			var msg map[string]string
-			if json.Unmarshal(msgBytes, &msg) != nil {
+			if err := json.Unmarshal(msgBytes, &msg); err != nil {
 				continue
 			}
 			if msg["type"] == "ping" {
-				pong, _ := json.Marshal(map[string]string{"type": "pong"})
+				pong, err := json.Marshal(map[string]string{"type": "pong"})
+				if err != nil {
+					continue
+				}
 				writeLock(pong)
 			}
 		}
@@ -315,6 +321,9 @@ func serveAlertWS(c *gin.Context) {
 				case <-ticker.C:
 					for i := 0; i < batchSize; i++ {
 						data := generateAlertJSON()
+						if data == nil {
+							continue
+						}
 						select {
 						case msgChan <- data:
 						default:

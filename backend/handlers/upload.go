@@ -6,6 +6,7 @@ import (
 	"encoding/json"
 	"fmt"
 	"io"
+	"log"
 	"os"
 	"path/filepath"
 	"sync"
@@ -70,7 +71,9 @@ func saveSessions() {
 	if err != nil {
 		return
 	}
-	os.WriteFile(sessionsFile, raw, 0644)
+	if err := os.WriteFile(sessionsFile, raw, 0644); err != nil {
+		log.Printf("save sessions: %v", err)
+	}
 }
 
 func loadSessions() {

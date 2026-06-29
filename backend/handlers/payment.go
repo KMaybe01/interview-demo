@@ -379,7 +379,9 @@ func SecurityCheck(c *gin.Context) {
 
 func RetryDemo(c *gin.Context) {
 	var req RetryDemoRequest
-	if err := c.ShouldBindJSON(&req); err != nil || req.MaxRetries < 1 {
+	if err := c.ShouldBindJSON(&req); err != nil {
+		req.MaxRetries = 3
+	} else if req.MaxRetries < 1 {
 		req.MaxRetries = 3
 	}
 
