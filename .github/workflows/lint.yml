@@ -61,25 +61,6 @@ jobs:
       - run: bun run lint
         working-directory: frontend
 
-  lint-frontend-eslint:
-    runs-on: ubuntu-latest
-    steps:
-      - uses: actions/checkout@v4
-      - uses: oven-sh/setup-bun@v2
-        with:
-          bun-version: ${{ env.BUN_VERSION }}
-      - name: Cache bun dependencies
-        uses: actions/cache@v4
-        with:
-          path: ~/.bun/install/cache
-          key: ${{ runner.os }}-bun-${{ hashFiles('frontend/bun.lock') }}
-          restore-keys: |
-            ${{ runner.os }}-bun-
-      - run: bun install --frozen-lockfile
-        working-directory: frontend
-      - run: bun run lint:eslint
-        working-directory: frontend
-
   tsc-frontend:
     runs-on: ubuntu-latest
     steps:

@@ -8,17 +8,17 @@ Go 1.26 + Gin 1.12 后端服务，为前端 13 个技术演示场景提供 API �
 |------|------|
 | Go 1.26 | 语言 / 运行时 |
 | Gin 1.12 | HTTP Web 框架（路由、中间件、JSON 绑定） |
-| golang-jwt v5 | JWT 双 Token 登录、刷新轮换、重放检测 |
-| Gorilla WebSocket v1.5 | WebSocket 告警推送、二进制协议 |
+| golang-jwt v5 | JWT 双 Token 登录、刷新轮换、重放检测、签名算法校验 |
+| Gorilla WebSocket v1.5 | WebSocket 告警推送、可配置来源校验 |
 
 ## 项目结构
 
 ```
 backend/
-├── main.go                  # 入口 :8080，优雅关闭
+├── main.go                  # 入口 :${PORT}，优雅关闭
 ├── go.mod / go.sum
 ├── middleware/
-│   └── cors.go              # CORS 中间件（允许所有来源）
+│   └── cors.go              # CORS 中间件（CORS_ORIGIN 环境变量配置）
 ├── handlers/
 │   ├── auth.go              # JWT 双 Token：登录/刷新/校验/重放检测
 │   ├── alert.go             # WebSocket + SSE + HTTP Polling 多协议告警
@@ -30,6 +30,7 @@ backend/
 │   ├── vitals.go            # Web Vitals + 页面渲染数据采集与聚合
 │   ├── rbac.go              # RBAC 位运算权限校验
 │   ├── lru_cache.go         # LRU 缓存演示数据
+│   ├── payment.go           # 支付状态机 + 幂等性 + 安全校验 + 重试演示
 │   └── request_loading.go   # 模拟请求延迟/失败
 ├── bin/
 │   └── server.exe           # 预编译 Windows 可执行文件
@@ -44,7 +45,7 @@ cd backend
 go run .
 ```
 
-服务默认监听 `:8080`，日志输出 `Backend running on :8080`。前端开发服务器通过 Vite 代理 `/api` 请求到后端。
+服务默认监听 `$PORT`（默认 8080），日志输出 `Backend running on :PORT`。前端开发服务器通过 Vite 代理 `/api` 请求到后端。
 
 ## 生产构建
 
@@ -64,7 +65,7 @@ go test ./handlers/ -v
 
 | 方法 | 路径 | 说明 |
 |------|------|------|
-| POST | `/api/auth/login` | 用户名密码登录（硬编码 `admin/admin123`），返回 Access + Refresh Token |
+| POST | `/api/auth/login` | 用户名密码登录（环境变量 `AUTH_USERNAME` / `AUTH_PASSWORD`），返回 Access + Refresh Token |
 | POST | `/api/auth/refresh` | 轮换 Refresh Token，返回新双 Token |
 | GET | `/api/auth/check` | 校验 Access Token 有效性 |
 | GET | `/api/auth/used-tokens` | 已轮换 Refresh Token 计数（重放检测） |
@@ -123,6 +124,8 @@ docker compose up --build
 | 环境变量 | 默认值 | 说明 |
 |----------|--------|------|
 | `GIN_MODE` | `debug` | Gin 运行模式（生产设为 `release`） |
-| 端口 | `:8080` | 硬编码，监听所有网络接口 |
-
-JWT 签名密钥、用户凭据、RBAC 预设角色均硬编码（演示用途），生产环境需替换为环境变量或配置文件。
+| `PORT` | `8080` | 服务监听端口 |
+| `JWT_SECRET` | `demo-jwt-secret-key` | JWT 签名密钥 |
+| `AUTH_USERNAME` | `admin` | 登录用户名 |
+| `AUTH_PASSWORD` | `admin123` | 登录密码 |
+| `CORS_ORIGIN` | `*` | CORS / WebSocket 允许的来源（生产环境应设为具体域名） |
