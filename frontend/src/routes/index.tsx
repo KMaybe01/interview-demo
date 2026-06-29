@@ -11,6 +11,7 @@ import {
   LineChartOutlined,
   NodeIndexOutlined,
   PartitionOutlined,
+  RobotOutlined,
   SafetyOutlined,
   ThunderboltOutlined,
   UploadOutlined,
@@ -109,6 +110,12 @@ export const routes: RouteConfig[] = [
     name: "UniPay 统一支付中台",
     icon: CreditCardOutlined,
     element: lazy(() => import("../pages/UniPay.tsx")),
+  },
+  {
+    path: "/ai-demo",
+    name: "AI Demo",
+    icon: RobotOutlined,
+    element: lazy(() => import("../pages/AIDemo/AIDemo.tsx")),
   },
   {
     path: "/web-vitals",
