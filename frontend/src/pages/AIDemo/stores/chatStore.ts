@@ -94,7 +94,8 @@ function createNewConversation(title = '新对话'): Conversation {
 export const useChatStore = create<ChatHistoryState>((set) => {
   const savedConversations = loadConversations();
 
-  const initialConversations = savedConversations.length > 0 ? savedConversations : [createNewConversation()];
+  const initialConversations =
+    savedConversations.length > 0 ? savedConversations : [createNewConversation()];
 
   const currentId = initialConversations[0].id;
 
@@ -162,14 +163,20 @@ export const useChatStore = create<ChatHistoryState>((set) => {
 
     renameConversation: (id: string, title: string) => {
       set((state) => {
-        const updated = state.conversations.map((c) => (c.id === id ? { ...c, title, updatedAt: new Date() } : c));
+        const updated = state.conversations.map((c) =>
+          c.id === id ? { ...c, title, updatedAt: new Date() } : c,
+        );
         saveConversations(updated);
         return { conversations: updated };
       });
     },
 
     addMessage: (message: Message) => {
-      const newMessage: Message = { ...message, id: message.id ?? generateId(), timestamp: new Date() };
+      const newMessage: Message = {
+        ...message,
+        id: message.id ?? generateId(),
+        timestamp: new Date(),
+      };
       set((state) => {
         const newMessages = [...state.messages, newMessage];
         const updated = state.conversations.map((c) => {

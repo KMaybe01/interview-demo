@@ -10,7 +10,7 @@ import {
   PauseCircleOutlined,
   PlayCircleOutlined,
   StopOutlined,
-} from "@ant-design/icons"
+} from '@ant-design/icons';
 import {
   Badge,
   Button,
@@ -24,35 +24,35 @@ import {
   Tag,
   Typography,
   Upload,
-} from "antd"
-import React, { useCallback, useEffect, useRef, useState } from "react"
-import { List } from "react-window"
-import { useUploadStore } from "../stores"
-import type { ChunkInfo, UploadFileItem, UploadResult } from "../stores/uploadStore"
-import { http } from "../utils/fetchClient.ts"
+} from 'antd';
+import React, { useCallback, useEffect, useRef, useState } from 'react';
+import { List } from 'react-window';
+import { useUploadStore } from '../stores';
+import type { ChunkInfo, UploadFileItem, UploadResult } from '../stores/uploadStore';
+import { http } from '../utils/fetchClient.ts';
 
-const { Text } = Typography
-const { Dragger } = Upload
+const { Text } = Typography;
+const { Dragger } = Upload;
 
 function formatBytes(bytes: number): string {
-  if (bytes < 1024) return `${String(bytes)} B`
-  if (bytes < 1024 * 1024) return `${(bytes / 1024).toFixed(1)} KB`
-  if (bytes < 1024 * 1024 * 1024) return `${(bytes / 1024 / 1024).toFixed(1)} MB`
-  return `${(bytes / 1024 / 1024 / 1024).toFixed(2)} GB`
+  if (bytes < 1024) return `${String(bytes)} B`;
+  if (bytes < 1024 * 1024) return `${(bytes / 1024).toFixed(1)} KB`;
+  if (bytes < 1024 * 1024 * 1024) return `${(bytes / 1024 / 1024).toFixed(1)} MB`;
+  return `${(bytes / 1024 / 1024 / 1024).toFixed(2)} GB`;
 }
 
 function formatSpeed(bytesPerSec: number): string {
-  if (bytesPerSec < 1024) return `${String(Math.round(bytesPerSec))} B/s`
-  if (bytesPerSec < 1024 * 1024) return `${(bytesPerSec / 1024).toFixed(1)} KB/s`
-  return `${(bytesPerSec / 1024 / 1024).toFixed(1)} MB/s`
+  if (bytesPerSec < 1024) return `${String(Math.round(bytesPerSec))} B/s`;
+  if (bytesPerSec < 1024 * 1024) return `${(bytesPerSec / 1024).toFixed(1)} KB/s`;
+  return `${(bytesPerSec / 1024 / 1024).toFixed(1)} MB/s`;
 }
 
 function formatDuration(ms: number): string {
-  if (ms < 1000) return `${String(Math.round(ms))}ms`
-  if (ms < 60000) return `${(ms / 1000).toFixed(1)}s`
-  const m = Math.floor(ms / 60000)
-  const s = Math.round((ms % 60000) / 1000)
-  return `${String(m)}m ${String(s)}s`
+  if (ms < 1000) return `${String(Math.round(ms))}ms`;
+  if (ms < 60000) return `${(ms / 1000).toFixed(1)}s`;
+  const m = Math.floor(ms / 60000);
+  const s = Math.round((ms % 60000) / 1000);
+  return `${String(m)}m ${String(s)}s`;
 }
 
 const ChunkRow = ({
@@ -60,121 +60,121 @@ const ChunkRow = ({
   style,
   data,
 }: {
-  index: number
-  style: React.CSSProperties
-  data: ChunkInfo[]
+  index: number;
+  style: React.CSSProperties;
+  data: ChunkInfo[];
 }) => {
-  const c = data[index]
+  const c = data[index];
   const statusTag = (() => {
-    if (c.status === "pending") return <Tag style={{ margin: 0, fontSize: 11 }}>等待</Tag>
-    if (c.status === "hashing")
+    if (c.status === 'pending') return <Tag style={{ margin: 0, fontSize: 11 }}>等待</Tag>;
+    if (c.status === 'hashing')
       return (
         <Tag style={{ margin: 0, fontSize: 11 }} icon={<LoadingOutlined />} color="blue">
           哈希中
         </Tag>
-      )
-    if (c.status === "uploading")
+      );
+    if (c.status === 'uploading')
       return (
         <Tag style={{ margin: 0, fontSize: 11 }} icon={<LoadingOutlined />} color="processing">
           上传中
         </Tag>
-      )
-    if (c.status === "done")
+      );
+    if (c.status === 'done')
       return (
         <Tag style={{ margin: 0, fontSize: 11 }} icon={<CheckCircleFilled />} color="success">
           完成
         </Tag>
-      )
+      );
     return (
       <Tag style={{ margin: 0, fontSize: 11 }} icon={<CloseCircleFilled />} color="error">
         失败
       </Tag>
-    )
-  })()
+    );
+  })();
   return (
     <div
       style={{
         ...style,
-        display: "flex",
-        alignItems: "center",
+        display: 'flex',
+        alignItems: 'center',
         gap: 8,
         fontSize: 12,
-        borderBottom: "1px solid #fafafa",
+        borderBottom: '1px solid #fafafa',
       }}
     >
       <span style={{ width: 80, flexShrink: 0, fontFamily: "'Courier New', monospace" }}>
-        #{String(c.index).padStart(3, "0")}
+        #{String(c.index).padStart(3, '0')}
       </span>
       <span style={{ width: 90, flexShrink: 0 }}>{formatBytes(c.size)}</span>
       <span style={{ width: 120, flexShrink: 0 }}>{statusTag}</span>
-      <span style={{ width: 100, flexShrink: 0 }}>{c.speed > 0 ? formatSpeed(c.speed) : "-"}</span>
+      <span style={{ width: 100, flexShrink: 0 }}>{c.speed > 0 ? formatSpeed(c.speed) : '-'}</span>
       <span style={{ width: 60, flexShrink: 0 }}>
-        {c.retries > 0 ? <Badge count={c.retries} size="small" /> : "-"}
+        {c.retries > 0 ? <Badge count={c.retries} size="small" /> : '-'}
       </span>
     </div>
-  )
-}
+  );
+};
 
 async function computeHash(blob: Blob): Promise<string> {
-  const buffer = await blob.arrayBuffer()
-  const hash = await crypto.subtle.digest("SHA-256", buffer)
+  const buffer = await blob.arrayBuffer();
+  const hash = await crypto.subtle.digest('SHA-256', buffer);
   return Array.from(new Uint8Array(hash))
-    .map((b) => b.toString(16).padStart(2, "0"))
-    .join("")
+    .map((b) => b.toString(16).padStart(2, '0'))
+    .join('');
 }
 
 function computeFileHash(file: File, chunkSize: number): Promise<string> {
   return new Promise((resolve, reject) => {
-    const worker = new Worker(new URL("../utils/hash.worker.ts", import.meta.url), {
-      type: "module",
-    })
+    const worker = new Worker(new URL('../utils/hash.worker.ts', import.meta.url), {
+      type: 'module',
+    });
     worker.onmessage = (e: MessageEvent<{ type: string; hash?: string; error?: string }>) => {
-      if (e.data.type === "result" && e.data.hash) {
-        worker.terminate()
-        resolve(e.data.hash)
-      } else if (e.data.type === "error") {
-        worker.terminate()
-        reject(new Error(e.data.error ?? "Unknown worker error"))
+      if (e.data.type === 'result' && e.data.hash) {
+        worker.terminate();
+        resolve(e.data.hash);
+      } else if (e.data.type === 'error') {
+        worker.terminate();
+        reject(new Error(e.data.error ?? 'Unknown worker error'));
       }
-    }
+    };
     worker.onerror = () => {
-      worker.terminate()
-      reject(new Error("Worker error"))
-    }
+      worker.terminate();
+      reject(new Error('Worker error'));
+    };
     void (async () => {
       try {
-        const totalChunks = Math.ceil(file.size / chunkSize)
+        const totalChunks = Math.ceil(file.size / chunkSize);
         for (let i = 0; i < totalChunks; i++) {
-          const offset = i * chunkSize
-          const size = Math.min(chunkSize, file.size - offset)
-          const buffer = await file.slice(offset, offset + size).arrayBuffer()
-          worker.postMessage({ type: "file", buffer }, [buffer])
+          const offset = i * chunkSize;
+          const size = Math.min(chunkSize, file.size - offset);
+          const buffer = await file.slice(offset, offset + size).arrayBuffer();
+          worker.postMessage({ type: 'file', buffer }, [buffer]);
         }
-        worker.postMessage({ type: "finalize" })
+        worker.postMessage({ type: 'finalize' });
       } catch (err) {
-        worker.terminate()
-        reject(err instanceof Error ? err : new Error(String(err)))
+        worker.terminate();
+        reject(err instanceof Error ? err : new Error(String(err)));
       }
-    })()
-  })
+    })();
+  });
 }
 
-const defaultChunkSize = 5 * 1024 * 1024
+const defaultChunkSize = 5 * 1024 * 1024;
 
 const DraggerCard = React.memo(function DraggerCard({
   isResume,
   onDrop,
 }: {
-  isResume: boolean
-  onDrop: (f: File) => void
+  isResume: boolean;
+  onDrop: (f: File) => void;
 }) {
   const beforeUpload = useCallback(
     (f: File | (Blob & { uid: string })) => {
-      onDrop(f as File)
-      return false
+      onDrop(f as File);
+      return false;
     },
     [onDrop],
-  )
+  );
   return (
     <Card size="small" title="选择文件">
       <Dragger accept="*" showUploadList={false} beforeUpload={beforeUpload}>
@@ -190,21 +190,21 @@ const DraggerCard = React.memo(function DraggerCard({
         </Tag>
       )}
     </Card>
-  )
-})
+  );
+});
 
 const ToolbarActions = React.memo(function ToolbarActions({
   hasFiles,
   onClearToolbar,
   onResetAll,
 }: {
-  hasFiles: boolean
-  onClearToolbar: () => void
-  onResetAll: () => void
+  hasFiles: boolean;
+  onClearToolbar: () => void;
+  onResetAll: () => void;
 }) {
-  if (!hasFiles) return null
+  if (!hasFiles) return null;
   return (
-    <div style={{ display: "flex", justifyContent: "flex-end", gap: 8 }}>
+    <div style={{ display: 'flex', justifyContent: 'flex-end', gap: 8 }}>
       <Button size="small" icon={<ClearOutlined />} onClick={onClearToolbar}>
         清除已完成
       </Button>
@@ -212,107 +212,107 @@ const ToolbarActions = React.memo(function ToolbarActions({
         重置全部
       </Button>
     </div>
-  )
-})
+  );
+});
 
 export default function ChunkedUpload() {
-  const { files, removeFile, updateFile, updateChunk, resetAll } = useUploadStore()
-  const [fileObj, setFileObj] = useState<File | null>(null)
-  const [chunkSize] = useState(defaultChunkSize)
-  const [concurrency, setConcurrency] = useState(4)
-  const [chunkOpen, setChunkOpen] = useState(false)
-  const [isResume, setIsResume] = useState(false)
+  const { files, removeFile, updateFile, updateChunk, resetAll } = useUploadStore();
+  const [fileObj, setFileObj] = useState<File | null>(null);
+  const [chunkSize] = useState(defaultChunkSize);
+  const [concurrency, setConcurrency] = useState(4);
+  const [chunkOpen, setChunkOpen] = useState(false);
+  const [isResume, setIsResume] = useState(false);
 
-  const abortRef = useRef(false)
-  const pausedRef = useRef(false)
-  const resolvePauseRef = useRef<(() => void) | null>(null)
-  const timerRef = useRef<ReturnType<typeof setInterval> | undefined>(undefined)
-  const uploadingRef = useRef(false)
-  const uploadGenRef = useRef(0)
-  const checkAbort = (): boolean => abortRef.current
+  const abortRef = useRef(false);
+  const pausedRef = useRef(false);
+  const resolvePauseRef = useRef<(() => void) | null>(null);
+  const timerRef = useRef<ReturnType<typeof setInterval> | undefined>(undefined);
+  const uploadingRef = useRef(false);
+  const uploadGenRef = useRef(0);
+  const checkAbort = (): boolean => abortRef.current;
 
   useEffect(() => {
     return () => {
-      abortRef.current = true
-      pausedRef.current = false
-      resolvePauseRef.current?.()
-      resolvePauseRef.current = null
-      if (timerRef.current) clearInterval(timerRef.current)
-    }
-  }, [])
+      abortRef.current = true;
+      pausedRef.current = false;
+      resolvePauseRef.current?.();
+      resolvePauseRef.current = null;
+      if (timerRef.current) clearInterval(timerRef.current);
+    };
+  }, []);
 
   useEffect(() => {
-    const ac = new AbortController()
-    const { files: currentFiles, updateFile: upd, removeFile: rem } = useUploadStore.getState()
-    if (currentFiles.length === 0) return
-    const f = currentFiles[0]
-    if (f.status !== "uploading" && f.status !== "paused") return
-    const serverId = f.uploadId || f.id
-    if (!serverId) return
+    const ac = new AbortController();
+    const { files: currentFiles, updateFile: upd, removeFile: rem } = useUploadStore.getState();
+    if (currentFiles.length === 0) return;
+    const f = currentFiles[0];
+    if (f.status !== 'uploading' && f.status !== 'paused') return;
+    const serverId = f.uploadId || f.id;
+    if (!serverId) return;
     http
       .get(`/api/upload/status/${serverId}`, { signal: ac.signal })
       .then((res) => {
-        const data = res.data as { received: number[] }
-        const done = new Set(data.received)
+        const data = res.data as { received: number[] };
+        const done = new Set(data.received);
         upd(f.id, {
           chunks: f.chunks.map((c) => ({
             ...c,
-            status: done.has(c.index) ? "done" : "pending",
+            status: done.has(c.index) ? 'done' : 'pending',
           })),
-        })
+        });
       })
       .catch(() => {
-        rem(f.id)
-      })
+        rem(f.id);
+      });
     return () => {
-      ac.abort()
-    }
-  }, [])
+      ac.abort();
+    };
+  }, []);
 
   const handleDrop = useCallback(
     (raw: File) => {
-      const { files: currentFiles, addFile: storeAddFile } = useUploadStore.getState()
+      const { files: currentFiles, addFile: storeAddFile } = useUploadStore.getState();
 
-      const existing = currentFiles.find((f) => f.filename === raw.name && f.fileSize === raw.size)
+      const existing = currentFiles.find((f) => f.filename === raw.name && f.fileSize === raw.size);
       if (existing) {
         updateFile(existing.id, {
-          status: "pending",
+          status: 'pending',
           progress: 0,
           uploadedBytes: 0,
           speed: 0,
           elapsed: 0,
           result: null,
-          chunks: existing.chunks.map((c) => ({ ...c, status: "pending" })),
-        })
-        setFileObj(raw)
-        setIsResume(existing.status !== "done")
-        return
+          chunks: existing.chunks.map((c) => ({ ...c, status: 'pending' })),
+        });
+        setFileObj(raw);
+        setIsResume(existing.status !== 'done');
+        return;
       }
 
-      const totalChunks = Math.ceil(raw.size / chunkSize)
-      const chunks: ChunkInfo[] = []
+      const totalChunks = Math.ceil(raw.size / chunkSize);
+      const chunks: ChunkInfo[] = [];
       for (let i = 0; i < totalChunks; i++) {
-        const sz = Math.min(chunkSize, raw.size - i * chunkSize)
+        const sz = Math.min(chunkSize, raw.size - i * chunkSize);
         chunks.push({
           index: i,
-          status: "pending",
-          hash: "",
+          status: 'pending',
+          hash: '',
           size: sz,
           retries: 0,
           speed: 0,
           startTime: 0,
-        })
+        });
       }
-      const id = `local_${String(Date.now())}_${Math.random().toString(36).slice(2, 8)}`
+      const id = `local_${String(Date.now())}_${Math.random().toString(36).slice(2, 8)}`;
       storeAddFile({
         id,
-        uploadId: "",
+        uploadId: '',
         filename: raw.name,
         fileSize: raw.size,
         chunkSize,
         totalChunks,
-        fileHash: "",
-        status: "pending",
+        fileHash: '',
+        status: 'pending',
         progress: 0,
         uploadedBytes: 0,
         speed: 0,
@@ -320,220 +320,220 @@ export default function ChunkedUpload() {
         chunks,
         result: null,
         createdAt: Date.now(),
-      })
-      setFileObj(raw)
-      setIsResume(false)
+      });
+      setFileObj(raw);
+      setIsResume(false);
     },
     [chunkSize, updateFile],
-  )
+  );
 
   const startUpload = useCallback(async () => {
-    if (uploadingRef.current) return
-    uploadingRef.current = true
-    const gen = ++uploadGenRef.current
-    const { files: currentFiles } = useUploadStore.getState()
+    if (uploadingRef.current) return;
+    uploadingRef.current = true;
+    const gen = ++uploadGenRef.current;
+    const { files: currentFiles } = useUploadStore.getState();
     if (!fileObj || currentFiles.length === 0) {
-      uploadingRef.current = false
-      return
+      uploadingRef.current = false;
+      return;
     }
-    const item = currentFiles[0]
-    if (item.status !== "pending") {
-      uploadingRef.current = false
-      return
+    const item = currentFiles[0];
+    if (item.status !== 'pending') {
+      uploadingRef.current = false;
+      return;
     }
     try {
-      updateFile(item.id, { status: "uploading" })
-      abortRef.current = false
-      pausedRef.current = false
-      const startTime = performance.now()
+      updateFile(item.id, { status: 'uploading' });
+      abortRef.current = false;
+      pausedRef.current = false;
+      const startTime = performance.now();
 
       timerRef.current = setInterval(() => {
-        const { files: f } = useUploadStore.getState()
-        if (f[0]) updateFile(f[0].id, { elapsed: performance.now() - startTime })
-      }, 200)
+        const { files: f } = useUploadStore.getState();
+        if (f[0]) updateFile(f[0].id, { elapsed: performance.now() - startTime });
+      }, 200);
 
-      let completedCount = 0
-      let currentInitId = item.uploadId
+      let completedCount = 0;
+      let currentInitId = item.uploadId;
 
-      let fileHash = item.fileHash
+      let fileHash = item.fileHash;
       if (!fileHash) {
-        fileHash = await computeFileHash(fileObj, chunkSize)
-        if (checkAbort()) return
-        updateFile(item.id, { fileHash })
+        fileHash = await computeFileHash(fileObj, chunkSize);
+        if (checkAbort()) return;
+        updateFile(item.id, { fileHash });
       }
 
       if (!currentInitId) {
-        const initRes = await http.post("/api/upload/init", {
+        const initRes = await http.post('/api/upload/init', {
           filename: item.filename,
           fileSize: item.fileSize,
           chunkSize,
           totalChunks: item.totalChunks,
           fileHash,
-        })
-        const initData = initRes.data as { uploadId: string }
-        currentInitId = initData.uploadId
-        if (checkAbort()) return
-        updateFile(item.id, { uploadId: currentInitId })
+        });
+        const initData = initRes.data as { uploadId: string };
+        currentInitId = initData.uploadId;
+        if (checkAbort()) return;
+        updateFile(item.id, { uploadId: currentInitId });
       }
 
-      completedCount = item.chunks.filter((c) => c.status === "done").length
+      completedCount = item.chunks.filter((c) => c.status === 'done').length;
 
       const uploadOne = async (chunkIdx: number): Promise<void> => {
-        if (checkAbort()) return
-        if (item.chunks[chunkIdx]?.status === "done") return
+        if (checkAbort()) return;
+        if (item.chunks[chunkIdx]?.status === 'done') return;
 
-        const offset = chunkIdx * chunkSize
-        const size = Math.min(chunkSize, fileObj.size - offset)
-        const blob = fileObj.slice(offset, offset + size)
+        const offset = chunkIdx * chunkSize;
+        const size = Math.min(chunkSize, fileObj.size - offset);
+        const blob = fileObj.slice(offset, offset + size);
 
-        updateChunk(item.id, chunkIdx, { status: "hashing" })
-        const hash = await computeHash(blob)
-        if (checkAbort()) return
+        updateChunk(item.id, chunkIdx, { status: 'hashing' });
+        const hash = await computeHash(blob);
+        if (checkAbort()) return;
 
         for (let attempt = 0; attempt <= 3; attempt++) {
-          if (checkAbort()) return
+          if (checkAbort()) return;
           while (pausedRef.current && !checkAbort()) {
             await new Promise<void>((r) => {
-              resolvePauseRef.current = r
-            })
+              resolvePauseRef.current = r;
+            });
           }
-          if (checkAbort()) return
+          if (checkAbort()) return;
 
-          const blob2 = fileObj.slice(offset, offset + size)
-          const chunkStart = performance.now()
-          updateChunk(item.id, chunkIdx, { status: "uploading", startTime: chunkStart })
+          const blob2 = fileObj.slice(offset, offset + size);
+          const chunkStart = performance.now();
+          updateChunk(item.id, chunkIdx, { status: 'uploading', startTime: chunkStart });
 
           try {
-            const formData = new FormData()
-            formData.append("uploadId", currentInitId)
-            formData.append("chunkIndex", String(chunkIdx))
-            formData.append("hash", hash)
-            formData.append("chunk", blob2, `chunk_${String(chunkIdx)}`)
-            await http.post("/api/upload/chunk", formData)
+            const formData = new FormData();
+            formData.append('uploadId', currentInitId);
+            formData.append('chunkIndex', String(chunkIdx));
+            formData.append('hash', hash);
+            formData.append('chunk', blob2, `chunk_${String(chunkIdx)}`);
+            await http.post('/api/upload/chunk', formData);
 
-            const chunkSpeed = size / ((performance.now() - chunkStart) / 1000)
+            const chunkSpeed = size / ((performance.now() - chunkStart) / 1000);
             updateChunk(item.id, chunkIdx, {
-              status: "done",
+              status: 'done',
               hash,
               retries: attempt,
               speed: chunkSpeed,
-            })
-            completedCount++
+            });
+            completedCount++;
             updateFile(item.id, {
               progress: Math.round((completedCount / item.totalChunks) * 100),
               uploadedBytes: completedCount * chunkSize,
-            })
-            return
+            });
+            return;
           } catch {
-            if (checkAbort()) return
-            updateChunk(item.id, chunkIdx, { status: "failed", retries: attempt + 1 })
+            if (checkAbort()) return;
+            updateChunk(item.id, chunkIdx, { status: 'failed', retries: attempt + 1 });
             if (attempt < 3)
-              await new Promise((r) => setTimeout(r, Math.min(1000 * 2 ** attempt, 30000)))
+              await new Promise((r) => setTimeout(r, Math.min(1000 * 2 ** attempt, 30000)));
           }
         }
-      }
+      };
 
-      const inflight = new Set<Promise<void>>()
+      const inflight = new Set<Promise<void>>();
       for (let i = 0; i < item.totalChunks; i++) {
-        if (checkAbort()) break
-        while (inflight.size >= concurrency) await Promise.race(inflight)
-        const p = uploadOne(i).finally(() => inflight.delete(p))
-        inflight.add(p)
+        if (checkAbort()) break;
+        while (inflight.size >= concurrency) await Promise.race(inflight);
+        const p = uploadOne(i).finally(() => inflight.delete(p));
+        inflight.add(p);
       }
-      await Promise.all(inflight)
-      if (checkAbort()) return
+      await Promise.all(inflight);
+      if (checkAbort()) return;
 
-      const completeRes = await http.post("/api/upload/complete", { uploadId: currentInitId })
+      const completeRes = await http.post('/api/upload/complete', { uploadId: currentInitId });
       updateFile(item.id, {
         result: completeRes.data as UploadResult,
-        status: "done",
+        status: 'done',
         progress: 100,
-      })
+      });
     } catch {
-      updateFile(item.id, { status: "failed" })
+      updateFile(item.id, { status: 'failed' });
     } finally {
       if (gen === uploadGenRef.current) {
-        if (timerRef.current) clearInterval(timerRef.current)
-        uploadingRef.current = false
+        if (timerRef.current) clearInterval(timerRef.current);
+        uploadingRef.current = false;
       }
     }
-  }, [fileObj, chunkSize, concurrency, updateFile, updateChunk])
+  }, [fileObj, chunkSize, concurrency, updateFile, updateChunk, checkAbort]);
 
   const pause = useCallback(() => {
-    pausedRef.current = true
-    const { files: f } = useUploadStore.getState()
-    if (f[0]) updateFile(f[0].id, { status: "paused" })
-  }, [updateFile])
+    pausedRef.current = true;
+    const { files: f } = useUploadStore.getState();
+    if (f[0]) updateFile(f[0].id, { status: 'paused' });
+  }, [updateFile]);
 
   const resume = useCallback(() => {
-    pausedRef.current = false
-    resolvePauseRef.current?.()
-    resolvePauseRef.current = null
-    const { files: f } = useUploadStore.getState()
-    if (f[0]) updateFile(f[0].id, { status: "uploading" })
-  }, [updateFile])
+    pausedRef.current = false;
+    resolvePauseRef.current?.();
+    resolvePauseRef.current = null;
+    const { files: f } = useUploadStore.getState();
+    if (f[0]) updateFile(f[0].id, { status: 'uploading' });
+  }, [updateFile]);
 
   const abort = useCallback(() => {
-    abortRef.current = true
-    uploadingRef.current = false
-    uploadGenRef.current++
-    pausedRef.current = false
-    resolvePauseRef.current?.()
-    resolvePauseRef.current = null
-    if (timerRef.current) clearInterval(timerRef.current)
-    const { files: f } = useUploadStore.getState()
-    if (f[0]) updateFile(f[0].id, { status: "failed" })
-  }, [updateFile])
+    abortRef.current = true;
+    uploadingRef.current = false;
+    uploadGenRef.current++;
+    pausedRef.current = false;
+    resolvePauseRef.current?.();
+    resolvePauseRef.current = null;
+    if (timerRef.current) clearInterval(timerRef.current);
+    const { files: f } = useUploadStore.getState();
+    if (f[0]) updateFile(f[0].id, { status: 'failed' });
+  }, [updateFile]);
 
   const handleConcurrencyChange = useCallback((v: number | null) => {
-    if (v != null) setConcurrency(v)
-  }, [])
+    if (v != null) setConcurrency(v);
+  }, []);
 
   const handleStartClick = useCallback(() => {
-    void startUpload()
-  }, [startUpload])
+    void startUpload();
+  }, [startUpload]);
 
-  const item = files[0] as UploadFileItem | undefined
-  const doneChunks = item?.chunks.filter((c) => c.status === "done").length ?? 0
+  const item = files[0] as UploadFileItem | undefined;
+  const doneChunks = item?.chunks.filter((c) => c.status === 'done').length ?? 0;
 
   const handleRetryClick = useCallback(() => {
-    if (!item) return
+    if (!item) return;
     updateFile(item.id, {
-      status: "pending",
+      status: 'pending',
       progress: 0,
       chunks: item.chunks.map((c) => ({
         ...c,
-        status: "pending",
+        status: 'pending',
       })),
-    })
-    setIsResume(true)
-  }, [item, updateFile])
+    });
+    setIsResume(true);
+  }, [item, updateFile]);
 
   const handleRemoveClick = useCallback(() => {
-    if (!item) return
-    removeFile(item.id)
-    setFileObj(null)
-    setIsResume(false)
-  }, [item, removeFile])
+    if (!item) return;
+    removeFile(item.id);
+    setFileObj(null);
+    setIsResume(false);
+  }, [item, removeFile]);
 
   const handleClearToolbar = useCallback(() => {
-    const { clearCompleted: storeClear } = useUploadStore.getState()
-    storeClear()
-    if (item != null && item.status !== "uploading" && item.status !== "paused") {
-      setFileObj(null)
-      setIsResume(false)
+    const { clearCompleted: storeClear } = useUploadStore.getState();
+    storeClear();
+    if (item != null && item.status !== 'uploading' && item.status !== 'paused') {
+      setFileObj(null);
+      setIsResume(false);
     }
-  }, [item])
+  }, [item]);
 
   const handleResetToolbar = useCallback(() => {
-    resetAll()
-    setFileObj(null)
-    setIsResume(false)
-  }, [resetAll])
+    resetAll();
+    setFileObj(null);
+    setIsResume(false);
+  }, [resetAll]);
 
   return (
     <div>
-      <Space orientation="vertical" style={{ width: "100%" }}>
+      <Space orientation="vertical" style={{ width: '100%' }}>
         <DraggerCard isResume={isResume} onDrop={handleDrop} />
 
         <ToolbarActions
@@ -574,25 +574,25 @@ export default function ChunkedUpload() {
                   max={10}
                   value={concurrency}
                   onChange={handleConcurrencyChange}
-                  disabled={item.status === "uploading"}
+                  disabled={item.status === 'uploading'}
                   style={{ width: 56 }}
                 />
-                {item.status === "pending" && (
+                {item.status === 'pending' && (
                   <Button
                     type="primary"
                     size="small"
                     icon={<PlayCircleOutlined />}
                     onClick={handleStartClick}
                   >
-                    {isResume ? "续传" : "上传"}
+                    {isResume ? '续传' : '上传'}
                   </Button>
                 )}
-                {item.status === "uploading" && (
+                {item.status === 'uploading' && (
                   <Button size="small" icon={<PauseCircleOutlined />} onClick={pause}>
                     暂停
                   </Button>
                 )}
-                {item.status === "paused" && (
+                {item.status === 'paused' && (
                   <Button
                     type="primary"
                     size="small"
@@ -602,12 +602,12 @@ export default function ChunkedUpload() {
                     恢复
                   </Button>
                 )}
-                {(item.status === "uploading" || item.status === "paused") && (
+                {(item.status === 'uploading' || item.status === 'paused') && (
                   <Button size="small" danger icon={<StopOutlined />} onClick={abort}>
                     停止
                   </Button>
                 )}
-                {item.status === "failed" && (
+                {item.status === 'failed' && (
                   <Button
                     type="primary"
                     size="small"
@@ -617,12 +617,12 @@ export default function ChunkedUpload() {
                     重试
                   </Button>
                 )}
-                {item.status === "done" && (
+                {item.status === 'done' && (
                   <Button size="small" icon={<StopOutlined />} onClick={handleRemoveClick}>
                     清除
                   </Button>
                 )}
-                {item.status === "failed" && (
+                {item.status === 'failed' && (
                   <Button size="small" icon={<StopOutlined />} onClick={handleRemoveClick}>
                     清除
                   </Button>
@@ -630,7 +630,7 @@ export default function ChunkedUpload() {
               </Space>
             }
           >
-            {(item.status === "uploading" || item.status === "paused" || item.progress > 0) && (
+            {(item.status === 'uploading' || item.status === 'paused' || item.progress > 0) && (
               <div style={{ marginBottom: 12 }}>
                 <Progress
                   percent={item.progress}
@@ -671,7 +671,7 @@ export default function ChunkedUpload() {
                               (((item.totalChunks - doneChunks) * item.chunkSize) / item.speed) *
                                 1000,
                             )
-                          : "-"
+                          : '-'
                       }
                       styles={{ content: { fontSize: 14 } }}
                     />
@@ -686,7 +686,7 @@ export default function ChunkedUpload() {
                 size="small"
                 icon={<DownOutlined />}
                 onClick={() => {
-                  setChunkOpen((v) => !v)
+                  setChunkOpen((v) => !v);
                 }}
                 style={{ padding: 0, marginBottom: chunkOpen ? 8 : 0 }}
               >
@@ -698,13 +698,13 @@ export default function ChunkedUpload() {
                 <div>
                   <div
                     style={{
-                      display: "flex",
+                      display: 'flex',
                       gap: 8,
-                      padding: "4px 0",
+                      padding: '4px 0',
                       fontWeight: 600,
                       fontSize: 12,
-                      color: "#888",
-                      borderBottom: "1px solid #f0f0f0",
+                      color: '#888',
+                      borderBottom: '1px solid #f0f0f0',
                       marginBottom: 4,
                     }}
                   >
@@ -731,8 +731,8 @@ export default function ChunkedUpload() {
                   <Text>
                     SHA-256: <Text code>{item.result.fileHash.slice(0, 16)}...</Text>
                   </Text>
-                  <Tag color={item.result.integrityOK ? "success" : "error"}>
-                    {item.result.integrityOK ? "完整性验证通过" : "完整性验证失败"}
+                  <Tag color={item.result.integrityOK ? 'success' : 'error'}>
+                    {item.result.integrityOK ? '完整性验证通过' : '完整性验证失败'}
                   </Tag>
                   <Button
                     size="small"
@@ -750,5 +750,5 @@ export default function ChunkedUpload() {
         )}
       </Space>
     </div>
-  )
+  );
 }

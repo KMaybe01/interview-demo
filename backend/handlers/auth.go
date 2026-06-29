@@ -147,7 +147,7 @@ func Login(c *gin.Context) {
 	nonce := fmt.Sprintf("%d", time.Now().UnixNano())
 	activeSessions.Store("user_001", nonce)
 
-	accessToken, err := createToken("user_001", 1*time.Minute, nonce)
+	accessToken, err := createToken("user_001", 15*time.Minute, nonce)
 	if err != nil {
 		c.JSON(http.StatusInternalServerError, gin.H{"error": "创建 Token 失败"})
 		return
@@ -161,7 +161,7 @@ func Login(c *gin.Context) {
 	c.JSON(http.StatusOK, TokenResponse{
 		AccessToken:  accessToken,
 		RefreshToken: refreshToken,
-		ExpiresIn:    3600,
+		ExpiresIn:    900,
 	})
 }
 
@@ -208,7 +208,7 @@ func RefreshToken(c *gin.Context) {
 		return
 	}
 
-	newAccessToken, err := createToken(sub, 1*time.Minute, nonceFromToken)
+	newAccessToken, err := createToken(sub, 15*time.Minute, nonceFromToken)
 	if err != nil {
 		c.JSON(http.StatusInternalServerError, gin.H{"error": "创建 Token 失败"})
 		return
@@ -224,7 +224,7 @@ func RefreshToken(c *gin.Context) {
 	c.JSON(http.StatusOK, gin.H{
 		"access_token":  newAccessToken,
 		"refresh_token": newRefreshToken,
-		"expires_in":    60,
+		"expires_in":    900,
 		"rotation":      true,
 	})
 }

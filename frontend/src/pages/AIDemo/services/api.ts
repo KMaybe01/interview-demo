@@ -201,7 +201,10 @@ export const knowledgeAPI = {
     });
   },
 
-  async batchAddDocuments(kbId: string, documents: AddDocumentRequest[]): Promise<BatchAddDocumentsResponse> {
+  async batchAddDocuments(
+    kbId: string,
+    documents: AddDocumentRequest[],
+  ): Promise<BatchAddDocumentsResponse> {
     return request<BatchAddDocumentsResponse>(`/knowledge-base/${kbId}/documents/batch`, {
       method: 'POST',
       body: JSON.stringify({ documents }),
@@ -221,7 +224,10 @@ export const modelAPI = {
     return request<ModelListResponse>('/models');
   },
 
-  async chat(modelId: string, messages: { role: string; content: string }[]): Promise<ChatResponse> {
+  async chat(
+    modelId: string,
+    messages: { role: string; content: string }[],
+  ): Promise<ChatResponse> {
     return request<ChatResponse>('/chat', {
       method: 'POST',
       body: JSON.stringify({ model: modelId, messages }),

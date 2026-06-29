@@ -1,12 +1,12 @@
-import { DeleteOutlined, PlusOutlined } from "@ant-design/icons"
-import { Button, Card, Typography } from "antd"
-import Renderer from "../Renderer.tsx"
-import type { FieldComponentProps } from "../types.ts"
-import { getDefaultsFromSchema } from "../types.ts"
+import { DeleteOutlined, PlusOutlined } from '@ant-design/icons';
+import { Button, Card, Typography } from 'antd';
+import Renderer from '../Renderer.tsx';
+import type { FieldComponentProps } from '../types.ts';
+import { getDefaultsFromSchema } from '../types.ts';
 
-const { Text } = Typography
+const { Text } = Typography;
 
-type ArrayItem = Record<string, unknown>
+type ArrayItem = Record<string, unknown>;
 
 export default function ArrayField({
   schema,
@@ -17,42 +17,42 @@ export default function ArrayField({
   allData,
   onBlur,
 }: FieldComponentProps) {
-  const items = Array.isArray(value) ? (value as ArrayItem[]) : []
-  const itemSchema = schema.items
+  const items = Array.isArray(value) ? (value as ArrayItem[]) : [];
+  const itemSchema = schema.items;
 
   const handleAdd = () => {
-    const defaults = itemSchema ? getDefaultsFromSchema(itemSchema) : {}
-    onChange(path, [...items, defaults])
-  }
+    const defaults = itemSchema ? getDefaultsFromSchema(itemSchema) : {};
+    onChange(path, [...items, defaults]);
+  };
 
   const handleRemove = (index: number) => {
-    const next = items.filter((_, i) => i !== index)
-    onChange(path, next)
-  }
+    const next = items.filter((_, i) => i !== index);
+    onChange(path, next);
+  };
 
   const handleItemChange = (index: number) => (itemPath: string, itemValue: unknown) => {
-    const next = [...items]
-    next[index] = { ...next[index], [itemPath]: itemValue }
-    onChange(path, next)
-  }
+    const next = [...items];
+    next[index] = { ...next[index], [itemPath]: itemValue };
+    onChange(path, next);
+  };
 
   const handleItemBlur = () => {
-    onBlur?.(path)
-  }
+    onBlur?.(path);
+  };
 
   if (!itemSchema) {
     return (
       <div>
         <Text type="warning">数组字段未定义 items 结构</Text>
       </div>
-    )
+    );
   }
 
-  const disableAdd = schema.maxItems !== undefined && items.length >= schema.maxItems
+  const disableAdd = schema.maxItems !== undefined && items.length >= schema.maxItems;
 
   return (
     <div>
-      <div style={{ display: "flex", flexDirection: "column", gap: 8 }}>
+      <div style={{ display: 'flex', flexDirection: 'column', gap: 8 }}>
         {items.map((item, index) => (
           <Card
             key={`${path}-${String(index)}`}
@@ -60,7 +60,7 @@ export default function ArrayField({
             variant="outlined"
             title={
               <div
-                style={{ display: "flex", justifyContent: "space-between", alignItems: "center" }}
+                style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}
               >
                 <Text type="secondary">项 #{index + 1}</Text>
                 <Button
@@ -69,7 +69,7 @@ export default function ArrayField({
                   size="small"
                   icon={<DeleteOutlined />}
                   onClick={() => {
-                    handleRemove(index)
+                    handleRemove(index);
                   }}
                   disabled={schema.minItems !== undefined && items.length <= schema.minItems}
                 />
@@ -106,5 +106,5 @@ export default function ArrayField({
         )}
       </div>
     </div>
-  )
+  );
 }

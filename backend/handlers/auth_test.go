@@ -62,8 +62,8 @@ func TestLogin_Success(t *testing.T) {
 	if resp.RefreshToken == "" {
 		t.Fatal("refresh_token is empty")
 	}
-	if resp.ExpiresIn != 3600 {
-		t.Fatalf("expected expires_in 3600, got %d", resp.ExpiresIn)
+	if resp.ExpiresIn != 900 {
+		t.Fatalf("expected expires_in 900, got %d", resp.ExpiresIn)
 	}
 }
 

@@ -1,5 +1,5 @@
-import { Switch } from "antd"
-import type { FieldComponentProps } from "../types.ts"
+import { Switch } from 'antd';
+import type { FieldComponentProps } from '../types.ts';
 
 export default function SwitchField({
   schema: _schema,
@@ -11,8 +11,8 @@ export default function SwitchField({
     <Switch
       checked={value as boolean}
       onChange={(v) => {
-        onChange(path, v)
+        onChange(path, v);
       }}
     />
-  )
+  );
 }

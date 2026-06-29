@@ -1,14 +1,14 @@
-import { StyleProvider } from "@ant-design/cssinjs"
-import { StrictMode } from "react"
-import { createRoot } from "react-dom/client"
-import { BrowserRouter } from "react-router-dom"
-import App from "./App.tsx"
-import { initVitalsReporter } from "./utils/vitalsReporter.ts"
+import { StyleProvider } from '@ant-design/cssinjs';
+import { StrictMode } from 'react';
+import { createRoot } from 'react-dom/client';
+import { BrowserRouter } from 'react-router-dom';
+import App from './App.tsx';
+import { initVitalsReporter } from './utils/vitalsReporter.ts';
 
-initVitalsReporter()
+initVitalsReporter();
 
-const rootElement = document.getElementById("root")
-if (!rootElement) throw new Error("Root element not found")
+const rootElement = document.getElementById('root');
+if (!rootElement) throw new Error('Root element not found');
 createRoot(rootElement).render(
   <StrictMode>
     <BrowserRouter>
@@ -17,4 +17,4 @@ createRoot(rootElement).render(
       </StyleProvider>
     </BrowserRouter>
   </StrictMode>,
-)
+);

@@ -1,5 +1,5 @@
-import { Input } from "antd"
-import type { FieldComponentProps } from "../types.ts"
+import { Input } from 'antd';
+import type { FieldComponentProps } from '../types.ts';
 
 export default function StringField({
   schema,
@@ -14,15 +14,15 @@ export default function StringField({
       <Input
         value={value as string}
         onChange={(e) => {
-          onChange(path, e.target.value)
+          onChange(path, e.target.value);
         }}
         placeholder={schema.placeholder}
-        status={error ? "error" : undefined}
+        status={error ? 'error' : undefined}
         onBlur={() => {
-          onBlur?.(path)
+          onBlur?.(path);
         }}
       />
-      {error && <div style={{ color: "#ff4d4f", fontSize: 12, marginTop: 2 }}>{error}</div>}
+      {error && <div style={{ color: '#ff4d4f', fontSize: 12, marginTop: 2 }}>{error}</div>}
     </div>
-  )
+  );
 }

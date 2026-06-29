@@ -255,11 +255,19 @@ function KnowledgeBasePage() {
             children: (
               <>
                 <div style={{ marginBottom: 16, display: 'flex', justifyContent: 'space-between' }}>
-                  <Button type="primary" icon={<PlusOutlined />} onClick={() => setCreateModalVisible(true)}>
+                  <Button
+                    type="primary"
+                    icon={<PlusOutlined />}
+                    onClick={() => setCreateModalVisible(true)}
+                  >
                     创建知识库
                   </Button>
                   <Tooltip title="刷新列表">
-                    <Button icon={<ReloadOutlined />} onClick={loadKnowledgeBases} loading={loading} />
+                    <Button
+                      icon={<ReloadOutlined />}
+                      onClick={loadKnowledgeBases}
+                      loading={loading}
+                    />
                   </Tooltip>
                 </div>
 
@@ -320,7 +328,7 @@ function KnowledgeBasePage() {
                         title={
                           <Space>
                             <FileTextOutlined />
-                            <Text>{item.docTitle || '未知文档'}</Text>
+                            <Text>{item.docTitle ?? '未知文档'}</Text>
                             <Tag color="green">相似度: {(item.score * 100).toFixed(1)}%</Tag>
                           </Space>
                         }
@@ -347,7 +355,11 @@ function KnowledgeBasePage() {
         onOk={() => createForm.submit()}
       >
         <Form form={createForm} onFinish={handleCreate} layout="vertical">
-          <Form.Item name="name" label="知识库名称" rules={[{ required: true, message: '请输入名称' }]}>
+          <Form.Item
+            name="name"
+            label="知识库名称"
+            rules={[{ required: true, message: '请输入名称' }]}
+          >
             <Input placeholder="例如：产品文档" />
           </Form.Item>
           <Form.Item name="description" label="描述">
@@ -366,20 +378,18 @@ function KnowledgeBasePage() {
         footer={null}
         width={680}
       >
-        <div
+        <button
           className="upload-zone"
-          role="button"
-          tabIndex={0}
+          type="button"
           onClick={() => fileInputRef.current?.click()}
-          onKeyDown={(e) => {
-            if (e.key === 'Enter' || e.key === ' ') fileInputRef.current?.click();
-          }}
           onDragOver={(e) => e.preventDefault()}
           onDrop={(e) => {
             e.preventDefault();
             const dt = e.dataTransfer;
             if (dt.files.length > 0) {
-              const syntheticEvent = { target: { files: dt.files } } as unknown as React.ChangeEvent<HTMLInputElement>;
+              const syntheticEvent = {
+                target: { files: dt.files },
+              } as unknown as React.ChangeEvent<HTMLInputElement>;
               handleFileSelect(syntheticEvent);
             }
           }}
@@ -402,11 +412,18 @@ function KnowledgeBasePage() {
             onChange={handleFileSelect}
             style={{ display: 'none' }}
           />
-        </div>
+        </button>
 
         {uploadFiles.length > 0 && (
           <>
-            <div style={{ marginBottom: 8, display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
+            <div
+              style={{
+                marginBottom: 8,
+                display: 'flex',
+                justifyContent: 'space-between',
+                alignItems: 'center',
+              }}
+            >
               <Text strong>已选择 {uploadFiles.length} 个文件</Text>
               <Button size="small" onClick={() => setUploadFiles([])}>
                 清空
@@ -458,7 +475,13 @@ function KnowledgeBasePage() {
                 style={{ marginBottom: 16 }}
               />
             )}
-            <Button type="primary" block loading={uploading} onClick={handleBatchUpload} icon={<PlusOutlined />}>
+            <Button
+              type="primary"
+              block
+              loading={uploading}
+              onClick={handleBatchUpload}
+              icon={<PlusOutlined />}
+            >
               {uploading
                 ? `上传中 (${uploadProgress.done}/${uploadProgress.total})...`
                 : `上传 ${uploadFiles.length} 篇文档`}
@@ -500,7 +523,14 @@ function KnowledgeBasePage() {
                         overflow: 'auto',
                       }}
                     >
-                      <pre style={{ margin: 0, whiteSpace: 'pre-wrap', fontSize: 12, fontFamily: 'monospace' }}>
+                      <pre
+                        style={{
+                          margin: 0,
+                          whiteSpace: 'pre-wrap',
+                          fontSize: 12,
+                          fontFamily: 'monospace',
+                        }}
+                      >
                         {doc.content}
                       </pre>
                     </div>

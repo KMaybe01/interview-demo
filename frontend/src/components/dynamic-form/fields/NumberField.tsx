@@ -1,5 +1,5 @@
-import { InputNumber } from "antd"
-import type { FieldComponentProps } from "../types.ts"
+import { InputNumber } from 'antd';
+import type { FieldComponentProps } from '../types.ts';
 
 export default function NumberField({
   schema,
@@ -14,18 +14,18 @@ export default function NumberField({
       <InputNumber
         value={value as number}
         onChange={(v) => {
-          onChange(path, v)
+          onChange(path, v);
         }}
         placeholder={schema.placeholder}
         min={schema.min}
         max={schema.max}
-        style={{ width: "100%" }}
-        status={error ? "error" : undefined}
+        style={{ width: '100%' }}
+        status={error ? 'error' : undefined}
         onBlur={() => {
-          onBlur?.(path)
+          onBlur?.(path);
         }}
       />
-      {error && <div style={{ color: "#ff4d4f", fontSize: 12, marginTop: 2 }}>{error}</div>}
+      {error && <div style={{ color: '#ff4d4f', fontSize: 12, marginTop: 2 }}>{error}</div>}
     </div>
-  )
+  );
 }

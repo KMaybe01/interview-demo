@@ -1,11 +1,11 @@
-import { Card, Col, Row, Typography } from "antd"
-import { useNavigate } from "react-router-dom"
-import { routes } from "../routes"
+import { Card, Col, Row, Typography } from 'antd';
+import { useNavigate } from 'react-router-dom';
+import { routes } from '../routes';
 
-const { Title, Paragraph } = Typography
+const { Title, Paragraph } = Typography;
 
 export default function Dashboard() {
-  const navigate = useNavigate()
+  const navigate = useNavigate();
 
   return (
     <div>
@@ -15,11 +15,11 @@ export default function Dashboard() {
       </Paragraph>
       <Row gutter={[16, 16]}>
         {routes
-          .filter((r) => r.path !== "/")
+          .filter((r) => r.path !== '/')
           .map((r) => (
             <Col key={r.path} xs={24} sm={12} md={8} lg={6}>
               <Card hoverable onClick={() => navigate(r.path)}>
-                <div style={{ display: "flex", alignItems: "center", gap: 12 }}>
+                <div style={{ display: 'flex', alignItems: 'center', gap: 12 }}>
                   {<r.icon />}
                   <Title level={5} style={{ margin: 0 }}>
                     {r.name}
@@ -30,5 +30,5 @@ export default function Dashboard() {
           ))}
       </Row>
     </div>
-  )
+  );
 }

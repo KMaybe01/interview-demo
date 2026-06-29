@@ -1,14 +1,14 @@
-import { DatePicker } from "antd"
-import dayjs from "dayjs"
-import type { FieldComponentProps } from "../types.ts"
+import { DatePicker } from 'antd';
+import dayjs from 'dayjs';
+import type { FieldComponentProps } from '../types.ts';
 
 function parseDateValue(value: unknown) {
-  if (typeof value === "string" && value) {
-    const d = dayjs(value)
-    return d.isValid() ? d : undefined
+  if (typeof value === 'string' && value) {
+    const d = dayjs(value);
+    return d.isValid() ? d : undefined;
   }
-  if (dayjs.isDayjs(value)) return value
-  return undefined
+  if (dayjs.isDayjs(value)) return value;
+  return undefined;
 }
 
 export default function DateTimeField({
@@ -24,17 +24,17 @@ export default function DateTimeField({
       <DatePicker
         value={parseDateValue(value)}
         onChange={(_, dateStr) => {
-          onChange(path, dateStr)
+          onChange(path, dateStr);
         }}
         placeholder={schema.placeholder}
         showTime
-        style={{ width: "100%" }}
-        status={error ? "error" : undefined}
+        style={{ width: '100%' }}
+        status={error ? 'error' : undefined}
         onBlur={() => {
-          onBlur?.(path)
+          onBlur?.(path);
         }}
       />
-      {error && <div style={{ color: "#ff4d4f", fontSize: 12, marginTop: 2 }}>{error}</div>}
+      {error && <div style={{ color: '#ff4d4f', fontSize: 12, marginTop: 2 }}>{error}</div>}
     </div>
-  )
+  );
 }

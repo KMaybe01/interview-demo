@@ -1,188 +1,188 @@
-import { ClearOutlined, PauseCircleOutlined, PlayCircleOutlined } from "@ant-design/icons"
-import { Badge, Button, Card, InputNumber, Select, Space, Tag, Typography } from "antd"
-import { useCallback, useEffect, useMemo, useRef, useState } from "react"
+import { ClearOutlined, PauseCircleOutlined, PlayCircleOutlined } from '@ant-design/icons';
+import { Badge, Button, Card, InputNumber, Select, Space, Tag, Typography } from 'antd';
+import { useCallback, useEffect, useMemo, useRef, useState } from 'react';
 
-const { Text } = Typography
+const { Text } = Typography;
 
-type LogLevel = "all" | "info" | "warn" | "error" | "debug"
+type LogLevel = 'all' | 'info' | 'warn' | 'error' | 'debug';
 
 interface LogLine {
-  id: number
-  text: string
-  level: string
-  isError: boolean
-  isWarn: boolean
+  id: number;
+  text: string;
+  level: string;
+  isError: boolean;
+  isWarn: boolean;
 }
 
-type RawLogLine = Omit<LogLine, "id">
+type RawLogLine = Omit<LogLine, 'id'>;
 
 function parseLine(text: string): RawLogLine {
   return {
     text,
-    level: text.startsWith("[") ? text.slice(1, text.indexOf("]")) : "",
-    isError: text.includes("[ERROR]"),
-    isWarn: text.includes("[WARN]"),
-  }
+    level: text.startsWith('[') ? text.slice(1, text.indexOf(']')) : '',
+    isError: text.includes('[ERROR]'),
+    isWarn: text.includes('[WARN]'),
+  };
 }
 
 const sseLogLineStyles: Record<string, React.CSSProperties> = {
-  error: { color: "#f48771" },
-  warn: { color: "#cca700" },
-  default: { color: "#d4d4d4" },
-}
+  error: { color: '#f48771' },
+  warn: { color: '#cca700' },
+  default: { color: '#d4d4d4' },
+};
 
 function getSseLogStyle(line: LogLine): React.CSSProperties {
-  if (line.isError) return sseLogLineStyles.error
-  if (line.isWarn) return sseLogLineStyles.warn
-  return sseLogLineStyles.default
+  if (line.isError) return sseLogLineStyles.error;
+  if (line.isWarn) return sseLogLineStyles.warn;
+  return sseLogLineStyles.default;
 }
 
 export default function SseLogStream() {
-  const [logs, setLogs] = useState<LogLine[]>([])
-  const [connected, setConnected] = useState(false)
-  const [paused, setPaused] = useState(false)
-  const [level, setLevel] = useState<LogLevel>("all")
-  const [intervalMs, setIntervalMs] = useState(200)
-  const bufferRef = useRef<RawLogLine[]>([])
-  const abortRef = useRef<AbortController | null>(null)
-  const containerRef = useRef<HTMLDivElement>(null)
-  const rafRef = useRef<number | null>(null)
-  const userScrolledRef = useRef(false)
-  const lastFlushRef = useRef(0)
-  const lineIdRef = useRef(0)
-  const intervalRef = useRef(intervalMs)
+  const [logs, setLogs] = useState<LogLine[]>([]);
+  const [connected, setConnected] = useState(false);
+  const [paused, setPaused] = useState(false);
+  const [level, setLevel] = useState<LogLevel>('all');
+  const [intervalMs, setIntervalMs] = useState(200);
+  const bufferRef = useRef<RawLogLine[]>([]);
+  const abortRef = useRef<AbortController | null>(null);
+  const containerRef = useRef<HTMLDivElement>(null);
+  const rafRef = useRef<number | null>(null);
+  const userScrolledRef = useRef(false);
+  const lastFlushRef = useRef(0);
+  const lineIdRef = useRef(0);
+  const intervalRef = useRef(intervalMs);
 
   const flush = useCallback(() => {
-    const batch = bufferRef.current
+    const batch = bufferRef.current;
     if (batch.length > 0) {
-      const withIds = batch.map((line) => ({ ...line, id: ++lineIdRef.current }))
-      setLogs((prev) => [...prev, ...withIds].slice(-500))
-      bufferRef.current = []
+      const withIds = batch.map((line) => ({ ...line, id: ++lineIdRef.current }));
+      setLogs((prev) => [...prev, ...withIds].slice(-500));
+      bufferRef.current = [];
     }
-  }, [])
+  }, []);
 
   const scheduleFlush = useCallback(() => {
-    if (rafRef.current != null) return
+    if (rafRef.current != null) return;
     rafRef.current = requestAnimationFrame(() => {
-      rafRef.current = null
-      const now = performance.now()
+      rafRef.current = null;
+      const now = performance.now();
       if (lastFlushRef.current === 0 || now - lastFlushRef.current >= 100) {
-        lastFlushRef.current = now
-        flush()
+        lastFlushRef.current = now;
+        flush();
       }
-    })
-  }, [flush])
+    });
+  }, [flush]);
 
   const disconnect = useCallback(() => {
-    abortRef.current?.abort()
-    abortRef.current = null
-    setConnected(false)
-  }, [])
+    abortRef.current?.abort();
+    abortRef.current = null;
+    setConnected(false);
+  }, []);
 
   const connect = useCallback(() => {
-    disconnect()
-    const abort = new AbortController()
-    abortRef.current = abort
-    setConnected(false)
+    disconnect();
+    const abort = new AbortController();
+    abortRef.current = abort;
+    setConnected(false);
 
-    const ms = intervalRef.current
-    const url = `/api/sse/logs?level=all&interval=${String(ms)}`
+    const ms = intervalRef.current;
+    const url = `/api/sse/logs?level=all&interval=${String(ms)}`;
 
     const startStream = async (): Promise<void> => {
-      const currentAbort = abort
+      const currentAbort = abort;
       try {
-        const response = await fetch(url, { signal: currentAbort.signal })
+        const response = await fetch(url, { signal: currentAbort.signal });
         if (!response.ok) {
-          setConnected(false)
-          return
+          setConnected(false);
+          return;
         }
-        const reader = response.body?.getReader()
+        const reader = response.body?.getReader();
         if (!reader) {
-          setConnected(false)
-          return
+          setConnected(false);
+          return;
         }
-        const decoder = new TextDecoder("utf-8")
+        const decoder = new TextDecoder('utf-8');
         if (!currentAbort.signal.aborted) {
-          setConnected(true)
+          setConnected(true);
         }
-        let remainder = ""
+        let remainder = '';
 
         while (!currentAbort.signal.aborted) {
-          const { done, value } = await reader.read()
-          if (done) break
-          remainder += decoder.decode(value, { stream: true })
-          const lines = remainder.split("\n")
-          remainder = lines.pop() ?? ""
+          const { done, value } = await reader.read();
+          if (done) break;
+          remainder += decoder.decode(value, { stream: true });
+          const lines = remainder.split('\n');
+          remainder = lines.pop() ?? '';
           for (const line of lines) {
-            if (line.startsWith("data: ")) {
-              bufferRef.current.push(parseLine(line.slice(6)))
-              scheduleFlush()
+            if (line.startsWith('data: ')) {
+              bufferRef.current.push(parseLine(line.slice(6)));
+              scheduleFlush();
             }
           }
         }
       } catch (err: unknown) {
-        if (abortRef.current !== currentAbort) return
-        const isAbort = err instanceof DOMException && err.name === "AbortError"
-        const isTypeError = err instanceof TypeError
-        if (isAbort || isTypeError) return
-        setConnected(false)
-        setTimeout(connect, 3000)
+        if (abortRef.current !== currentAbort) return;
+        const isAbort = err instanceof DOMException && err.name === 'AbortError';
+        const isTypeError = err instanceof TypeError;
+        if (isAbort || isTypeError) return;
+        setConnected(false);
+        setTimeout(connect, 3000);
       }
-    }
+    };
 
-    void startStream()
-  }, [disconnect, scheduleFlush])
+    void startStream();
+  }, [disconnect, scheduleFlush]);
 
   useEffect(() => {
-    intervalRef.current = intervalMs
-  }, [intervalMs])
+    intervalRef.current = intervalMs;
+  }, [intervalMs]);
 
   useEffect(() => {
     if (!paused) {
-      connect()
+      connect();
     } else {
-      disconnect()
+      disconnect();
     }
     return () => {
-      disconnect()
+      disconnect();
       if (rafRef.current != null) {
-        cancelAnimationFrame(rafRef.current)
+        cancelAnimationFrame(rafRef.current);
       }
-    }
-  }, [paused, intervalMs, connect, disconnect])
+    };
+  }, [paused, connect, disconnect]);
 
   const handleScroll = useCallback(() => {
-    const el = containerRef.current
-    if (!el) return
-    const { scrollTop, scrollHeight, clientHeight } = el
-    userScrolledRef.current = scrollHeight - scrollTop - clientHeight > 50
-  }, [])
+    const el = containerRef.current;
+    if (!el) return;
+    const { scrollTop, scrollHeight, clientHeight } = el;
+    userScrolledRef.current = scrollHeight - scrollTop - clientHeight > 50;
+  }, []);
 
   useEffect(() => {
-    if (paused || userScrolledRef.current) return
-    const el = containerRef.current
+    if (paused || userScrolledRef.current) return;
+    const el = containerRef.current;
     if (el) {
-      el.scrollTop = el.scrollHeight
+      el.scrollTop = el.scrollHeight;
     }
-  }, [logs, paused])
+  }, [paused]);
 
   const filteredLogs = useMemo(() => {
-    if (level === "all") return logs
-    return logs.filter((l) => l.level.toUpperCase() === level.toUpperCase())
-  }, [logs, level])
+    if (level === 'all') return logs;
+    return logs.filter((l) => l.level.toUpperCase() === level.toUpperCase());
+  }, [logs, level]);
 
-  const lineCount = logs.length + bufferRef.current.length
+  const lineCount = logs.length + bufferRef.current.length;
 
   const statusBadge = paused
-    ? ("warning" as const)
+    ? ('warning' as const)
     : connected
-      ? ("success" as const)
-      : ("error" as const)
-  const statusText = paused ? "已暂停" : connected ? "已连接 SSE" : "未连接"
+      ? ('success' as const)
+      : ('error' as const);
+  const statusText = paused ? '已暂停' : connected ? '已连接 SSE' : '未连接';
 
   return (
     <div>
-      <Space orientation="vertical" style={{ width: "100%" }}>
+      <Space orientation="vertical" style={{ width: '100%' }}>
         <Card size="small">
           <Space wrap>
             <Badge status={statusBadge} />
@@ -194,20 +194,20 @@ export default function SseLogStream() {
             )}
             <Button
               size="small"
-              type={paused ? "primary" : "default"}
+              type={paused ? 'primary' : 'default'}
               icon={paused ? <PlayCircleOutlined /> : <PauseCircleOutlined />}
               onClick={() => {
-                setPaused((prev) => !prev)
+                setPaused((prev) => !prev);
               }}
             >
-              {paused ? "恢复" : "暂停"}
+              {paused ? '恢复' : '暂停'}
             </Button>
             <Button
               size="small"
               icon={<ClearOutlined />}
               onClick={() => {
-                setLogs([])
-                bufferRef.current = []
+                setLogs([]);
+                bufferRef.current = [];
               }}
             >
               清空
@@ -216,15 +216,15 @@ export default function SseLogStream() {
               size="small"
               value={level}
               onChange={(v: LogLevel) => {
-                setLevel(v)
+                setLevel(v);
               }}
               style={{ width: 100 }}
               options={[
-                { label: "全部", value: "all" },
-                { label: "INFO", value: "info" },
-                { label: "WARN", value: "warn" },
-                { label: "ERROR", value: "error" },
-                { label: "DEBUG", value: "debug" },
+                { label: '全部', value: 'all' },
+                { label: 'INFO', value: 'info' },
+                { label: 'WARN', value: 'warn' },
+                { label: 'ERROR', value: 'error' },
+                { label: 'DEBUG', value: 'debug' },
               ]}
             />
             <Space size={4}>
@@ -236,7 +236,7 @@ export default function SseLogStream() {
                 step={50}
                 value={intervalMs}
                 onChange={(v) => {
-                  if (v != null) setIntervalMs(v)
+                  if (v != null) setIntervalMs(v);
                 }}
                 style={{ width: 80 }}
               />
@@ -252,10 +252,10 @@ export default function SseLogStream() {
             onScroll={handleScroll}
             style={{
               height: 520,
-              overflow: "auto",
-              background: "#1e1e1e",
-              color: "#d4d4d4",
-              fontFamily: "monospace",
+              overflow: 'auto',
+              background: '#1e1e1e',
+              color: '#d4d4d4',
+              fontFamily: 'monospace',
               fontSize: 12,
               padding: 12,
               lineHeight: 1.6,
@@ -272,11 +272,11 @@ export default function SseLogStream() {
                 <div key={line.id} style={getSseLogStyle(line)}>
                   {line.text}
                 </div>
-              )
+              );
             })}
           </div>
         </Card>
       </Space>
     </div>
-  )
+  );
 }

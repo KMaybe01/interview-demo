@@ -1,84 +1,84 @@
-import { Alert, Card, Tabs, Tag, Typography } from "antd"
-import { getField } from "./registry.tsx"
-import type { FormSchema } from "./types.ts"
+import { Alert, Card, Tabs, Tag, Typography } from 'antd';
+import { getField } from './registry.tsx';
+import type { FormSchema } from './types.ts';
 
-const { Text } = Typography
+const { Text } = Typography;
 
 interface RendererProps {
-  schema: FormSchema
-  data: Record<string, unknown>
-  errors: Record<string, string>
-  path: string
-  onChange: (path: string, value: unknown) => void
-  onBlur?: (path: string) => void
-  backendErrors?: Record<string, string>
-  ajvErrors?: Record<string, string[]>
-  asyncValidating?: Record<string, boolean>
-  allData?: Record<string, unknown>
-  _depth?: number
-  _visitedRefs?: WeakSet<FormSchema>
-  maxDepth?: number
+  schema: FormSchema;
+  data: Record<string, unknown>;
+  errors: Record<string, string>;
+  path: string;
+  onChange: (path: string, value: unknown) => void;
+  onBlur?: (path: string) => void;
+  backendErrors?: Record<string, string>;
+  ajvErrors?: Record<string, string[]>;
+  asyncValidating?: Record<string, boolean>;
+  allData?: Record<string, unknown>;
+  _depth?: number;
+  _visitedRefs?: WeakSet<FormSchema>;
+  maxDepth?: number;
 }
 
 function getTokenValue(token: string, data: Record<string, unknown>): unknown {
-  const t = token.trim()
+  const t = token.trim();
   if ((t.startsWith("'") && t.endsWith("'")) || (t.startsWith('"') && t.endsWith('"')))
-    return t.slice(1, -1)
-  if (/^-?\d+\.?\d*$/.test(t)) return Number(t)
-  if (t === "true") return true
-  if (t === "false") return false
-  if (t === "null") return null
-  if (t === "undefined") return undefined
-  return data[t]
+    return t.slice(1, -1);
+  if (/^-?\d+\.?\d*$/.test(t)) return Number(t);
+  if (t === 'true') return true;
+  if (t === 'false') return false;
+  if (t === 'null') return null;
+  if (t === 'undefined') return undefined;
+  return data[t];
 }
 
 function splitTopLevel(s: string, sep: string): string[] {
-  const parts: string[] = []
-  let depth = 0
-  let cur = ""
-  let i = 0
+  const parts: string[] = [];
+  let depth = 0;
+  let cur = '';
+  let i = 0;
   while (i < s.length) {
-    if (s[i] === "(" || s[i] === "[") depth++
-    else if (s[i] === ")" || s[i] === "]") depth--
+    if (s[i] === '(' || s[i] === '[') depth++;
+    else if (s[i] === ')' || s[i] === ']') depth--;
     if (depth === 0 && s.slice(i).startsWith(sep)) {
-      parts.push(cur.trim())
-      cur = ""
-      i += sep.length
-      continue
+      parts.push(cur.trim());
+      cur = '';
+      i += sep.length;
+      continue;
     }
-    cur += s[i]
-    i++
+    cur += s[i];
+    i++;
   }
-  if (cur.trim()) parts.push(cur.trim())
-  return parts
+  if (cur.trim()) parts.push(cur.trim());
+  return parts;
 }
 
 function evaluateExpression(expr: string, data: Record<string, unknown>): boolean {
   try {
-    const clean = expr.trim()
-    if (!clean) return true
+    const clean = expr.trim();
+    if (!clean) return true;
 
-    if (clean.startsWith("(") && clean.endsWith(")"))
-      return evaluateExpression(clean.slice(1, -1), data)
+    if (clean.startsWith('(') && clean.endsWith(')'))
+      return evaluateExpression(clean.slice(1, -1), data);
 
-    const andParts = splitTopLevel(clean, "&&")
-    if (andParts.length > 1) return andParts.every((p) => evaluateExpression(p, data))
+    const andParts = splitTopLevel(clean, '&&');
+    if (andParts.length > 1) return andParts.every((p) => evaluateExpression(p, data));
 
-    const orParts = splitTopLevel(clean, "||")
-    if (orParts.length > 1) return orParts.some((p) => evaluateExpression(p, data))
+    const orParts = splitTopLevel(clean, '||');
+    if (orParts.length > 1) return orParts.some((p) => evaluateExpression(p, data));
 
-    const strictEq = /^(.+?)\s*===\s*(.+)$/.exec(clean)
-    if (strictEq) return getTokenValue(strictEq[1], data) === getTokenValue(strictEq[2], data)
+    const strictEq = /^(.+?)\s*===\s*(.+)$/.exec(clean);
+    if (strictEq) return getTokenValue(strictEq[1], data) === getTokenValue(strictEq[2], data);
 
-    const strictNeq = /^(.+?)\s*!==\s*(.+)$/.exec(clean)
-    if (strictNeq) return getTokenValue(strictNeq[1], data) !== getTokenValue(strictNeq[2], data)
+    const strictNeq = /^(.+?)\s*!==\s*(.+)$/.exec(clean);
+    if (strictNeq) return getTokenValue(strictNeq[1], data) !== getTokenValue(strictNeq[2], data);
 
-    const val = getTokenValue(clean, data)
-    if (typeof val === "boolean") return val
-    if (typeof val === "string") return val === "true"
-    return Boolean(val)
+    const val = getTokenValue(clean, data);
+    if (typeof val === 'boolean') return val;
+    if (typeof val === 'string') return val === 'true';
+    return Boolean(val);
   } catch {
-    return true
+    return true;
   }
 }
 
@@ -97,7 +97,7 @@ function Renderer({
   _visitedRefs,
   maxDepth = 10,
 }: RendererProps) {
-  const activeData = allData ?? data
+  const activeData = allData ?? data;
 
   if (_depth > maxDepth) {
     return (
@@ -108,7 +108,7 @@ function Renderer({
         showIcon
         style={{ marginBottom: 8 }}
       />
-    )
+    );
   }
 
   if (_visitedRefs) {
@@ -121,19 +121,19 @@ function Renderer({
           showIcon
           style={{ marginBottom: 8 }}
         />
-      )
+      );
     }
-    _visitedRefs.add(schema)
+    _visitedRefs.add(schema);
   }
 
-  if (schema.type === "tabs" && schema.tabs) {
+  if (schema.type === 'tabs' && schema.tabs) {
     return (
       <Tabs
         items={schema.tabs.map((tab) => ({
           key: tab.key,
           label: tab.title,
           children: (
-            <div style={{ display: "flex", flexDirection: "column", gap: 16 }}>
+            <div style={{ display: 'flex', flexDirection: 'column', gap: 16 }}>
               {tab.children.map((child, i) => (
                 <Renderer
                   key={`${child.key}-${String(i)}`}
@@ -156,10 +156,10 @@ function Renderer({
           ),
         }))}
       />
-    )
+    );
   }
 
-  if (schema.type === "card") {
+  if (schema.type === 'card') {
     return (
       <Card
         title={
@@ -175,7 +175,7 @@ function Renderer({
         size="small"
         variant="outlined"
       >
-        <div style={{ display: "flex", flexDirection: "column", gap: 16 }}>
+        <div style={{ display: 'flex', flexDirection: 'column', gap: 16 }}>
           {(schema.children ?? []).map((child, i) => (
             <Renderer
               key={`${child.key}-${String(i)}`}
@@ -196,12 +196,12 @@ function Renderer({
           ))}
         </div>
       </Card>
-    )
+    );
   }
 
-  if (schema.type === "form") {
+  if (schema.type === 'form') {
     return (
-      <div style={{ display: "flex", flexDirection: "column", gap: 16 }}>
+      <div style={{ display: 'flex', flexDirection: 'column', gap: 16 }}>
         {(schema.children ?? []).map((child, i) => (
           <Renderer
             key={`${child.key}-${String(i)}`}
@@ -221,20 +221,20 @@ function Renderer({
           />
         ))}
       </div>
-    )
+    );
   }
 
-  if (schema.type === "leaf" && schema.properties) {
+  if (schema.type === 'leaf' && schema.properties) {
     return (
-      <div style={{ display: "flex", flexDirection: "column", gap: 16 }}>
+      <div style={{ display: 'flex', flexDirection: 'column', gap: 16 }}>
         {Object.entries(schema.properties).map(([_propKey, leaf]) => {
-          if (leaf.visible && !evaluateExpression(leaf.visible, activeData)) return null
+          if (leaf.visible && !evaluateExpression(leaf.visible, activeData)) return null;
 
-          const fullPath = leaf.key
-          const FieldComponent = getField(leaf.type)
-          const fieldError = errors[fullPath] ?? backendErrors?.[fullPath]
-          const fieldAjvErrors = ajvErrorsMap?.[fullPath]
-          const isLoading = asyncValidating?.[fullPath]
+          const fullPath = leaf.key;
+          const FieldComponent = getField(leaf.type);
+          const fieldError = errors[fullPath] ?? backendErrors?.[fullPath];
+          const fieldAjvErrors = ajvErrorsMap?.[fullPath];
+          const isLoading = asyncValidating?.[fullPath];
 
           if (!FieldComponent) {
             return (
@@ -244,7 +244,7 @@ function Renderer({
                   {fullPath}
                 </Text>
               </div>
-            )
+            );
           }
 
           return (
@@ -267,7 +267,7 @@ function Renderer({
                   </Text>
                 )}
               </div>
-              <div style={{ position: "relative" }}>
+              <div style={{ position: 'relative' }}>
                 <FieldComponent
                   schema={leaf}
                   value={data[fullPath]}
@@ -279,7 +279,7 @@ function Renderer({
                   allData={activeData}
                 />
                 {isLoading && (
-                  <div style={{ position: "absolute", right: 8, top: 4 }}>
+                  <div style={{ position: 'absolute', right: 8, top: 4 }}>
                     <Tag color="processing" style={{ fontSize: 10 }}>
                       校验中...
                     </Tag>
@@ -300,22 +300,22 @@ function Renderer({
                 </div>
               )}
               {backendErrors?.[fullPath] && (
-                <div style={{ color: "#ff4d4f", fontSize: 12, marginTop: 2 }}>
+                <div style={{ color: '#ff4d4f', fontSize: 12, marginTop: 2 }}>
                   {backendErrors[fullPath]}
                 </div>
               )}
             </div>
-          )
+          );
         })}
       </div>
-    )
+    );
   }
 
-  return null
+  return null;
 }
 
 function Space({ children, style }: { children: React.ReactNode; style?: React.CSSProperties }) {
-  return <div style={{ display: "flex", alignItems: "center", gap: 8, ...style }}>{children}</div>
+  return <div style={{ display: 'flex', alignItems: 'center', gap: 8, ...style }}>{children}</div>;
 }
 
-export default Renderer
+export default Renderer;

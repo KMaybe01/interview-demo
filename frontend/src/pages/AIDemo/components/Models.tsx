@@ -1,5 +1,22 @@
-import { ApiOutlined, CheckCircleOutlined, CloseCircleOutlined, EditOutlined, ReloadOutlined } from '@ant-design/icons';
-import { Button, Card, Descriptions, Modal, Space, Table, Tabs, Tag, Tooltip, Typography } from 'antd';
+import {
+  ApiOutlined,
+  CheckCircleOutlined,
+  CloseCircleOutlined,
+  EditOutlined,
+  ReloadOutlined,
+} from '@ant-design/icons';
+import {
+  Button,
+  Card,
+  Descriptions,
+  Modal,
+  Space,
+  Table,
+  Tabs,
+  Tag,
+  Tooltip,
+  Typography,
+} from 'antd';
 import { useCallback, useEffect, useState } from 'react';
 import { useMessageApi } from '../AIDemo';
 import { modelAPI } from '../services/api';
@@ -57,7 +74,9 @@ function Models() {
       title: '提供商',
       dataIndex: 'provider' as const,
       key: 'provider',
-      render: (provider: string) => <Tag color={PROVIDER_COLORS[provider] || 'default'}>{provider.toUpperCase()}</Tag>,
+      render: (provider: string) => (
+        <Tag color={PROVIDER_COLORS[provider] || 'default'}>{provider.toUpperCase()}</Tag>
+      ),
     },
     {
       title: '上下文窗口',
@@ -189,18 +208,25 @@ function Models() {
                       key: '2',
                       feature: '上下文窗口',
                       ...Object.fromEntries(
-                        models.map((m) => [m.id, m.context_window ? `${(m.context_window / 1000).toFixed(0)}K` : '-']),
+                        models.map((m) => [
+                          m.id,
+                          m.context_window ? `${(m.context_window / 1000).toFixed(0)}K` : '-',
+                        ]),
                       ),
                     },
                     {
                       key: '3',
                       feature: '工具调用',
-                      ...Object.fromEntries(models.map((m) => [m.id, m.supports_tools ? '✅' : '❌'])),
+                      ...Object.fromEntries(
+                        models.map((m) => [m.id, m.supports_tools ? '✅' : '❌']),
+                      ),
                     },
                     {
                       key: '4',
                       feature: '视觉能力',
-                      ...Object.fromEntries(models.map((m) => [m.id, m.supports_vision ? '✅' : '❌'])),
+                      ...Object.fromEntries(
+                        models.map((m) => [m.id, m.supports_vision ? '✅' : '❌']),
+                      ),
                     },
                   ]}
                   pagination={false}
@@ -225,9 +251,13 @@ function Models() {
             <Descriptions.Item label="模型名称">{selectedModel.model_name}</Descriptions.Item>
             <Descriptions.Item label="提供商">{selectedModel.provider}</Descriptions.Item>
             <Descriptions.Item label="上下文窗口">
-              {selectedModel.context_window ? `${(selectedModel.context_window / 1000).toFixed(0)}K Tokens` : '-'}
+              {selectedModel.context_window
+                ? `${(selectedModel.context_window / 1000).toFixed(0)}K Tokens`
+                : '-'}
             </Descriptions.Item>
-            <Descriptions.Item label="最大输出">{selectedModel.max_tokens} Tokens</Descriptions.Item>
+            <Descriptions.Item label="最大输出">
+              {selectedModel.max_tokens} Tokens
+            </Descriptions.Item>
             <Descriptions.Item label="温度">{selectedModel.temperature}</Descriptions.Item>
             <Descriptions.Item label="工具调用">
               {selectedModel.supports_tools ? '✅ 支持' : '❌ 不支持'}

@@ -1,67 +1,67 @@
-import { LockOutlined, SafetyOutlined, UserOutlined } from "@ant-design/icons"
-import { Alert, Button, Card, Form, Input, message, Typography } from "antd"
-import { useCallback, useEffect, useRef, useState } from "react"
-import { useNavigate, useSearchParams } from "react-router-dom"
-import { useAuthStore } from "../stores"
-import { getErrorMessage, http } from "../utils/fetchClient.ts"
-import { parseToken, setTokens } from "../utils/token.ts"
-import styles from "./Login.module.css"
+import { LockOutlined, SafetyOutlined, UserOutlined } from '@ant-design/icons';
+import { Alert, Button, Card, Form, Input, message, Typography } from 'antd';
+import { useCallback, useEffect, useRef, useState } from 'react';
+import { useNavigate, useSearchParams } from 'react-router-dom';
+import { useAuthStore } from '../stores';
+import { getErrorMessage, http } from '../utils/fetchClient.ts';
+import { parseToken, setTokens } from '../utils/token.ts';
+import styles from './Login.module.css';
 
-const { Title, Text } = Typography
+const { Title, Text } = Typography;
 
 export default function Login() {
-  const [loading, setLoading] = useState(false)
-  const [searchParams, setSearchParams] = useSearchParams()
+  const [loading, setLoading] = useState(false);
+  const [searchParams, setSearchParams] = useSearchParams();
   const [showSessionAlert, setShowSessionAlert] = useState(
-    searchParams.get("session_replaced") === "1",
-  )
-  const navigate = useNavigate()
-  const login = useAuthStore((s) => s.login)
+    searchParams.get('session_replaced') === '1',
+  );
+  const navigate = useNavigate();
+  const login = useAuthStore((s) => s.login);
 
-  const alertTimerRef = useRef<ReturnType<typeof setTimeout> | null>(null)
+  const alertTimerRef = useRef<ReturnType<typeof setTimeout> | null>(null);
 
   useEffect(() => {
     if (showSessionAlert) {
       setSearchParams(
         (prev) => {
-          prev.delete("session_replaced")
-          return prev
+          prev.delete('session_replaced');
+          return prev;
         },
         { replace: true },
-      )
+      );
       alertTimerRef.current = setTimeout(() => {
-        setShowSessionAlert(false)
-      }, 8000)
+        setShowSessionAlert(false);
+      }, 8000);
     }
     return () => {
-      if (alertTimerRef.current) clearTimeout(alertTimerRef.current)
-    }
-  }, [showSessionAlert, setSearchParams])
+      if (alertTimerRef.current) clearTimeout(alertTimerRef.current);
+    };
+  }, [showSessionAlert, setSearchParams]);
 
   const handleSubmit = useCallback(
     async (values: { username: string; password: string }) => {
-      setLoading(true)
+      setLoading(true);
       try {
-        const res = await http.post("/api/auth/login", values)
-        const data = res.data as { access_token: string; refresh_token: string }
+        const res = await http.post('/api/auth/login', values);
+        const data = res.data as { access_token: string; refresh_token: string };
 
-        setTokens(data.access_token, data.refresh_token)
+        setTokens(data.access_token, data.refresh_token);
 
-        const payload = parseToken(data.access_token)
+        const payload = parseToken(data.access_token);
         if (payload != null) {
-          login({ sub: payload.sub, role: payload.role })
+          login({ sub: payload.sub, role: payload.role });
         }
 
-        message.success("登录成功")
-        void navigate("/", { replace: true })
+        message.success('登录成功');
+        void navigate('/', { replace: true });
       } catch (err) {
-        message.error(getErrorMessage(err))
+        message.error(getErrorMessage(err));
       } finally {
-        setLoading(false)
+        setLoading(false);
       }
     },
     [login, navigate],
-  )
+  );
 
   return (
     <div className={styles.container}>
@@ -87,21 +87,21 @@ export default function Login() {
       <div className={styles.blob2} />
 
       {/* 登录卡片 */}
-      <Card className={styles.card} styles={{ body: { padding: "40px 32px 32px" } }}>
+      <Card className={styles.card} styles={{ body: { padding: '40px 32px 32px' } }}>
         {/* Logo */}
         <div className={styles.logoBox}>
           <div className={styles.logoIcon}>
-            <SafetyOutlined style={{ fontSize: 28, color: "#fff" }} />
+            <SafetyOutlined style={{ fontSize: 28, color: '#fff' }} />
           </div>
-          <Title level={3} style={{ margin: 0, color: "#1a1a2e", fontWeight: 600 }}>
+          <Title level={3} style={{ margin: 0, color: '#1a1a2e', fontWeight: 600 }}>
             Interview Demo
           </Title>
-          <Text style={{ color: "#8c8c8c", fontSize: 14 }}>全栈技术演示平台</Text>
+          <Text style={{ color: '#8c8c8c', fontSize: 14 }}>全栈技术演示平台</Text>
         </div>
 
         <Form
           onFinish={handleSubmit}
-          initialValues={{ username: "admin", password: "admin123" }}
+          initialValues={{ username: 'admin', password: 'admin123' }}
           size="large"
           autoComplete="off"
         >
@@ -114,36 +114,36 @@ export default function Login() {
                 showIcon
                 closable={{
                   onClose: () => {
-                    setShowSessionAlert(false)
+                    setShowSessionAlert(false);
                   },
                 }}
               />
             </Form.Item>
           )}
-          <Form.Item name="username" rules={[{ required: true, message: "请输入用户名" }]}>
+          <Form.Item name="username" rules={[{ required: true, message: '请输入用户名' }]}>
             <Input
-              prefix={<UserOutlined style={{ color: "#bfbfbf" }} />}
+              prefix={<UserOutlined style={{ color: '#bfbfbf' }} />}
               placeholder="用户名"
               style={{
-                background: "#f5f5f5",
-                border: "1px solid #e8e8e8",
+                background: '#f5f5f5',
+                border: '1px solid #e8e8e8',
                 borderRadius: 10,
                 height: 48,
-                color: "#1a1a2e",
+                color: '#1a1a2e',
               }}
             />
           </Form.Item>
 
-          <Form.Item name="password" rules={[{ required: true, message: "请输入密码" }]}>
+          <Form.Item name="password" rules={[{ required: true, message: '请输入密码' }]}>
             <Input.Password
-              prefix={<LockOutlined style={{ color: "#bfbfbf" }} />}
+              prefix={<LockOutlined style={{ color: '#bfbfbf' }} />}
               placeholder="密码"
               style={{
-                background: "#f5f5f5",
-                border: "1px solid #e8e8e8",
+                background: '#f5f5f5',
+                border: '1px solid #e8e8e8',
                 borderRadius: 10,
                 height: 48,
-                color: "#1a1a2e",
+                color: '#1a1a2e',
               }}
             />
           </Form.Item>
@@ -159,9 +159,9 @@ export default function Login() {
                 borderRadius: 10,
                 fontSize: 16,
                 fontWeight: 500,
-                border: "none",
-                background: "linear-gradient(135deg, #667eea 0%, #764ba2 100%)",
-                boxShadow: "0 8px 24px rgba(102,126,234,0.25)",
+                border: 'none',
+                background: 'linear-gradient(135deg, #667eea 0%, #764ba2 100%)',
+                boxShadow: '0 8px 24px rgba(102,126,234,0.25)',
               }}
             >
               登录
@@ -169,26 +169,26 @@ export default function Login() {
           </Form.Item>
         </Form>
 
-        <div style={{ textAlign: "center", marginTop: 8 }}>
-          <Text style={{ color: "#bfbfbf", fontSize: 12 }}>演示账号: admin / admin123</Text>
+        <div style={{ textAlign: 'center', marginTop: 8 }}>
+          <Text style={{ color: '#bfbfbf', fontSize: 12 }}>演示账号: admin / admin123</Text>
         </div>
       </Card>
 
       {/* 底部版权 */}
       <div
         style={{
-          position: "absolute",
+          position: 'absolute',
           bottom: 24,
-          display: "flex",
-          alignItems: "center",
+          display: 'flex',
+          alignItems: 'center',
           gap: 16,
-          color: "#d9d9d9",
+          color: '#d9d9d9',
           fontSize: 12,
           letterSpacing: 2,
         }}
       >
         <span>© {new Date().getFullYear()} Interview Demo</span>
-        <span style={{ color: "#e8e8e8" }}>|</span>
+        <span style={{ color: '#e8e8e8' }}>|</span>
         <a
           href="https://github.com/KMaybe01/interview-demo.git/"
           target="_blank"
@@ -199,5 +199,5 @@ export default function Login() {
         </a>
       </div>
     </div>
-  )
+  );
 }

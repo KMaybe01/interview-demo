@@ -5,63 +5,74 @@ import {
   ReloadOutlined,
   StopOutlined,
   WarningOutlined,
-} from "@ant-design/icons"
-import { Alert, Badge, Button, Card, Empty, Segmented, Space, Tag, Tooltip, Typography } from "antd"
-import * as echarts from "echarts"
-import { useCallback, useEffect, useMemo, useRef, useState } from "react"
-import { List } from "react-window"
+} from '@ant-design/icons';
+import {
+  Alert,
+  Badge,
+  Button,
+  Card,
+  Empty,
+  Segmented,
+  Space,
+  Tag,
+  Tooltip,
+  Typography,
+} from 'antd';
+import * as echarts from 'echarts';
+import { useCallback, useEffect, useMemo, useRef, useState } from 'react';
+import { List } from 'react-window';
 import {
   type AlertLevel,
   type AlertMessage,
   CATEGORY_COLORS,
   useAlertStore,
-} from "../stores/alertStore.ts"
-import { type ConnectionStatus, MAX_RETRY, ReconnectingTransport } from "../utils/wsTransport.ts"
+} from '../stores/alertStore.ts';
+import { type ConnectionStatus, MAX_RETRY, ReconnectingTransport } from '../utils/wsTransport.ts';
 
-const { Text } = Typography
+const { Text } = Typography;
 
 const LEVEL_TAG: Record<AlertLevel, { color: string; text: string }> = {
-  critical: { color: "red", text: "CRITICAL" },
-  major: { color: "orange", text: "MAJOR" },
-  minor: { color: "blue", text: "MINOR" },
-  info: { color: "green", text: "INFO" },
-}
+  critical: { color: 'red', text: 'CRITICAL' },
+  major: { color: 'orange', text: 'MAJOR' },
+  minor: { color: 'blue', text: 'MINOR' },
+  info: { color: 'green', text: 'INFO' },
+};
 
 const PRIORITY: Record<AlertLevel, number> = {
   critical: 0,
   major: 1,
   minor: 2,
   info: 3,
-}
+};
 
-const ALERT_TYPE: Record<AlertLevel, "success" | "info" | "warning" | "error"> = {
-  critical: "error",
-  major: "warning",
-  minor: "info",
-  info: "success",
-}
+const ALERT_TYPE: Record<AlertLevel, 'success' | 'info' | 'warning' | 'error'> = {
+  critical: 'error',
+  major: 'warning',
+  minor: 'info',
+  info: 'success',
+};
 
-const LEVEL_ORDER: AlertLevel[] = ["critical", "major", "minor", "info"]
-const DISPLAY_LIMIT = 2000
+const LEVEL_ORDER: AlertLevel[] = ['critical', 'major', 'minor', 'info'];
+const DISPLAY_LIMIT = 2000;
 
 const AlertRow = ({
   index,
   style,
   data,
 }: {
-  index: number
-  style: React.CSSProperties
-  data: AlertMessage[]
+  index: number;
+  style: React.CSSProperties;
+  data: AlertMessage[];
 }) => {
-  const a = data[index]
-  const tag = LEVEL_TAG[a.level]
-  const catColor = CATEGORY_COLORS[a.category] || "#8c8c8c"
+  const a = data[index];
+  const tag = LEVEL_TAG[a.level];
+  const catColor = CATEGORY_COLORS[a.category] || '#8c8c8c';
   return (
     <div style={style}>
       <Alert
         type={ALERT_TYPE[a.level]}
         title={
-          <Space style={{ flexWrap: "wrap" }}>
+          <Space style={{ flexWrap: 'wrap' }}>
             <Tag color={tag.color}>{tag.text}</Tag>
             <Tag color={catColor}>{a.category}</Tag>
             <Tag>{a.topic.toUpperCase()}</Tag>
@@ -72,387 +83,388 @@ const AlertRow = ({
           </Space>
         }
         showIcon
-        style={{ marginBottom: 6, padding: "6px 12px" }}
+        style={{ marginBottom: 6, padding: '6px 12px' }}
       />
     </div>
-  )
-}
+  );
+};
 
 const CHART_COLORS: Record<AlertLevel, string> = {
-  critical: "#f5222d",
-  major: "#fa8c16",
-  minor: "#1890ff",
-  info: "#52c41a",
-}
+  critical: '#f5222d',
+  major: '#fa8c16',
+  minor: '#1890ff',
+  info: '#52c41a',
+};
 
 export default function AlertWebSocket() {
-  const { alerts, metrics, addAlerts, logInterruption, clearAlerts, resetMetrics } = useAlertStore()
-  const [connectionStatus, setConnectionStatus] = useState<ConnectionStatus>("disconnected")
-  const [heartbeatAlive, setHeartbeatAlive] = useState(false)
-  const [retryCount, setRetryCount] = useState(0)
-  const [isInterrupted, setIsInterrupted] = useState(false)
-  const [reconnectCountdown, setReconnectCountdown] = useState(0)
-  const [levelFilter, setLevelFilter] = useState<"all" | AlertLevel>("all")
-  const [recovered, setRecovered] = useState(false)
-  const [isPaused, setIsPaused] = useState(false)
-  const [transportType, setTransportType] = useState("WebSocket")
+  const { alerts, metrics, addAlerts, logInterruption, clearAlerts, resetMetrics } =
+    useAlertStore();
+  const [connectionStatus, setConnectionStatus] = useState<ConnectionStatus>('disconnected');
+  const [heartbeatAlive, setHeartbeatAlive] = useState(false);
+  const [retryCount, setRetryCount] = useState(0);
+  const [isInterrupted, setIsInterrupted] = useState(false);
+  const [reconnectCountdown, setReconnectCountdown] = useState(0);
+  const [levelFilter, setLevelFilter] = useState<'all' | AlertLevel>('all');
+  const [recovered, setRecovered] = useState(false);
+  const [isPaused, setIsPaused] = useState(false);
+  const [transportType, setTransportType] = useState('WebSocket');
 
-  const transportRef = useRef<import("../utils/wsTransport.ts").ReconnectingTransport | null>(null)
-  const aliveRef = useRef(true)
-  const chartActiveRef = useRef(true)
+  const transportRef = useRef<import('../utils/wsTransport.ts').ReconnectingTransport | null>(null);
+  const aliveRef = useRef(true);
+  const chartActiveRef = useRef(true);
   const startChartLoopRef = useRef<() => void>(() => {
     /* empty */
-  })
+  });
   const stopChartLoopRef = useRef<() => void>(() => {
     /* empty */
-  })
-  const seenRef = useRef<Set<string>>(new Set())
-  const bufferRef = useRef<AlertMessage[]>([])
-  const rafRef = useRef(0)
-  const chartRef = useRef<HTMLDivElement>(null)
-  const chartInstanceRef = useRef<echarts.ECharts | null>(null)
-  const trendBufferRef = useRef<{ time: number; level: AlertLevel }[]>([])
-  const chartRafRef = useRef(0)
-  const rateRef = useRef(1000)
-  const workersRef = useRef(4)
-  const pausedRef = useRef(false)
-  const disconnectTimeRef = useRef(0)
-  const [editRate, setEditRate] = useState(1000)
-  const [editWorkers, setEditWorkers] = useState(4)
+  });
+  const seenRef = useRef<Set<string>>(new Set());
+  const bufferRef = useRef<AlertMessage[]>([]);
+  const rafRef = useRef(0);
+  const chartRef = useRef<HTMLDivElement>(null);
+  const chartInstanceRef = useRef<echarts.ECharts | null>(null);
+  const trendBufferRef = useRef<{ time: number; level: AlertLevel }[]>([]);
+  const chartRafRef = useRef(0);
+  const rateRef = useRef(1000);
+  const workersRef = useRef(4);
+  const pausedRef = useRef(false);
+  const disconnectTimeRef = useRef(0);
+  const [editRate, setEditRate] = useState(1000);
+  const [editWorkers, setEditWorkers] = useState(4);
 
   const addToBuffer = useCallback((msg: AlertMessage) => {
-    bufferRef.current.push(msg)
-  }, [])
+    bufferRef.current.push(msg);
+  }, []);
 
   const rafFlush = useCallback(() => {
-    if (!aliveRef.current) return
+    if (!aliveRef.current) return;
     if (bufferRef.current.length > 0) {
-      const batch = bufferRef.current.splice(0)
-      const unique: AlertMessage[] = []
+      const batch = bufferRef.current.splice(0);
+      const unique: AlertMessage[] = [];
       for (const msg of batch) {
         if (!seenRef.current.has(msg.id)) {
-          seenRef.current.add(msg.id)
-          unique.push(msg)
+          seenRef.current.add(msg.id);
+          unique.push(msg);
         }
       }
       if (seenRef.current.size > 5000) {
-        const entries = [...seenRef.current]
-        seenRef.current = new Set(entries.slice(entries.length - 2500))
+        const entries = [...seenRef.current];
+        seenRef.current = new Set(entries.slice(entries.length - 2500));
       }
       if (unique.length > 0) {
-        unique.sort((a, b) => PRIORITY[a.level] - PRIORITY[b.level])
-        const now = Date.now()
-        for (const msg of unique) trendBufferRef.current.push({ time: now, level: msg.level })
-        addAlerts(unique)
+        unique.sort((a, b) => PRIORITY[a.level] - PRIORITY[b.level]);
+        const now = Date.now();
+        for (const msg of unique) trendBufferRef.current.push({ time: now, level: msg.level });
+        addAlerts(unique);
       }
     }
-    rafRef.current = requestAnimationFrame(rafFlush)
-  }, [addAlerts])
+    rafRef.current = requestAnimationFrame(rafFlush);
+  }, [addAlerts]);
 
   const initTransport = useCallback(() => {
-    const protocol = window.location.protocol === "https:" ? "wss:" : "ws:"
-    const baseUrl = `${protocol}//localhost:8080/ws/alerts?rate=${String(rateRef.current)}&workers=${String(workersRef.current)}`
+    const protocol = window.location.protocol === 'https:' ? 'wss:' : 'ws:';
+    const baseUrl = `${protocol}//localhost:8080/ws/alerts?rate=${String(rateRef.current)}&workers=${String(workersRef.current)}`;
 
-    const transport = new ReconnectingTransport(baseUrl)
+    const transport = new ReconnectingTransport(baseUrl);
     transport.setCallbacks({
       onMessage: (msg) => {
-        addToBuffer(msg)
+        addToBuffer(msg);
       },
       onStatus: (status) => {
-        setConnectionStatus(status)
-        if (status === "connected") {
-          setIsInterrupted(false)
-          setRetryCount(0)
-          disconnectTimeRef.current = 0
-          startChartLoopRef.current()
-        } else if (status === "reconnecting") {
-          setIsInterrupted(true)
-          stopChartLoopRef.current()
+        setConnectionStatus(status);
+        if (status === 'connected') {
+          setIsInterrupted(false);
+          setRetryCount(0);
+          disconnectTimeRef.current = 0;
+          startChartLoopRef.current();
+        } else if (status === 'reconnecting') {
+          setIsInterrupted(true);
+          stopChartLoopRef.current();
           if (disconnectTimeRef.current === 0) {
-            disconnectTimeRef.current = Date.now()
+            disconnectTimeRef.current = Date.now();
           }
-        } else if (status === "disconnected") {
-          stopChartLoopRef.current()
+        } else if (status === 'disconnected') {
+          stopChartLoopRef.current();
         }
       },
       onRetry: (attempt, _delay) => {
-        setRetryCount(attempt)
-        setReconnectCountdown(Math.ceil(_delay / 1000))
+        setRetryCount(attempt);
+        setReconnectCountdown(Math.ceil(_delay / 1000));
       },
       onHeartbeat: (alive) => {
-        setHeartbeatAlive(alive)
+        setHeartbeatAlive(alive);
         if (alive && disconnectTimeRef.current > 0) {
-          setRecovered(true)
+          setRecovered(true);
           setTimeout(() => {
-            setRecovered(false)
-          }, 3000)
-          disconnectTimeRef.current = 0
+            setRecovered(false);
+          }, 3000);
+          disconnectTimeRef.current = 0;
         }
       },
       onSyncRequest: (_lastSeq) => {
         // server-side sync would go here
       },
-    })
+    });
 
     transport.onFallbackChange((type) => {
-      setTransportType(type)
-    })
+      setTransportType(type);
+    });
 
     transport.onInterruptionLogged((downtimeMs) => {
-      logInterruption(downtimeMs)
-    })
+      logInterruption(downtimeMs);
+    });
 
-    transportRef.current = transport
-    return transport
-  }, [addToBuffer, logInterruption])
+    transportRef.current = transport;
+    return transport;
+  }, [addToBuffer, logInterruption]);
 
   const connect = useCallback(
     (delayMs = 0) => {
-      pausedRef.current = false
-      setIsPaused(false)
+      pausedRef.current = false;
+      setIsPaused(false);
       if (delayMs > 0) {
         setTimeout(() => {
-          const t = transportRef.current ?? initTransport()
-          t.connect()
-        }, delayMs)
+          const t = transportRef.current ?? initTransport();
+          t.connect();
+        }, delayMs);
       } else {
-        const t = transportRef.current ?? initTransport()
-        t.connect()
+        const t = transportRef.current ?? initTransport();
+        t.connect();
       }
     },
     [initTransport],
-  )
+  );
 
   const disconnect = useCallback(() => {
-    transportRef.current?.disconnect()
-    transportRef.current = null
-    setConnectionStatus("disconnected")
-    setHeartbeatAlive(false)
-    setIsInterrupted(false)
-    stopChartLoopRef.current()
-  }, [])
+    transportRef.current?.disconnect();
+    transportRef.current = null;
+    setConnectionStatus('disconnected');
+    setHeartbeatAlive(false);
+    setIsInterrupted(false);
+    stopChartLoopRef.current();
+  }, []);
 
   const pauseConnection = useCallback(() => {
-    pausedRef.current = true
-    setIsPaused(true)
-    transportRef.current?.disconnect()
-    setConnectionStatus("disconnected")
-    setHeartbeatAlive(false)
-    stopChartLoopRef.current()
-  }, [])
+    pausedRef.current = true;
+    setIsPaused(true);
+    transportRef.current?.disconnect();
+    setConnectionStatus('disconnected');
+    setHeartbeatAlive(false);
+    stopChartLoopRef.current();
+  }, []);
 
   const resumeConnection = useCallback(() => {
-    pausedRef.current = false
-    setIsPaused(false)
-    startChartLoopRef.current()
-    const t = transportRef.current ?? initTransport()
-    t.connect()
-  }, [initTransport])
+    pausedRef.current = false;
+    setIsPaused(false);
+    startChartLoopRef.current();
+    const t = transportRef.current ?? initTransport();
+    t.connect();
+  }, [initTransport]);
 
   useEffect(() => {
-    const p = new URLSearchParams(window.location.search)
-    const r = parseInt(p.get("rate") ?? "1000", 10)
-    const w = parseInt(p.get("workers") ?? "4", 10)
+    const p = new URLSearchParams(window.location.search);
+    const r = parseInt(p.get('rate') ?? '1000', 10);
+    const w = parseInt(p.get('workers') ?? '4', 10);
     if (!Number.isNaN(r) && r >= 100) {
-      rateRef.current = r
-      setEditRate(r)
+      rateRef.current = r;
+      setEditRate(r);
     }
     if (!Number.isNaN(w) && w >= 1) {
-      workersRef.current = w
-      setEditWorkers(w)
+      workersRef.current = w;
+      setEditWorkers(w);
     }
-  }, [])
+  }, []);
 
   useEffect(() => {
-    aliveRef.current = true
+    aliveRef.current = true;
     return () => {
-      aliveRef.current = false
-      disconnect()
-      cancelAnimationFrame(rafRef.current)
-      cancelAnimationFrame(chartRafRef.current)
-      chartInstanceRef.current?.dispose()
-    }
-  }, [disconnect])
+      aliveRef.current = false;
+      disconnect();
+      cancelAnimationFrame(rafRef.current);
+      cancelAnimationFrame(chartRafRef.current);
+      chartInstanceRef.current?.dispose();
+    };
+  }, [disconnect]);
 
   useEffect(() => {
-    rafRef.current = requestAnimationFrame(rafFlush)
+    rafRef.current = requestAnimationFrame(rafFlush);
     return () => {
-      cancelAnimationFrame(rafRef.current)
-    }
-  }, [rafFlush])
+      cancelAnimationFrame(rafRef.current);
+    };
+  }, [rafFlush]);
 
   useEffect(() => {
-    if (!chartRef.current) return
-    const chart = echarts.init(chartRef.current, undefined, { renderer: "canvas" })
-    chartInstanceRef.current = chart
+    if (!chartRef.current) return;
+    const chart = echarts.init(chartRef.current, undefined, { renderer: 'canvas' });
+    chartInstanceRef.current = chart;
 
     chart.setOption({
-      tooltip: { trigger: "axis" },
+      tooltip: { trigger: 'axis' },
       legend: {
-        data: ["Critical", "Major", "Minor", "Info"],
+        data: ['Critical', 'Major', 'Minor', 'Info'],
         bottom: 0,
         textStyle: { fontSize: 11 },
       },
       grid: { left: 40, right: 16, top: 8, bottom: 32 },
-      xAxis: { type: "category", axisLabel: { fontSize: 10 } },
+      xAxis: { type: 'category', axisLabel: { fontSize: 10 } },
       yAxis: {
-        type: "value",
+        type: 'value',
         min: 0,
         axisLabel: { fontSize: 10 },
-        splitLine: { lineStyle: { type: "dashed", opacity: 0.3 } },
+        splitLine: { lineStyle: { type: 'dashed', opacity: 0.3 } },
       },
       series: LEVEL_ORDER.map((level) => ({
         name: level.charAt(0).toUpperCase() + level.slice(1),
-        type: "line",
+        type: 'line',
         smooth: true,
-        stack: "total",
+        stack: 'total',
         areaStyle: { opacity: 0.25 },
-        symbol: "none",
+        symbol: 'none',
         animation: false,
         lineStyle: { width: 1.5 },
         itemStyle: { color: CHART_COLORS[level] },
       })),
-    })
+    });
 
     const handleResize = () => {
-      chart.resize()
-    }
-    window.addEventListener("resize", handleResize, { passive: true })
+      chart.resize();
+    };
+    window.addEventListener('resize', handleResize, { passive: true });
     return () => {
-      window.removeEventListener("resize", handleResize)
-      chart.dispose()
-      chartInstanceRef.current = null
-    }
-  }, [])
+      window.removeEventListener('resize', handleResize);
+      chart.dispose();
+      chartInstanceRef.current = null;
+    };
+  }, []);
 
   const updateChart = useCallback(() => {
-    if (!aliveRef.current) return
-    const chart = chartInstanceRef.current
+    if (!aliveRef.current) return;
+    const chart = chartInstanceRef.current;
     if (!chart) {
-      chartRafRef.current = requestAnimationFrame(updateChart)
-      return
+      chartRafRef.current = requestAnimationFrame(updateChart);
+      return;
     }
-    const trend = trendBufferRef.current
-    const now = Date.now()
-    const windowMs = 60000
-    const bucketSize = 5000
-    const bucketCount = Math.ceil(windowMs / bucketSize)
-    const windowStart = now - windowMs
+    const trend = trendBufferRef.current;
+    const now = Date.now();
+    const windowMs = 60000;
+    const bucketSize = 5000;
+    const bucketCount = Math.ceil(windowMs / bucketSize);
+    const windowStart = now - windowMs;
 
-    const labels: string[] = []
+    const labels: string[] = [];
     const buckets: Record<AlertLevel, number[]> = {
       critical: [],
       major: [],
       minor: [],
       info: [],
-    }
+    };
     for (let i = 0; i < bucketCount; i++) {
-      const t = new Date(windowStart + (i + 1) * bucketSize)
+      const t = new Date(windowStart + (i + 1) * bucketSize);
       labels.push(
-        t.toLocaleTimeString("zh-CN", { hour: "2-digit", minute: "2-digit", second: "2-digit" }),
-      )
-      for (const level of LEVEL_ORDER) buckets[level].push(0)
+        t.toLocaleTimeString('zh-CN', { hour: '2-digit', minute: '2-digit', second: '2-digit' }),
+      );
+      for (const level of LEVEL_ORDER) buckets[level].push(0);
     }
     for (const t of trend) {
-      if (t.time < windowStart) continue
-      const idx = Math.floor((t.time - windowStart) / bucketSize)
-      if (idx >= 0 && idx < bucketCount) buckets[t.level][idx]++
+      if (t.time < windowStart) continue;
+      const idx = Math.floor((t.time - windowStart) / bucketSize);
+      if (idx >= 0 && idx < bucketCount) buckets[t.level][idx]++;
     }
     chart.setOption({
       xAxis: { data: labels },
       series: LEVEL_ORDER.map((level) => ({ data: buckets[level] })),
-    })
+    });
     if (chartActiveRef.current) {
-      chartRafRef.current = requestAnimationFrame(updateChart)
+      chartRafRef.current = requestAnimationFrame(updateChart);
     }
-  }, [])
+  }, []);
 
   useEffect(() => {
     startChartLoopRef.current = () => {
-      chartActiveRef.current = true
-      cancelAnimationFrame(chartRafRef.current)
-      chartRafRef.current = requestAnimationFrame(updateChart)
-    }
+      chartActiveRef.current = true;
+      cancelAnimationFrame(chartRafRef.current);
+      chartRafRef.current = requestAnimationFrame(updateChart);
+    };
     stopChartLoopRef.current = () => {
-      chartActiveRef.current = false
-      cancelAnimationFrame(chartRafRef.current)
-    }
-    chartRafRef.current = requestAnimationFrame(updateChart)
+      chartActiveRef.current = false;
+      cancelAnimationFrame(chartRafRef.current);
+    };
+    chartRafRef.current = requestAnimationFrame(updateChart);
     return () => {
-      cancelAnimationFrame(chartRafRef.current)
-    }
-  }, [updateChart])
+      cancelAnimationFrame(chartRafRef.current);
+    };
+  }, [updateChart]);
 
   const fallbackLabel =
-    transportType === "SSE" ? "SSE 降级" : transportType === "Polling" ? "轮询降级" : null
+    transportType === 'SSE' ? 'SSE 降级' : transportType === 'Polling' ? '轮询降级' : null;
 
-  const statusBadge: "success" | "warning" | "error" = recovered
-    ? "success"
+  const statusBadge: 'success' | 'warning' | 'error' = recovered
+    ? 'success'
     : isInterrupted
-      ? "error"
-      : connectionStatus === "connected" && heartbeatAlive
-        ? "success"
-        : connectionStatus === "connected"
-          ? "warning"
-          : "error"
+      ? 'error'
+      : connectionStatus === 'connected' && heartbeatAlive
+        ? 'success'
+        : connectionStatus === 'connected'
+          ? 'warning'
+          : 'error';
 
   const statusText = isPaused
-    ? "已暂停"
+    ? '已暂停'
     : recovered
-      ? "已恢复"
-      : isInterrupted && connectionStatus === "reconnecting"
+      ? '已恢复'
+      : isInterrupted && connectionStatus === 'reconnecting'
         ? `已中断 · ${String(reconnectCountdown)}s 后重连`
         : isInterrupted
-          ? "已中断"
-          : connectionStatus === "connected" && heartbeatAlive
+          ? '已中断'
+          : connectionStatus === 'connected' && heartbeatAlive
             ? `已连接 (${transportType})`
-            : connectionStatus === "connected"
-              ? "心跳异常"
-              : connectionStatus === "connecting"
-                ? "连接中..."
-                : "未连接"
+            : connectionStatus === 'connected'
+              ? '心跳异常'
+              : connectionStatus === 'connecting'
+                ? '连接中...'
+                : '未连接';
 
   const statusTooltip = recovered
-    ? "连接已恢复"
+    ? '连接已恢复'
     : isInterrupted
       ? `连接异常中断 · 第 ${String(retryCount)}/${String(MAX_RETRY)} 次重连 · 已中断 ${String(Math.floor((Date.now() - disconnectTimeRef.current) / 1000))}s`
-      : connectionStatus === "connected" && heartbeatAlive
+      : connectionStatus === 'connected' && heartbeatAlive
         ? `${transportType} 已连接，心跳正常`
-        : connectionStatus === "connected"
+        : connectionStatus === 'connected'
           ? `${transportType} 已连接，未收到心跳响应`
-          : connectionStatus === "connecting"
-            ? "正在建立连接..."
-            : `${transportType} 未连接`
+          : connectionStatus === 'connecting'
+            ? '正在建立连接...'
+            : `${transportType} 未连接`;
 
   const displayAlerts = useMemo(() => {
-    const filtered = levelFilter === "all" ? alerts : alerts.filter((a) => a.level === levelFilter)
-    return filtered.slice(0, DISPLAY_LIMIT)
-  }, [alerts, levelFilter])
+    const filtered = levelFilter === 'all' ? alerts : alerts.filter((a) => a.level === levelFilter);
+    return filtered.slice(0, DISPLAY_LIMIT);
+  }, [alerts, levelFilter]);
 
   const qps = useMemo(() => {
-    const ts = metrics.timestamps
-    if (ts.length < 2) return 0
-    const cutoff = Date.now() - 1000
-    return ts.filter((t) => t >= cutoff).length
-  }, [metrics.timestamps])
+    const ts = metrics.timestamps;
+    if (ts.length < 2) return 0;
+    const cutoff = Date.now() - 1000;
+    return ts.filter((t) => t >= cutoff).length;
+  }, [metrics.timestamps]);
 
   const levelDots = useMemo(() => {
-    const total = metrics.totalReceived || 1
+    const total = metrics.totalReceived || 1;
     return LEVEL_ORDER.map((l) => ({
       level: l,
       pct: (metrics.countByLevel[l] / total) * 100,
-    }))
-  }, [metrics])
+    }));
+  }, [metrics]);
 
   return (
-    <div style={{ display: "flex", flexDirection: "column", gap: 12, height: "100%" }}>
+    <div style={{ display: 'flex', flexDirection: 'column', gap: 12, height: '100%' }}>
       {/* Connection + QPS bar */}
       <div
         style={{
-          display: "flex",
-          alignItems: "center",
-          justifyContent: "space-between",
-          flexWrap: "wrap",
+          display: 'flex',
+          alignItems: 'center',
+          justifyContent: 'space-between',
+          flexWrap: 'wrap',
           gap: 8,
         }}
       >
@@ -460,7 +472,7 @@ export default function AlertWebSocket() {
           <Tooltip title={statusTooltip}>
             <Badge status={statusBadge} />
           </Tooltip>
-          <Text strong style={{ color: isInterrupted ? "#f5222d" : undefined }}>
+          <Text strong style={{ color: isInterrupted ? '#f5222d' : undefined }}>
             {statusText}
           </Text>
           {isInterrupted && <Text type="secondary">中断: {metrics.interruptionCount}</Text>}
@@ -476,18 +488,18 @@ export default function AlertWebSocket() {
           size="small"
           value={transportType}
           onChange={(v) => {
-            const index = v === "WebSocket" ? 0 : v === "SSE" ? 1 : 2
-            let t = transportRef.current
+            const index = v === 'WebSocket' ? 0 : v === 'SSE' ? 1 : 2;
+            let t = transportRef.current;
             if (!t) {
-              t = initTransport()
-              transportRef.current = t
+              t = initTransport();
+              transportRef.current = t;
             }
-            t.forceTransport(index)
+            t.forceTransport(index);
           }}
           options={[
-            { label: "WebSocket", value: "WebSocket" },
-            { label: "SSE", value: "SSE" },
-            { label: "Polling", value: "Polling" },
+            { label: 'WebSocket', value: 'WebSocket' },
+            { label: 'SSE', value: 'SSE' },
+            { label: 'Polling', value: 'Polling' },
           ]}
         />
         <Space>
@@ -501,10 +513,10 @@ export default function AlertWebSocket() {
             step={1000}
             value={editRate}
             onChange={(e) => {
-              const v = Number.parseInt(e.target.value, 10)
+              const v = Number.parseInt(e.target.value, 10);
               if (!Number.isNaN(v) && v >= 100) {
-                rateRef.current = v
-                setEditRate(v)
+                rateRef.current = v;
+                setEditRate(v);
               }
             }}
             style={{ width: 80, fontSize: 12 }}
@@ -519,10 +531,10 @@ export default function AlertWebSocket() {
             step={1}
             value={editWorkers}
             onChange={(e) => {
-              const v = Number.parseInt(e.target.value, 10)
+              const v = Number.parseInt(e.target.value, 10);
               if (!Number.isNaN(v) && v > 0) {
-                workersRef.current = v
-                setEditWorkers(v)
+                workersRef.current = v;
+                setEditWorkers(v);
               }
             }}
             style={{ width: 60, fontSize: 12 }}
@@ -532,7 +544,7 @@ export default function AlertWebSocket() {
               {fallbackLabel}
             </Tag>
           )}
-          {connectionStatus === "connected" ? (
+          {connectionStatus === 'connected' ? (
             <>
               <Button size="small" icon={<PauseCircleOutlined />} onClick={pauseConnection}>
                 暂停
@@ -556,7 +568,7 @@ export default function AlertWebSocket() {
               type="primary"
               icon={<ReloadOutlined />}
               onClick={() => {
-                connect(100)
+                connect(100);
               }}
             >
               重连
@@ -566,8 +578,8 @@ export default function AlertWebSocket() {
             size="small"
             icon={<WarningOutlined />}
             onClick={() => {
-              clearAlerts()
-              resetMetrics()
+              clearAlerts();
+              resetMetrics();
             }}
           >
             清空
@@ -576,14 +588,14 @@ export default function AlertWebSocket() {
       </div>
 
       {/* Level distribution bar */}
-      <div style={{ display: "flex", gap: 4, height: 6, borderRadius: 3, overflow: "hidden" }}>
+      <div style={{ display: 'flex', gap: 4, height: 6, borderRadius: 3, overflow: 'hidden' }}>
         {levelDots.map(({ level, pct }) => (
           <div
             key={level}
             style={{
               width: `${String(pct)}%`,
               backgroundColor: CHART_COLORS[level],
-              transition: "width 0.3s",
+              transition: 'width 0.3s',
             }}
           />
         ))}
@@ -591,21 +603,21 @@ export default function AlertWebSocket() {
 
       {/* ECharts trend */}
       <Card size="small" title={<Text strong>告警趋势 (最近 60s)</Text>}>
-        <div ref={chartRef} style={{ width: "100%", height: 200 }} />
+        <div ref={chartRef} style={{ width: '100%', height: 200 }} />
       </Card>
 
       {/* Alert list */}
       <Card
         size="small"
-        styles={{ body: { padding: 0, overflow: "hidden" } }}
+        styles={{ body: { padding: 0, overflow: 'hidden' } }}
         style={{ flex: 1, minHeight: 0 }}
         title={
           <div
             style={{
-              display: "flex",
-              justifyContent: "space-between",
-              alignItems: "center",
-              width: "100%",
+              display: 'flex',
+              justifyContent: 'space-between',
+              alignItems: 'center',
+              width: '100%',
             }}
           >
             <Text strong>{`实时告警 (${String(displayAlerts.length)})`}</Text>
@@ -613,10 +625,10 @@ export default function AlertWebSocket() {
               size="small"
               value={levelFilter}
               onChange={(v) => {
-                setLevelFilter(v as "all" | AlertLevel)
+                setLevelFilter(v as 'all' | AlertLevel);
               }}
               options={[
-                { label: `全部 (${String(alerts.length)})`, value: "all" },
+                { label: `全部 (${String(alerts.length)})`, value: 'all' },
                 ...LEVEL_ORDER.map((l) => ({
                   label: `${LEVEL_TAG[l].text} (${String(metrics.countByLevel[l])})`,
                   value: l,
@@ -639,5 +651,5 @@ export default function AlertWebSocket() {
         )}
       </Card>
     </div>
-  )
+  );
 }

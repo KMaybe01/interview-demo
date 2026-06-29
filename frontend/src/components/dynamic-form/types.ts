@@ -1,205 +1,211 @@
-import Ajv from "ajv"
+import Ajv from 'ajv';
 
 export interface FormSchema {
-  type: "tabs" | "card" | "form" | "leaf"
-  key: string
-  title?: string
-  description?: string
-  children?: FormSchema[]
-  properties?: Record<string, LeafSchema>
-  tabs?: TabSchema[]
+  type: 'tabs' | 'card' | 'form' | 'leaf';
+  key: string;
+  title?: string;
+  description?: string;
+  children?: FormSchema[];
+  properties?: Record<string, LeafSchema>;
+  tabs?: TabSchema[];
 }
 
 export interface TabSchema {
-  title: string
-  key: string
-  children: FormSchema[]
+  title: string;
+  key: string;
+  children: FormSchema[];
 }
 
 export interface LeafSchema {
-  type: FieldType
-  key: string
-  title: string
-  description?: string
-  required?: boolean
-  default?: unknown
-  placeholder?: string
-  options?: { label: string; value: string | number }[]
-  min?: number
-  max?: number
-  minLength?: number
-  maxLength?: number
-  pattern?: string
-  multiple?: boolean
-  visible?: string
-  items?: FormSchema
-  minItems?: number
-  maxItems?: number
-  validation?: (value: unknown, data: Record<string, unknown>) => string | undefined
-  asyncValidation?: (value: unknown) => Promise<string | undefined>
-  autoFill?: (data: Record<string, unknown>) => unknown
-  dependencies?: string[]
-  ajvSchema?: Record<string, unknown>
+  type: FieldType;
+  key: string;
+  title: string;
+  description?: string;
+  required?: boolean;
+  default?: unknown;
+  placeholder?: string;
+  options?: { label: string; value: string | number }[];
+  min?: number;
+  max?: number;
+  minLength?: number;
+  maxLength?: number;
+  pattern?: string;
+  multiple?: boolean;
+  visible?: string;
+  items?: FormSchema;
+  minItems?: number;
+  maxItems?: number;
+  validation?: (value: unknown, data: Record<string, unknown>) => string | undefined;
+  asyncValidation?: (value: unknown) => Promise<string | undefined>;
+  autoFill?: (data: Record<string, unknown>) => unknown;
+  dependencies?: string[];
+  ajvSchema?: Record<string, unknown>;
 }
 
-export type FieldType = "string" | "number" | "select" | "switch" | "datetime" | "json" | "array"
+export type FieldType = 'string' | 'number' | 'select' | 'switch' | 'datetime' | 'json' | 'array';
 
 export interface FieldComponentProps {
-  schema: LeafSchema
-  value: unknown
-  path: string
-  onChange: (path: string, value: unknown) => void
-  onBlur?: (path: string) => void
-  error?: string
-  asyncValidating?: boolean
-  allData?: Record<string, unknown>
+  schema: LeafSchema;
+  value: unknown;
+  path: string;
+  onChange: (path: string, value: unknown) => void;
+  onBlur?: (path: string) => void;
+  error?: string;
+  asyncValidating?: boolean;
+  allData?: Record<string, unknown>;
 }
 
 export interface ValidationError {
-  path: string
-  message: string
+  path: string;
+  message: string;
 }
 
-let ajvInstance: Ajv | null = null
-let ajvOptions: ConstructorParameters<typeof Ajv>[0] | null = null
+let ajvInstance: Ajv | null = null;
+let ajvOptions: ConstructorParameters<typeof Ajv>[0] | null = null;
 
 export function getAjv(): Ajv {
-  if (ajvInstance) return ajvInstance
-  ajvInstance = new Ajv(ajvOptions ?? { allErrors: true, verbose: true })
-  return ajvInstance
+  if (ajvInstance) return ajvInstance;
+  ajvInstance = new Ajv(ajvOptions ?? { allErrors: true, verbose: true });
+  return ajvInstance;
 }
 
 export function configureAjv(options: ConstructorParameters<typeof Ajv>[0]): void {
-  ajvOptions = options
-  ajvInstance = null // Re-create on next getAjv() call
+  ajvOptions = options;
+  ajvInstance = null; // Re-create on next getAjv() call
 }
 
 export function compileAjvSchema(
   schema: Record<string, unknown>,
-): ReturnType<Ajv["compile"]> | null {
+): ReturnType<Ajv['compile']> | null {
   try {
-    const ajv = getAjv()
-    return ajv.compile(schema)
+    const ajv = getAjv();
+    return ajv.compile(schema);
   } catch {
-    return null
+    return null;
   }
 }
 
 export function getDefaultsFromSchema(schema: FormSchema): Record<string, unknown> {
-  const defaults: Record<string, unknown> = {}
-  const leaves = flattenSchema(schema)
+  const defaults: Record<string, unknown> = {};
+  const leaves = flattenSchema(schema);
   for (const leaf of leaves) {
     if (leaf.default !== undefined) {
-      defaults[leaf.key] = leaf.default
-    } else if (leaf.type === "switch") {
-      defaults[leaf.key] = false
-    } else if (leaf.type === "array") {
-      defaults[leaf.key] = []
+      defaults[leaf.key] = leaf.default;
+    } else if (leaf.type === 'switch') {
+      defaults[leaf.key] = false;
+    } else if (leaf.type === 'array') {
+      defaults[leaf.key] = [];
     } else {
-      defaults[leaf.key] = undefined
+      defaults[leaf.key] = undefined;
     }
   }
-  return defaults
+  return defaults;
 }
 
 export function flattenSchema(schema: FormSchema): LeafSchema[] {
-  const result: LeafSchema[] = []
+  const result: LeafSchema[] = [];
   const walk = (node: FormSchema) => {
-    if (node.type === "leaf") {
+    if (node.type === 'leaf') {
       if (node.properties) {
         for (const leaf of Object.values(node.properties)) {
-          result.push(leaf)
+          result.push(leaf);
           // array items are nested — skip; ArrayField handles its own validation
         }
       }
     }
     if (node.children) {
       for (const child of node.children) {
-        walk(child)
+        walk(child);
       }
     }
     if (node.tabs) {
       for (const tab of node.tabs) {
         for (const child of tab.children) {
-          walk(child)
+          walk(child);
         }
       }
     }
-  }
-  walk(schema)
-  return result
+  };
+  walk(schema);
+  return result;
 }
 
 export function validateSchema(
   schema: FormSchema,
   data: Record<string, unknown>,
 ): ValidationError[] {
-  const errors: ValidationError[] = []
-  const leaves = flattenSchema(schema)
+  const errors: ValidationError[] = [];
+  const leaves = flattenSchema(schema);
   for (const leaf of leaves) {
-    const value = data[leaf.key]
-    if (leaf.required && (value == null || value === "")) {
-      errors.push({ path: leaf.key, message: `${leaf.title} 为必填项` })
+    const value = data[leaf.key];
+    if (leaf.required && (value == null || value === '')) {
+      errors.push({ path: leaf.key, message: `${leaf.title} 为必填项` });
     }
-    if (value != null && value !== "") {
+    if (value != null && value !== '') {
       if (
-        leaf.type === "string" &&
+        leaf.type === 'string' &&
         leaf.minLength !== undefined &&
-        typeof value === "string" &&
+        typeof value === 'string' &&
         value.length < leaf.minLength
       ) {
         errors.push({
           path: leaf.key,
           message: `${leaf.title} 最少 ${String(leaf.minLength)} 个字符`,
-        })
+        });
       }
       if (
-        leaf.type === "string" &&
+        leaf.type === 'string' &&
         leaf.maxLength !== undefined &&
-        typeof value === "string" &&
+        typeof value === 'string' &&
         value.length > leaf.maxLength
       ) {
         errors.push({
           path: leaf.key,
           message: `${leaf.title} 最多 ${String(leaf.maxLength)} 个字符`,
-        })
+        });
       }
-      if (leaf.type === "number") {
-        const num = Number(value)
+      if (leaf.type === 'number') {
+        const num = Number(value);
         if (Number.isNaN(num)) {
-          errors.push({ path: leaf.key, message: `${leaf.title} 必须为数字` })
+          errors.push({ path: leaf.key, message: `${leaf.title} 必须为数字` });
         } else {
           if (leaf.min !== undefined && num < leaf.min) {
-            errors.push({ path: leaf.key, message: `${leaf.title} 最小值为 ${String(leaf.min)}` })
+            errors.push({ path: leaf.key, message: `${leaf.title} 最小值为 ${String(leaf.min)}` });
           }
           if (leaf.max !== undefined && num > leaf.max) {
-            errors.push({ path: leaf.key, message: `${leaf.title} 最大值为 ${String(leaf.max)}` })
+            errors.push({ path: leaf.key, message: `${leaf.title} 最大值为 ${String(leaf.max)}` });
           }
         }
       }
-      if (leaf.type === "select" && leaf.options) {
-        const validValues = leaf.options.map((o) => o.value)
+      if (leaf.type === 'select' && leaf.options) {
+        const validValues = leaf.options.map((o) => o.value);
         if (!validValues.includes(value as string | number)) {
-          errors.push({ path: leaf.key, message: `${leaf.title} 选项值无效` })
+          errors.push({ path: leaf.key, message: `${leaf.title} 选项值无效` });
         }
       }
-      if (leaf.type === "array" && Array.isArray(value)) {
+      if (leaf.type === 'array' && Array.isArray(value)) {
         if (leaf.minItems !== undefined && value.length < leaf.minItems) {
-          errors.push({ path: leaf.key, message: `${leaf.title} 最少 ${String(leaf.minItems)} 项` })
+          errors.push({
+            path: leaf.key,
+            message: `${leaf.title} 最少 ${String(leaf.minItems)} 项`,
+          });
         }
         if (leaf.maxItems !== undefined && value.length > leaf.maxItems) {
-          errors.push({ path: leaf.key, message: `${leaf.title} 最多 ${String(leaf.maxItems)} 项` })
+          errors.push({
+            path: leaf.key,
+            message: `${leaf.title} 最多 ${String(leaf.maxItems)} 项`,
+          });
         }
       }
     }
     if (leaf.validation) {
-      const customError = leaf.validation(value, data)
+      const customError = leaf.validation(value, data);
       if (customError) {
-        errors.push({ path: leaf.key, message: customError })
+        errors.push({ path: leaf.key, message: customError });
       }
     }
   }
-  return errors
+  return errors;
 }
 
 export function updateValue(
@@ -207,20 +213,20 @@ export function updateValue(
   path: string,
   value: unknown,
 ): Record<string, unknown> {
-  return { ...data, [path]: value }
+  return { ...data, [path]: value };
 }
 
 export function getValueAtPath(data: Record<string, unknown>, path: string): unknown {
-  const parts = path.split(".")
-  let current: unknown = data
+  const parts = path.split('.');
+  let current: unknown = data;
   for (const part of parts) {
-    if (current == null || typeof current !== "object") return undefined
-    current = (current as Record<string, unknown>)[part]
+    if (current == null || typeof current !== 'object') return undefined;
+    current = (current as Record<string, unknown>)[part];
   }
-  return current
+  return current;
 }
 
 export function findLeaf(schema: FormSchema, key: string): LeafSchema | undefined {
-  const leaves = flattenSchema(schema)
-  return leaves.find((l) => l.key === key)
+  const leaves = flattenSchema(schema);
+  return leaves.find((l) => l.key === key);
 }

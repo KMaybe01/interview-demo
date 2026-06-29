@@ -1,5 +1,23 @@
-import { ApiOutlined, BulbOutlined, CheckCircleOutlined, CloseCircleOutlined, ToolOutlined } from '@ant-design/icons';
-import { Button, Card, Descriptions, List, Modal, Space, Switch, Table, Tabs, Tag, Typography } from 'antd';
+import {
+  ApiOutlined,
+  BulbOutlined,
+  CheckCircleOutlined,
+  CloseCircleOutlined,
+  ToolOutlined,
+} from '@ant-design/icons';
+import {
+  Button,
+  Card,
+  Descriptions,
+  List,
+  Modal,
+  Space,
+  Switch,
+  Table,
+  Tabs,
+  Tag,
+  Typography,
+} from 'antd';
 import { useState } from 'react';
 import { useMessageApi } from '../AIDemo';
 import type { Plugin } from '../types';
@@ -109,7 +127,9 @@ function Plugins() {
       dataIndex: 'category' as const,
       key: 'category',
       render: (category: string) => (
-        <Tag color={CATEGORY_COLORS[category] || 'default'}>{CATEGORY_LABELS[category] || category}</Tag>
+        <Tag color={CATEGORY_COLORS[category] || 'default'}>
+          {CATEGORY_LABELS[category] || category}
+        </Tag>
       ),
     },
     {
@@ -177,7 +197,12 @@ function Plugins() {
             ),
             children: (
               <Card>
-                <Table<Plugin> columns={columns} dataSource={plugins} rowKey="id" pagination={{ pageSize: 10 }} />
+                <Table<Plugin>
+                  columns={columns}
+                  dataSource={plugins}
+                  rowKey="id"
+                  pagination={{ pageSize: 10 }}
+                />
               </Card>
             ),
           },
@@ -224,7 +249,8 @@ function Plugins() {
               <Card>
                 <Title level={5}>插件系统说明</Title>
                 <Text>
-                  插件系统允许扩展 AI Agent 的能力。每个插件都是一个独立的功能模块， 可以被智能体调用来完成特定任务。
+                  插件系统允许扩展 AI Agent 的能力。每个插件都是一个独立的功能模块，
+                  可以被智能体调用来完成特定任务。
                 </Text>
 
                 <Title level={5} style={{ marginTop: 24 }}>
@@ -232,7 +258,12 @@ function Plugins() {
                 </Title>
                 <List
                   bordered
-                  dataSource={['实现 Plugin 接口', '定义插件 Schema', '注册到 PluginManager', '在智能体中调用']}
+                  dataSource={[
+                    '实现 Plugin 接口',
+                    '定义插件 Schema',
+                    '注册到 PluginManager',
+                    '在智能体中调用',
+                  ]}
                   renderItem={(item: string, index: number) => (
                     <List.Item key={`step-${index}`}>{`${index + 1}. ${item}`}</List.Item>
                   )}
@@ -277,7 +308,9 @@ function Plugins() {
             <Descriptions.Item label="描述">{selectedPlugin.description}</Descriptions.Item>
             <Descriptions.Item label="版本">{selectedPlugin.version}</Descriptions.Item>
             <Descriptions.Item label="分类">
-              <Tag color={CATEGORY_COLORS[selectedPlugin.category]}>{CATEGORY_LABELS[selectedPlugin.category]}</Tag>
+              <Tag color={CATEGORY_COLORS[selectedPlugin.category]}>
+                {CATEGORY_LABELS[selectedPlugin.category]}
+              </Tag>
             </Descriptions.Item>
             <Descriptions.Item label="状态">
               {selectedPlugin.enabled ? <Tag color="success">已启用</Tag> : <Tag>已禁用</Tag>}
@@ -288,7 +321,12 @@ function Plugins() {
                 columns={[
                   { title: '参数名', dataIndex: 'name', key: 'name' },
                   { title: '类型', dataIndex: 'type', key: 'type' },
-                  { title: '必填', dataIndex: 'required', key: 'required', render: (v: boolean) => (v ? '是' : '否') },
+                  {
+                    title: '必填',
+                    dataIndex: 'required',
+                    key: 'required',
+                    render: (v: boolean) => (v ? '是' : '否'),
+                  },
                   { title: '描述', dataIndex: 'description', key: 'description' },
                 ]}
                 dataSource={selectedPlugin.parameters}

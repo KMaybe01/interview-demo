@@ -93,7 +93,7 @@
 }
 
 .githubLink:hover {
-  color: #667eea !important;
+  color: #667eea;
 }
 
 @keyframes loginDrift {

@@ -1,50 +1,50 @@
-import { create } from "zustand"
+import { create } from 'zustand';
 
-export type AlertLevel = "critical" | "major" | "minor" | "info"
+export type AlertLevel = 'critical' | 'major' | 'minor' | 'info';
 
 export interface AlertMessage {
-  id: string
-  seq: number
-  topic: "alert" | "status" | "log"
-  category: string
-  level: AlertLevel
-  message: string
-  time: string
+  id: string;
+  seq: number;
+  topic: 'alert' | 'status' | 'log';
+  category: string;
+  level: AlertLevel;
+  message: string;
+  time: string;
 }
 
 export interface AlertMetrics {
-  totalReceived: number
-  countByLevel: Record<AlertLevel, number>
-  countByTopic: Record<string, number>
-  timestamps: number[]
-  interruptionCount: number
-  totalDowntimeMs: number
-  lastSeq: number
-  gapsDetected: number
+  totalReceived: number;
+  countByLevel: Record<AlertLevel, number>;
+  countByTopic: Record<string, number>;
+  timestamps: number[];
+  interruptionCount: number;
+  totalDowntimeMs: number;
+  lastSeq: number;
+  gapsDetected: number;
 }
 
 interface AlertState {
-  alerts: AlertMessage[]
-  metrics: AlertMetrics
-  addAlerts: (items: AlertMessage[]) => void
-  logInterruption: (downtimeMs: number) => void
-  logGap: (from: number, to: number) => void
-  setSeq: (seq: number) => void
-  clearAlerts: () => void
-  resetMetrics: () => void
+  alerts: AlertMessage[];
+  metrics: AlertMetrics;
+  addAlerts: (items: AlertMessage[]) => void;
+  logInterruption: (downtimeMs: number) => void;
+  logGap: (from: number, to: number) => void;
+  setSeq: (seq: number) => void;
+  clearAlerts: () => void;
+  resetMetrics: () => void;
 }
 
 const CATEGORY_COLORS: Record<string, string> = {
-  system: "#722ed1",
-  network: "#13c2c2",
-  database: "#fa8c16",
-  security: "#eb2f96",
-  application: "#1890ff",
-}
+  system: '#722ed1',
+  network: '#13c2c2',
+  database: '#fa8c16',
+  security: '#eb2f96',
+  application: '#1890ff',
+};
 
-export { CATEGORY_COLORS }
+export { CATEGORY_COLORS };
 
-const MAX_ALERTS = 5000
+const MAX_ALERTS = 5000;
 
 export const useAlertStore = create<AlertState>((set) => ({
   alerts: [],
@@ -60,31 +60,31 @@ export const useAlertStore = create<AlertState>((set) => ({
   },
   addAlerts: (items) => {
     set((state) => {
-      const now = Date.now()
-      const { metrics } = state
-      const newTimestamps = metrics.timestamps.slice()
+      const now = Date.now();
+      const { metrics } = state;
+      const newTimestamps = metrics.timestamps.slice();
 
-      const countByLevel = { ...metrics.countByLevel }
-      const countByTopic = { ...metrics.countByTopic }
-      let lastSeq = metrics.lastSeq
-      let gaps = metrics.gapsDetected
+      const countByLevel = { ...metrics.countByLevel };
+      const countByTopic = { ...metrics.countByTopic };
+      let lastSeq = metrics.lastSeq;
+      let gaps = metrics.gapsDetected;
 
       for (const item of items) {
-        countByLevel[item.level]++
-        countByTopic[item.topic]++
-        newTimestamps.push(now)
+        countByLevel[item.level]++;
+        countByTopic[item.topic]++;
+        newTimestamps.push(now);
         if (item.seq > 0) {
           if (lastSeq > 0 && item.seq > lastSeq + 1) {
-            gaps++
+            gaps++;
           }
           if (item.seq > lastSeq) {
-            lastSeq = item.seq
+            lastSeq = item.seq;
           }
         }
       }
 
       if (newTimestamps.length > 20000) {
-        newTimestamps.splice(0, newTimestamps.length - 20000)
+        newTimestamps.splice(0, newTimestamps.length - 20000);
       }
 
       return {
@@ -98,8 +98,8 @@ export const useAlertStore = create<AlertState>((set) => ({
           lastSeq,
           gapsDetected: gaps,
         },
-      }
-    })
+      };
+    });
   },
   logInterruption: (downtimeMs) => {
     set((state) => ({
@@ -108,7 +108,7 @@ export const useAlertStore = create<AlertState>((set) => ({
         interruptionCount: state.metrics.interruptionCount + 1,
         totalDowntimeMs: state.metrics.totalDowntimeMs + downtimeMs,
       },
-    }))
+    }));
   },
   logGap: (_from, _to) => {
     set((state) => ({
@@ -116,7 +116,7 @@ export const useAlertStore = create<AlertState>((set) => ({
         ...state.metrics,
         gapsDetected: state.metrics.gapsDetected + 1,
       },
-    }))
+    }));
   },
   setSeq: (seq) => {
     set((state) => ({
@@ -124,10 +124,10 @@ export const useAlertStore = create<AlertState>((set) => ({
         ...state.metrics,
         lastSeq: seq,
       },
-    }))
+    }));
   },
   clearAlerts: () => {
-    set({ alerts: [] })
+    set({ alerts: [] });
   },
   resetMetrics: () => {
     set({
@@ -141,6 +141,6 @@ export const useAlertStore = create<AlertState>((set) => ({
         lastSeq: 0,
         gapsDetected: 0,
       },
-    })
+    });
   },
-}))
+}));

@@ -1,4 +1,4 @@
-import { CaretDownOutlined, CaretRightOutlined } from "@ant-design/icons"
+import { CaretDownOutlined, CaretRightOutlined } from '@ant-design/icons';
 import {
   Alert,
   Button,
@@ -13,142 +13,142 @@ import {
   Tag,
   Typography,
   theme,
-} from "antd"
-import { useCallback, useEffect, useMemo, useRef, useState } from "react"
-import DynamicForm, { type DynamicFormHandle } from "../components/dynamic-form/DynamicForm.tsx"
-import ArrayField from "../components/dynamic-form/fields/ArrayField.tsx"
-import DateTimeField from "../components/dynamic-form/fields/DateTimeField.tsx"
-import JsonField from "../components/dynamic-form/fields/JsonField.tsx"
-import NumberField from "../components/dynamic-form/fields/NumberField.tsx"
-import SelectField from "../components/dynamic-form/fields/SelectField.tsx"
-import StringField from "../components/dynamic-form/fields/StringField.tsx"
-import SwitchField from "../components/dynamic-form/fields/SwitchField.tsx"
-import { registerField } from "../components/dynamic-form/registry.tsx"
-import type { FormSchema } from "../components/dynamic-form/types.ts"
-import { getErrorMessage, http } from "../utils/fetchClient.ts"
+} from 'antd';
+import { useCallback, useEffect, useMemo, useRef, useState } from 'react';
+import DynamicForm, { type DynamicFormHandle } from '../components/dynamic-form/DynamicForm.tsx';
+import ArrayField from '../components/dynamic-form/fields/ArrayField.tsx';
+import DateTimeField from '../components/dynamic-form/fields/DateTimeField.tsx';
+import JsonField from '../components/dynamic-form/fields/JsonField.tsx';
+import NumberField from '../components/dynamic-form/fields/NumberField.tsx';
+import SelectField from '../components/dynamic-form/fields/SelectField.tsx';
+import StringField from '../components/dynamic-form/fields/StringField.tsx';
+import SwitchField from '../components/dynamic-form/fields/SwitchField.tsx';
+import { registerField } from '../components/dynamic-form/registry.tsx';
+import type { FormSchema } from '../components/dynamic-form/types.ts';
+import { getErrorMessage, http } from '../utils/fetchClient.ts';
 
-const { Text, Title } = Typography
+const { Text, Title } = Typography;
 
-registerField("string", StringField)
-registerField("number", NumberField)
-registerField("select", SelectField)
-registerField("switch", SwitchField)
-registerField("datetime", DateTimeField)
-registerField("json", JsonField)
-registerField("array", ArrayField)
+registerField('string', StringField);
+registerField('number', NumberField);
+registerField('select', SelectField);
+registerField('switch', SwitchField);
+registerField('datetime', DateTimeField);
+registerField('json', JsonField);
+registerField('array', ArrayField);
 
-const ipPattern = /^(\d{1,3}\.){3}\d{1,3}$/
+const ipPattern = /^(\d{1,3}\.){3}\d{1,3}$/;
 
 function augmentSchema(schema: FormSchema): FormSchema {
   const walk = (node: FormSchema): FormSchema => {
-    if (node.type === "leaf" && node.properties) {
+    if (node.type === 'leaf' && node.properties) {
       for (const [key, leaf] of Object.entries(node.properties)) {
-        if (key === "ipAddress") {
+        if (key === 'ipAddress') {
           leaf.validation = (value) => {
-            if (typeof value === "string" && value && !ipPattern.test(value)) {
-              return "IP 地址格式无效 (需为 x.x.x.x 格式)"
+            if (typeof value === 'string' && value && !ipPattern.test(value)) {
+              return 'IP 地址格式无效 (需为 x.x.x.x 格式)';
             }
-            return undefined
-          }
+            return undefined;
+          };
         }
-        if (key === "cellId") {
+        if (key === 'cellId') {
           leaf.asyncValidation = async (value) => {
             await new Promise((r) => {
-              setTimeout(r, 1000)
-            })
-            if (String(value) === "CELL-999") {
-              return "基站 ID CELL-999 已被占用"
+              setTimeout(r, 1000);
+            });
+            if (String(value) === 'CELL-999') {
+              return '基站 ID CELL-999 已被占用';
             }
-            return undefined
-          }
+            return undefined;
+          };
         }
-        if (key === "fullCellName") {
+        if (key === 'fullCellName') {
           leaf.autoFill = (d) => {
             const typeLabel =
-              d.cellType === "macro"
-                ? "宏"
-                : d.cellType === "micro"
-                  ? "微"
-                  : d.cellType === "pico"
-                    ? "皮"
-                    : "家庭"
-            const name = typeof d.cellName === "string" ? d.cellName : ""
-            return `${typeLabel}基站-${name}`
-          }
+              d.cellType === 'macro'
+                ? '宏'
+                : d.cellType === 'micro'
+                  ? '微'
+                  : d.cellType === 'pico'
+                    ? '皮'
+                    : '家庭';
+            const name = typeof d.cellName === 'string' ? d.cellName : '';
+            return `${typeLabel}基站-${name}`;
+          };
         }
         if (leaf.items) {
-          leaf.items = walk(leaf.items)
+          leaf.items = walk(leaf.items);
         }
       }
     }
     if (node.children) {
-      node.children = node.children.map(walk)
+      node.children = node.children.map(walk);
     }
     if (node.tabs) {
       node.tabs = node.tabs.map((tab) => ({
         ...tab,
         children: tab.children.map(walk),
-      }))
+      }));
     }
-    return node
-  }
-  return walk(structuredClone(schema))
+    return node;
+  };
+  return walk(structuredClone(schema));
 }
 
 export default function JsonSchemaFormPage() {
-  const { token } = theme.useToken()
-  const [schema, setSchema] = useState<FormSchema | null>(null)
-  const [initialData, setInitialData] = useState<Record<string, unknown> | null>(null)
-  const [loading, setLoading] = useState(true)
-  const [fetchError, setFetchError] = useState<string | null>(null)
-  const [submittedData, setSubmittedData] = useState<Record<string, unknown> | null>(null)
-  const [backendErrors, setBackendErrors] = useState<Record<string, string>>({})
-  const formRef = useRef<DynamicFormHandle>(null)
-  const [liveData, setLiveData] = useState<Record<string, unknown>>({})
-  const debounceRef = useRef<ReturnType<typeof setTimeout>>(undefined)
-  const fetchedRef = useRef(false)
+  const { token } = theme.useToken();
+  const [schema, setSchema] = useState<FormSchema | null>(null);
+  const [initialData, setInitialData] = useState<Record<string, unknown> | null>(null);
+  const [loading, setLoading] = useState(true);
+  const [fetchError, setFetchError] = useState<string | null>(null);
+  const [submittedData, setSubmittedData] = useState<Record<string, unknown> | null>(null);
+  const [backendErrors, setBackendErrors] = useState<Record<string, string>>({});
+  const formRef = useRef<DynamicFormHandle>(null);
+  const [liveData, setLiveData] = useState<Record<string, unknown>>({});
+  const debounceRef = useRef<ReturnType<typeof setTimeout>>(undefined);
+  const fetchedRef = useRef(false);
 
   useEffect(() => {
     return () => {
-      if (debounceRef.current) clearTimeout(debounceRef.current)
-    }
-  }, [])
+      if (debounceRef.current) clearTimeout(debounceRef.current);
+    };
+  }, []);
 
   useEffect(() => {
-    if (fetchedRef.current) return
-    fetchedRef.current = true
+    if (fetchedRef.current) return;
+    fetchedRef.current = true;
     http
       .get<{ schema: Record<string, unknown>; initialData: Record<string, unknown> }>(
-        "/api/schema/config",
+        '/api/schema/config',
       )
       .then((res) => {
-        const rawSchema = res.data.schema as unknown as FormSchema
-        const augmented = augmentSchema(rawSchema)
-        setSchema(augmented)
-        setInitialData(res.data.initialData)
-        setLiveData(res.data.initialData)
+        const rawSchema = res.data.schema as unknown as FormSchema;
+        const augmented = augmentSchema(rawSchema);
+        setSchema(augmented);
+        setInitialData(res.data.initialData);
+        setLiveData(res.data.initialData);
       })
       .catch((err: unknown) => {
-        fetchedRef.current = false
-        setFetchError(getErrorMessage(err))
+        fetchedRef.current = false;
+        setFetchError(getErrorMessage(err));
       })
       .finally(() => {
-        setLoading(false)
-      })
-  }, [])
+        setLoading(false);
+      });
+  }, []);
   const handleFormChange = useCallback((data: Record<string, unknown>) => {
-    if (debounceRef.current) clearTimeout(debounceRef.current)
+    if (debounceRef.current) clearTimeout(debounceRef.current);
     debounceRef.current = setTimeout(() => {
-      setLiveData(data)
-    }, 150)
-  }, [])
-  const liveDataJson = useMemo(() => JSON.stringify(liveData, null, 2), [liveData])
-  const [jsonEditing, setJsonEditing] = useState(false)
-  const [editJsonText, setEditJsonText] = useState("")
-  const [activeTab, setActiveTab] = useState("form")
-  const [formCollapsed, setFormCollapsed] = useState(false)
-  const [jsonCollapsed, setJsonCollapsed] = useState(false)
-  const [guideCollapsed, setGuideCollapsed] = useState(true)
+      setLiveData(data);
+    }, 150);
+  }, []);
+  const liveDataJson = useMemo(() => JSON.stringify(liveData, null, 2), [liveData]);
+  const [jsonEditing, setJsonEditing] = useState(false);
+  const [editJsonText, setEditJsonText] = useState('');
+  const [activeTab, setActiveTab] = useState('form');
+  const [formCollapsed, setFormCollapsed] = useState(false);
+  const [jsonCollapsed, setJsonCollapsed] = useState(false);
+  const [guideCollapsed, setGuideCollapsed] = useState(true);
 
   const handleBackendValidate = useCallback(
     async (
@@ -156,60 +156,60 @@ export default function JsonSchemaFormPage() {
     ): Promise<{ path: string; message: string; source: string }[]> => {
       try {
         const res = await http.post<{
-          valid: boolean
-          errors: { path: string; message: string; source: string }[] | null
-        }>("/api/schema/validate", { data })
+          valid: boolean;
+          errors: { path: string; message: string; source: string }[] | null;
+        }>('/api/schema/validate', { data });
         setBackendErrors(() => {
-          const map: Record<string, string> = {}
+          const map: Record<string, string> = {};
           for (const e of res.data.errors ?? []) {
-            map[e.path] = `[后端] ${e.message}`
+            map[e.path] = `[后端] ${e.message}`;
           }
-          return map
-        })
-        return res.data.errors ?? []
+          return map;
+        });
+        return res.data.errors ?? [];
       } catch (err) {
         // 401 handled by axios interceptor (refresh + redirect)
         notification.error({
-          title: "后端校验网络错误",
+          title: '后端校验网络错误',
           description: getErrorMessage(err),
-        })
-        return []
+        });
+        return [];
       }
     },
     [],
-  )
+  );
 
   const handleSubmit = useCallback((data: Record<string, unknown>) => {
-    setSubmittedData(data)
-    setBackendErrors({})
-  }, [])
+    setSubmittedData(data);
+    setBackendErrors({});
+  }, []);
 
   const handleCopyJson = useCallback(() => {
     navigator.clipboard
       .writeText(JSON.stringify(liveData, null, 2))
-      .then(() => message.success("已复制到剪贴板"))
-      .catch(() => message.error("复制失败"))
-  }, [liveData])
+      .then(() => message.success('已复制到剪贴板'))
+      .catch(() => message.error('复制失败'));
+  }, [liveData]);
 
   const handleStartEdit = useCallback(() => {
-    setEditJsonText(JSON.stringify(liveData, null, 2))
-    setJsonEditing(true)
-  }, [liveData])
+    setEditJsonText(JSON.stringify(liveData, null, 2));
+    setJsonEditing(true);
+  }, [liveData]);
 
   const handleApplyJson = useCallback(() => {
     try {
-      const parsed = JSON.parse(editJsonText) as Record<string, unknown>
-      formRef.current?.setFormData(parsed)
-      setJsonEditing(false)
-      message.success("JSON 已应用到表单")
+      const parsed = JSON.parse(editJsonText) as Record<string, unknown>;
+      formRef.current?.setFormData(parsed);
+      setJsonEditing(false);
+      message.success('JSON 已应用到表单');
     } catch {
-      message.error("JSON 格式错误")
+      message.error('JSON 格式错误');
     }
-  }, [editJsonText])
+  }, [editJsonText]);
 
   const handleCancelEdit = useCallback(() => {
-    setJsonEditing(false)
-  }, [])
+    setJsonEditing(false);
+  }, []);
 
   return (
     <div>
@@ -225,15 +225,15 @@ export default function JsonSchemaFormPage() {
           <button
             type="button"
             onClick={() => {
-              setGuideCollapsed((v) => !v)
+              setGuideCollapsed((v) => !v);
             }}
             style={{
-              cursor: "pointer",
-              background: "none",
-              border: "none",
+              cursor: 'pointer',
+              background: 'none',
+              border: 'none',
               padding: 0,
-              width: "100%",
-              textAlign: "left",
+              width: '100%',
+              textAlign: 'left',
             }}
           >
             <Space>
@@ -245,12 +245,12 @@ export default function JsonSchemaFormPage() {
         style={{ marginBottom: 16 }}
       >
         {!guideCollapsed && (
-          <div style={{ display: "flex", flexDirection: "column", gap: 12 }}>
+          <div style={{ display: 'flex', flexDirection: 'column', gap: 12 }}>
             <div>
               <Text strong>递归渲染流程</Text>
               <div
                 style={{
-                  fontFamily: "monospace",
+                  fontFamily: 'monospace',
                   fontSize: 12,
                   background: token.colorFillContent,
                   padding: 8,
@@ -261,18 +261,18 @@ export default function JsonSchemaFormPage() {
                 renderTabs → renderCard → renderForm → renderLeaf
               </div>
             </div>
-            <Divider style={{ margin: "4px 0" }} />
+            <Divider style={{ margin: '4px 0' }} />
             <div>
               <Text strong>控件注册表</Text>
-              <div style={{ marginTop: 4, display: "flex", flexWrap: "wrap", gap: 4 }}>
+              <div style={{ marginTop: 4, display: 'flex', flexWrap: 'wrap', gap: 4 }}>
                 {[
-                  { type: "string", label: "String", color: "blue" },
-                  { type: "number", label: "Number", color: "cyan" },
-                  { type: "select", label: "Select", color: "geekblue" },
-                  { type: "switch", label: "Switch", color: "purple" },
-                  { type: "datetime", label: "DateTime", color: "orange" },
-                  { type: "json", label: "JSON", color: "magenta" },
-                  { type: "array", label: "Array", color: "lime" },
+                  { type: 'string', label: 'String', color: 'blue' },
+                  { type: 'number', label: 'Number', color: 'cyan' },
+                  { type: 'select', label: 'Select', color: 'geekblue' },
+                  { type: 'switch', label: 'Switch', color: 'purple' },
+                  { type: 'datetime', label: 'DateTime', color: 'orange' },
+                  { type: 'json', label: 'JSON', color: 'magenta' },
+                  { type: 'array', label: 'Array', color: 'lime' },
                 ].map((t) => (
                   <Tag key={t.type} color={t.color}>
                     {t.label}
@@ -283,7 +283,7 @@ export default function JsonSchemaFormPage() {
                 运行时 register() 可扩展自定义控件
               </Text>
             </div>
-            <Divider style={{ margin: "4px 0" }} />
+            <Divider style={{ margin: '4px 0' }} />
             <div>
               <Text strong>前端校验</Text>
               <div style={{ fontSize: 12, marginTop: 2 }}>
@@ -298,7 +298,7 @@ export default function JsonSchemaFormPage() {
                 <Tag color="geekblue">联动</Tag> 基站名称自动填充
               </div>
             </div>
-            <Divider style={{ margin: "4px 0" }} />
+            <Divider style={{ margin: '4px 0' }} />
             <div>
               <Text strong>后端业务校验</Text>
               <div style={{ fontSize: 12, marginTop: 2 }}>
@@ -313,7 +313,7 @@ export default function JsonSchemaFormPage() {
                 <Tag color="red">业务</Tag> 带宽标准值校验
               </div>
             </div>
-            <Divider style={{ margin: "4px 0" }} />
+            <Divider style={{ margin: '4px 0' }} />
             <div>
               <Text strong>双重校验策略</Text>
               <div
@@ -334,7 +334,7 @@ export default function JsonSchemaFormPage() {
                 后端错误 setFields 精准映射到控件
               </div>
             </div>
-            <Divider style={{ margin: "4px 0" }} />
+            <Divider style={{ margin: '4px 0' }} />
             <div>
               <Text strong>演示说明</Text>
               <ul style={{ fontSize: 12, margin: 0, paddingLeft: 16, lineHeight: 1.8 }}>
@@ -375,19 +375,19 @@ export default function JsonSchemaFormPage() {
             onChange={setActiveTab}
             items={[
               {
-                key: "form",
-                label: "表单",
+                key: 'form',
+                label: '表单',
                 children: (
                   <Card
                     title={
                       <Space
-                        style={{ cursor: "pointer" }}
+                        style={{ cursor: 'pointer' }}
                         onClick={() => {
-                          setFormCollapsed(!formCollapsed)
+                          setFormCollapsed(!formCollapsed);
                         }}
                       >
                         <Text strong>5G 网元配置表单</Text>
-                        <Tag color="blue">{formCollapsed ? "展开" : "折叠"}</Tag>
+                        <Tag color="blue">{formCollapsed ? '展开' : '折叠'}</Tag>
                         {formCollapsed && (
                           <Text type="secondary" style={{ fontSize: 12 }}>
                             (点击展开)
@@ -414,19 +414,19 @@ export default function JsonSchemaFormPage() {
                 ),
               },
               {
-                key: "json",
-                label: "JSON 数据",
+                key: 'json',
+                label: 'JSON 数据',
                 children: (
                   <Card
                     title={
                       <Space
-                        style={{ cursor: "pointer" }}
+                        style={{ cursor: 'pointer' }}
                         onClick={() => {
-                          setJsonCollapsed(!jsonCollapsed)
+                          setJsonCollapsed(!jsonCollapsed);
                         }}
                       >
                         <Text strong>JSON 数据</Text>
-                        <Tag color="blue">{jsonCollapsed ? "展开" : "折叠"}</Tag>
+                        <Tag color="blue">{jsonCollapsed ? '展开' : '折叠'}</Tag>
                       </Space>
                     }
                     extra={
@@ -458,7 +458,7 @@ export default function JsonSchemaFormPage() {
                           <Input.TextArea
                             value={editJsonText}
                             onChange={(e) => {
-                              setEditJsonText(e.target.value)
+                              setEditJsonText(e.target.value);
                             }}
                             rows={24}
                             style={{
@@ -471,7 +471,7 @@ export default function JsonSchemaFormPage() {
                             style={{
                               fontSize: 12,
                               maxHeight: 600,
-                              overflow: "auto",
+                              overflow: 'auto',
                               margin: 0,
                             }}
                           >
@@ -489,11 +489,11 @@ export default function JsonSchemaFormPage() {
       </Card>
       {submittedData && (
         <Card title="提交数据" size="small" style={{ marginTop: 12 }}>
-          <pre style={{ fontSize: 12, maxHeight: 400, overflow: "auto", margin: 0 }}>
+          <pre style={{ fontSize: 12, maxHeight: 400, overflow: 'auto', margin: 0 }}>
             {JSON.stringify(submittedData, null, 2)}
           </pre>
         </Card>
       )}
     </div>
-  )
+  );
 }

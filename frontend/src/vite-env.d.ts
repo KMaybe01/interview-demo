@@ -1,3 +1,3 @@
 /// <reference types="vite/client" />
 
-declare module "ol/ol.css"
+declare module 'ol/ol.css';

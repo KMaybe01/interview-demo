@@ -178,7 +178,11 @@ function Agents() {
             children: (
               <>
                 <div style={{ marginBottom: 16, display: 'flex', justifyContent: 'space-between' }}>
-                  <Button type="primary" icon={<PlusOutlined />} onClick={() => setCreateModalVisible(true)}>
+                  <Button
+                    type="primary"
+                    icon={<PlusOutlined />}
+                    onClick={() => setCreateModalVisible(true)}
+                  >
                     创建智能体
                   </Button>
                   <Tooltip title="刷新列表">
@@ -241,8 +245,8 @@ function Agents() {
                     key="function"
                   >
                     <Text>
-                      Function Calling 是 OpenAI 推出的功能，允许 LLM 根据用户输入自动选择并调用预定义的函数。
-                      适用于结构化的工具调用场景。
+                      Function Calling 是 OpenAI 推出的功能，允许 LLM
+                      根据用户输入自动选择并调用预定义的函数。 适用于结构化的工具调用场景。
                     </Text>
                     <List
                       style={{ marginTop: 16 }}
@@ -295,10 +299,18 @@ function Agents() {
         onOk={() => createForm.submit()}
       >
         <Form form={createForm} onFinish={handleCreate} layout="vertical">
-          <Form.Item name="name" label="智能体名称" rules={[{ required: true, message: '请输入名称' }]}>
+          <Form.Item
+            name="name"
+            label="智能体名称"
+            rules={[{ required: true, message: '请输入名称' }]}
+          >
             <Input placeholder="例如：客服助手" />
           </Form.Item>
-          <Form.Item name="type" label="智能体类型" rules={[{ required: true, message: '请选择类型' }]}>
+          <Form.Item
+            name="type"
+            label="智能体类型"
+            rules={[{ required: true, message: '请选择类型' }]}
+          >
             <Select
               placeholder="选择类型"
               options={[
@@ -320,11 +332,20 @@ function Agents() {
         width={700}
       >
         <Form form={executeForm} onFinish={handleExecute} layout="vertical">
-          <Form.Item name="input" label="输入内容" rules={[{ required: true, message: '请输入内容' }]}>
+          <Form.Item
+            name="input"
+            label="输入内容"
+            rules={[{ required: true, message: '请输入内容' }]}
+          >
             <Input.TextArea rows={4} placeholder="输入要处理的内容..." />
           </Form.Item>
           <Form.Item>
-            <Button type="primary" htmlType="submit" icon={<PlayCircleOutlined />} loading={executeLoading}>
+            <Button
+              type="primary"
+              htmlType="submit"
+              icon={<PlayCircleOutlined />}
+              loading={executeLoading}
+            >
               执行
             </Button>
           </Form.Item>
@@ -344,7 +365,9 @@ function Agents() {
                   style={{ marginTop: 12 }}
                   items={executeResult.steps.map((step: AgentStep, index: number) => ({
                     children: (
-                      <div key={`step-${step.action ?? 'thought'}-${step.thought?.slice(0, 20) ?? ''}`}>
+                      <div
+                        key={`step-${step.action ?? 'thought'}-${step.thought?.slice(0, 20) ?? ''}`}
+                      >
                         <Text type="secondary">Step {index + 1}</Text>
                         <br />
                         {step.thought && <Text>思考: {step.thought}</Text>}
