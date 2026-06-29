@@ -1,4 +1,4 @@
-package services
+package agent
 
 import (
 	"context"
@@ -10,16 +10,17 @@ import (
 	"sync"
 	"time"
 
+	"interview-demo/backend/chat"
 	"interview-demo/backend/models"
 )
 
 type AgentService struct {
-	llmService *LLMService
+	llmService *chat.LLMService
 	tools      map[string]models.Tool
 	mu         sync.RWMutex
 }
 
-func NewAgentService(llmService *LLMService) *AgentService {
+func NewAgentService(llmService *chat.LLMService) *AgentService {
 	service := &AgentService{
 		llmService: llmService,
 		tools:      make(map[string]models.Tool),

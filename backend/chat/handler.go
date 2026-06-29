@@ -1,4 +1,4 @@
-package handlers
+package chat
 
 import (
 	"context"
@@ -8,31 +8,36 @@ import (
 
 	"github.com/gin-gonic/gin"
 	"github.com/google/uuid"
+	"interview-demo/backend/knowledge"
+	"interview-demo/backend/memory"
 	"interview-demo/backend/models"
-	"interview-demo/backend/services"
 )
 
+type AgentExecutor interface {
+	Execute(ctx context.Context, input string) (string, error)
+}
+
 type ChatHandler struct {
-	llmService    *services.LLMService
-	memoryService *services.MemoryService
-	ragService    *services.RAGService
-	agentFactory  *services.AgentFactory
-	agentHandler  *AgentHandler
+	llmService    *LLMService
+	memoryService *memory.MemoryService
+	ragService    *knowledge.RAGService
+	lookupAgent   func(id string) AgentExecutor
+	createAgent   func(agentType, name string) AgentExecutor
 }
 
 func NewChatHandler(
-	llmService *services.LLMService,
-	memoryService *services.MemoryService,
-	ragService *services.RAGService,
-	agentFactory *services.AgentFactory,
-	agentHandler *AgentHandler,
+	llmService *LLMService,
+	memoryService *memory.MemoryService,
+	ragService *knowledge.RAGService,
+	lookupAgent func(id string) AgentExecutor,
+	createAgent func(agentType, name string) AgentExecutor,
 ) *ChatHandler {
 	return &ChatHandler{
 		llmService:    llmService,
 		memoryService: memoryService,
 		ragService:    ragService,
-		agentFactory:  agentFactory,
-		agentHandler:  agentHandler,
+		lookupAgent:   lookupAgent,
+		createAgent:   createAgent,
 	}
 }
 
@@ -89,17 +94,17 @@ func (h *ChatHandler) Chat(c *gin.Context) {
 	var err error
 
 	if req.UseAgent {
-		agent, agentExists := h.agentHandler.GetAgent(req.AgentID)
+		agt := h.lookupAgent(req.AgentID)
 
-		if req.AgentID != "" && agentExists {
-			response, err = agent.Execute(context.Background(), req.Content)
+		if req.AgentID != "" && agt != nil {
+			response, err = agt.Execute(context.Background(), req.Content)
 		} else {
-			agentType := services.AgentType(req.AgentType)
+			agentType := req.AgentType
 			if agentType == "" {
-				agentType = services.AgentTypeReAct
+				agentType = "react"
 			}
-			agent := h.agentFactory.CreateAgent(agentType, "聊天助手")
-			response, err = agent.Execute(context.Background(), req.Content)
+			agt = h.createAgent(agentType, "聊天助手")
+			response, err = agt.Execute(context.Background(), req.Content)
 		}
 	} else {
 		model := req.Model

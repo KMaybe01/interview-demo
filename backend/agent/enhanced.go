@@ -1,4 +1,4 @@
-package services
+package agent
 
 import (
 	"context"
@@ -8,6 +8,8 @@ import (
 	"time"
 
 	"github.com/google/uuid"
+	"interview-demo/backend/chat"
+	"interview-demo/backend/knowledge"
 	"interview-demo/backend/models"
 )
 
@@ -260,11 +262,11 @@ type WorkflowStep struct {
 
 type RAGAgent struct {
 	*EnhancedAgent
-	ragService *RAGService
-	llmService *LLMService
+	ragService *knowledge.RAGService
+	llmService *chat.LLMService
 }
 
-func NewRAGAgent(ragService *RAGService, llmService *LLMService) *RAGAgent {
+func NewRAGAgent(ragService *knowledge.RAGService, llmService *chat.LLMService) *RAGAgent {
 	agent := NewEnhancedAgent("RAG智能体", AgentTypeReAct)
 
 	ragAgent := &RAGAgent{
@@ -333,10 +335,10 @@ func (a *RAGAgent) generateAnswer(ctx context.Context, input string) (string, er
 
 type ToolCallingAgent struct {
 	*EnhancedAgent
-	llmService *LLMService
+	llmService *chat.LLMService
 }
 
-func NewToolCallingAgent(llmService *LLMService) *ToolCallingAgent {
+func NewToolCallingAgent(llmService *chat.LLMService) *ToolCallingAgent {
 	agent := NewEnhancedAgent("工具调用智能体", AgentTypeFunction)
 
 	toolAgent := &ToolCallingAgent{
@@ -380,11 +382,11 @@ func (a *ToolCallingAgent) getWeather(ctx context.Context, input string) (string
 }
 
 type AgentFactory struct {
-	llmService *LLMService
-	ragService *RAGService
+	llmService *chat.LLMService
+	ragService *knowledge.RAGService
 }
 
-func NewAgentFactory(llmService *LLMService, ragService *RAGService) *AgentFactory {
+func NewAgentFactory(llmService *chat.LLMService, ragService *knowledge.RAGService) *AgentFactory {
 	return &AgentFactory{
 		llmService: llmService,
 		ragService: ragService,

@@ -1,4 +1,4 @@
-package handlers
+package chat
 
 import (
 	"context"
@@ -7,14 +7,13 @@ import (
 
 	"github.com/gin-gonic/gin"
 	"interview-demo/backend/models"
-	"interview-demo/backend/services"
 )
 
 type ModelHandler struct {
-	manager *services.ModelManager
+	manager *ModelManager
 }
 
-func NewModelHandler(manager *services.ModelManager) *ModelHandler {
+func NewModelHandler(manager *ModelManager) *ModelHandler {
 	return &ModelHandler{manager: manager}
 }
 

@@ -1,4 +1,4 @@
-package handlers
+package knowledge
 
 import (
 	"fmt"
@@ -7,21 +7,20 @@ import (
 	"github.com/gin-gonic/gin"
 	"github.com/google/uuid"
 	"interview-demo/backend/models"
-	"interview-demo/backend/services"
 )
 
 type KnowledgeHandler struct {
-	ragService       *services.RAGService
-	chunkerManager   *services.ChunkerManager
-	embeddingService *services.EmbeddingService
-	vectorDB         *services.VectorDatabase
+	ragService       *RAGService
+	chunkerManager   *ChunkerManager
+	embeddingService *EmbeddingService
+	vectorDB         *VectorDatabase
 }
 
 func NewKnowledgeHandler(
-	ragService *services.RAGService,
-	chunkerManager *services.ChunkerManager,
-	embeddingService *services.EmbeddingService,
-	vectorDB *services.VectorDatabase,
+	ragService *RAGService,
+	chunkerManager *ChunkerManager,
+	embeddingService *EmbeddingService,
+	vectorDB *VectorDatabase,
 ) *KnowledgeHandler {
 	return &KnowledgeHandler{
 		ragService:       ragService,

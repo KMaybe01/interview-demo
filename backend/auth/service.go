@@ -1,4 +1,4 @@
-package handlers
+package auth
 
 import (
 	"fmt"
@@ -10,6 +10,9 @@ import (
 	"github.com/gin-gonic/gin"
 	"github.com/golang-jwt/jwt/v5"
 )
+
+// Public router registrations — main.go binds these.
+// Login, RefreshToken, CheckToken, GetUsedTokenCount, AuthMiddleware.
 
 func getEnvDefault(key, defaultVal string) string {
 	if v := os.Getenv(key); v != "" {

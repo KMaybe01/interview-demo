@@ -10,9 +10,14 @@ import (
 	"syscall"
 	"time"
 
+	"interview-demo/backend/agent"
+	"interview-demo/backend/auth"
+	"interview-demo/backend/chat"
 	"interview-demo/backend/handlers"
+	"interview-demo/backend/knowledge"
+	"interview-demo/backend/memory"
 	"interview-demo/backend/middleware"
-	"interview-demo/backend/services"
+	"interview-demo/backend/payment"
 
 	"github.com/gin-gonic/gin"
 )
@@ -27,25 +32,48 @@ func main() {
 		log.Println("Warning: OPENAI_API_KEY not set")
 	}
 
-	authService := handlers.NewAuthService()
-	llmService := services.NewLLMService(apiKey)
-	memoryService := services.NewMemoryService()
-	ragService := services.NewRAGService()
-	chunkerManager := services.NewChunkerManager()
-	embeddingService := services.NewEmbeddingService(services.EmbeddingOpenAI)
-	vectorDB := services.NewVectorDatabase()
-	modelManager := services.DefaultModelManager()
-	agentFactory := services.NewAgentFactory(llmService, ragService)
-	agentHandler := handlers.NewAgentHandler(agentFactory, modelManager)
-	chatHandler := handlers.NewChatHandler(llmService, memoryService, ragService, agentFactory, agentHandler)
-	knowledgeHandler := handlers.NewKnowledgeHandler(ragService, chunkerManager, embeddingService, vectorDB)
-	modelHandler := handlers.NewModelHandler(modelManager)
+	authService := auth.NewAuthService()
+	llmService := chat.NewLLMService(apiKey)
+	memoryService := memory.NewMemoryService()
+	ragService := knowledge.NewRAGService()
+	chunkerManager := knowledge.NewChunkerManager()
+	embeddingService := knowledge.NewEmbeddingService(knowledge.EmbeddingOpenAI)
+	vectorDB := knowledge.NewVectorDatabase()
+	modelManager := chat.DefaultModelManager()
+	agentFactory := agent.NewAgentFactory(llmService, ragService)
+	agentHandler := agent.NewAgentHandler(agentFactory, modelManager)
+	chatHandler := chat.NewChatHandler(
+		llmService, memoryService, ragService,
+		func(id string) chat.AgentExecutor {
+			agt, ok := agentHandler.GetAgent(id)
+			if !ok {
+				return nil
+			}
+			return agt
+		},
+		func(agentType, name string) chat.AgentExecutor {
+			var t agent.AgentType
+			switch agentType {
+			case "react":
+				t = agent.AgentTypeReAct
+			case "function":
+				t = agent.AgentTypeFunction
+			case "multi":
+				t = agent.AgentTypeMulti
+			default:
+				t = agent.AgentTypeReAct
+			}
+			return agentFactory.CreateAgent(t, name)
+		},
+	)
+	knowledgeHandler := knowledge.NewKnowledgeHandler(ragService, chunkerManager, embeddingService, vectorDB)
+	modelHandler := chat.NewModelHandler(modelManager)
 
 	docsDir := os.Getenv("DOCS_DIR")
 	if docsDir == "" {
 		docsDir = "../docs"
 	}
-	docLoader := services.NewDocLoader(ragService, chunkerManager, embeddingService, vectorDB)
+	docLoader := knowledge.NewDocLoader(ragService, chunkerManager, embeddingService, vectorDB)
 
 	api := r.Group("/api")
 	{
@@ -128,14 +156,14 @@ func main() {
 			protected.GET("/vitals/pages", handlers.GetPageSummary)
 			protected.GET("/vitals/page-history", handlers.GetPageHistory)
 			protected.GET("/request-loading/demo", handlers.DemoRequest)
-			protected.POST("/payments/create", handlers.CreatePayment)
-			protected.POST("/payments/process/:id", handlers.ProcessPayment)
-			protected.GET("/payments/order/:id", handlers.GetOrder)
-			protected.GET("/payments/orders", handlers.ListOrders)
-			protected.POST("/payments/transition/:id", handlers.TransitionPayment)
-			protected.POST("/payments/idempotency-test", handlers.IdempotencyTest)
-			protected.POST("/payments/security-check", handlers.SecurityCheck)
-			protected.POST("/payments/retry-demo", handlers.RetryDemo)
+			protected.POST("/payments/create", payment.CreatePayment)
+			protected.POST("/payments/process/:id", payment.ProcessPayment)
+			protected.GET("/payments/order/:id", payment.GetOrder)
+			protected.GET("/payments/orders", payment.ListOrders)
+			protected.POST("/payments/transition/:id", payment.TransitionPayment)
+			protected.POST("/payments/idempotency-test", payment.IdempotencyTest)
+			protected.POST("/payments/security-check", payment.SecurityCheck)
+			protected.POST("/payments/retry-demo", payment.RetryDemo)
 		}
 	}
 

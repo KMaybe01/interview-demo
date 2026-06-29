@@ -1,4 +1,4 @@
-package handlers
+package agent
 
 import (
 	"context"
@@ -7,21 +7,21 @@ import (
 	"time"
 
 	"github.com/gin-gonic/gin"
-	"interview-demo/backend/services"
+	"interview-demo/backend/chat"
 )
 
 type AgentHandler struct {
-	factory *services.AgentFactory
-	manager *services.ModelManager
-	agents  map[string]*services.EnhancedAgent
+	factory *AgentFactory
+	manager *chat.ModelManager
+	agents  map[string]*EnhancedAgent
 	mu      sync.RWMutex
 }
 
-func NewAgentHandler(factory *services.AgentFactory, manager *services.ModelManager) *AgentHandler {
+func NewAgentHandler(factory *AgentFactory, manager *chat.ModelManager) *AgentHandler {
 	return &AgentHandler{
 		factory: factory,
 		manager: manager,
-		agents:  make(map[string]*services.EnhancedAgent),
+		agents:  make(map[string]*EnhancedAgent),
 	}
 }
 
@@ -61,31 +61,31 @@ func (h *AgentHandler) CreateAgent(c *gin.Context) {
 		req.Name = "智能助手"
 	}
 
-	var agent *services.EnhancedAgent
+	var agt *EnhancedAgent
 	switch req.Type {
 	case "react":
-		agent = h.factory.CreateAgent(services.AgentTypeReAct, req.Name)
+		agt = h.factory.CreateAgent(AgentTypeReAct, req.Name)
 	case "function":
-		agent = h.factory.CreateAgent(services.AgentTypeFunction, req.Name)
+		agt = h.factory.CreateAgent(AgentTypeFunction, req.Name)
 	case "multi":
-		agent = h.factory.CreateAgent(services.AgentTypeMulti, req.Name)
+		agt = h.factory.CreateAgent(AgentTypeMulti, req.Name)
 	case "rag":
 		ragAgent := h.factory.CreateRAGAgent()
-		agent = ragAgent.EnhancedAgent
+		agt = ragAgent.EnhancedAgent
 	default:
-		agent = h.factory.CreateAgent(services.AgentTypeReAct, req.Name)
+		agt = h.factory.CreateAgent(AgentTypeReAct, req.Name)
 	}
 
 	h.mu.Lock()
-	h.agents[agent.ID] = agent
+	h.agents[agt.ID] = agt
 	h.mu.Unlock()
 
 	c.JSON(http.StatusCreated, gin.H{
-		"id":        agent.ID,
-		"name":      agent.Name,
-		"type":      agent.Type,
-		"tools":     len(agent.Tools),
-		"max_steps": agent.MaxSteps,
+		"id":        agt.ID,
+		"name":      agt.Name,
+		"type":      agt.Type,
+		"tools":     len(agt.Tools),
+		"max_steps": agt.MaxSteps,
 	})
 }
 
@@ -146,7 +146,7 @@ func (h *AgentHandler) GetAgentLog(c *gin.Context) {
 	})
 }
 
-func (h *AgentHandler) GetAgent(id string) (*services.EnhancedAgent, bool) {
+func (h *AgentHandler) GetAgent(id string) (*EnhancedAgent, bool) {
 	h.mu.RLock()
 	defer h.mu.RUnlock()
 	agent, ok := h.agents[id]
