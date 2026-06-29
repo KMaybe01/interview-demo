@@ -44,6 +44,8 @@ const CATEGORY_COLORS: Record<string, string> = {
 
 export { CATEGORY_COLORS }
 
+const MAX_ALERTS = 5000
+
 export const useAlertStore = create<AlertState>((set) => ({
   alerts: [],
   metrics: {
@@ -86,7 +88,7 @@ export const useAlertStore = create<AlertState>((set) => ({
       }
 
       return {
-        alerts: items.concat(state.alerts),
+        alerts: items.concat(state.alerts).slice(0, MAX_ALERTS),
         metrics: {
           ...metrics,
           totalReceived: metrics.totalReceived + items.length,

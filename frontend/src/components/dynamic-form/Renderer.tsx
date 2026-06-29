@@ -314,10 +314,8 @@ function Renderer({
   return null
 }
 
-function Space({ children, ...props }: { children: React.ReactNode; style?: React.CSSProperties }) {
-  return (
-    <div style={{ display: "flex", alignItems: "center", gap: 8, ...props.style }}>{children}</div>
-  )
+function Space({ children, style }: { children: React.ReactNode; style?: React.CSSProperties }) {
+  return <div style={{ display: "flex", alignItems: "center", gap: 8, ...style }}>{children}</div>
 }
 
 export default Renderer

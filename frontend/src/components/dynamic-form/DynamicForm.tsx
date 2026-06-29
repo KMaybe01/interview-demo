@@ -1,6 +1,6 @@
 import type { ValidateFunction } from "ajv"
 import { Button, notification, Spin, Tag, Typography } from "antd"
-import { forwardRef, useEffect, useImperativeHandle, useRef, useState } from "react"
+import { forwardRef, useEffect, useImperativeHandle, useMemo, useRef, useState } from "react"
 import Renderer from "./Renderer.tsx"
 import {
   compileAjvSchema,
@@ -67,7 +67,7 @@ const DynamicForm = forwardRef<DynamicFormHandle, DynamicFormProps>(function Dyn
     [],
   )
 
-  const leaves = flattenSchema(schema)
+  const leaves = useMemo(() => flattenSchema(schema), [schema])
 
   function runAjvValidation(currentData: Record<string, unknown>) {
     const newAjvErrors: Record<string, string[]> = {}
@@ -99,24 +99,27 @@ const DynamicForm = forwardRef<DynamicFormHandle, DynamicFormProps>(function Dyn
   }
 
   function handleChange(path: string, value: unknown) {
-    setData((prev) => updateValue(prev, path, value))
-
-    setErrors((prev) => {
-      if (prev[path]) {
-        const next = Object.fromEntries(Object.entries(prev).filter(([k]) => k !== path))
-        return next
-      }
-      return prev
-    })
-
     const leaf = findLeaf(schema, path)
     const validationFn = leaf?.validation
-    if (validationFn) {
-      setData((prev) => {
-        const newData = updateValue(prev, path, value)
+
+    setData((prev) => {
+      const newData = updateValue(prev, path, value)
+      if (validationFn) {
         const err = validationFn(value, newData)
-        if (err) {
-          setErrors((current) => ({ ...current, [path]: err }))
+        setErrors((current) => {
+          if (err) {
+            return { ...current, [path]: err }
+          }
+          return Object.fromEntries(Object.entries(current).filter(([k]) => k !== path))
+        })
+      }
+      return newData
+    })
+
+    if (!validationFn) {
+      setErrors((prev) => {
+        if (prev[path]) {
+          return Object.fromEntries(Object.entries(prev).filter(([k]) => k !== path))
         }
         return prev
       })
@@ -150,8 +153,7 @@ const DynamicForm = forwardRef<DynamicFormHandle, DynamicFormProps>(function Dyn
   useEffect(() => {
     if (Object.keys(data).length === 0) return
     runAjvValidation(data)
-    // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [data])
+  }, [data, leaves])
 
   useEffect(() => {
     const updates: Record<string, unknown> = {}
@@ -182,7 +184,7 @@ const DynamicForm = forwardRef<DynamicFormHandle, DynamicFormProps>(function Dyn
       })
     }
     // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [data, schema])
+  }, [data, schema, leaves])
 
   const onChangeRef = useRef(onChange)
   onChangeRef.current = onChange

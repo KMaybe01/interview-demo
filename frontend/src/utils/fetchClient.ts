@@ -36,12 +36,8 @@ async function doRefresh(): Promise<string> {
       const apiData = axios.isAxiosError(err) ? getResponseData(err) : null
       const code = apiData?.code
       if (code === "SESSION_REPLACED") {
-        clearTokens()
+        redirectToLogin("session_replaced=1")
         refreshPromise = null
-        if (!isLoginPage()) {
-          isRedirecting = true
-          location.href = "/login?session_replaced=1"
-        }
         // eslint-disable-next-line preserve-caught-error
         throw new Error("Session replaced")
       }
@@ -91,6 +87,15 @@ function isLoginPage(): boolean {
   return window.location.pathname === "/login"
 }
 
+function redirectToLogin(params?: string): void {
+  if (isRedirecting || isLoginPage()) return
+  isRedirecting = true
+  clearTokens()
+  const query = params ? `?${params}` : ""
+  // replace avoids polluting browser history with a broken page
+  window.location.replace(`/login${query}`)
+}
+
 const http = axios.create({
   timeout: 30000,
 })
@@ -125,20 +130,13 @@ http.interceptors.response.use(
     if (status === 401 && !originalRequest._retry) {
       const apiData = getResponseData(error)
       if (apiData?.code === "SESSION_REPLACED") {
-        clearTokens()
-        if (!isRedirecting && !isLoginPage()) {
-          isRedirecting = true
-          window.location.href = "/login?session_replaced=1"
-        }
+        redirectToLogin("session_replaced=1")
         return Promise.reject(error)
       }
 
       const token = getAccessToken()
       if (token == null) {
-        if (!isRedirecting && !isLoginPage()) {
-          isRedirecting = true
-          window.location.href = "/login"
-        }
+        redirectToLogin()
         return Promise.reject(error)
       }
 
@@ -159,11 +157,7 @@ http.interceptors.response.use(
         }
         return await http(originalRequest)
       } catch {
-        if (!isRedirecting && !isLoginPage()) {
-          isRedirecting = true
-          clearTokens()
-          window.location.href = "/login"
-        }
+        redirectToLogin()
         return Promise.reject(error)
       }
     }

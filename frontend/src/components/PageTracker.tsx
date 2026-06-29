@@ -31,12 +31,14 @@ export default function PageTracker({ children }: { children: React.ReactNode })
   const prevPathRef = useRef("")
   const referrerRef = useRef("")
 
-  if (prevPathRef.current !== pathname) {
-    referrerRef.current = prevPathRef.current
-    prevPathRef.current = pathname
-    reportedRef.current = false
-    renderStartRef.current = performance.now()
-  }
+  useEffect(() => {
+    if (prevPathRef.current !== pathname) {
+      referrerRef.current = prevPathRef.current
+      prevPathRef.current = pathname
+      reportedRef.current = false
+      renderStartRef.current = performance.now()
+    }
+  })
 
   useEffect(() => {
     if (reportedRef.current) return

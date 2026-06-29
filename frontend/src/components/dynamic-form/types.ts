@@ -61,11 +61,17 @@ export interface ValidationError {
 }
 
 let ajvInstance: Ajv | null = null
+let ajvOptions: ConstructorParameters<typeof Ajv>[0] | null = null
 
 export function getAjv(): Ajv {
   if (ajvInstance) return ajvInstance
-  ajvInstance = new Ajv({ allErrors: true, verbose: true })
+  ajvInstance = new Ajv(ajvOptions ?? { allErrors: true, verbose: true })
   return ajvInstance
+}
+
+export function configureAjv(options: ConstructorParameters<typeof Ajv>[0]): void {
+  ajvOptions = options
+  ajvInstance = null // Re-create on next getAjv() call
 }
 
 export function compileAjvSchema(

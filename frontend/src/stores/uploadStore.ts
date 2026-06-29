@@ -96,7 +96,19 @@ export const useUploadStore = create<UploadState>()(
     }),
     {
       name: "upload_sessions",
-      skipHydration: false,
+      partialize: (state) => ({
+        files: state.files.map(({ speed, elapsed, chunks, ...rest }) => ({
+          ...rest,
+          // Reset runtime fields on rehydrate, they will be recalculated
+          speed: 0,
+          elapsed: 0,
+          chunks: chunks.map(({ speed: cs, startTime: cst, ...crest }) => ({
+            ...crest,
+            speed: 0,
+            startTime: 0,
+          })),
+        })),
+      }),
     },
   ),
 )

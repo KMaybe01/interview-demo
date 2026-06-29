@@ -1,5 +1,15 @@
 import { DatePicker } from "antd"
+import dayjs from "dayjs"
 import type { FieldComponentProps } from "../types.ts"
+
+function parseDateValue(value: unknown) {
+  if (typeof value === "string" && value) {
+    const d = dayjs(value)
+    return d.isValid() ? d : undefined
+  }
+  if (dayjs.isDayjs(value)) return value
+  return undefined
+}
 
 export default function DateTimeField({
   schema,
@@ -12,7 +22,7 @@ export default function DateTimeField({
   return (
     <div>
       <DatePicker
-        value={value ? (typeof value === "string" ? undefined : undefined) : undefined}
+        value={parseDateValue(value)}
         onChange={(_, dateStr) => {
           onChange(path, dateStr)
         }}

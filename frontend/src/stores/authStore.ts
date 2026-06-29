@@ -12,9 +12,11 @@ interface AuthState {
   setUser: (user: UserInfo | null) => void
   login: (user: UserInfo) => void
   logout: () => void
+  hydrate: () => void
 }
 
 function initUser(): UserInfo | null {
+  if (typeof window === "undefined") return null
   const token = getAccessToken()
   if (!token) return null
   if (isTokenExpired(token)) {
@@ -26,11 +28,9 @@ function initUser(): UserInfo | null {
   return { sub: payload.sub, role: payload.role }
 }
 
-const initialUser = initUser()
-
 export const useAuthStore = create<AuthState>((set) => ({
-  user: initialUser,
-  isLoggedIn: initialUser != null,
+  user: null,
+  isLoggedIn: false,
   setUser: (user) => {
     set({ user, isLoggedIn: user != null })
   },
@@ -40,4 +40,13 @@ export const useAuthStore = create<AuthState>((set) => ({
   logout: () => {
     set({ user: null, isLoggedIn: false })
   },
+  hydrate: () => {
+    const user = initUser()
+    set({ user, isLoggedIn: user != null })
+  },
 }))
+
+// Hydrate on first import in browser
+if (typeof window !== "undefined") {
+  useAuthStore.getState().hydrate()
+}

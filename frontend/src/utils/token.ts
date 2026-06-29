@@ -35,7 +35,7 @@ export function parseToken(
   }
 }
 
-export function isTokenExpired(token: string): boolean {
+export function isTokenExpired(token: string, bufferMs = 30_000): boolean {
   const payload = parseToken(token)
-  return payload == null || payload.exp * 1000 < Date.now()
+  return payload == null || payload.exp * 1000 < Date.now() + bufferMs
 }
