@@ -28,9 +28,9 @@ export interface RouteConfig {
 export const routes: RouteConfig[] = [
   {
     path: '/',
-    name: '仪表盘',
-    icon: DashboardOutlined,
-    element: lazy(() => import('../pages/Dashboard.tsx')),
+    name: '页面性能监控',
+    icon: LineChartOutlined,
+    element: lazy(() => import('../pages/WebVitals.tsx')),
   },
   {
     path: '/alert-websocket',
@@ -116,11 +116,5 @@ export const routes: RouteConfig[] = [
     name: 'AI Demo',
     icon: RobotOutlined,
     element: lazy(() => import('../pages/AIDemo/AIDemo.tsx')),
-  },
-  {
-    path: '/web-vitals',
-    name: 'Web Vitals 性能采集',
-    icon: LineChartOutlined,
-    element: lazy(() => import('../pages/WebVitals.tsx')),
   },
 ];

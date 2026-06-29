@@ -301,21 +301,35 @@ export default function WebVitals() {
         }}
       >
         <Title level={3} style={{ margin: 0 }}>
-          Web Vitals 性能指标 & 页面渲染监控
+          页面性能监控
         </Title>
         <Button icon={<ReloadOutlined />} onClick={fetchData} loading={loading}>
           刷新
         </Button>
       </div>
 
-      <Card size="small" style={{ marginTop: 16 }}>
+      <Card size="small">
         <Title level={5} style={{ marginTop: 0, marginBottom: 8 }}>
-          页面渲染耗时排行
+          页面访问明细
         </Title>
-        <div ref={pageChartRef} style={{ height: Math.max(200, pages.length * 40 + 40) }} />
-        {pages.length === 0 && !loading && !error && (
-          <div style={{ textAlign: 'center', padding: 40, color: '#999' }}>
-            暂无页面访问记录 —— 浏览其他页面后会自动采集
+        {pages.length > 0 ? (
+          <Table
+            dataSource={pages}
+            columns={pageColumns}
+            rowKey="path"
+            size="small"
+            pagination={false}
+            scroll={{ x: 780, y: 200 }}
+          />
+        ) : (
+          !loading &&
+          !error && (
+            <div style={{ textAlign: 'center', padding: 40, color: '#999' }}>暂无页面访问记录</div>
+          )
+        )}
+        {loading && (
+          <div style={{ textAlign: 'center', padding: 40 }}>
+            <Spin />
           </div>
         )}
         {error && (
@@ -327,37 +341,12 @@ export default function WebVitals() {
 
       <Card size="small" style={{ marginTop: 16 }}>
         <Title level={5} style={{ marginTop: 0, marginBottom: 8 }}>
-          页面访问明细
+          页面渲染耗时排行
         </Title>
-        {pages.length > 0 ? (
-          <Table
-            dataSource={pages}
-            columns={pageColumns}
-            rowKey="path"
-            size="small"
-            pagination={false}
-            scroll={{ x: 780 }}
-          />
-        ) : (
-          !loading && !error && (
-            <div style={{ textAlign: 'center', padding: 40, color: '#999' }}>暂无页面访问记录</div>
-          )
-        )}
-        {loading && (
-          <div style={{ textAlign: 'center', padding: 40 }}>
-            <Spin />
-          </div>
-        )}
-      </Card>
-
-      <Card size="small" style={{ marginTop: 16 }}>
-        <Title level={5} style={{ marginTop: 0, marginBottom: 8 }}>
-          Web Vitals 历史趋势
-        </Title>
-        <div ref={chartRef} style={{ height: 260 }} />
-        {Object.keys(history).length === 0 && !loading && !error && (
+        <div ref={pageChartRef} style={{ height: Math.max(200, pages.length * 40 + 40) }} />
+        {pages.length === 0 && !loading && !error && (
           <div style={{ textAlign: 'center', padding: 40, color: '#999' }}>
-            暂无数据 —— 刷新页面或稍后自动采集
+            暂无页面访问记录 —— 浏览其他页面后会自动采集
           </div>
         )}
       </Card>

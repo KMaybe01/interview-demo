@@ -1,6 +1,14 @@
 import type { ValidateFunction } from 'ajv';
 import { Button, notification, Spin, Tag, Typography } from 'antd';
-import { forwardRef, useEffect, useImperativeHandle, useMemo, useRef, useState } from 'react';
+import {
+  forwardRef,
+  useCallback,
+  useEffect,
+  useImperativeHandle,
+  useMemo,
+  useRef,
+  useState,
+} from 'react';
 import Renderer from './Renderer.tsx';
 import {
   compileAjvSchema,
@@ -69,35 +77,42 @@ const DynamicForm = forwardRef<DynamicFormHandle, DynamicFormProps>(function Dyn
 
   const leaves = useMemo(() => flattenSchema(schema), [schema]);
 
-  function runAjvValidation(currentData: Record<string, unknown>) {
-    const newAjvErrors: Record<string, string[]> = {};
-    for (const leaf of leaves) {
-      if (!leaf.ajvSchema) continue;
-      const key = leaf.key;
-      let validate = compiledRef.current.get(key);
-      if (!validate) {
-        const compiled = compileAjvSchema(leaf.ajvSchema);
-        if (compiled) {
-          validate = compiled;
-          compiledRef.current.set(key, validate);
+  const runAjvValidation = useCallback(
+    (currentData: Record<string, unknown>) => {
+      const newAjvErrors: Record<string, string[]> = {};
+      for (const leaf of leaves) {
+        if (!leaf.ajvSchema) continue;
+        const key = leaf.key;
+        let validate = compiledRef.current.get(key);
+        if (!validate) {
+          const compiled = compileAjvSchema(leaf.ajvSchema);
+          if (compiled) {
+            validate = compiled;
+            compiledRef.current.set(key, validate);
+          }
+        }
+        if (validate) {
+          validate(currentData[key]);
+          if (validate.errors) {
+            newAjvErrors[key] = validate.errors.map((e) => {
+              if (e.keyword === 'type') return `应为 ${String(e.params.type)} 类型`;
+              if (e.keyword === 'required')
+                return `缺少必填字段: ${String(e.params.missingProperty)}`;
+              if (e.keyword === 'enum')
+                return `值不在允许范围内: ${String(e.params.allowedValues)}`;
+              if (e.keyword === 'pattern') return `格式不匹配: ${String(e.message)}`;
+              return e.message ?? '格式错误';
+            });
+          }
         }
       }
-      if (validate) {
-        validate(currentData[key]);
-        if (validate.errors) {
-          newAjvErrors[key] = validate.errors.map((e) => {
-            if (e.keyword === 'type') return `应为 ${String(e.params.type)} 类型`;
-            if (e.keyword === 'required')
-              return `缺少必填字段: ${String(e.params.missingProperty)}`;
-            if (e.keyword === 'enum') return `值不在允许范围内: ${String(e.params.allowedValues)}`;
-            if (e.keyword === 'pattern') return `格式不匹配: ${String(e.message)}`;
-            return e.message ?? '格式错误';
-          });
-        }
-      }
-    }
-    setAjvErrors(newAjvErrors);
-  }
+      setAjvErrors((prev) => {
+        if (JSON.stringify(prev) === JSON.stringify(newAjvErrors)) return prev;
+        return newAjvErrors;
+      });
+    },
+    [leaves],
+  );
 
   function handleChange(path: string, value: unknown) {
     const leaf = findLeaf(schema, path);

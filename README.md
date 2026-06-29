@@ -4,16 +4,16 @@
 
 ## 项目概述
 
-React 19 + Go 1.26 全栈演示项目，涵盖 **15 个高级技术场景**（含仪表盘 + 14 个核心演示），聚焦前端工程化、性能优化与架构设计。
+React 19 + Go 1.26 全栈演示项目，涵盖 **16 个技术场景**（含首页页面性能监控 + 15 个核心演示），聚焦前端工程化、性能优化与架构设计。
 
-**Keywords:** 无感刷新 · Token Rotation · 递归表单引擎 · 双重校验 · 实时 JSON 编辑 · WebSocket 心跳 · LRU 路由缓存 · Web Worker 分治 · OpenLayers 聚类 · RBAC 位编码 · SSE 流式日志 · 请求加载 Signal · 树形数据引擎 · 大文件断点续传 · Web Vitals + 页面渲染监控 · 统一支付中台
+**Keywords:** 无感刷新 · Token Rotation · 递归表单引擎 · 双重校验 · 实时 JSON 编辑 · WebSocket 心跳 · LRU 路由缓存 · Web Worker 分治 · OpenLayers 聚类 · RBAC 位编码 · SSE 流式日志 · 请求加载 Signal · 树形数据引擎 · 大文件断点续传 · 页面性能监控 · 统一支付中台
 
 ## 技术栈
 
 | 层级     | 技术                                                                    |
 | -------- | ----------------------------------------------------------------------- |
 | 前端     | React 19, TypeScript 6, Vite 8, Ant Design 6, Zustand 5, React Router 7 |
-| 工具链   | Biome 2.5, ESLint 9 (strictTypeChecked)                                 |
+| 工具链   | Biome 2.5 (lint + format)                                               |
 | 样式     | Ant Design tokens + CSS Modules (Login.module.css)                       |
 | 后端     | Go 1.26, Gin 1.12, Gorilla WebSocket, golang-jwt (双 Token 无感刷新)     |
 | GIS      | OpenLayers 10.9 (Cluster + BBOX)                                        |
@@ -26,109 +26,146 @@ React 19 + Go 1.26 全栈演示项目，涵盖 **15 个高级技术场景**（�
 
 ```
 interview-demo/
-├── frontend/                       # React 19 前端
+├── frontend/                        # React 19 前端
 │   ├── src/
-│   │   ├── main.tsx                # React 入口 (StrictMode, BrowserRouter)
-│   │   ├── App.tsx                 # 根组件 (Ant Design ConfigProvider, 路由)
-│   │   ├── assets/                 # 静态资源 (图片)
-│   │   ├── pages/                  # 19 个页面 (含仪表盘 + 登录)
-│   │   │   ├── Dashboard.tsx       # / 仪表盘
-│   │   │   ├── Login.tsx           # /login 登录页面（CSS Module 模块化样式 + 涟漪动画）
-│   │   │   ├── JsonSchemaForm.tsx  # /json-schema-form 动态表单 + 实时 JSON 编辑
-│   │   │   ├── AlertWebSocket.tsx  # /alert-websocket WebSocket 告警
-│   │   │   ├── ChunkedUpload.tsx   # /chunked-upload 大文件分片上传
-│   │   │   ├── GisRendering.tsx    # /gis-rendering GIS 十万级点位
-│   │   │   ├── LogStream.tsx       # /log-stream 十万行日志流解密
-│   │   │   ├── LruRouteCache.tsx   # /lru-route-cache LRU 路由缓存
-│   │   │   ├── RbacPermission.tsx  # /rbac-permission RBAC 位编码权限
-│   │   │   ├── RequestLoading.tsx  # /request-loading 请求加载 Signal
-│   │   │   ├── SseLogStream.tsx    # /sse-log-stream SSE 日志流
-│   │   │   ├── TokenRefresh.tsx    # /token-refresh 双 Token 无感刷新
-│   │   │   ├── TreeDataEngine.tsx  # /tree-data-engine 树形数据操作
-│   │   │   ├── WebVitals.tsx       # /web-vitals Web Vitals 性能采集
-│   │   │   ├── WebWorkerMerge.tsx  # /web-worker-merge Web Worker 分治合并
-│   │   │   └── UniPay.tsx          # /unipay 统一支付中台
+│   │   ├── main.tsx                 # React 入口 (StrictMode, BrowserRouter)
+│   │   ├── App.tsx                  # 根组件 (Ant Design ConfigProvider, 路由)
+│   │   ├── assets/                  # 静态资源
+│   │   ├── pages/                   # 16 个页面 (含首页 + 15 演示)
+│   │   │   ├── WebVitals.tsx        # / 页面性能监控 (首页)
+│   │   │   ├── Login.tsx            # /login CSS Module + 涟漪动画
+│   │   │   ├── AlertWebSocket.tsx   # /alert-websocket
+│   │   │   ├── JsonSchemaForm.tsx   # /json-schema-form
+│   │   │   ├── ChunkedUpload.tsx    # /chunked-upload
+│   │   │   ├── GisRendering.tsx     # /gis-rendering
+│   │   │   ├── LogStream.tsx        # /log-stream
+│   │   │   ├── LruRouteCache.tsx    # /lru-route-cache
+│   │   │   ├── LruRouteCacheConfig.tsx
+│   │   │   ├── LruRouteCacheLogs.tsx
+│   │   │   ├── LruRouteCacheMonitor.tsx
+│   │   │   ├── RbacPermission.tsx   # /rbac-permission
+│   │   │   ├── RequestLoading.tsx   # /request-loading
+│   │   │   ├── SseLogStream.tsx     # /sse-log-stream
+│   │   │   ├── TokenRefresh.tsx     # /token-refresh
+│   │   │   ├── TreeDataEngine.tsx   # /tree-data-engine
+│   │   │   ├── WebWorkerMerge.tsx   # /web-worker-merge
+│   │   │   ├── UniPay.tsx           # /unipay
+│   │   │   └── AIDemo/
+│   │   │       ├── AIDemo.tsx       # /ai-demo
+│   │   │       ├── AIDemo.module.css
+│   │   │       ├── components/      # Chat / Agents / KnowledgeBase / Models / Plugins / Dashboard / ErrorBoundary
+│   │   │       ├── services/api.ts
+│   │   │       ├── stores/chatStore.ts
+│   │   │       └── types/index.ts
 │   │   ├── components/
-│   │   │   ├── AuthGuard.tsx       # 路由守卫（基于 Zustand 认证状态）
-│   │   │   ├── PageTracker.tsx     # 页面渲染监控（路径 + 渲染耗时 + Navigation Timing）
-│   │   │   └── dynamic-form/       # 自定义递归表单引擎
-│   │   │       ├── DynamicForm.tsx  # 容器: forwardRef + onChange + 校验调度
-│   │   │       ├── Renderer.tsx     # 递归渲染器 (tabs→card→form→leaf)
-│   │   │       ├── registry.tsx     # 策略模式控件注册表
-│   │   │       ├── types.ts        # Schema 类型 + AJV 校验 + 工具函数
-│   │   │       └── fields/         # 7 个字段组件
-│   │   │           ├── StringField.tsx   # Input
-│   │   │           ├── NumberField.tsx   # InputNumber
-│   │   │           ├── SelectField.tsx   # Select
-│   │   │           ├── SwitchField.tsx   # Switch
-│   │   │           ├── DateTimeField.tsx # DatePicker
-│   │   │           ├── JsonField.tsx     # TextArea (JSON)
-│   │   │           └── ArrayField.tsx    # 动态数组 (添加/删除)
-│   │   ├── stores/                  # Zustand 状态管理 (6 stores)
-│   │   │   ├── index.ts            # 桶文件导出
-│   │   │   ├── alertStore.ts       # WebSocket 告警
-│   │   │   ├── authStore.ts        # 登录认证状态 (hydrate 延迟初始化 + SSR 守卫 + Token 过期自检)
-│   │   │   ├── lruRouteStore.ts    # LRU 路由缓存
-│   │   │   ├── requestLoadingStore.ts # 请求加载 Signal
-│   │   │   ├── themeStore.ts       # 主题切换 (light/dark)
-│   │   │   └── uploadStore.ts      # 分片上传 (persist + localStorage)
+│   │   │   ├── AuthGuard.tsx        # 路由守卫 (Zustand 认证状态)
+│   │   │   ├── PageTracker.tsx      # 页面渲染监控
+│   │   │   └── dynamic-form/        # 自定义递归表单引擎
+│   │   │       ├── DynamicForm.tsx   # 容器: forwardRef + onChange + 校验调度
+│   │   │       ├── Renderer.tsx      # 递归渲染器
+│   │   │       ├── registry.tsx      # 策略模式控件注册表
+│   │   │       ├── types.ts         # Schema + AJV 校验 + 工具函数
+│   │   │       └── fields/          # 7 个字段组件
+│   │   ├── stores/                  # Zustand 状态管理 (7 stores)
+│   │   │   ├── index.ts
+│   │   │   ├── authStore.ts         # 登录认证 (hydrate + Token 过期自检)
+│   │   │   ├── alertStore.ts        # WebSocket 告警
+│   │   │   ├── lruRouteStore.ts     # LRU 路由缓存
+│   │   │   ├── requestLoadingStore.ts
+│   │   │   ├── themeStore.ts        # 主题 light/dark
+│   │   │   └── uploadStore.ts       # 分片上传 (persist + localStorage)
 │   │   ├── routes/
-│   │   │   └── index.tsx           # 15 条路由配置 (含 / 仪表盘 + 14 演示页)
-│   │   └── utils/                   # 工具函数
-│   │       ├── fetchClient.ts      # 统一请求封装（自动附加 Token + 401 无感刷新）
-│   │       ├── token.ts            # JWT Token 工具
-│   │       ├── lru.ts              # LRUCache 泛型类
-│   │       ├── rbac.ts             # RBAC 位运算权限
-│   │       ├── wsTransport.ts      # WebSocket 传输层: 二进制协议/背压/心跳/降级链
-│   │       ├── hash.worker.ts      # SHA-256 分片哈希 Worker
-│   │       ├── merge.worker.ts     # 归并排序 Worker
-│   │       └── decrypt.worker.ts   # 日志解密 Worker (RSA 密钥对生成 + AES-256-GCM)
+│   │   │   └── index.tsx            # 16 条路由 (含 / 首页 + 15 演示)
+│   │   └── utils/
+│   │       ├── fetchClient.ts       # 统一请求封装 (401 无感刷新)
+│   │       ├── token.ts             # JWT Token 工具
+│   │       ├── lru.ts               # LRUCache 泛型类
+│   │       ├── rbac.ts              # RBAC 位运算权限
+│   │       ├── wsTransport.ts       # WebSocket 传输层
+│   │       ├── vitalsReporter.ts    # Web Vitals 上报
+│   │       ├── vitalsSnapshot.ts    # Vitals 快照采集
+│   │       ├── requestResource.ts   # 请求资源追踪
+│   │       ├── hash.worker.ts       # SHA-256 Worker
+│   │       ├── merge.worker.ts      # 归并排序 Worker
+│   │       └── decrypt.worker.ts    # RSA + AES-256-GCM Worker
 │   ├── public/
 │   │   ├── favicon.svg
 │   │   └── icons.svg
-│   ├── dist/                        # 构建产物 (代码分割, 按需加载)
-│   ├── vite.config.ts              # Vite 8 + React + Babel Compiler + Rolldown 代码分割 + /api 代理
-│   ├── tsconfig.json               # TypeScript 配置入口
-│   ├── tsconfig.app.json
-│   ├── tsconfig.node.json
-│   ├── biome.json                  # Biome 2.5 配置
-│   ├── eslint.config.js            # ESLint 9 配置
+│   ├── dist/                        # 构建产物 (代码分割)
+│   ├── vite.config.ts               # Vite 8 + Rolldown + /api 代理
+│   ├── tsconfig*.json
+│   ├── biome.json                   # Biome 2.5 (lint + format)
 │   ├── package.json
-│   └── index.html                  # HTML 入口
-├── backend/                        # Go 1.26 后端
-│   ├── main.go                     # Gin 入口 :8080
+│   └── index.html                   # HTML 入口
+├── backend/                         # Go 1.26 + Gin 1.12 后端
+│   ├── main.go                      # 入口 :${PORT}，优雅关闭
 │   ├── go.mod / go.sum
+│   ├── models/
+│   │   └── models.go                # 共享数据模型
+│   ├── auth/
+│   │   └── service.go               # JWT 双 Token
+│   ├── chat/
+│   │   ├── handler.go               # Chat/Stream/History
+│   │   ├── llm.go                   # OpenAI 客户端封装
+│   │   ├── model_handler.go         # 模型路由
+│   │   └── model_manager.go         # 多模型管理
+│   ├── agent/
+│   │   ├── handler.go               # 智能体 CRUD / 执行
+│   │   ├── agent.go                 # AgentService + ReAct
+│   │   └── enhanced.go             # EnhancedAgent / RAGAgent
+│   ├── knowledge/
+│   │   ├── handler.go               # 知识库 CRUD / 文档 / 搜索
+│   │   ├── rag.go                   # RAGService
+│   │   ├── chunker.go               # 文本分块 (4 种)
+│   │   ├── embedding.go             # EmbeddingService + VectorDB
+│   │   └── doc_loader.go            # 文档加载器
+│   ├── memory/
+│   │   └── service.go               # 对话历史存储
+│   ├── payment/
+│   │   └── handler.go               # 支付状态机 + 幂等 + 重试 + 对账 + 安全
 │   ├── handlers/
-│   │   ├── alert.go                # WebSocket 告警推送 + HTTP SSE/Polling 多协议适配
-│   │   ├── auth.go                 # 登录 + Token 刷新/轮换
-│   │   ├── gis.go                  # GIS 点位数据
-│   │   ├── schema.go               # Schema 后端业务校验
-│   │   ├── sse.go                  # SSE 日志流
-│   │   ├── encrypted_logs.go       # 加密日志流 (客户端公钥加密 AES 密钥)
-│   │   ├── vitals.go               # Web Vitals + 页面路由/渲染采集与存储
-│   │   ├── upload.go               # 分片上传 / 状态查询 / 合并
-│   │   └── payment.go              # 统一支付中台 (状态机/幂等/重试/对账/安全检测)
+│   │   ├── alert.go                 # WebSocket + SSE + HTTP Polling
+│   │   ├── gis.go                   # GIS 点位 (~50万点)
+│   │   ├── schema.go                # Schema 校验
+│   │   ├── sse.go                   # SSE 日志流
+│   │   ├── encrypted_logs.go        # 加密日志 (RSA + AES-256-GCM)
+│   │   ├── vitals.go                # Web Vitals + 页面采集
+│   │   ├── upload.go                # 分片上传
+│   │   ├── rbac.go                  # RBAC 位运算权限校验
+│   │   ├── lru_cache.go             # LRU 缓存演示
+│   │   ├── request_loading.go       # 请求延迟模拟
+│   │   ├── payment.go               # 支付演示数据
+│   │   └── health.go                # 健康检查
 │   ├── middleware/
-│   │   └── (CORS 中间件)
-│   └── uploads/                    # 上传文件临时存储
+│   │   └── cors.go                  # CORS 中间件
+│   └── uploads/
+│       └── sessions.json            # 上传会话持久化
 ├── docs/
-│   └── 面试亮点.md                 # 项目技术分析报告 (面试用)
-├── helm/                           # Helm Chart 部署
-│   ├── Chart.yaml                  # Chart 元数据 (v2, version 0.1.0)
-│   ├── values.yaml                 # 集中化配置 (镜像/副本/探针/资源/ingress)
+│   ├── 面试亮点.md                  # 项目技术分析报告
+│   ├── 简历问题.md                  # 简历问题梳理
+│   ├── 简历.md
+│   ├── 前端可视化转型面试策略.md
+│   └── ToC转型面试策略.md
+├── helm/                            # Helm Chart 部署
+│   ├── Chart.yaml
+│   ├── values.yaml
 │   └── templates/
-│       ├── _helpers.tpl            # 通用标签/选择器模板
-│       ├── namespace.yaml          # ns/interview-demo
-│       ├── configmap.yaml          # 后端环境变量
-│       ├── backend-deployment.yaml # 2 副本, 滚动更新, 健康检查
-│       ├── backend-service.yaml    # ClusterIP :8080
-│       ├── frontend-deployment.yaml# 2 副本, nginx :80
-│       ├── frontend-service.yaml   # ClusterIP :80
-│       └── ingress.yaml            # /api /ws → backend, / → frontend
-├── Dockerfile                      # 多阶段构建 (frontend-builder → backend-builder → frontend/backend, Go -ldflags="-s -w")
-├── nginx.conf                      # Nginx 反向代理 (安全头 / SSE proxy_buffering off / 大 body 100m / gzip / WebSocket)
-├── .gitlab-ci.yml                  # GitLab CI/CD 流水线 (validate → build → package → deploy)
+│       ├── _helpers.tpl
+│       ├── namespace.yaml
+│       ├── configmap.yaml
+│       ├── backend-deployment.yaml   # 2 副本, 滚动更新
+│       ├── backend-service.yaml      # ClusterIP :8080
+│       ├── frontend-deployment.yaml  # 2 副本, nginx
+│       ├── frontend-service.yaml     # ClusterIP :80
+│       └── ingress.yaml             # /api /ws → backend
+├── .husky/                          # Git hooks (pre-commit, commit-msg)
+├── .github/workflows/lint.yml       # GitHub Actions CI
+├── Dockerfile                       # 多阶段构建
+├── docker-compose.yml               # Docker Compose
+├── nginx.conf / nginx.compose.conf  # Nginx 反向代理配置
+├── .gitlab-ci.yml                   # GitLab CI/CD
 └── README.md
+```
 ```
 
 ## 演示功能
@@ -147,7 +184,7 @@ interview-demo/
 | 10 | 请求加载 Signal      | Signal 级别请求追踪 + 方法-路径匹配树                                     |
 | 11 | 树形数据操作引擎     | 递归 CRUD + 拖拽排序 + 节点校验 + 批量操作                                |
 | 12 | 大文件断点续传       | SHA-256 分片哈希 + 并发分片上传 + 完整性校验 + 暂停/恢复/停止 + 刷新持久化 + 清除已完成 + 重置全部 + 代际锁防并发竞态 + 停止后即时重试 + 后端 mutex 数据竞争修复 |
-| 13 | Web Vitals + 页面渲染监控 | web-vitals 5 采集 CLS/FCP/INP/LCP/TTFB → PageTracker 自动上报路径+渲染耗时（单 effect + render-time 重置 `reportedRef` 防 StrictMode 重复请求）→ 后端存储 → ECharts 卡片/趋势图/排行/访问明细 |
+| 13 | 页面性能监控 (首页)   | web-vitals 5 采集 CLS/FCP/INP/LCP/TTFB → PageTracker 自动上报路径+渲染耗时（单 effect + render-time 重置 `reportedRef` 防 StrictMode 重复请求）→ 后端存储 → 页面访问明细表 + 渲染耗时 ECharts 排行，所有 vitals 端点无需认证 |
 | 14 | UniPay 统一支付中台 | 支付状态机 (7 状态 × 6 驱动) + Idempotency-Key 幂等性防重复扣款 + 指数退避重试 (1s/2s/4s, 确定性失败) + T+1 对账 (groupMap 去重 + 自动退款) + 安全检测 (回调伪造 RSA 验签 + 金额篡改二次验价) + Re-pay 重新支付 |
 
 ## 快速启动
@@ -252,12 +289,23 @@ dist/
 | `/api/upload/status/:uploadId` | GET | 查询某个上传的已接收分片列表 |
 | `/api/rbac/check`     | POST   | RBAC 权限后端校验（roleCode + nodes → 逐节点 accessible 结果） |
 | `/api/vitals/report`  | POST   | 上报 Web Vitals 指标           |
-| `/api/vitals/summary` | GET    | Web Vitals 汇总 (最新值 + 聚合) |
-| `/api/vitals/history` | GET    | Web Vitals 时间序列 (按指标分组) |
-| `/api/vitals/page-report` | POST | 上报页面渲染数据 (路径 + 渲染耗时) |
-| `/api/vitals/pages` | GET | 页面访问汇总 (访问次数 / 平均渲染时长) |
-| `/api/vitals/page-history` | GET | 按路径分组的页面渲染时间序列 |
-| `/api/upload/sessions` | GET    | 列出所有进行中的上传会话      |
+| `/api/vitals/summary` | GET    | Web Vitals 汇总 |
+| `/api/vitals/history` | GET    | Web Vitals 时间序列 |
+| `/api/vitals/page-report` | POST | 上报页面渲染数据 |
+| `/api/vitals/pages` | GET | 页面访问汇总 |
+| `/api/vitals/page-history` | GET | 页面渲染时间序列 |
+| `/api/chat` | POST | 聊天 (可选 useAgent/knowledgeBaseId) |
+| `/api/chat/stream` | POST | 流式聊天 |
+| `/api/chat/:id/history` | GET/DELETE | 聊天历史 |
+| `/api/agents` | GET/POST | 智能体列表 / 创建 |
+| `/api/agents/:id` | GET/DELETE | 智能体详情 / 删除 |
+| `/api/agents/:id/execute` | POST | 执行智能体 |
+| `/api/agents/:id/log` | GET | 执行日志 |
+| `/api/knowledge` | GET/POST | 知识库列表 / 创建 |
+| `/api/knowledge/:id` | GET/DELETE | 知识库详情 / 删除 |
+| `/api/knowledge/:id/documents` | GET/POST/DELETE | 文档管理 |
+| `/api/knowledge/search` | POST | 知识库搜索 |
+| `/api/upload/sessions` | GET    | 上传会话列表      |
 | `/api/payments/create` | POST   | 创建支付订单                 |
 | `/api/payments/:id/process` | POST | 处理支付 (模拟渠道回调)    |
 | `/api/payments/:id` | GET    | 查询订单状态                 |
@@ -275,8 +323,7 @@ dist/
 | ------------------ | ------------------------- | -------------- |
 | lint-backend       | `go vet ./...`            | Go vet         |
 | test-backend       | `go test ./handlers/`     | Go test (82 个) |
-| lint-frontend      | `bun run lint`            | Biome 2.5      |
-| lint-frontend-eslint | `bun run lint:eslint`   | ESLint 9       |
+| lint-frontend      | `bun run lint`            | Biome 2.5 (lint + format) |
 | tsc-frontend       | `bunx tsc -b --noEmit`    | TypeScript 6   |
 
 > 前端使用 Bun 1.3 作为运行时安装依赖和执行脚本。配置文件: `.github/workflows/lint.yml`
