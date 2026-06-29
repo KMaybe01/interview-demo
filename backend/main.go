@@ -134,7 +134,7 @@ func main() {
 		api.POST("/agents/:id/execute", agentHandler.ExecuteAgent)
 		api.DELETE("/agents/:id", agentHandler.DeleteAgent)
 
-		protected := api.Group("")
+			protected := api.Group("")
 		protected.Use(authService.AuthMiddleware())
 		{
 			protected.GET("/gis/points", handlers.GetGISPoints)
@@ -149,12 +149,6 @@ func main() {
 			protected.GET("/services", handlers.GetServices)
 			protected.GET("/config", handlers.GetConfig)
 			protected.GET("/logs", handlers.GetLogs)
-			protected.POST("/vitals/report", handlers.ReportVitals)
-			protected.GET("/vitals/summary", handlers.GetVitalsSummary)
-			protected.GET("/vitals/history", handlers.GetVitalsHistory)
-			protected.POST("/vitals/page-report", handlers.ReportPage)
-			protected.GET("/vitals/pages", handlers.GetPageSummary)
-			protected.GET("/vitals/page-history", handlers.GetPageHistory)
 			protected.GET("/request-loading/demo", handlers.DemoRequest)
 			protected.POST("/payments/create", payment.CreatePayment)
 			protected.POST("/payments/process/:id", payment.ProcessPayment)
@@ -165,6 +159,13 @@ func main() {
 			protected.POST("/payments/security-check", payment.SecurityCheck)
 			protected.POST("/payments/retry-demo", payment.RetryDemo)
 		}
+
+		api.POST("/vitals/report", handlers.ReportVitals)
+		api.GET("/vitals/summary", handlers.GetVitalsSummary)
+		api.GET("/vitals/history", handlers.GetVitalsHistory)
+		api.POST("/vitals/page-report", handlers.ReportPage)
+		api.GET("/vitals/pages", handlers.GetPageSummary)
+		api.GET("/vitals/page-history", handlers.GetPageHistory)
 	}
 
 	r.GET("/healthz", func(c *gin.Context) {

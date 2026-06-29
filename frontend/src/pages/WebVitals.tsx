@@ -79,12 +79,14 @@ export default function WebVitals() {
   const [history, setHistory] = useState<HistoryData>({});
   const [pages, setPages] = useState<PageSummary[]>([]);
   const [loading, setLoading] = useState(true);
+  const [error, setError] = useState<string | null>(null);
   const chartRef = useRef<HTMLDivElement>(null);
   const pageChartRef = useRef<HTMLDivElement>(null);
   const chartInstance = useRef<echarts.ECharts | null>(null);
   const pageChartInstance = useRef<echarts.ECharts | null>(null);
 
   const fetchData = useCallback(async () => {
+    setError(null);
     try {
       const [sRes, hRes, pRes] = await Promise.all([
         http.get<MetricSummary[]>('/api/vitals/summary'),
@@ -94,6 +96,8 @@ export default function WebVitals() {
       setSummary(sRes.data);
       setHistory(hRes.data);
       setPages(pRes.data);
+    } catch (err) {
+      setError(err instanceof Error ? err.message : '请求失败');
     } finally {
       setLoading(false);
     }
@@ -309,9 +313,14 @@ export default function WebVitals() {
           页面渲染耗时排行
         </Title>
         <div ref={pageChartRef} style={{ height: Math.max(200, pages.length * 40 + 40) }} />
-        {pages.length === 0 && !loading && (
+        {pages.length === 0 && !loading && !error && (
           <div style={{ textAlign: 'center', padding: 40, color: '#999' }}>
             暂无页面访问记录 —— 浏览其他页面后会自动采集
+          </div>
+        )}
+        {error && (
+          <div style={{ textAlign: 'center', padding: 40, color: '#ff4d4f' }}>
+            数据加载失败: {error}
           </div>
         )}
       </Card>
@@ -330,7 +339,7 @@ export default function WebVitals() {
             scroll={{ x: 780 }}
           />
         ) : (
-          !loading && (
+          !loading && !error && (
             <div style={{ textAlign: 'center', padding: 40, color: '#999' }}>暂无页面访问记录</div>
           )
         )}
@@ -346,7 +355,7 @@ export default function WebVitals() {
           Web Vitals 历史趋势
         </Title>
         <div ref={chartRef} style={{ height: 260 }} />
-        {Object.keys(history).length === 0 && !loading && (
+        {Object.keys(history).length === 0 && !loading && !error && (
           <div style={{ textAlign: 'center', padding: 40, color: '#999' }}>
             暂无数据 —— 刷新页面或稍后自动采集
           </div>
