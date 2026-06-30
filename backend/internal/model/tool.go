@@ -1,4 +1,4 @@
-﻿package model
+package model
 
 type Tool struct {
 	Name        string                 `json:"name" binding:"required"`

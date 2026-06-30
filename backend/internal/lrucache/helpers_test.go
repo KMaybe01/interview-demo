@@ -1,4 +1,4 @@
-﻿package lrucache
+package lrucache
 
 import (
 	"encoding/json"

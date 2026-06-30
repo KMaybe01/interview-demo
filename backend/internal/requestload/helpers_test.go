@@ -1,4 +1,4 @@
-﻿package requestload
+package requestload
 
 import (
 	"encoding/json"

@@ -1,4 +1,4 @@
-﻿package gis
+package gis
 
 import (
 	"encoding/json"

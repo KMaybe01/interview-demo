@@ -32,7 +32,7 @@ bun run format       # Biome 格式化
 
 # 后端开发
 cd backend
-go run .             # Gin :8080
+go run ./cmd/server/            # Gin :8080
 ```
 
 ---
@@ -416,8 +416,8 @@ bun run build          # tsc -b + vite build
 
 cd backend
 go vet ./...           # 代码规范校验
-go test -count=1 ./handlers/   # 后端测试 (82 个)
-go build -o bin/server.exe .   # build 可运行文件
+go test ./internal/... -v  # 后端测试 (82 个)
+go build -o bin/server.exe .    # build 可运行文件
 ```
 
 - 所有代码变更后必须跑构建验证

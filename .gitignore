@@ -23,6 +23,7 @@ dist-ssr
 *.sln
 *.sw?
 
-./frontend/dist/
-./backend/bin/
-./backend/uploads/*
+# Build binaries
+backend/bin/
+backend/coverage/
+frontend/dist/

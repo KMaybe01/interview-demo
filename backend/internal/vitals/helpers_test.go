@@ -1,4 +1,4 @@
-﻿package vitals
+package vitals
 
 import (
 	"encoding/json"

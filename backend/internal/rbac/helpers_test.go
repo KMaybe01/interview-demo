@@ -1,4 +1,4 @@
-﻿package rbac
+package rbac
 
 import (
 	"encoding/json"
