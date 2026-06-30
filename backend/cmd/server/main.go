@@ -26,13 +26,23 @@ import (
 	"time"
 
 	"interview-demo/backend/internal/agent"
+	"interview-demo/backend/internal/alert"
 	"interview-demo/backend/internal/auth"
 	"interview-demo/backend/internal/chat"
-	"interview-demo/backend/internal/demo"
+	"interview-demo/backend/internal/encryptedlog"
+	"interview-demo/backend/internal/gis"
+	"interview-demo/backend/internal/health"
 	"interview-demo/backend/internal/knowledge"
+	"interview-demo/backend/internal/lrucache"
 	"interview-demo/backend/internal/memory"
 	"interview-demo/backend/internal/middleware"
 	"interview-demo/backend/internal/payment"
+	"interview-demo/backend/internal/rbac"
+	"interview-demo/backend/internal/requestload"
+	"interview-demo/backend/internal/schema"
+	"interview-demo/backend/internal/sse"
+	"interview-demo/backend/internal/upload"
+	"interview-demo/backend/internal/vitals"
 
 	"github.com/gin-gonic/gin"
 
@@ -102,11 +112,11 @@ func main() {
 		api.POST("/auth/refresh", authService.RefreshToken)
 		api.GET("/auth/check", authService.CheckToken)
 		api.GET("/auth/used-tokens", authService.UsedTokenCount)
-		api.GET("/sse/logs", demo.SSELogStream)
-		api.GET("/sse/encrypted-logs", demo.EncryptedLogStream)
-		api.GET("/upload/download/:uploadId", demo.DownloadUpload)
+		api.GET("/sse/logs", sse.SSELogStream)
+		api.GET("/sse/encrypted-logs", encryptedlog.EncryptedLogStream)
+		api.GET("/upload/download/:uploadId", upload.DownloadUpload)
 
-		api.GET("/health", demo.HealthCheck)
+		api.GET("/health", health.HealthCheck)
 
 		api.POST("/chat", chatHandler.Chat)
 		api.POST("/chat/stream", chatHandler.ChatStream)
@@ -167,19 +177,19 @@ func main() {
 		protected := api.Group("")
 		protected.Use(authService.AuthMiddleware())
 		{
-			protected.GET("/gis/points", demo.GISPoints)
-			protected.GET("/schema/config", demo.SchemaConfig)
-			protected.POST("/schema/validate", demo.ValidateSchema)
-			protected.POST("/upload/init", demo.InitUpload)
-			protected.POST("/upload/chunk", demo.UploadChunk)
-			protected.POST("/upload/complete", demo.CompleteUpload)
-			protected.GET("/upload/status/:uploadId", demo.UploadStatus)
-			protected.GET("/upload/sessions", demo.ListUploadSessions)
-			protected.POST("/rbac/check", demo.CheckPermissions)
-			protected.GET("/services", demo.Services)
-			protected.GET("/config", demo.Config)
-			protected.GET("/logs", demo.Logs)
-			protected.GET("/request-loading/demo", demo.DemoRequest)
+			protected.GET("/gis/points", gis.GISPoints)
+			protected.GET("/schema/config", schema.SchemaConfig)
+			protected.POST("/schema/validate", schema.ValidateSchema)
+			protected.POST("/upload/init", upload.InitUpload)
+			protected.POST("/upload/chunk", upload.UploadChunk)
+			protected.POST("/upload/complete", upload.CompleteUpload)
+			protected.GET("/upload/status/:uploadId", upload.UploadStatus)
+			protected.GET("/upload/sessions", upload.ListUploadSessions)
+			protected.POST("/rbac/check", rbac.CheckPermissions)
+			protected.GET("/services", lrucache.Services)
+			protected.GET("/config", lrucache.Config)
+			protected.GET("/logs", lrucache.Logs)
+			protected.GET("/request-loading/demo", requestload.DemoRequest)
 			protected.POST("/payments/create", payment.CreatePayment)
 			protected.POST("/payments/process/:id", payment.ProcessPayment)
 			protected.GET("/payments/order/:id", payment.OrderDetail)
@@ -190,12 +200,12 @@ func main() {
 			protected.POST("/payments/retry-demo", payment.RetryDemo)
 		}
 
-		api.POST("/vitals/report", demo.ReportVitals)
-		api.GET("/vitals/summary", demo.VitalsSummaryReport)
-		api.GET("/vitals/history", demo.VitalsHistory)
-		api.POST("/vitals/page-report", demo.ReportPage)
-		api.GET("/vitals/pages", demo.PageSummaryReport)
-		api.GET("/vitals/page-history", demo.PageHistory)
+		api.POST("/vitals/report", vitals.ReportVitals)
+		api.GET("/vitals/summary", vitals.VitalsSummaryReport)
+		api.GET("/vitals/history", vitals.VitalsHistory)
+		api.POST("/vitals/page-report", vitals.ReportPage)
+		api.GET("/vitals/pages", vitals.PageSummaryReport)
+		api.GET("/vitals/page-history", vitals.PageHistory)
 	}
 
 	r.GET("/healthz", func(c *gin.Context) {
@@ -209,8 +219,8 @@ func main() {
 
 		c.JSON(200, gin.H{"status": "ok"})
 	})
-	r.GET("/ws/alerts", demo.AlertDispatcher)
-	r.GET("/api/alerts", demo.AlertDispatcher)
+	r.GET("/ws/alerts", alert.AlertDispatcher)
+	r.GET("/api/alerts", alert.AlertDispatcher)
 
 	fmt.Println("=====================================")
 	fmt.Printf("Loading docs from: %s\n", docsDir)

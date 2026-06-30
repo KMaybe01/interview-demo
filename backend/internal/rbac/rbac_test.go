@@ -1,4 +1,4 @@
-﻿package demo
+package rbac
 
 import (
 	"net/http"

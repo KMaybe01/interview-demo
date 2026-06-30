@@ -1,4 +1,4 @@
-package demo
+package vitals
 
 import (
 	"net/http"

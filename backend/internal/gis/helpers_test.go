@@ -1,4 +1,4 @@
-﻿package demo
+﻿package gis
 
 import (
 	"encoding/json"
@@ -6,9 +6,9 @@ import (
 	"testing"
 )
 
-func readBody(t *testing.T, w *httptest.ResponseRecorder, v any) {
+func readBody(t *testing.T, w *httptest.ResponseRecorder, v interface{}) {
 	t.Helper()
 	if err := json.Unmarshal(w.Body.Bytes(), v); err != nil {
-		t.Fatalf("json.Unmarshal: %v", err)
+		t.Fatal(err)
 	}
 }

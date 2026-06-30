@@ -1,4 +1,4 @@
-package demo
+package lrucache
 
 import (
 	"net/http"

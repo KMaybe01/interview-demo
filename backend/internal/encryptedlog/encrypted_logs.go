@@ -1,4 +1,4 @@
-package demo
+package encryptedlog
 
 import (
 	"crypto/aes"

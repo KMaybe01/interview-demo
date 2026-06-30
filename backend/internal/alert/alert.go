@@ -1,4 +1,4 @@
-﻿package demo
+package alert
 
 import (
 	"encoding/json"
