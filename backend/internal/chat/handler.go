@@ -41,6 +41,17 @@ func NewChatHandler(
 	}
 }
 
+// Chat  godoc
+// @Summary     发送聊天消息
+// @Description 发送消息并获取 AI 回复，支持知识库上下文、Agent 调用、模型选择
+// @Tags        对话
+// @Accept      json
+// @Produce     json
+// @Param       body body     object{content=string,conversationId=string,knowledgeBaseId=string,useAgent=bool,agentType=string,agentId=string,model=string} true "聊天请求"
+// @Success     200  {object} map[string]interface{}
+// @Failure     400  {object} map[string]interface{}
+// @Failure     500  {object} map[string]interface{}
+// @Router      /chat [post]
 func (h *ChatHandler) Chat(c *gin.Context) {
 	var req struct {
 		Content         string `json:"content" binding:"required"`
@@ -137,6 +148,16 @@ func (h *ChatHandler) Chat(c *gin.Context) {
 	})
 }
 
+// ChatStream  godoc
+// @Summary     聊天流式回复 (SSE)
+// @Description 通过 Server-Sent Events 返回流式聊天回复
+// @Tags        对话
+// @Accept      json
+// @Produce     text/event-stream
+// @Param       body body     object{content=string,conversationId=string,knowledgeBaseId=string} true "聊天请求"
+// @Success     200
+// @Failure     400 {object} map[string]interface{}
+// @Router      /chat/stream [post]
 func (h *ChatHandler) ChatStream(c *gin.Context) {
 	var req struct {
 		Content         string `json:"content" binding:"required"`
@@ -168,6 +189,14 @@ func (h *ChatHandler) ChatStream(c *gin.Context) {
 	c.String(http.StatusOK, "data: [DONE]\n\n")
 }
 
+// GetHistory  godoc
+// @Summary     获取聊天历史
+// @Description 获取指定会话的聊天历史消息
+// @Tags        对话
+// @Produce     json
+// @Param       conversationId path string true "会话 ID"
+// @Success     200 {object} map[string]interface{}
+// @Router      /chat/history/{conversationId} [get]
 func (h *ChatHandler) GetHistory(c *gin.Context) {
 	conversationId := c.Param("conversationId")
 	limit := 20
@@ -189,6 +218,14 @@ func (h *ChatHandler) GetHistory(c *gin.Context) {
 	})
 }
 
+// ClearHistory  godoc
+// @Summary     清空聊天历史
+// @Description 清空指定会话的聊天历史消息
+// @Tags        对话
+// @Produce     json
+// @Param       conversationId path string true "会话 ID"
+// @Success     200 {object} map[string]interface{}
+// @Router      /chat/history/{conversationId} [delete]
 func (h *ChatHandler) ClearHistory(c *gin.Context) {
 	conversationId := c.Param("conversationId")
 	h.memoryService.Clear(conversationId)

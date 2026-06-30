@@ -21,6 +21,17 @@ type checkNodeResult struct {
 	Accessible bool   `json:"accessible"`
 }
 
+// CheckPermissions  godoc
+// @Summary     RBAC 权限检查
+// @Description 根据角色编码（位掩码）检查用户对各节点的访问权限，演示基于位运算的权限模型
+// @Tags        演示
+// @Accept      json
+// @Produce     json
+// @Security    Bearer
+// @Param       body body     checkBody true "权限检查请求"
+// @Success     200  {object} map[string]interface{}
+// @Failure     400  {object} map[string]interface{}
+// @Router      /rbac/check [post]
 func CheckPermissions(c *gin.Context) {
 	var body checkBody
 	if err := c.ShouldBindJSON(&body); err != nil {

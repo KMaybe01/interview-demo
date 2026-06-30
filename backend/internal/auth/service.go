@@ -1,4 +1,4 @@
-package auth
+﻿package auth
 
 import (
 	"fmt"
@@ -155,6 +155,18 @@ func (a *AuthService) parseAndValidateToken(tokenStr string) (*jwt.MapClaims, er
 	return &claims, nil
 }
 
+// Login  godoc
+// @Summary     用户登录
+// @Description 使用用户名密码登录，获取 JWT Token
+// @Tags        认证
+// @Accept      json
+// @Produce     json
+// @Param       body body     LoginRequest true "登录请求"
+// @Success     200  {object} TokenResponse
+// @Failure     400  {object} map[string]interface{}
+// @Failure     401  {object} map[string]interface{}
+// @Failure     500  {object} map[string]interface{}
+// @Router      /auth/login [post]
 func (a *AuthService) Login(c *gin.Context) {
 	var req LoginRequest
 	if err := c.ShouldBindJSON(&req); err != nil {
@@ -192,6 +204,18 @@ type RefreshRequest struct {
 	RefreshToken string `json:"refresh_token" binding:"required"`
 }
 
+// RefreshToken  godoc
+// @Summary     刷新 Token
+// @Description 使用 Refresh Token 轮换获取新的 Access Token 和 Refresh Token，带重放攻击检测
+// @Tags        认证
+// @Accept      json
+// @Produce     json
+// @Param       body body     RefreshRequest true "刷新请求"
+// @Success     200  {object} map[string]interface{}
+// @Failure     400  {object} map[string]interface{}
+// @Failure     401  {object} map[string]interface{}
+// @Failure     500  {object} map[string]interface{}
+// @Router      /auth/refresh [post]
 func (a *AuthService) RefreshToken(c *gin.Context) {
 	var req RefreshRequest
 	if err := c.ShouldBindJSON(&req); err != nil {
@@ -248,6 +272,15 @@ func (a *AuthService) RefreshToken(c *gin.Context) {
 	})
 }
 
+// CheckToken  godoc
+// @Summary     验证 Token
+// @Description 验证 JWT Token 是否有效，返回剩余过期时间
+// @Tags        认证
+// @Accept      json
+// @Produce     json
+// @Success     200 {object} map[string]interface{}
+// @Failure     401 {object} map[string]interface{}
+// @Router      /auth/check [get]
 func (a *AuthService) CheckToken(c *gin.Context) {
 	tokenStr := c.GetHeader("Authorization")
 	if tokenStr == "" || len(tokenStr) < 7 {
@@ -311,6 +344,13 @@ func (a *AuthService) AuthMiddleware() gin.HandlerFunc {
 	}
 }
 
+// GetUsedTokenCount  godoc
+// @Summary     已用 Token 计数
+// @Description 返回已被使用的 Refresh Token 数量（重放攻击检测统计）
+// @Tags        认证
+// @Produce     json
+// @Success     200 {object} map[string]interface{}
+// @Router      /auth/used-tokens [get]
 func (a *AuthService) GetUsedTokenCount(c *gin.Context) {
 	count := a.tokenStore.Count()
 	c.JSON(http.StatusOK, gin.H{"count": count})

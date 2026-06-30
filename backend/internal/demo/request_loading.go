@@ -9,6 +9,18 @@ import (
 	"github.com/gin-gonic/gin"
 )
 
+// DemoRequest  godoc
+// @Summary     请求加载状态演示
+// @Description 模拟请求延迟和随机失败，用于前端加载状态展示（含骨架屏/错误重试等场景）
+// @Tags        演示
+// @Produce     json
+// @Security    Bearer
+// @Param       delay query int    false "延迟毫秒 (0-10000)" default(1000)
+// @Param       fail  query number false "失败率 (0.0-1.0)"  default(0)
+// @Param       type  query string false "数据类型 (default/users/reports/export)"
+// @Success     200   {object} map[string]interface{}
+// @Failure     500   {object} map[string]interface{}
+// @Router      /request-loading/demo [get]
 func DemoRequest(c *gin.Context) {
 	delayStr := c.DefaultQuery("delay", "1000")
 	failStr := c.DefaultQuery("fail", "0")

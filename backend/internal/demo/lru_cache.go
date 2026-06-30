@@ -38,6 +38,14 @@ var serviceStatuses = []string{"healthy", "warning", "critical"}
 var logLevelsLRU = []string{"INFO", "WARN", "ERROR", "DEBUG"}
 var logSources = []string{"api-gateway", "user-svc", "order-svc", "payment-svc", "cache-svc"}
 
+// GetServices  godoc
+// @Summary     服务列表
+// @Description 返回模拟的服务实例列表（含名称、状态、区域、QPS、P99），用于演示 LRU 缓存
+// @Tags        演示
+// @Produce     json
+// @Security    Bearer
+// @Success     200 {object} map[string]interface{}
+// @Router      /services [get]
 func GetServices(c *gin.Context) {
 	services := make([]ServiceItem, 30)
 	for i := range 30 {
@@ -53,6 +61,14 @@ func GetServices(c *gin.Context) {
 	c.JSON(http.StatusOK, gin.H{"services": services})
 }
 
+// GetConfig  godoc
+// @Summary     集群配置
+// @Description 返回模拟的集群配置（含名称、副本数、TLS、日志级别），用于演示 LRU 缓存
+// @Tags        演示
+// @Produce     json
+// @Security    Bearer
+// @Success     200 {object} map[string]interface{}
+// @Router      /config [get]
 func GetConfig(c *gin.Context) {
 	ts := time.Now().UnixMilli()
 	cfg := ConfigData{
@@ -64,6 +80,14 @@ func GetConfig(c *gin.Context) {
 	c.JSON(http.StatusOK, gin.H{"config": cfg})
 }
 
+// GetLogs  godoc
+// @Summary     日志列表
+// @Description 返回模拟的 200 条系统日志（含级别、时间、来源、消息），用于演示 LRU 缓存
+// @Tags        演示
+// @Produce     json
+// @Security    Bearer
+// @Success     200 {object} map[string]interface{}
+// @Router      /logs [get]
 func GetLogs(c *gin.Context) {
 	now := time.Now()
 	logs := make([]LogEntry, 200)

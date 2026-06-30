@@ -25,6 +25,13 @@ func NewAgentHandler(factory *AgentFactory, manager *chat.ModelManager) *AgentHa
 	}
 }
 
+// ListAgents  godoc
+// @Summary     列出智能体
+// @Description 返回所有已创建的智能体列表
+// @Tags        智能体
+// @Produce     json
+// @Success     200 {object} map[string]interface{}
+// @Router      /agents [get]
 func (h *AgentHandler) ListAgents(c *gin.Context) {
 	h.mu.RLock()
 	defer h.mu.RUnlock()
@@ -46,6 +53,16 @@ func (h *AgentHandler) ListAgents(c *gin.Context) {
 	})
 }
 
+// CreateAgent  godoc
+// @Summary     创建智能体
+// @Description 创建指定类型的 AI 智能体（ReAct/Function/Multi/RAG）
+// @Tags        智能体
+// @Accept      json
+// @Produce     json
+// @Param       body body     object{type=string,name=string} true "创建请求"
+// @Success     201  {object} map[string]interface{}
+// @Failure     400  {object} map[string]interface{}
+// @Router      /agents [post]
 func (h *AgentHandler) CreateAgent(c *gin.Context) {
 	var req struct {
 		Type string `json:"type"`
@@ -89,6 +106,19 @@ func (h *AgentHandler) CreateAgent(c *gin.Context) {
 	})
 }
 
+// ExecuteAgent  godoc
+// @Summary     执行智能体
+// @Description 执行指定智能体，返回推理过程和最终响应
+// @Tags        智能体
+// @Accept      json
+// @Produce     json
+// @Param       id   path string                   true "智能体 ID"
+// @Param       body body  object{input=string} true "执行请求"
+// @Success     200  {object} map[string]interface{}
+// @Failure     400  {object} map[string]interface{}
+// @Failure     404  {object} map[string]interface{}
+// @Failure     500  {object} map[string]interface{}
+// @Router      /agents/{id}/execute [post]
 func (h *AgentHandler) ExecuteAgent(c *gin.Context) {
 	agentID := c.Param("id")
 
@@ -153,6 +183,15 @@ func (h *AgentHandler) GetAgent(id string) (*EnhancedAgent, bool) {
 	return agent, ok
 }
 
+// DeleteAgent  godoc
+// @Summary     删除智能体
+// @Description 删除指定的智能体
+// @Tags        智能体
+// @Produce     json
+// @Param       id path string true "智能体 ID"
+// @Success     200 {object} map[string]interface{}
+// @Failure     404 {object} map[string]interface{}
+// @Router      /agents/{id} [delete]
 func (h *AgentHandler) DeleteAgent(c *gin.Context) {
 	agentID := c.Param("id")
 

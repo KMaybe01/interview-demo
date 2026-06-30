@@ -133,6 +133,18 @@ type CompleteUploadRequest struct {
 	UploadID string `json:"uploadId" binding:"required"`
 }
 
+// InitUpload  godoc
+// @Summary     初始化分片上传
+// @Description 创建新的分片上传会话，返回 uploadId 用于后续分片上传
+// @Tags        演示
+// @Accept      json
+// @Produce     json
+// @Security    Bearer
+// @Param       body body     InitUploadRequest true "初始化请求"
+// @Success     200  {object} map[string]interface{}
+// @Failure     400  {object} map[string]interface{}
+// @Failure     500  {object} map[string]interface{}
+// @Router      /upload/init [post]
 func InitUpload(c *gin.Context) {
 	ensureUploadInit()
 	var req InitUploadRequest
@@ -165,6 +177,16 @@ func InitUpload(c *gin.Context) {
 	c.JSON(http.StatusOK, gin.H{"uploadId": id})
 }
 
+// GetUploadStatus  godoc
+// @Summary     查询上传状态
+// @Description 查询指定上传会话的进度和已接收分片列表
+// @Tags        演示
+// @Produce     json
+// @Security    Bearer
+// @Param       uploadId path string true "上传会话 ID"
+// @Success     200 {object} map[string]interface{}
+// @Failure     404 {object} map[string]interface{}
+// @Router      /upload/status/{uploadId} [get]
 func GetUploadStatus(c *gin.Context) {
 	ensureUploadInit()
 	uploadID := c.Param("uploadId")
@@ -204,6 +226,15 @@ func sanitizeFilename(name string) string {
 	return cleaned
 }
 
+// DownloadUpload  godoc
+// @Summary     下载已上传文件
+// @Description 根据 uploadId 下载已合并的完整文件
+// @Tags        演示
+// @Produce     application/octet-stream
+// @Param       uploadId path string true "上传会话 ID"
+// @Success     200
+// @Failure     404 {object} map[string]interface{}
+// @Router      /upload/download/{uploadId} [get]
 func DownloadUpload(c *gin.Context) {
 	ensureUploadInit()
 	uploadID := c.Param("uploadId")
@@ -230,6 +261,14 @@ func DownloadUpload(c *gin.Context) {
 	c.File(filePath)
 }
 
+// ListUploadSessions  godoc
+// @Summary     列出上传会话
+// @Description 返回当前所有活跃的上传会话列表
+// @Tags        演示
+// @Produce     json
+// @Security    Bearer
+// @Success     200 {object} map[string]interface{}
+// @Router      /upload/sessions [get]
 func ListUploadSessions(c *gin.Context) {
 	ensureUploadInit()
 	var sessions []map[string]interface{}
@@ -253,6 +292,22 @@ func ListUploadSessions(c *gin.Context) {
 	c.JSON(http.StatusOK, gin.H{"sessions": sessions})
 }
 
+// UploadChunk  godoc
+// @Summary     上传分片
+// @Description 上传单个文件分片（multipart/form-data），含 SHA256 哈希校验
+// @Tags        演示
+// @Accept      multipart/form-data
+// @Produce     json
+// @Security    Bearer
+// @Param       uploadId   formData string true "上传会话 ID"
+// @Param       chunkIndex formData int    true "分片索引"
+// @Param       hash      formData string true "分片 SHA256 哈希"
+// @Param       chunk     formData file   true "分片文件内容"
+// @Success     200 {object} map[string]interface{}
+// @Failure     400 {object} map[string]interface{}
+// @Failure     404 {object} map[string]interface{}
+// @Failure     500 {object} map[string]interface{}
+// @Router      /upload/chunk [post]
 func UploadChunk(c *gin.Context) {
 	ensureUploadInit()
 	uploadID := c.PostForm("uploadId")
@@ -322,6 +377,19 @@ func UploadChunk(c *gin.Context) {
 	})
 }
 
+// CompleteUpload  godoc
+// @Summary     完成分片上传
+// @Description 合并所有已上传分片为完整文件，验证文件完整性
+// @Tags        演示
+// @Accept      json
+// @Produce     json
+// @Security    Bearer
+// @Param       body body     CompleteUploadRequest true "完成请求"
+// @Success     200  {object} map[string]interface{}
+// @Failure     400  {object} map[string]interface{}
+// @Failure     404  {object} map[string]interface{}
+// @Failure     500  {object} map[string]interface{}
+// @Router      /upload/complete [post]
 func CompleteUpload(c *gin.Context) {
 	ensureUploadInit()
 	var req CompleteUploadRequest

@@ -15,7 +15,11 @@ Go 1.26 + Gin 1.12 后端服务，为前端 13 个技术演示场景提供 API �
 
 ```
 backend/
-├── cmd/server/main.go       # 入口 :${PORT}，优雅关闭
+├── cmd/server/main.go       # 入口 :${PORT}，优雅关闭（含 Swagger API 文档）
+├── docs/                    # Swagger 自动生成的 API 文档
+│   ├── docs.go              # Swagger embedded doc
+│   ├── swagger.json
+│   └── swagger.yaml
 ├── internal/
 │   ├── agent/               # 智能体引擎（ReAct / Function Calling / Multi-Agent）
 │   ├── auth/                # JWT 双 Token 认证（登录/刷新/重放检测）
@@ -54,6 +58,16 @@ go run ./cmd/server/
 
 服务默认监听 `$PORT`（默认 8080），日志输出 `Backend running on :PORT`。前端开发服务器通过 Vite 代理 `/api` 请求到后端。
 
+## Swagger API 文档
+
+启动服务后访问 http://localhost:8080/swagger/index.html 查看交互式 API 文档。
+
+**注意**: Swagger UI 依赖 `github.com/swaggo/gin-swagger` 和 `github.com/swaggo/files`，首次构建前需要网络环境执行 `go mod tidy` 以下载依赖。之后可通过以下命令重新生成文档：
+
+```bash
+swag init -g cmd/server/main.go -o docs
+```
+
 ## 生产构建
 
 ```bash
@@ -68,6 +82,12 @@ go test ./internal/... -v
 
 ## API 路由
 
+### Swagger UI
+
+| 方法 | 路径 | 说明 |
+|------|------|------|
+| GET | `/swagger/*any` | Swagger 交互式 API 文档 |
+
 ### 公开（无需认证）
 
 | 方法 | 路径 | 说明 |
@@ -76,11 +96,37 @@ go test ./internal/... -v
 | POST | `/api/auth/refresh` | 轮换 Refresh Token，返回新双 Token |
 | GET | `/api/auth/check` | 校验 Access Token 有效性 |
 | GET | `/api/auth/used-tokens` | 已轮换 Refresh Token 计数（重放检测） |
+| GET | `/api/health` | 健康检查 |
 | GET | `/api/sse/logs` | SSE 日志流（查询参数 `level` / `interval`） |
 | GET | `/api/sse/encrypted-logs` | 加密日志流（通过查询参数传递 RSA 公钥） |
 | GET | `/api/upload/download/:uploadId` | 下载已完成的文件 |
+| GET | `/api/chat/:conversationId` | 获取 / 清空聊天历史 |
+| POST | `/api/chat**` | 聊天对话 / 流式回复 |
+| GET | `/api/models` | 列出可用 AI 模型 |
+| GET | `/api/models/:id` | 获取模型详情 |
+| POST | `/api/models/:id/chat` | 使用指定模型对话 |
+| POST | `/api/knowledge-base` | 创建知识库 |
+| GET | `/api/knowledge-base` | 列出知识库 |
+| GET | `/api/knowledge-base/:id` | 获取知识库详情 |
+| DELETE | `/api/knowledge-base/:id` | 删除知识库 |
+| POST | `/api/knowledge-base/:id/document` | 添加文档 |
+| POST | `/api/knowledge-base/:id/documents/batch` | 批量添加文档 |
+| GET | `/api/knowledge-base/:id/document` | 获取文档列表 |
+| DELETE | `/api/knowledge-base/:id/document/:docId` | 删除文档 |
+| POST | `/api/knowledge-base/search` | 搜索知识库 |
+| POST | `/api/knowledge-base/init-docs` | 从本地目录加载文档 |
+| GET | `/api/agents` | 列出智能体 |
+| POST | `/api/agents` | 创建智能体 |
+| POST | `/api/agents/:id/execute` | 执行智能体 |
+| DELETE | `/api/agents/:id` | 删除智能体 |
+| POST | `/api/vitals/report` | 上报 Web Vitals 指标 |
+| GET | `/api/vitals/summary` | Web Vitals 汇总（最新值 + 聚合统计） |
+| GET | `/api/vitals/history` | Web Vitals 时间序列 |
+| POST | `/api/vitals/page-report` | 上报页面渲染数据 |
+| GET | `/api/vitals/pages` | 页面访问汇总 |
+| GET | `/api/vitals/page-history` | 页面渲染时间序列 |
 | GET | `/healthz` | 健康检查（存活/就绪探针） |
-| GET | `/ws/alerts` | WebSocket 告警推送 |
+| GET | `/ws/alerts` | WebSocket 告警推送（查询参数 `transport` / `rate` / `workers`） |
 | GET | `/api/alerts` | SSE / HTTP Polling 告警推送（同路由分发） |
 
 ### 受保护（需 JWT Authorization Header）
@@ -99,13 +145,15 @@ go test ./internal/... -v
 | GET | `/api/services` | LRU 缓存 — 服务列表 |
 | GET | `/api/config` | LRU 缓存 — 配置数据 |
 | GET | `/api/logs` | LRU 缓存 — 日志数据 |
-| POST | `/api/vitals/report` | 上报 Web Vitals 指标 |
-| GET | `/api/vitals/summary` | Web Vitals 汇总（最新值 + 聚合统计） |
-| GET | `/api/vitals/history` | Web Vitals 时间序列 |
-| POST | `/api/vitals/page-report` | 上报页面渲染数据 |
-| GET | `/api/vitals/pages` | 页面访问汇总 |
-| GET | `/api/vitals/page-history` | 页面渲染时间序列 |
 | GET | `/api/request-loading/demo` | 模拟请求（查询参数 `delay` / `failRate`） |
+| POST | `/api/payments/create` | 创建支付订单（幂等 Key 支持） |
+| POST | `/api/payments/process/:id` | 处理支付扣款 |
+| GET | `/api/payments/order/:id` | 查询订单详情 |
+| GET | `/api/payments/orders` | 订单列表 |
+| POST | `/api/payments/transition/:id` | 订单状态转换 |
+| POST | `/api/payments/idempotency-test` | 幂等性测试 |
+| POST | `/api/payments/security-check` | 安全校验演示 |
+| POST | `/api/payments/retry-demo` | 重试机制演示 |
 
 ## 认证机制
 

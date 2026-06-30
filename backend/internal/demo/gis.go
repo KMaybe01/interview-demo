@@ -14,6 +14,15 @@ type Point struct {
 	Value float64 `json:"value"`
 }
 
+// GetGISPoints  godoc
+// @Summary     GIS 地理坐标数据
+// @Description 生成北京中心经纬度周围的模拟 GIS 点数据（含螺旋分布），用于前端地图可视化
+// @Tags        演示
+// @Produce     json
+// @Security    Bearer
+// @Param       count query int false "点数 (1-500000)" default(100000)
+// @Success     200 {object} map[string]interface{}
+// @Router      /gis/points [get]
 func GetGISPoints(c *gin.Context) {
 	countStr := c.DefaultQuery("count", "100000")
 	count, err := strconv.Atoi(countStr)

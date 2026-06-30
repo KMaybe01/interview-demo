@@ -8,6 +8,11 @@ require (
 	github.com/google/uuid v1.6.0
 	github.com/gorilla/websocket v1.5.3
 	github.com/sashabaranov/go-openai v1.38.1
+
+	// Swagger UI deps — run `go mod tidy` when network is available to download:
+	github.com/swaggo/files v1.0.1
+	github.com/swaggo/gin-swagger v1.6.0
+	github.com/swaggo/swag v1.16.6
 )
 
 require (

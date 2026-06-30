@@ -30,6 +30,17 @@ func NewKnowledgeHandler(
 	}
 }
 
+// CreateKnowledgeBase  godoc
+// @Summary     创建知识库
+// @Description 创建新的知识库，同时创建对应的向量集合
+// @Tags        知识库
+// @Accept      json
+// @Produce     json
+// @Param       body body     object{name=string,description=string} true "创建请求"
+// @Success     201  {object} map[string]interface{}
+// @Failure     400  {object} map[string]interface{}
+// @Failure     500  {object} map[string]interface{}
+// @Router      /knowledge-base [post]
 func (h *KnowledgeHandler) CreateKnowledgeBase(c *gin.Context) {
 	var req struct {
 		Name        string `json:"name" binding:"required"`
@@ -58,6 +69,13 @@ func (h *KnowledgeHandler) CreateKnowledgeBase(c *gin.Context) {
 	})
 }
 
+// ListKnowledgeBases  godoc
+// @Summary     列出知识库
+// @Description 返回所有知识库列表（含文档数、分块数）
+// @Tags        知识库
+// @Produce     json
+// @Success     200 {object} map[string]interface{}
+// @Router      /knowledge-base [get]
 func (h *KnowledgeHandler) ListKnowledgeBases(c *gin.Context) {
 	kbs := h.ragService.ListKnowledgeBases()
 
@@ -80,6 +98,15 @@ func (h *KnowledgeHandler) ListKnowledgeBases(c *gin.Context) {
 	})
 }
 
+// GetKnowledgeBase  godoc
+// @Summary     获取知识库详情
+// @Description 获取指定知识库的详细信息，包含文档列表
+// @Tags        知识库
+// @Produce     json
+// @Param       id path string true "知识库 ID"
+// @Success     200 {object} map[string]interface{}
+// @Failure     404 {object} map[string]interface{}
+// @Router      /knowledge-base/{id} [get]
 func (h *KnowledgeHandler) GetKnowledgeBase(c *gin.Context) {
 	id := c.Param("id")
 
@@ -103,6 +130,15 @@ func (h *KnowledgeHandler) GetKnowledgeBase(c *gin.Context) {
 	})
 }
 
+// DeleteKnowledgeBase  godoc
+// @Summary     删除知识库
+// @Description 删除指定知识库及其向量集合
+// @Tags        知识库
+// @Produce     json
+// @Param       id path string true "知识库 ID"
+// @Success     200 {object} map[string]interface{}
+// @Failure     404 {object} map[string]interface{}
+// @Router      /knowledge-base/{id} [delete]
 func (h *KnowledgeHandler) DeleteKnowledgeBase(c *gin.Context) {
 	id := c.Param("id")
 
@@ -116,6 +152,18 @@ func (h *KnowledgeHandler) DeleteKnowledgeBase(c *gin.Context) {
 	c.JSON(http.StatusOK, gin.H{"message": "知识库已删除"})
 }
 
+// AddDocument  godoc
+// @Summary     添加文档
+// @Description 向知识库中添加文档，自动进行分块和向量化存储
+// @Tags        知识库
+// @Accept      json
+// @Produce     json
+// @Param       id   path string                          true "知识库 ID"
+// @Param       body body  object{title=string,content=string,source=string,mimeType=string} true "文档内容"
+// @Success     201  {object} map[string]interface{}
+// @Failure     400  {object} map[string]interface{}
+// @Failure     404  {object} map[string]interface{}
+// @Router      /knowledge-base/{id}/document [post]
 func (h *KnowledgeHandler) AddDocument(c *gin.Context) {
 	kbID := c.Param("id")
 
@@ -175,6 +223,14 @@ func (h *KnowledgeHandler) AddDocument(c *gin.Context) {
 	})
 }
 
+// GetDocuments  godoc
+// @Summary     获取文档列表
+// @Description 获取指定知识库的文档列表
+// @Tags        知识库
+// @Produce     json
+// @Param       id path string true "知识库 ID"
+// @Success     200 {object} map[string]interface{}
+// @Router      /knowledge-base/{id}/document [get]
 func (h *KnowledgeHandler) GetDocuments(c *gin.Context) {
 	kbID := c.Param("id")
 
@@ -186,6 +242,16 @@ func (h *KnowledgeHandler) GetDocuments(c *gin.Context) {
 	})
 }
 
+// DeleteDocument  godoc
+// @Summary     删除文档
+// @Description 从知识库中删除指定文档
+// @Tags        知识库
+// @Produce     json
+// @Param       id    path string true "知识库 ID"
+// @Param       docId path string true "文档 ID"
+// @Success     200 {object} map[string]interface{}
+// @Failure     404 {object} map[string]interface{}
+// @Router      /knowledge-base/{id}/document/{docId} [delete]
 func (h *KnowledgeHandler) DeleteDocument(c *gin.Context) {
 	kbID := c.Param("id")
 	docID := c.Param("docId")
@@ -198,6 +264,18 @@ func (h *KnowledgeHandler) DeleteDocument(c *gin.Context) {
 	c.JSON(http.StatusOK, gin.H{"message": "文档已删除"})
 }
 
+// BatchAddDocuments  godoc
+// @Summary     批量添加文档
+// @Description 向知识库中批量添加多篇文档，每篇自动分块和向量化
+// @Tags        知识库
+// @Accept      json
+// @Produce     json
+// @Param       id   path string                            true "知识库 ID"
+// @Param       body body  object{documents=[]object{title=string,content=string}} true "批量文档"
+// @Success     201  {object} map[string]interface{}
+// @Failure     400  {object} map[string]interface{}
+// @Failure     404  {object} map[string]interface{}
+// @Router      /knowledge-base/{id}/documents/batch [post]
 func (h *KnowledgeHandler) BatchAddDocuments(c *gin.Context) {
 	kbID := c.Param("id")
 
@@ -267,6 +345,16 @@ func (h *KnowledgeHandler) BatchAddDocuments(c *gin.Context) {
 	})
 }
 
+// Search  godoc
+// @Summary     搜索知识库
+// @Description 在知识库中搜索相关文档（语义搜索）
+// @Tags        知识库
+// @Accept      json
+// @Produce     json
+// @Param       body body     object{query=string,knowledgeBaseId=string,topK=int} true "搜索请求"
+// @Success     200  {object} map[string]interface{}
+// @Failure     400  {object} map[string]interface{}
+// @Router      /knowledge-base/search [post]
 func (h *KnowledgeHandler) Search(c *gin.Context) {
 	var req struct {
 		Query           string `json:"query" binding:"required"`

@@ -21,6 +21,17 @@ type ValidationError struct {
 	Source  string `json:"source"`
 }
 
+// ValidateSchema  godoc
+// @Summary     Schema 数据校验
+// @Description 根据 JSON Schema 对提交数据进行后端校验，含业务规则（IP 格式、小区 ID、MCC/MNC 等）
+// @Tags        演示
+// @Accept      json
+// @Produce     json
+// @Security    Bearer
+// @Param       body body     ValidationRequest true "校验请求"
+// @Success     200  {object} map[string]interface{}
+// @Failure     400  {object} map[string]interface{}
+// @Router      /schema/validate [post]
 func ValidateSchema(c *gin.Context) {
 	var req ValidationRequest
 	if err := c.ShouldBindJSON(&req); err != nil {
@@ -284,6 +295,14 @@ func formatFloat(f float64) string {
 	return fmt.Sprintf("%g", f)
 }
 
+// GetSchemaConfig  godoc
+// @Summary     获取动态表单 Schema
+// @Description 返回基站配置的动态表单结构（含 tabs/cards/leaf 组件、字段属性、校验规则），支持前端动态渲染
+// @Tags        演示
+// @Produce     json
+// @Security    Bearer
+// @Success     200 {object} map[string]interface{}
+// @Router      /schema/config [get]
 func GetSchemaConfig(c *gin.Context) {
 	c.JSON(http.StatusOK, gin.H{
 		"schema": gin.H{

@@ -1,4 +1,4 @@
-﻿package demo
+package demo
 
 import (
 	"crypto/aes"
@@ -49,6 +49,15 @@ type chunkEvent struct {
 	Total    int     `json:"total"`
 }
 
+// EncryptedLogStream  godoc
+// @Summary     加密日志流 (SSE)
+// @Description 通过 RSA + AES-256-GCM 加密传输模拟日志，演示端到端加密数据传输
+// @Tags        演示
+// @Produce     text/event-stream
+// @Param       clientKey query string false "客户端 RSA 公钥 (SPKI DER base64)，为空则使用服务端密钥"
+// @Param       limit     query string false "模拟日志行数"
+// @Success     200
+// @Router      /sse/encrypted-logs [get]
 func EncryptedLogStream(c *gin.Context) {
 	if err := initRSA(); err != nil {
 		log.Printf("RSA init failed: %v", err)

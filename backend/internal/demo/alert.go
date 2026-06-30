@@ -235,6 +235,16 @@ func generateAlertJSON() []byte {
 	return data
 }
 
+// AlertDispatcher  godoc
+// @Summary     告警推送 (WebSocket/SSE/Polling)
+// @Description 支持 WebSocket、SSE、HTTP 轮询三种传输方式的实时告警推送演示，包含 CPU、内存、网络等多种指标
+// @Tags        演示
+// @Produce     application/json
+// @Param       transport query string false "传输方式 (ws/sse/poll)" default(ws)
+// @Param       rate      query int    false "每秒消息数"            default(1000)
+// @Param       workers   query int    false "并发工作数 (仅 ws)"    default(4)
+// @Success     200 {object} map[string]interface{}
+// @Router      /alerts [get]
 func AlertDispatcher(c *gin.Context) {
 	transport := c.DefaultQuery("transport", "ws")
 	switch transport {

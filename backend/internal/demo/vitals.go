@@ -47,6 +47,16 @@ var (
 	vitalsMax   = 2000
 )
 
+// ReportVitals  godoc
+// @Summary     上报 Web Vitals
+// @Description 上报前端 Web Vitals 指标（TTFB/FCP/LCP/CLS/INP），用于实时监控面板
+// @Tags        演示
+// @Accept      json
+// @Produce     json
+// @Param       body body     []VitalsReport true "Vitals 上报数组"
+// @Success     200  {object} map[string]interface{}
+// @Failure     400  {object} map[string]interface{}
+// @Router      /vitals/report [post]
 func ReportVitals(c *gin.Context) {
 	var reports []VitalsReport
 	if err := c.ShouldBindJSON(&reports); err != nil {
@@ -74,6 +84,13 @@ func ReportVitals(c *gin.Context) {
 	c.JSON(http.StatusOK, gin.H{"ok": true, "count": len(reports)})
 }
 
+// GetVitalsSummary  godoc
+// @Summary     Web Vitals 汇总
+// @Description 返回各指标最新值、最小值、最大值、平均值和统计次数
+// @Tags        演示
+// @Produce     json
+// @Success     200 {array}  VitalsSummary
+// @Router      /vitals/summary [get]
 func GetVitalsSummary(c *gin.Context) {
 	vitalsMu.RLock()
 	defer vitalsMu.RUnlock()
@@ -123,6 +140,13 @@ func GetVitalsSummary(c *gin.Context) {
 	c.JSON(http.StatusOK, summary)
 }
 
+// GetVitalsHistory  godoc
+// @Summary     Web Vitals 历史
+// @Description 返回各指标按 metric 分组的时序历史数据
+// @Tags        演示
+// @Produce     json
+// @Success     200 {object} map[string]interface{} "按 metric 分组的历史点阵"
+// @Router      /vitals/history [get]
 func GetVitalsHistory(c *gin.Context) {
 	vitalsMu.RLock()
 	defer vitalsMu.RUnlock()
@@ -208,6 +232,16 @@ var (
 	pageMax   = 1000
 )
 
+// ReportPage  godoc
+// @Summary     上报页面渲染数据
+// @Description 上报前端页面渲染指标（渲染耗时、LCP/INP/CLS），用于页面性能分析
+// @Tags        演示
+// @Accept      json
+// @Produce     json
+// @Param       body body     []PageReport true "页面报告数组"
+// @Success     200  {object} map[string]interface{}
+// @Failure     400  {object} map[string]interface{}
+// @Router      /vitals/page-report [post]
 func ReportPage(c *gin.Context) {
 	var reports []PageReport
 	if err := c.ShouldBindJSON(&reports); err != nil {
@@ -252,6 +286,13 @@ type pageAcc struct {
 	name      string
 }
 
+// GetPageSummary  godoc
+// @Summary     页面性能汇总
+// @Description 返回各页面路径的访问次数、渲染耗时统计（平均/最小/最大）、Web Vitals 均值
+// @Tags        演示
+// @Produce     json
+// @Success     200 {array}  PageSummary
+// @Router      /vitals/pages [get]
 func GetPageSummary(c *gin.Context) {
 	pageMu.RLock()
 	defer pageMu.RUnlock()
@@ -315,6 +356,13 @@ func GetPageSummary(c *gin.Context) {
 	c.JSON(http.StatusOK, summary)
 }
 
+// GetPageHistory  godoc
+// @Summary     页面性能历史
+// @Description 返回各页面路径按 path 分组的时序历史数据
+// @Tags        演示
+// @Produce     json
+// @Success     200 {object} map[string]interface{} "按 path 分组的历史点阵"
+// @Router      /vitals/page-history [get]
 func GetPageHistory(c *gin.Context) {
 	pageMu.RLock()
 	defer pageMu.RUnlock()

@@ -7,6 +7,13 @@ import (
 	"github.com/gin-gonic/gin"
 )
 
+// HealthCheck  godoc
+// @Summary     健康检查
+// @Description 返回 API 运行状态
+// @Tags        监控
+// @Produce     json
+// @Success     200 {object} map[string]interface{}
+// @Router      /health [get]
 func HealthCheck(c *gin.Context) {
 	c.JSON(http.StatusOK, gin.H{
 		"status":  "ok",

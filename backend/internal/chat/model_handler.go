@@ -17,6 +17,13 @@ func NewModelHandler(manager *ModelManager) *ModelHandler {
 	return &ModelHandler{manager: manager}
 }
 
+// ListModels  godoc
+// @Summary     列出可用模型
+// @Description 返回所有可用的 AI 模型列表（含 provider、上下文窗口、工具/视觉支持等）
+// @Tags        模型
+// @Produce     json
+// @Success     200 {object} map[string]interface{}
+// @Router      /models [get]
 func (h *ModelHandler) ListModels(c *gin.Context) {
 	configs := h.manager.ListModels()
 
@@ -43,6 +50,15 @@ func (h *ModelHandler) ListModels(c *gin.Context) {
 	})
 }
 
+// GetModel  godoc
+// @Summary     获取模型详情
+// @Description 获取指定 AI 模型的详细信息
+// @Tags        模型
+// @Produce     json
+// @Param       id path string true "模型 ID"
+// @Success     200 {object} map[string]interface{}
+// @Failure     404 {object} map[string]interface{}
+// @Router      /models/{id} [get]
 func (h *ModelHandler) GetModel(c *gin.Context) {
 	id := c.Param("id")
 
@@ -64,6 +80,19 @@ func (h *ModelHandler) GetModel(c *gin.Context) {
 	})
 }
 
+// Chat  godoc
+// @Summary     模型对话
+// @Description 使用指定模型进行对话
+// @Tags        模型
+// @Accept      json
+// @Produce     json
+// @Param       id   path string                 true "模型 ID"
+// @Param       body body  object{messages=[]models.Message} true "对话请求"
+// @Success     200  {object} map[string]interface{}
+// @Failure     400  {object} map[string]interface{}
+// @Failure     404  {object} map[string]interface{}
+// @Failure     500  {object} map[string]interface{}
+// @Router      /models/{id}/chat [post]
 func (h *ModelHandler) Chat(c *gin.Context) {
 	modelID := c.Param("id")
 

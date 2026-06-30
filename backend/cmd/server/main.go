@@ -1,4 +1,19 @@
-﻿package main
+﻿// @title           Interview Demo API
+// @version         1.0
+// @description     AI Agent Demo — Go + Gin 后端，提供 13 个技术演示场景的 API 支持
+// @host            localhost:8080
+// @BasePath        /api
+// @schemes         http
+
+// @contact.name   Developer
+// @contact.email  dev@example.com
+
+// @securityDefinitions.apikey Bearer
+// @in header
+// @name Authorization
+// @description 输入格式: "Bearer {token}"
+
+package main
 
 import (
 	"context"
@@ -20,12 +35,18 @@ import (
 	"interview-demo/backend/internal/payment"
 
 	"github.com/gin-gonic/gin"
+
+	"github.com/swaggo/files"
+	"github.com/swaggo/gin-swagger"
+	_ "interview-demo/backend/docs"
 )
 
 func main() {
 	r := gin.Default()
 	r.MaxMultipartMemory = 100 << 20
 	r.Use(middleware.CORS())
+
+	r.GET("/swagger/*any", ginSwagger.WrapHandler(swaggerFiles.Handler))
 
 	apiKey := os.Getenv("OPENAI_API_KEY")
 	if apiKey == "" {
@@ -102,6 +123,15 @@ func main() {
 		api.DELETE("/knowledge-base/:id/document/:docId", knowledgeHandler.DeleteDocument)
 		api.POST("/knowledge-base/search", knowledgeHandler.Search)
 		api.POST("/knowledge-base/init-docs", func(c *gin.Context) {
+			// InitDocs godoc
+			// @Summary     初始化文档
+			// @Description 从本地目录加载文档到知识库（含分块和向量化）
+			// @Tags        知识库
+			// @Produce     json
+			// @Success     200 {object} map[string]interface{}
+			// @Failure     500 {object} map[string]interface{}
+			// @Router      /knowledge-base/init-docs [post]
+
 			docsDir := os.Getenv("DOCS_DIR")
 			if docsDir == "" {
 				docsDir = "../docs"
@@ -134,7 +164,7 @@ func main() {
 		api.POST("/agents/:id/execute", agentHandler.ExecuteAgent)
 		api.DELETE("/agents/:id", agentHandler.DeleteAgent)
 
-			protected := api.Group("")
+		protected := api.Group("")
 		protected.Use(authService.AuthMiddleware())
 		{
 			protected.GET("/gis/points", demo.GetGISPoints)
@@ -169,6 +199,14 @@ func main() {
 	}
 
 	r.GET("/healthz", func(c *gin.Context) {
+		// Healthz godoc
+		// @Summary     K8s 健康检查
+		// @Description Kubernetes 存活探针
+		// @Tags        监控
+		// @Produce     json
+		// @Success     200 {object} map[string]interface{}
+		// @Router      /healthz [get]
+
 		c.JSON(200, gin.H{"status": "ok"})
 	})
 	r.GET("/ws/alerts", demo.AlertDispatcher)

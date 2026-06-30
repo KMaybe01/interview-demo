@@ -1,4 +1,4 @@
-﻿package demo
+package demo
 
 import (
 	"fmt"
@@ -25,6 +25,15 @@ var logMessages = []string{
 	"Session expired for user",
 }
 
+// SSELogStream  godoc
+// @Summary     SSE 日志流
+// @Description 通过 Server-Sent Events 推送实时模拟日志流
+// @Tags        演示
+// @Produce     text/event-stream
+// @Param       level    query string false "日志级别 (all/info/warn/error/debug)" default(all)
+// @Param       interval query string false "推送间隔毫秒"                   default(200)
+// @Success     200
+// @Router      /sse/logs [get]
 func SSELogStream(c *gin.Context) {
 	level := c.DefaultQuery("level", "all")
 	intervalStr := c.DefaultQuery("interval", "200")
