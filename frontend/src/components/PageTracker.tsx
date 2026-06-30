@@ -26,59 +26,62 @@ const navigationTimings: ReadonlyMap<string, number> = (() => {
 export default function PageTracker({ children }: { children: React.ReactNode }) {
   const location = useLocation();
   const pathname = location.pathname;
-  const renderStartRef = useRef(performance.now());
+  const renderStartRef = useRef(0);
   const reportedRef = useRef(false);
-  const prevPathRef = useRef('');
+  const prevPathRef = useRef(pathname);
   const referrerRef = useRef('');
 
-  useEffect(() => {
-    if (prevPathRef.current !== pathname) {
-      referrerRef.current = prevPathRef.current;
-      prevPathRef.current = pathname;
-      reportedRef.current = false;
-      renderStartRef.current = performance.now();
-    }
-  });
+  if (prevPathRef.current !== pathname) {
+    referrerRef.current = prevPathRef.current;
+    prevPathRef.current = pathname;
+    reportedRef.current = false;
+    renderStartRef.current = performance.now();
+  }
 
   useEffect(() => {
     if (reportedRef.current) return;
     reportedRef.current = true;
 
-    const renderEnd = performance.now();
-    const renderDuration = renderEnd - renderStartRef.current;
-    const pageName = getPageName(pathname);
+    // Use setTimeout to ensure we measure after the browser has painted
+    const timer = setTimeout(() => {
+      const renderEnd = performance.now();
+      const renderDuration = renderEnd - renderStartRef.current;
+      const pageName = getPageName(pathname);
 
-    const v = getVitalsSnapshot();
-    http
-      .post('/api/vitals/page-report', [
-        {
-          path: pathname,
-          pageName,
-          renderDuration: Math.round(renderDuration * 100) / 100,
-          lcp: v.LCP,
-          inp: v.INP,
-          cls: v.CLS,
-          referrer: referrerRef.current,
-        },
-      ])
-      // biome-ignore lint/suspicious/noConsole: log API errors for debugging
-      .catch((err) => console.warn('[PageTracker] page-report failed', err));
-
-    if (navigationTimings.size > 0 && pathname !== '/login') {
+      const v = getVitalsSnapshot();
       http
-        .post(
-          '/api/vitals/report',
-          Array.from(navigationTimings.entries()).map(([metric, value]) => ({
-            metric,
-            value: Math.round(value * 100) / 100,
-            rating: 'good',
-            url: pathname,
-            version: 'navigation',
-          })),
-        )
+        .post('/api/vitals/page-report', [
+          {
+            path: pathname,
+            pageName,
+            renderDuration: Math.round(renderDuration * 100) / 100,
+            lcp: v.LCP,
+            inp: v.INP,
+            cls: v.CLS,
+            referrer: referrerRef.current,
+          },
+        ])
         // biome-ignore lint/suspicious/noConsole: log API errors for debugging
-        .catch((err) => console.warn('[PageTracker] vitals/report failed', err));
-    }
+        .catch((err) => console.warn('[PageTracker] page-report failed', err));
+
+      if (navigationTimings.size > 0 && pathname !== '/login') {
+        http
+          .post(
+            '/api/vitals/report',
+            Array.from(navigationTimings.entries()).map(([metric, value]) => ({
+              metric,
+              value: Math.round(value * 100) / 100,
+              rating: 'good',
+              url: pathname,
+              version: 'navigation',
+            })),
+          )
+          // biome-ignore lint/suspicious/noConsole: log API errors for debugging
+          .catch((err) => console.warn('[PageTracker] vitals/report failed', err));
+      }
+    }, 0);
+
+    return () => clearTimeout(timer);
   }, [pathname]);
 
   return children;
