@@ -98,46 +98,33 @@ interview-demo/
 │   ├── package.json
 │   └── index.html                   # HTML 入口
 ├── backend/                         # Go 1.26 + Gin 1.12 后端
-│   ├── main.go                      # 入口 :${PORT}，优雅关闭
+│   ├── cmd/server/main.go           # 入口 :${PORT}，优雅关闭（含 Swagger API 文档）
+│   ├── docs/                        # Swagger 自动生成的 API 文档
+│   │   ├── docs.go
+│   │   ├── swagger.json
+│   │   └── swagger.yaml
 │   ├── go.mod / go.sum
-│   ├── models/
-│   │   └── models.go                # 共享数据模型
-│   ├── auth/
-│   │   └── service.go               # JWT 双 Token
-│   ├── chat/
-│   │   ├── handler.go               # Chat/Stream/History
-│   │   ├── llm.go                   # OpenAI 客户端封装
-│   │   ├── model_handler.go         # 模型路由
-│   │   └── model_manager.go         # 多模型管理
-│   ├── agent/
-│   │   ├── handler.go               # 智能体 CRUD / 执行
-│   │   ├── agent.go                 # AgentService + ReAct
-│   │   └── enhanced.go             # EnhancedAgent / RAGAgent
-│   ├── knowledge/
-│   │   ├── handler.go               # 知识库 CRUD / 文档 / 搜索
-│   │   ├── rag.go                   # RAGService
-│   │   ├── chunker.go               # 文本分块 (4 种)
-│   │   ├── embedding.go             # EmbeddingService + VectorDB
-│   │   └── doc_loader.go            # 文档加载器
-│   ├── memory/
-│   │   └── service.go               # 对话历史存储
-│   ├── payment/
-│   │   └── handler.go               # 支付状态机 + 幂等 + 重试 + 对账 + 安全
-│   ├── handlers/
-│   │   ├── alert.go                 # WebSocket + SSE + HTTP Polling
-│   │   ├── gis.go                   # GIS 点位 (~50万点)
-│   │   ├── schema.go                # Schema 校验
-│   │   ├── sse.go                   # SSE 日志流
-│   │   ├── encrypted_logs.go        # 加密日志 (RSA + AES-256-GCM)
-│   │   ├── vitals.go                # Web Vitals + 页面采集
-│   │   ├── upload.go                # 分片上传
-│   │   ├── rbac.go                  # RBAC 位运算权限校验
-│   │   ├── lru_cache.go             # LRU 缓存演示
-│   │   ├── request_loading.go       # 请求延迟模拟
-│   │   ├── payment.go               # 支付演示数据
-│   │   └── health.go                # 健康检查
-│   ├── middleware/
-│   │   └── cors.go                  # CORS 中间件
+│   ├── internal/
+│   │   ├── agent/                   # 智能体引擎（ReAct / Function Calling / Multi-Agent）
+│   │   ├── auth/                    # JWT 双 Token 认证
+│   │   ├── chat/                    # 对话处理（LLM / 流式 / 模型管理）
+│   │   ├── demo/                    # 13 个技术演示场景
+│   │   │   ├── alert.go             # WebSocket + SSE + HTTP Polling
+│   │   │   ├── encrypted_logs.go    # 加密日志 (RSA + AES-256-GCM)
+│   │   │   ├── gis.go               # GIS 点位 (~50万点)
+│   │   │   ├── health.go            # 健康检查
+│   │   │   ├── lru_cache.go         # LRU 缓存演示
+│   │   │   ├── rbac.go              # RBAC 位运算权限
+│   │   │   ├── request_loading.go   # 请求延迟模拟
+│   │   │   ├── schema.go            # Schema 校验
+│   │   │   ├── sse.go               # SSE 日志流
+│   │   │   ├── upload.go            # 分片上传
+│   │   │   └── vitals.go            # Web Vitals + 页面采集
+│   │   ├── knowledge/               # RAG 知识库
+│   │   ├── memory/                  # 对话记忆
+│   │   ├── middleware/              # CORS 中间件
+│   │   ├── models/                  # 领域类型（多文件拆分）
+│   │   └── payment/                 # 支付状态机 + 幂等 + 重试
 │   └── uploads/
 │       └── sessions.json            # 上传会话持久化
 ├── docs/
@@ -193,11 +180,13 @@ interview-demo/
 
 ```bash
 # 后端
-cd backend && go run .
+cd backend && go run ./cmd/server/
 
 # 前端
 cd frontend && bun dev
 ```
+
+Swagger 文档启动后访问 http://localhost:8080/swagger/index.html（需先执行 `cd backend && go mod tidy` 下载 Swagger UI 依赖）。
 
 ### Docker Compose (完整环境)
 
@@ -272,48 +261,60 @@ dist/
 
 | 路由                   | 方法   | 说明                        |
 | ---------------------- | ------ | --------------------------- |
+| `/swagger/*any`        | GET    | Swagger 交互式 API 文档      |
 | `/ws/alerts`           | GET    | WebSocket 告警推送          |
 | `/api/alerts`          | GET    | SSE/Polling 告警推送 (同路由分发) |
+| `/api/health`          | GET    | 健康检查                    |
 | `/api/gis/points`      | GET    | GIS 点位数据                |
 | `/api/sse/logs`        | GET    | SSE 日志流                  |
+| `/api/sse/encrypted-logs`| GET  | 加密日志流 (RSA + AES-256-GCM) |
 | `/api/auth/login`      | POST   | 登录获取双 Token            |
 | `/api/auth/refresh`    | POST   | 轮换 Refresh Token + 返回新双 Token |
 | `/healthz`             | GET    | 健康检查（存活/就绪探针）     |
 | `/api/auth/check`      | GET    | 验证 Access Token 有效性     |
 | `/api/auth/used-tokens`| GET    | 已轮换 Refresh Token 计数   |
-| `/api/schema/config`  | GET    | 获取动态表单 Schema + initialData（后端驱动，JS 行为前端 augmentSchema 注入） |
+| `/api/schema/config`  | GET    | 获取动态表单 Schema + initialData |
 | `/api/schema/validate` | POST   | 后端 Schema + 业务语义校验   |
-| `/api/upload/init`     | POST   | 初始化大文件上传 (uploadId, chunkSize, totalChunks) |
+| `/api/upload/init`     | POST   | 初始化大文件上传              |
 | `/api/upload/chunk`    | POST   | 上传单个分片 (SHA-256 校验)  |
 | `/api/upload/complete` | POST   | 分片合并 + 完整性验证        |
-| `/api/upload/status/:uploadId` | GET | 查询某个上传的已接收分片列表 |
-| `/api/rbac/check`     | POST   | RBAC 权限后端校验（roleCode + nodes → 逐节点 accessible 结果） |
-| `/api/vitals/report`  | POST   | 上报 Web Vitals 指标           |
-| `/api/vitals/summary` | GET    | Web Vitals 汇总 |
-| `/api/vitals/history` | GET    | Web Vitals 时间序列 |
-| `/api/vitals/page-report` | POST | 上报页面渲染数据 |
-| `/api/vitals/pages` | GET | 页面访问汇总 |
-| `/api/vitals/page-history` | GET | 页面渲染时间序列 |
+| `/api/upload/download/:uploadId` | GET | 下载已完成的文件        |
+| `/api/upload/status/:uploadId` | GET | 查询上传进度           |
+| `/api/upload/sessions` | GET    | 上传会话列表                |
+| `/api/rbac/check`     | POST   | RBAC 权限后端校验            |
+| `/api/vitals/report`  | POST   | 上报 Web Vitals 指标        |
+| `/api/vitals/summary` | GET    | Web Vitals 汇总             |
+| `/api/vitals/history` | GET    | Web Vitals 时间序列          |
+| `/api/vitals/page-report` | POST | 上报页面渲染数据             |
+| `/api/vitals/pages` | GET | 页面访问汇总                   |
+| `/api/vitals/page-history` | GET | 页面渲染时间序列            |
 | `/api/chat` | POST | 聊天 (可选 useAgent/knowledgeBaseId) |
 | `/api/chat/stream` | POST | 流式聊天 |
-| `/api/chat/:id/history` | GET/DELETE | 聊天历史 |
+| `/api/chat/history/:conversationId` | GET/DELETE | 聊天历史 |
+| `/api/models` | GET | 列出可用 AI 模型 |
+| `/api/models/:id` | GET | 获取模型详情 |
+| `/api/models/:id/chat` | POST | 使用指定模型对话 |
 | `/api/agents` | GET/POST | 智能体列表 / 创建 |
-| `/api/agents/:id` | GET/DELETE | 智能体详情 / 删除 |
 | `/api/agents/:id/execute` | POST | 执行智能体 |
-| `/api/agents/:id/log` | GET | 执行日志 |
-| `/api/knowledge` | GET/POST | 知识库列表 / 创建 |
-| `/api/knowledge/:id` | GET/DELETE | 知识库详情 / 删除 |
-| `/api/knowledge/:id/documents` | GET/POST/DELETE | 文档管理 |
-| `/api/knowledge/search` | POST | 知识库搜索 |
-| `/api/upload/sessions` | GET    | 上传会话列表      |
-| `/api/payments/create` | POST   | 创建支付订单                 |
-| `/api/payments/:id/process` | POST | 处理支付 (模拟渠道回调)    |
-| `/api/payments/:id` | GET    | 查询订单状态                 |
-| `/api/payments` | GET    | 列出所有订单                 |
-| `/api/payments/:id/transition` | POST | 状态流转 (6 种驱动)      |
-| `/api/payments/idempotency-test` | POST | 幂等性测试              |
-| `/api/payments/security-check` | POST | 安全检测 (伪造/篡改)    |
-| `/api/payments/retry-demo` | POST | 指数退避重试演示          |
+| `/api/agents/:id` | DELETE | 删除智能体 |
+| `/api/knowledge-base` | GET/POST | 知识库列表 / 创建 |
+| `/api/knowledge-base/:id` | GET/DELETE | 知识库详情 / 删除 |
+| `/api/knowledge-base/:id/document` | GET/POST/DELETE | 文档管理 |
+| `/api/knowledge-base/:id/documents/batch` | POST | 批量添加文档 |
+| `/api/knowledge-base/search` | POST | 知识库搜索 |
+| `/api/knowledge-base/init-docs` | POST | 从目录加载文档 |
+| `/api/payments/create` | POST | 创建支付订单 |
+| `/api/payments/process/:id` | POST | 处理支付 (模拟渠道回调) |
+| `/api/payments/order/:id` | GET | 查询订单状态 |
+| `/api/payments/orders` | GET | 列出所有订单 |
+| `/api/payments/transition/:id` | POST | 状态流转 |
+| `/api/payments/idempotency-test` | POST | 幂等性测试 |
+| `/api/payments/security-check` | POST | 安全检测 |
+| `/api/payments/retry-demo` | POST | 指数退避重试演示 |
+| `/api/services` | GET | 服务列表 (LRU 缓存演示) |
+| `/api/config` | GET | 集群配置 (LRU 缓存演示) |
+| `/api/logs` | GET | 日志列表 (LRU 缓存演示) |
+| `/api/request-loading/demo` | GET | 请求延迟模拟 |
 
 ## 代码校验 (GitHub Actions)
 
@@ -322,7 +323,7 @@ dist/
 | Job                | 命令                      | 工具           |
 | ------------------ | ------------------------- | -------------- |
 | lint-backend       | `go vet ./...`            | Go vet         |
-| test-backend       | `go test ./handlers/`     | Go test (82 个) |
+| test-backend       | `go test ./internal/...`  | Go test |
 | lint-frontend      | `bun run lint`            | Biome 2.5 (lint + format) |
 | tsc-frontend       | `bunx tsc -b --noEmit`    | TypeScript 6   |
 
@@ -367,9 +368,9 @@ docker compose up --build
 | Stage      | Job              | 说明                                  |
 | ---------- | ---------------- | ------------------------------------- |
 | validate   | lint-backend     | `go vet ./...`                        |
-| validate   | test-backend     | `go test ./handlers/`                 |
+| validate   | test-backend     | `go test ./internal/...`              |
 | validate   | lint-frontend    | `biome check --write src/`           |
-| build      | build-backend    | `go build -o bin/server .`            |
+| build      | build-backend    | `go build -o bin/server ./cmd/server/`|
 | build      | build-frontend   | `bun install && bun run build`        |
 | package    | docker-backend   | 多阶段构建 backend 镜像并推送 Registry |
 | package    | docker-frontend  | 多阶段构建 frontend 镜像并推送 Registry |
