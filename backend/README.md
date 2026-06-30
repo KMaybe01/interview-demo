@@ -15,34 +15,41 @@ Go 1.26 + Gin 1.12 后端服务，为前端 13 个技术演示场景提供 API �
 
 ```
 backend/
-├── main.go                  # 入口 :${PORT}，优雅关闭
+├── cmd/server/main.go       # 入口 :${PORT}，优雅关闭
+├── internal/
+│   ├── agent/               # 智能体引擎（ReAct / Function Calling / Multi-Agent）
+│   ├── auth/                # JWT 双 Token 认证（登录/刷新/重放检测）
+│   ├── chat/                # 对话处理（LLM 调用 / 流式 / 模型管理）
+│   ├── demo/                # 13 个技术演示场景
+│   │   ├── alert.go         # WebSocket + SSE + HTTP Polling 多协议告警
+│   │   ├── encrypted_logs.go # 加密日志流
+│   │   ├── gis.go           # GIS 点位生成
+│   │   ├── health.go        # 健康检查
+│   │   ├── lru_cache.go     # LRU 缓存演示
+│   │   ├── rbac.go          # RBAC 位运算权限校验
+│   │   ├── request_loading.go # 模拟请求延迟/失败
+│   │   ├── schema.go        # 动态 JSON Schema 表单 + 递归校验
+│   │   ├── sse.go           # SSE 日志流
+│   │   ├── upload.go        # 大文件分片上传
+│   │   └── vitals.go        # Web Vitals 采集与聚合
+│   ├── knowledge/           # RAG 知识库（文档加载 / 分块 / 嵌入 / 搜索）
+│   ├── memory/              # 对话记忆管理
+│   ├── middleware/          # CORS 中间件
+│   ├── models/              # 领域类型（按 domain 拆分多文件）
+│   └── payment/             # 支付状态机 + 幂等性 + 重试
+├── uploads/
+│   └── sessions.json        # 上传会话持久化
 ├── go.mod / go.sum
-├── middleware/
-│   └── cors.go              # CORS 中间件（CORS_ORIGIN 环境变量配置）
-├── handlers/
-│   ├── auth.go              # JWT 双 Token：登录/刷新/校验/重放检测
-│   ├── alert.go             # WebSocket + SSE + HTTP Polling 多协议告警
-│   ├── sse.go               # SSE 日志流（可筛选级别/间隔）
-│   ├── encrypted_logs.go    # 加密日志流（RSA 密钥交换 + AES-256-GCM）
-│   ├── gis.go               # GIS 点位生成（~50 万点，北京区域螺旋分布）
-│   ├── schema.go            # 动态 JSON Schema 表单配置 + 递归校验引擎
-│   ├── upload.go            # 大文件分片上传（初始化/上传分片/合并/下载）
-│   ├── vitals.go            # Web Vitals + 页面渲染数据采集与聚合
-│   ├── rbac.go              # RBAC 位运算权限校验
-│   ├── lru_cache.go         # LRU 缓存演示数据
-│   ├── payment.go           # 支付状态机 + 幂等性 + 安全校验 + 重试演示
-│   └── request_loading.go   # 模拟请求延迟/失败
-├── bin/
-│   └── server.exe           # 预编译 Windows 可执行文件
-└── uploads/
-    └── sessions.json        # 上传会话持久化
+├── .env.example
+├── .gitignore
+└── Makefile
 ```
 
 ## 快速启动
 
 ```bash
 cd backend
-go run .
+go run ./cmd/server/
 ```
 
 服务默认监听 `$PORT`（默认 8080），日志输出 `Backend running on :PORT`。前端开发服务器通过 Vite 代理 `/api` 请求到后端。
@@ -50,13 +57,13 @@ go run .
 ## 生产构建
 
 ```bash
-go build -ldflags="-s -w" -o bin/server .
+go build -ldflags="-s -w" -o bin/server ./cmd/server/
 ```
 
 ## 测试
 
 ```bash
-go test ./handlers/ -v
+go test ./internal/... -v
 ```
 
 ## API 路由

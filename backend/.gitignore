@@ -1,0 +1,5 @@
+bin/
+uploads/*.json
+coverage
+coverage.prof
+*.exe

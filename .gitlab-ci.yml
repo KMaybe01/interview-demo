@@ -43,7 +43,7 @@ lint-backend:
 test-backend:
   stage: validate
   script:
-    - cd backend && go test -count=1 ./handlers/
+    - cd backend && go test -count=1 ./internal/...
   only:
     - main
     - merge_requests
@@ -61,7 +61,7 @@ lint-frontend:
 build-backend:
   stage: build
   script:
-    - cd backend && go build -o bin/server .
+    - cd backend && go build -o bin/server ./cmd/server/
   artifacts:
     paths:
       - backend/bin/server

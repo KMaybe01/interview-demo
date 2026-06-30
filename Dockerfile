@@ -12,7 +12,7 @@ WORKDIR /app
 COPY backend/go.* ./
 RUN go mod download
 COPY backend/ .
-RUN CGO_ENABLED=0 go build -ldflags="-s -w" -o /server .
+RUN CGO_ENABLED=0 go build -ldflags="-s -w" -o /server ./cmd/server/
 
 # Stage 3: Frontend runtime
 FROM nginx:alpine AS frontend
