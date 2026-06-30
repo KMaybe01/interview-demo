@@ -1,4 +1,4 @@
-﻿package knowledge
+package knowledge
 
 import (
 	"encoding/json"
@@ -8,10 +8,10 @@ import (
 	"testing"
 
 	"github.com/gin-gonic/gin"
-	"interview-demo/backend/internal/models"
+	"interview-demo/backend/internal/model"
 )
 
-func TestKnowledgeHandlerCreateAndListKnowledgeBase(t *testing.T) {
+func TestHandlerCreateAndListKnowledgeBase(t *testing.T) {
 	gin.SetMode(gin.TestMode)
 
 	rag := NewRAGService()
@@ -19,7 +19,7 @@ func TestKnowledgeHandlerCreateAndListKnowledgeBase(t *testing.T) {
 	embedding := NewEmbeddingService(EmbeddingLocal)
 	vdb := NewVectorDatabase()
 
-	h := NewKnowledgeHandler(rag, chunker, embedding, vdb)
+	h := NewHandler(rag, chunker, embedding, vdb)
 
 	w := httptest.NewRecorder()
 	c, _ := gin.CreateTestContext(w)
@@ -62,7 +62,7 @@ func TestKnowledgeHandlerCreateAndListKnowledgeBase(t *testing.T) {
 	}
 }
 
-func TestKnowledgeHandlerCreateKBInvalidJSON(t *testing.T) {
+func TestHandlerCreateKBInvalidJSON(t *testing.T) {
 	gin.SetMode(gin.TestMode)
 
 	rag := NewRAGService()
@@ -70,7 +70,7 @@ func TestKnowledgeHandlerCreateKBInvalidJSON(t *testing.T) {
 	embedding := NewEmbeddingService(EmbeddingLocal)
 	vdb := NewVectorDatabase()
 
-	h := NewKnowledgeHandler(rag, chunker, embedding, vdb)
+	h := NewHandler(rag, chunker, embedding, vdb)
 
 	w := httptest.NewRecorder()
 	c, _ := gin.CreateTestContext(w)
@@ -84,7 +84,7 @@ func TestKnowledgeHandlerCreateKBInvalidJSON(t *testing.T) {
 	}
 }
 
-func TestKnowledgeHandlerGetKnowledgeBase(t *testing.T) {
+func TestHandlerGetKnowledgeBase(t *testing.T) {
 	gin.SetMode(gin.TestMode)
 
 	rag := NewRAGService()
@@ -92,7 +92,7 @@ func TestKnowledgeHandlerGetKnowledgeBase(t *testing.T) {
 	embedding := NewEmbeddingService(EmbeddingLocal)
 	vdb := NewVectorDatabase()
 
-	h := NewKnowledgeHandler(rag, chunker, embedding, vdb)
+	h := NewHandler(rag, chunker, embedding, vdb)
 
 	kb := rag.CreateKnowledgeBase("get-test", "desc")
 
@@ -101,14 +101,14 @@ func TestKnowledgeHandlerGetKnowledgeBase(t *testing.T) {
 	c.Params = []gin.Param{{Key: "id", Value: kb.ID}}
 	c.Request = httptest.NewRequest(http.MethodGet, "/api/knowledge/"+kb.ID, nil)
 
-	h.GetKnowledgeBase(c)
+	h.KnowledgeBaseDetail(c)
 
 	if w.Code != http.StatusOK {
 		t.Fatalf("expected 200, got %d: %s", w.Code, w.Body.String())
 	}
 }
 
-func TestKnowledgeHandlerGetNonexistentKB(t *testing.T) {
+func TestHandlerGetNonexistentKB(t *testing.T) {
 	gin.SetMode(gin.TestMode)
 
 	rag := NewRAGService()
@@ -116,21 +116,21 @@ func TestKnowledgeHandlerGetNonexistentKB(t *testing.T) {
 	embedding := NewEmbeddingService(EmbeddingLocal)
 	vdb := NewVectorDatabase()
 
-	h := NewKnowledgeHandler(rag, chunker, embedding, vdb)
+	h := NewHandler(rag, chunker, embedding, vdb)
 
 	w := httptest.NewRecorder()
 	c, _ := gin.CreateTestContext(w)
 	c.Params = []gin.Param{{Key: "id", Value: "nonexistent"}}
 	c.Request = httptest.NewRequest(http.MethodGet, "/api/knowledge/nonexistent", nil)
 
-	h.GetKnowledgeBase(c)
+	h.KnowledgeBaseDetail(c)
 
 	if w.Code != http.StatusNotFound {
 		t.Fatalf("expected 404, got %d", w.Code)
 	}
 }
 
-func TestKnowledgeHandlerDeleteKnowledgeBase(t *testing.T) {
+func TestHandlerDeleteKnowledgeBase(t *testing.T) {
 	gin.SetMode(gin.TestMode)
 
 	rag := NewRAGService()
@@ -138,7 +138,7 @@ func TestKnowledgeHandlerDeleteKnowledgeBase(t *testing.T) {
 	embedding := NewEmbeddingService(EmbeddingLocal)
 	vdb := NewVectorDatabase()
 
-	h := NewKnowledgeHandler(rag, chunker, embedding, vdb)
+	h := NewHandler(rag, chunker, embedding, vdb)
 
 	kb := rag.CreateKnowledgeBase("del-test", "")
 
@@ -153,12 +153,12 @@ func TestKnowledgeHandlerDeleteKnowledgeBase(t *testing.T) {
 		t.Fatalf("expected 200, got %d", w.Code)
 	}
 
-	if _, exists := rag.GetKnowledgeBase(kb.ID); exists {
+	if _, exists := rag.KnowledgeBase(kb.ID); exists {
 		t.Error("expected KB to be deleted")
 	}
 }
 
-func TestKnowledgeHandlerDeleteNonexistentKB(t *testing.T) {
+func TestHandlerDeleteNonexistentKB(t *testing.T) {
 	gin.SetMode(gin.TestMode)
 
 	rag := NewRAGService()
@@ -166,7 +166,7 @@ func TestKnowledgeHandlerDeleteNonexistentKB(t *testing.T) {
 	embedding := NewEmbeddingService(EmbeddingLocal)
 	vdb := NewVectorDatabase()
 
-	h := NewKnowledgeHandler(rag, chunker, embedding, vdb)
+	h := NewHandler(rag, chunker, embedding, vdb)
 
 	w := httptest.NewRecorder()
 	c, _ := gin.CreateTestContext(w)
@@ -180,7 +180,7 @@ func TestKnowledgeHandlerDeleteNonexistentKB(t *testing.T) {
 	}
 }
 
-func TestKnowledgeHandlerAddAndGetDocuments(t *testing.T) {
+func TestHandlerAddAndGetDocuments(t *testing.T) {
 	gin.SetMode(gin.TestMode)
 
 	rag := NewRAGService()
@@ -188,7 +188,7 @@ func TestKnowledgeHandlerAddAndGetDocuments(t *testing.T) {
 	embedding := NewEmbeddingService(EmbeddingLocal)
 	vdb := NewVectorDatabase()
 
-	h := NewKnowledgeHandler(rag, chunker, embedding, vdb)
+	h := NewHandler(rag, chunker, embedding, vdb)
 
 	kb := rag.CreateKnowledgeBase("doc-test", "")
 	vdb.CreateCollectionWithID(kb.ID, "doc-test", 768)
@@ -211,7 +211,7 @@ func TestKnowledgeHandlerAddAndGetDocuments(t *testing.T) {
 	c2.Params = []gin.Param{{Key: "id", Value: kb.ID}}
 	c2.Request = httptest.NewRequest(http.MethodGet, "/api/knowledge/"+kb.ID+"/documents", nil)
 
-	h.GetDocuments(c2)
+	h.KnowledgeBaseDocuments(c2)
 
 	if w2.Code != http.StatusOK {
 		t.Fatalf("expected 200, got %d", w2.Code)
@@ -227,7 +227,7 @@ func TestKnowledgeHandlerAddAndGetDocuments(t *testing.T) {
 	}
 }
 
-func TestKnowledgeHandlerAddDocumentNonexistentKB(t *testing.T) {
+func TestHandlerAddDocumentNonexistentKB(t *testing.T) {
 	gin.SetMode(gin.TestMode)
 
 	rag := NewRAGService()
@@ -235,7 +235,7 @@ func TestKnowledgeHandlerAddDocumentNonexistentKB(t *testing.T) {
 	embedding := NewEmbeddingService(EmbeddingLocal)
 	vdb := NewVectorDatabase()
 
-	h := NewKnowledgeHandler(rag, chunker, embedding, vdb)
+	h := NewHandler(rag, chunker, embedding, vdb)
 
 	w := httptest.NewRecorder()
 	c, _ := gin.CreateTestContext(w)
@@ -251,7 +251,7 @@ func TestKnowledgeHandlerAddDocumentNonexistentKB(t *testing.T) {
 	}
 }
 
-func TestKnowledgeHandlerDeleteDocument(t *testing.T) {
+func TestHandlerDeleteDocument(t *testing.T) {
 	gin.SetMode(gin.TestMode)
 
 	rag := NewRAGService()
@@ -259,10 +259,10 @@ func TestKnowledgeHandlerDeleteDocument(t *testing.T) {
 	embedding := NewEmbeddingService(EmbeddingLocal)
 	vdb := NewVectorDatabase()
 
-	h := NewKnowledgeHandler(rag, chunker, embedding, vdb)
+	h := NewHandler(rag, chunker, embedding, vdb)
 
 	kb := rag.CreateKnowledgeBase("del-doc", "")
-	doc := rag.AddDocument(kb.ID, models.Document{Title: "doc", Content: "content"})
+	doc := rag.AddDocument(kb.ID, model.Document{Title: "doc", Content: "content"})
 
 	w := httptest.NewRecorder()
 	c, _ := gin.CreateTestContext(w)
@@ -276,7 +276,7 @@ func TestKnowledgeHandlerDeleteDocument(t *testing.T) {
 	}
 }
 
-func TestKnowledgeHandlerSearch(t *testing.T) {
+func TestHandlerSearch(t *testing.T) {
 	gin.SetMode(gin.TestMode)
 
 	rag := NewRAGService()
@@ -284,10 +284,10 @@ func TestKnowledgeHandlerSearch(t *testing.T) {
 	embedding := NewEmbeddingService(EmbeddingLocal)
 	vdb := NewVectorDatabase()
 
-	h := NewKnowledgeHandler(rag, chunker, embedding, vdb)
+	h := NewHandler(rag, chunker, embedding, vdb)
 
 	kb := rag.CreateKnowledgeBase("search", "")
-	rag.AddDocument(kb.ID, models.Document{Title: "test", Content: "sunny weather today"})
+	rag.AddDocument(kb.ID, model.Document{Title: "test", Content: "sunny weather today"})
 
 	w := httptest.NewRecorder()
 	c, _ := gin.CreateTestContext(w)
@@ -302,7 +302,7 @@ func TestKnowledgeHandlerSearch(t *testing.T) {
 	}
 }
 
-func TestKnowledgeHandlerBatchAddDocuments(t *testing.T) {
+func TestHandlerBatchAddDocuments(t *testing.T) {
 	gin.SetMode(gin.TestMode)
 
 	rag := NewRAGService()
@@ -310,7 +310,7 @@ func TestKnowledgeHandlerBatchAddDocuments(t *testing.T) {
 	embedding := NewEmbeddingService(EmbeddingLocal)
 	vdb := NewVectorDatabase()
 
-	h := NewKnowledgeHandler(rag, chunker, embedding, vdb)
+	h := NewHandler(rag, chunker, embedding, vdb)
 
 	kb := rag.CreateKnowledgeBase("batch", "")
 	vdb.CreateCollectionWithID(kb.ID, "batch", 768)

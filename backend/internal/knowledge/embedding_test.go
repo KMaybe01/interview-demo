@@ -1,9 +1,9 @@
-﻿package knowledge
+package knowledge
 
 import (
 	"testing"
 
-	"interview-demo/backend/internal/models"
+	"interview-demo/backend/internal/model"
 )
 
 func TestEmbeddingServiceEmbedText(t *testing.T) {
@@ -81,7 +81,7 @@ func TestVectorDatabaseGetCollection(t *testing.T) {
 	db := NewVectorDatabase()
 	col, _ := db.CreateCollection("get-test", 64)
 
-	got, exists := db.GetCollection(col.ID)
+	got, exists := db.Collection(col.ID)
 	if !exists {
 		t.Fatal("expected collection to exist")
 	}
@@ -92,7 +92,7 @@ func TestVectorDatabaseGetCollection(t *testing.T) {
 
 func TestVectorDatabaseNonexistentCollection(t *testing.T) {
 	db := NewVectorDatabase()
-	_, exists := db.GetCollection("nonexistent")
+	_, exists := db.Collection("nonexistent")
 	if exists {
 		t.Fatal("expected nonexistent collection to return false")
 	}
@@ -114,13 +114,13 @@ func TestVectorDatabaseInsertAndSearch(t *testing.T) {
 	db := NewVectorDatabase()
 	col, _ := db.CreateCollection("search", 4)
 
-	err := db.InsertVector(col.ID, []float64{1, 0, 0, 0}, nil, &models.DocumentChunk{
+	err := db.InsertVector(col.ID, []float64{1, 0, 0, 0}, nil, &model.DocumentChunk{
 		Content: "doc1",
 	})
 	if err != nil {
 		t.Fatalf("InsertVector failed: %v", err)
 	}
-	err = db.InsertVector(col.ID, []float64{0, 1, 0, 0}, nil, &models.DocumentChunk{
+	err = db.InsertVector(col.ID, []float64{0, 1, 0, 0}, nil, &model.DocumentChunk{
 		Content: "doc2",
 	})
 	if err != nil {
@@ -167,7 +167,7 @@ func TestCosineSimilarity(t *testing.T) {
 func TestVectorDatabaseExportImport(t *testing.T) {
 	db := NewVectorDatabase()
 	col, _ := db.CreateCollection("export", 4)
-	_ = db.InsertVector(col.ID, []float64{1, 0, 0, 0}, nil, &models.DocumentChunk{
+	_ = db.InsertVector(col.ID, []float64{1, 0, 0, 0}, nil, &model.DocumentChunk{
 		Content: "data",
 	})
 
@@ -182,7 +182,7 @@ func TestVectorDatabaseExportImport(t *testing.T) {
 		t.Fatalf("ImportCollection failed: %v", err)
 	}
 
-	_, exists := db2.GetCollection(col.ID)
+	_, exists := db2.Collection(col.ID)
 	if !exists {
 		t.Fatal("expected imported collection to exist")
 	}

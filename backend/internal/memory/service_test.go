@@ -1,18 +1,18 @@
-﻿package memory
+package memory
 
 import (
 	"testing"
 
-	"interview-demo/backend/internal/models"
+	"interview-demo/backend/internal/model"
 )
 
 func TestAddAndGetHistory(t *testing.T) {
-	s := NewMemoryService()
+	s := NewService()
 
-	s.Add("conv1", models.Message{Role: "user", Content: "hello"})
-	s.Add("conv1", models.Message{Role: "assistant", Content: "hi"})
+	s.Add("conv1", model.Message{Role: "user", Content: "hello"})
+	s.Add("conv1", model.Message{Role: "assistant", Content: "hi"})
 
-	history := s.GetHistory("conv1", 10)
+	history := s.History("conv1", 10)
 	if len(history) != 2 {
 		t.Fatalf("expected 2 memories, got %d", len(history))
 	}
@@ -22,40 +22,40 @@ func TestAddAndGetHistory(t *testing.T) {
 }
 
 func TestGetHistoryLimit(t *testing.T) {
-	s := NewMemoryService()
+	s := NewService()
 	for i := 0; i < 10; i++ {
-		s.Add("conv2", models.Message{Role: "user", Content: "msg"})
+		s.Add("conv2", model.Message{Role: "user", Content: "msg"})
 	}
 
-	history := s.GetHistory("conv2", 3)
+	history := s.History("conv2", 3)
 	if len(history) != 3 {
 		t.Fatalf("expected 3 memories, got %d", len(history))
 	}
 }
 
 func TestGetHistoryNonexistent(t *testing.T) {
-	s := NewMemoryService()
-	history := s.GetHistory("nonexistent", 10)
+	s := NewService()
+	history := s.History("nonexistent", 10)
 	if len(history) != 0 {
 		t.Fatalf("expected 0 memories, got %d", len(history))
 	}
 }
 
 func TestClear(t *testing.T) {
-	s := NewMemoryService()
-	s.Add("conv3", models.Message{Role: "user", Content: "msg"})
+	s := NewService()
+	s.Add("conv3", model.Message{Role: "user", Content: "msg"})
 	s.Clear("conv3")
 
-	history := s.GetHistory("conv3", 10)
+	history := s.History("conv3", 10)
 	if len(history) != 0 {
 		t.Fatalf("expected 0 memories after clear")
 	}
 }
 
 func TestSearch(t *testing.T) {
-	s := NewMemoryService()
-	s.Add("conv4", models.Message{Role: "user", Content: "今天天气怎么样"})
-	s.Add("conv4", models.Message{Role: "user", Content: "帮我定个闹钟"})
+	s := NewService()
+	s.Add("conv4", model.Message{Role: "user", Content: "今天天气怎么样"})
+	s.Add("conv4", model.Message{Role: "user", Content: "帮我定个闹钟"})
 
 	results := s.Search("conv4", "天气", 5)
 	if len(results) == 0 {
@@ -74,8 +74,8 @@ func TestSearch(t *testing.T) {
 }
 
 func TestSearchNoMatch(t *testing.T) {
-	s := NewMemoryService()
-	s.Add("conv5", models.Message{Role: "user", Content: "hello world"})
+	s := NewService()
+	s.Add("conv5", model.Message{Role: "user", Content: "hello world"})
 
 	results := s.Search("conv5", "zzzzz", 5)
 	if len(results) != 0 {
@@ -84,28 +84,28 @@ func TestSearchNoMatch(t *testing.T) {
 }
 
 func TestCalculateImportance(t *testing.T) {
-	s := NewMemoryService()
+	s := NewService()
 
-	normal := s.Add("imp", models.Message{Role: "user", Content: "hello"})
+	normal := s.Add("imp", model.Message{Role: "user", Content: "hello"})
 	if normal.Importance < 0.4 || normal.Importance > 0.6 {
 		t.Errorf("expected importance ~0.5, got %f", normal.Importance)
 	}
 
-	important := s.Add("imp", models.Message{Role: "user", Content: "请记住这个重要信息"})
+	important := s.Add("imp", model.Message{Role: "user", Content: "请记住这个重要信息"})
 	if important.Importance <= normal.Importance {
 		t.Errorf("expected higher importance for important content, got %f", important.Importance)
 	}
 }
 
 func TestSummarize(t *testing.T) {
-	s := NewMemoryService()
+	s := NewService()
 	summary := s.Summarize("nonexistent")
 	if summary != "暂无对话历史" {
 		t.Errorf("expected '暂无对话历史', got %s", summary)
 	}
 
-	s.Add("summ", models.Message{Role: "user", Content: "第一条消息"})
-	s.Add("summ", models.Message{Role: "user", Content: "第二条消息"})
+	s.Add("summ", model.Message{Role: "user", Content: "第一条消息"})
+	s.Add("summ", model.Message{Role: "user", Content: "第二条消息"})
 	summary = s.Summarize("summ")
 	if summary == "" || summary == "暂无对话历史" {
 		t.Errorf("expected non-empty summary")

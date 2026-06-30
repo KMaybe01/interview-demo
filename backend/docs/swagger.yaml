@@ -167,7 +167,7 @@ definitions:
           type: integer
         type: array
     type: object
-  models.Message:
+  model.Message:
     properties:
       content:
         type: string
@@ -185,23 +185,7 @@ definitions:
     - content
     - role
     type: object
-  payment.PaymentRequest:
-    properties:
-      amount:
-        type: integer
-      channel:
-        type: string
-      idempotencyKey:
-        type: string
-      orderNo:
-        type: string
-    type: object
-  payment.RetryDemoRequest:
-    properties:
-      maxRetries:
-        type: integer
-    type: object
-  payment.SecurityCheckRequest:
+  payment.CheckRequest:
     properties:
       amount:
         type: integer
@@ -210,6 +194,22 @@ definitions:
       orderNo:
         type: string
       sign:
+        type: string
+    type: object
+  payment.DemoRequest:
+    properties:
+      maxRetries:
+        type: integer
+    type: object
+  payment.Request:
+    properties:
+      amount:
+        type: integer
+      channel:
+        type: string
+      idempotencyKey:
+        type: string
+      orderNo:
         type: string
     type: object
 host: localhost:8080
@@ -1002,7 +1002,7 @@ paths:
           properties:
             messages:
               items:
-                $ref: '#/definitions/models.Message'
+                $ref: '#/definitions/model.Message'
               type: array
           type: object
       produces:
@@ -1042,7 +1042,7 @@ paths:
         name: body
         required: true
         schema:
-          $ref: '#/definitions/payment.PaymentRequest'
+          $ref: '#/definitions/payment.Request'
       produces:
       - application/json
       responses:
@@ -1186,7 +1186,7 @@ paths:
         name: body
         required: true
         schema:
-          $ref: '#/definitions/payment.RetryDemoRequest'
+          $ref: '#/definitions/payment.DemoRequest'
       produces:
       - application/json
       responses:
@@ -1211,7 +1211,7 @@ paths:
         name: body
         required: true
         schema:
-          $ref: '#/definitions/payment.SecurityCheckRequest'
+          $ref: '#/definitions/payment.CheckRequest'
       produces:
       - application/json
       responses:

@@ -1,11 +1,11 @@
-﻿package chat
+package chat
 
 import (
 	"context"
 	"testing"
 	"time"
 
-	"interview-demo/backend/internal/models"
+	"interview-demo/backend/internal/model"
 )
 
 func TestDefaultModelManager(t *testing.T) {
@@ -30,7 +30,7 @@ func TestModelManagerRegisterAndGet(t *testing.T) {
 		Timeout:   30 * time.Second,
 	})
 
-	client, exists := m.GetClient("test-model")
+	client, exists := m.Client("test-model")
 	if !exists {
 		t.Fatal("expected client to exist")
 	}
@@ -38,7 +38,7 @@ func TestModelManagerRegisterAndGet(t *testing.T) {
 		t.Fatal("expected non-nil client")
 	}
 
-	_, exists = m.GetClient("nonexistent")
+	_, exists = m.Client("nonexistent")
 	if exists {
 		t.Fatal("expected nonexistent client to return false")
 	}
@@ -52,7 +52,7 @@ func TestModelManagerChat(t *testing.T) {
 		ModelName: "gpt-4o",
 	})
 
-	resp, err := m.Chat(context.Background(), "chat-test", []models.Message{
+	resp, err := m.Chat(context.Background(), "chat-test", []model.Message{
 		{Role: "user", Content: "hello"},
 	})
 	if err != nil {
@@ -72,7 +72,7 @@ func TestModelManagerChatWithTools(t *testing.T) {
 	})
 
 	resp, err := m.ChatWithTools(context.Background(), "tool-test",
-		[]models.Message{{Role: "user", Content: "hello"}},
+		[]model.Message{{Role: "user", Content: "hello"}},
 		[]ToolDefinition{{Name: "test", Description: "test tool"}},
 	)
 	if err != nil {
@@ -105,7 +105,7 @@ func TestModelSelector(t *testing.T) {
 		t.Error("expected a model for analysis task")
 	}
 
-	caps := sel.GetModelCapabilities("openai-gpt4")
+	caps := sel.ModelCapabilities("openai-gpt4")
 	if caps == nil {
 		t.Fatal("expected capabilities")
 	}
@@ -122,19 +122,19 @@ func TestModelClients(t *testing.T) {
 	}
 
 	openai := NewOpenAIClient(cfg)
-	info := openai.GetModelInfo()
+	info := openai.ModelInfo()
 	if info.Provider != ProviderOpenAI {
 		t.Errorf("expected OpenAI provider, got %s", info.Provider)
 	}
 
 	deepseek := NewDeepSeekClient(cfg)
-	info = deepseek.GetModelInfo()
+	info = deepseek.ModelInfo()
 	if info.Provider != ProviderDeepSeek {
 		t.Errorf("expected DeepSeek provider, got %s", info.Provider)
 	}
 
 	ollama := NewOllamaClient(cfg)
-	info = ollama.GetModelInfo()
+	info = ollama.ModelInfo()
 	if info.Provider != ProviderOllama {
 		t.Errorf("expected Ollama provider, got %s", info.Provider)
 	}
@@ -148,7 +148,7 @@ func TestModelClientChat(t *testing.T) {
 	}
 
 	c := NewOpenAIClient(cfg)
-	resp, err := c.Chat(context.Background(), []models.Message{{Role: "user", Content: "hi"}})
+	resp, err := c.Chat(context.Background(), []model.Message{{Role: "user", Content: "hi"}})
 	if err != nil {
 		t.Fatalf("Chat failed: %v", err)
 	}

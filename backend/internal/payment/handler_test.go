@@ -15,8 +15,8 @@ import (
 func resetPaymentGlobalState() {
 	mu.Lock()
 	defer mu.Unlock()
-	paymentOrders = make(map[string]*PaymentOrder)
-	idempotentCache = make(map[string]*PaymentOrder)
+	paymentOrders = make(map[string]*Order)
+	idempotentCache = make(map[string]*Order)
 	orderCounter = 0
 }
 
@@ -91,7 +91,7 @@ func TestSecurityCheck(t *testing.T) {
 	gin.SetMode(gin.TestMode)
 
 	mu.Lock()
-	paymentOrders["ORD-SEC"] = &PaymentOrder{
+	paymentOrders["ORD-SEC"] = &Order{
 		OrderNo: "ORD-SEC",
 		Amount:  1000,
 	}
@@ -213,13 +213,13 @@ func TestGetOrderAndListOrders(t *testing.T) {
 
 	// Pre-populate some orders
 	mu.Lock()
-	paymentOrders["order-1"] = &PaymentOrder{
+	paymentOrders["order-1"] = &Order{
 		ID:        "order-1",
 		OrderNo:   "ORD-1",
 		Status:    StatusPending,
 		CreatedAt: time.Date(2023, 1, 1, 0, 0, 0, 0, time.UTC),
 	}
-	paymentOrders["order-2"] = &PaymentOrder{
+	paymentOrders["order-2"] = &Order{
 		ID:        "order-2",
 		OrderNo:   "ORD-2",
 		Status:    StatusSuccess,
@@ -233,7 +233,7 @@ func TestGetOrderAndListOrders(t *testing.T) {
 		c.Params = gin.Params{{Key: "id", Value: "order-1"}}
 		c.Request = httptest.NewRequest(http.MethodGet, "/api/payments/order-1", nil)
 
-		GetOrder(c)
+		OrderDetail(c)
 
 		if w.Code != http.StatusOK {
 			t.Errorf("expected 200, got %d", w.Code)
@@ -252,7 +252,7 @@ func TestGetOrderAndListOrders(t *testing.T) {
 		c.Params = gin.Params{{Key: "id", Value: "order-999"}}
 		c.Request = httptest.NewRequest(http.MethodGet, "/api/payments/order-999", nil)
 
-		GetOrder(c)
+		OrderDetail(c)
 
 		if w.Code != http.StatusNotFound {
 			t.Errorf("expected 404, got %d", w.Code)
@@ -288,7 +288,7 @@ func TestTransitionPayment(t *testing.T) {
 	gin.SetMode(gin.TestMode)
 
 	mu.Lock()
-	paymentOrders["order-1"] = &PaymentOrder{
+	paymentOrders["order-1"] = &Order{
 		ID:      "order-1",
 		OrderNo: "ORD-1",
 		Status:  StatusPending,
@@ -441,13 +441,13 @@ func TestProcessPayment(t *testing.T) {
 
 	// Pre-populate some orders
 	mu.Lock()
-	paymentOrders["order-1"] = &PaymentOrder{
+	paymentOrders["order-1"] = &Order{
 		ID:      "order-1",
 		OrderNo: "ORD-1",
 		Status:  StatusPending,
 		Amount:  100,
 	}
-	paymentOrders["order-2"] = &PaymentOrder{
+	paymentOrders["order-2"] = &Order{
 		ID:      "order-2",
 		OrderNo: "ORD-2",
 		Status:  StatusSuccess, // Not pending

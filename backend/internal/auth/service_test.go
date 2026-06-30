@@ -15,12 +15,12 @@ func init() {
 	gin.SetMode(gin.TestMode)
 }
 
-func newTestAuth(t *testing.T) *AuthService {
+func newTestAuth(t *testing.T) *Service {
 	t.Helper()
-	return NewAuthService()
+	return NewService()
 }
 
-func testAccessToken(t *testing.T, a *AuthService, sub, nonce string) string {
+func testAccessToken(t *testing.T, a *Service, sub, nonce string) string {
 	t.Helper()
 	s, err := a.createToken(sub, 5*time.Second, nonce)
 	if err != nil {
@@ -29,7 +29,7 @@ func testAccessToken(t *testing.T, a *AuthService, sub, nonce string) string {
 	return s
 }
 
-func testRefreshToken(t *testing.T, a *AuthService, sub, nonce string) string {
+func testRefreshToken(t *testing.T, a *Service, sub, nonce string) string {
 	t.Helper()
 	s, err := a.createRefreshToken(sub, nonce, 5*time.Second)
 	if err != nil {
@@ -298,7 +298,7 @@ func TestGetUsedTokenCount(t *testing.T) {
 	c, _ := gin.CreateTestContext(w)
 	c.Request = httptest.NewRequest(http.MethodGet, "/api/auth/used-tokens", nil)
 
-	auth.GetUsedTokenCount(c)
+	auth.UsedTokenCount(c)
 
 	if w.Code != http.StatusOK {
 		t.Fatalf("expected 200, got %d: %s", w.Code, w.Body.String())

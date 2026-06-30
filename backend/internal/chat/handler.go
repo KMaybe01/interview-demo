@@ -1,4 +1,4 @@
-﻿package chat
+package chat
 
 import (
 	"context"
@@ -10,29 +10,29 @@ import (
 	"github.com/google/uuid"
 	"interview-demo/backend/internal/knowledge"
 	"interview-demo/backend/internal/memory"
-	"interview-demo/backend/internal/models"
+	"interview-demo/backend/internal/model"
 )
 
 type AgentExecutor interface {
 	Execute(ctx context.Context, input string) (string, error)
 }
 
-type ChatHandler struct {
+type Handler struct {
 	llmService    *LLMService
-	memoryService *memory.MemoryService
+	memoryService *memory.Service
 	ragService    *knowledge.RAGService
 	lookupAgent   func(id string) AgentExecutor
 	createAgent   func(agentType, name string) AgentExecutor
 }
 
-func NewChatHandler(
+func NewHandler(
 	llmService *LLMService,
-	memoryService *memory.MemoryService,
+	memoryService *memory.Service,
 	ragService *knowledge.RAGService,
 	lookupAgent func(id string) AgentExecutor,
 	createAgent func(agentType, name string) AgentExecutor,
-) *ChatHandler {
-	return &ChatHandler{
+) *Handler {
+	return &Handler{
 		llmService:    llmService,
 		memoryService: memoryService,
 		ragService:    ragService,
@@ -52,7 +52,7 @@ func NewChatHandler(
 // @Failure     400  {object} map[string]interface{}
 // @Failure     500  {object} map[string]interface{}
 // @Router      /chat [post]
-func (h *ChatHandler) Chat(c *gin.Context) {
+func (h *Handler) Chat(c *gin.Context) {
 	var req struct {
 		Content         string `json:"content" binding:"required"`
 		ConversationID  string `json:"conversationId"`
@@ -72,30 +72,30 @@ func (h *ChatHandler) Chat(c *gin.Context) {
 		req.ConversationID = uuid.New().String()
 	}
 
-	history := h.memoryService.GetHistory(req.ConversationID, 10)
+	history := h.memoryService.History(req.ConversationID, 10)
 
 	var ragContext string
 	if req.KnowledgeBaseID != "" {
-		ragContext = h.ragService.GetContextForQuery(req.Content, req.KnowledgeBaseID)
+		ragContext = h.ragService.ContextForQuery(req.Content, req.KnowledgeBaseID)
 	}
 
-	var messages []models.Message
+	var messages []model.Message
 	for _, mem := range history {
-		messages = append(messages, models.Message{
+		messages = append(messages, model.Message{
 			Role:    mem.Role,
 			Content: mem.Content,
 		})
 	}
 
 	if ragContext != "" {
-		systemMsg := models.Message{
+		systemMsg := model.Message{
 			Role:    "system",
 			Content: fmt.Sprintf("基于以下知识库内容回答问题：\n\n%s", ragContext),
 		}
-		messages = append([]models.Message{systemMsg}, messages...)
+		messages = append([]model.Message{systemMsg}, messages...)
 	}
 
-	userMsg := models.Message{
+	userMsg := model.Message{
 		Role:    "user",
 		Content: req.Content,
 	}
@@ -136,7 +136,7 @@ func (h *ChatHandler) Chat(c *gin.Context) {
 	}
 
 	h.memoryService.Add(req.ConversationID, userMsg)
-	h.memoryService.Add(req.ConversationID, models.Message{
+	h.memoryService.Add(req.ConversationID, model.Message{
 		Role:    "assistant",
 		Content: response,
 	})
@@ -158,7 +158,7 @@ func (h *ChatHandler) Chat(c *gin.Context) {
 // @Success     200
 // @Failure     400 {object} map[string]interface{}
 // @Router      /chat/stream [post]
-func (h *ChatHandler) ChatStream(c *gin.Context) {
+func (h *Handler) ChatStream(c *gin.Context) {
 	var req struct {
 		Content         string `json:"content" binding:"required"`
 		ConversationID  string `json:"conversationId"`
@@ -197,15 +197,15 @@ func (h *ChatHandler) ChatStream(c *gin.Context) {
 // @Param       conversationId path string true "会话 ID"
 // @Success     200 {object} map[string]interface{}
 // @Router      /chat/history/{conversationId} [get]
-func (h *ChatHandler) GetHistory(c *gin.Context) {
+func (h *Handler) History(c *gin.Context) {
 	conversationId := c.Param("conversationId")
 	limit := 20
 
-	history := h.memoryService.GetHistory(conversationId, limit)
+	history := h.memoryService.History(conversationId, limit)
 
-	var messages []models.Message
+	var messages []model.Message
 	for _, mem := range history {
-		messages = append(messages, models.Message{
+		messages = append(messages, model.Message{
 			Role:    mem.Role,
 			Content: mem.Content,
 		})
@@ -226,7 +226,7 @@ func (h *ChatHandler) GetHistory(c *gin.Context) {
 // @Param       conversationId path string true "会话 ID"
 // @Success     200 {object} map[string]interface{}
 // @Router      /chat/history/{conversationId} [delete]
-func (h *ChatHandler) ClearHistory(c *gin.Context) {
+func (h *Handler) ClearHistory(c *gin.Context) {
 	conversationId := c.Param("conversationId")
 	h.memoryService.Clear(conversationId)
 

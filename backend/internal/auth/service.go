@@ -1,4 +1,4 @@
-﻿package auth
+package auth
 
 import (
 	"fmt"
@@ -79,7 +79,7 @@ func (s *tokenStore) Count() int {
 	return count
 }
 
-type AuthService struct {
+type Service struct {
 	jwtSecret     []byte
 	adminUsername string
 	adminPassword string
@@ -87,13 +87,13 @@ type AuthService struct {
 	sessions      sync.Map
 }
 
-func NewAuthService() *AuthService {
+func NewService() *Service {
 	secret := []byte("interview-demo-secret-key-2026")
 	if s := os.Getenv("JWT_SECRET"); s != "" {
 		secret = []byte(s)
 	}
 
-	return &AuthService{
+	return &Service{
 		jwtSecret:     secret,
 		adminUsername: getEnvDefault("AUTH_USERNAME", "admin"),
 		adminPassword: getEnvDefault("AUTH_PASSWORD", "admin123"),
@@ -112,7 +112,7 @@ type TokenResponse struct {
 	ExpiresIn    int    `json:"expires_in"`
 }
 
-func (a *AuthService) createToken(sub string, duration time.Duration, nonce ...string) (string, error) {
+func (a *Service) createToken(sub string, duration time.Duration, nonce ...string) (string, error) {
 	claims := jwt.MapClaims{
 		"sub":  sub,
 		"iat":  time.Now().Unix(),
@@ -126,7 +126,7 @@ func (a *AuthService) createToken(sub string, duration time.Duration, nonce ...s
 	return token.SignedString(a.jwtSecret)
 }
 
-func (a *AuthService) createRefreshToken(sub, nonce string, duration time.Duration) (string, error) {
+func (a *Service) createRefreshToken(sub, nonce string, duration time.Duration) (string, error) {
 	claims := jwt.MapClaims{
 		"sub":   sub,
 		"nonce": nonce,
@@ -138,7 +138,7 @@ func (a *AuthService) createRefreshToken(sub, nonce string, duration time.Durati
 	return token.SignedString(a.jwtSecret)
 }
 
-func (a *AuthService) parseAndValidateToken(tokenStr string) (*jwt.MapClaims, error) {
+func (a *Service) parseAndValidateToken(tokenStr string) (*jwt.MapClaims, error) {
 	token, err := jwt.Parse(tokenStr, func(token *jwt.Token) (interface{}, error) {
 		if _, ok := token.Method.(*jwt.SigningMethodHMAC); !ok {
 			return nil, fmt.Errorf("unexpected signing method: %v", token.Header["alg"])
@@ -167,7 +167,7 @@ func (a *AuthService) parseAndValidateToken(tokenStr string) (*jwt.MapClaims, er
 // @Failure     401  {object} map[string]interface{}
 // @Failure     500  {object} map[string]interface{}
 // @Router      /auth/login [post]
-func (a *AuthService) Login(c *gin.Context) {
+func (a *Service) Login(c *gin.Context) {
 	var req LoginRequest
 	if err := c.ShouldBindJSON(&req); err != nil {
 		c.JSON(http.StatusBadRequest, gin.H{"error": "参数错误"})
@@ -216,7 +216,7 @@ type RefreshRequest struct {
 // @Failure     401  {object} map[string]interface{}
 // @Failure     500  {object} map[string]interface{}
 // @Router      /auth/refresh [post]
-func (a *AuthService) RefreshToken(c *gin.Context) {
+func (a *Service) RefreshToken(c *gin.Context) {
 	var req RefreshRequest
 	if err := c.ShouldBindJSON(&req); err != nil {
 		c.JSON(http.StatusBadRequest, gin.H{"error": "参数错误"})
@@ -281,7 +281,7 @@ func (a *AuthService) RefreshToken(c *gin.Context) {
 // @Success     200 {object} map[string]interface{}
 // @Failure     401 {object} map[string]interface{}
 // @Router      /auth/check [get]
-func (a *AuthService) CheckToken(c *gin.Context) {
+func (a *Service) CheckToken(c *gin.Context) {
 	tokenStr := c.GetHeader("Authorization")
 	if tokenStr == "" || len(tokenStr) < 7 {
 		c.JSON(http.StatusUnauthorized, gin.H{"valid": false, "error": "未提供 Token"})
@@ -311,7 +311,7 @@ func (a *AuthService) CheckToken(c *gin.Context) {
 
 // AuthMiddleware returns a Gin middleware that validates JWT Bearer tokens
 // and checks session nonce for replay protection.
-func (a *AuthService) AuthMiddleware() gin.HandlerFunc {
+func (a *Service) AuthMiddleware() gin.HandlerFunc {
 	return func(c *gin.Context) {
 		tokenStr := c.GetHeader("Authorization")
 		if tokenStr == "" || len(tokenStr) < 7 {
@@ -351,7 +351,7 @@ func (a *AuthService) AuthMiddleware() gin.HandlerFunc {
 // @Produce     json
 // @Success     200 {object} map[string]interface{}
 // @Router      /auth/used-tokens [get]
-func (a *AuthService) GetUsedTokenCount(c *gin.Context) {
+func (a *Service) UsedTokenCount(c *gin.Context) {
 	count := a.tokenStore.Count()
 	c.JSON(http.StatusOK, gin.H{"count": count})
 }

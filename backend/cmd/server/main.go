@@ -1,4 +1,4 @@
-﻿// @title           Interview Demo API
+// @title           Interview Demo API
 // @version         1.0
 // @description     AI Agent Demo — Go + Gin 后端，提供 13 个技术演示场景的 API 支持
 // @host            localhost:8080
@@ -53,41 +53,41 @@ func main() {
 		log.Println("Warning: OPENAI_API_KEY not set")
 	}
 
-	authService := auth.NewAuthService()
+	authService := auth.NewService()
 	llmService := chat.NewLLMService(apiKey)
-	memoryService := memory.NewMemoryService()
+	memoryService := memory.NewService()
 	ragService := knowledge.NewRAGService()
 	chunkerManager := knowledge.NewChunkerManager()
 	embeddingService := knowledge.NewEmbeddingService(knowledge.EmbeddingOpenAI)
 	vectorDB := knowledge.NewVectorDatabase()
 	modelManager := chat.DefaultModelManager()
-	agentFactory := agent.NewAgentFactory(llmService, ragService)
-	agentHandler := agent.NewAgentHandler(agentFactory, modelManager)
-	chatHandler := chat.NewChatHandler(
+	agentFactory := agent.NewFactory(llmService, ragService)
+	agentHandler := agent.NewHandler(agentFactory, modelManager)
+	chatHandler := chat.NewHandler(
 		llmService, memoryService, ragService,
 		func(id string) chat.AgentExecutor {
-			agt, ok := agentHandler.GetAgent(id)
+			agt, ok := agentHandler.Agent(id)
 			if !ok {
 				return nil
 			}
 			return agt
 		},
 		func(agentType, name string) chat.AgentExecutor {
-			var t agent.AgentType
+			var t agent.Type
 			switch agentType {
 			case "react":
-				t = agent.AgentTypeReAct
+				t = agent.TypeReAct
 			case "function":
-				t = agent.AgentTypeFunction
+				t = agent.TypeFunction
 			case "multi":
-				t = agent.AgentTypeMulti
+				t = agent.TypeMulti
 			default:
-				t = agent.AgentTypeReAct
+				t = agent.TypeReAct
 			}
 			return agentFactory.CreateAgent(t, name)
 		},
 	)
-	knowledgeHandler := knowledge.NewKnowledgeHandler(ragService, chunkerManager, embeddingService, vectorDB)
+	knowledgeHandler := knowledge.NewHandler(ragService, chunkerManager, embeddingService, vectorDB)
 	modelHandler := chat.NewModelHandler(modelManager)
 
 	docsDir := os.Getenv("DOCS_DIR")
@@ -101,7 +101,7 @@ func main() {
 		api.POST("/auth/login", authService.Login)
 		api.POST("/auth/refresh", authService.RefreshToken)
 		api.GET("/auth/check", authService.CheckToken)
-		api.GET("/auth/used-tokens", authService.GetUsedTokenCount)
+		api.GET("/auth/used-tokens", authService.UsedTokenCount)
 		api.GET("/sse/logs", demo.SSELogStream)
 		api.GET("/sse/encrypted-logs", demo.EncryptedLogStream)
 		api.GET("/upload/download/:uploadId", demo.DownloadUpload)
@@ -110,16 +110,16 @@ func main() {
 
 		api.POST("/chat", chatHandler.Chat)
 		api.POST("/chat/stream", chatHandler.ChatStream)
-		api.GET("/chat/history/:conversationId", chatHandler.GetHistory)
+		api.GET("/chat/history/:conversationId", chatHandler.History)
 		api.DELETE("/chat/history/:conversationId", chatHandler.ClearHistory)
 
 		api.POST("/knowledge-base", knowledgeHandler.CreateKnowledgeBase)
 		api.GET("/knowledge-base", knowledgeHandler.ListKnowledgeBases)
-		api.GET("/knowledge-base/:id", knowledgeHandler.GetKnowledgeBase)
+		api.GET("/knowledge-base/:id", knowledgeHandler.KnowledgeBaseDetail)
 		api.DELETE("/knowledge-base/:id", knowledgeHandler.DeleteKnowledgeBase)
 		api.POST("/knowledge-base/:id/document", knowledgeHandler.AddDocument)
 		api.POST("/knowledge-base/:id/documents/batch", knowledgeHandler.BatchAddDocuments)
-		api.GET("/knowledge-base/:id/document", knowledgeHandler.GetDocuments)
+		api.GET("/knowledge-base/:id/document", knowledgeHandler.KnowledgeBaseDocuments)
 		api.DELETE("/knowledge-base/:id/document/:docId", knowledgeHandler.DeleteDocument)
 		api.POST("/knowledge-base/search", knowledgeHandler.Search)
 		api.POST("/knowledge-base/init-docs", func(c *gin.Context) {
@@ -156,7 +156,7 @@ func main() {
 		})
 
 		api.GET("/models", modelHandler.ListModels)
-		api.GET("/models/:id", modelHandler.GetModel)
+		api.GET("/models/:id", modelHandler.ModelDetail)
 		api.POST("/models/:id/chat", modelHandler.Chat)
 
 		api.GET("/agents", agentHandler.ListAgents)
@@ -167,22 +167,22 @@ func main() {
 		protected := api.Group("")
 		protected.Use(authService.AuthMiddleware())
 		{
-			protected.GET("/gis/points", demo.GetGISPoints)
-			protected.GET("/schema/config", demo.GetSchemaConfig)
+			protected.GET("/gis/points", demo.GISPoints)
+			protected.GET("/schema/config", demo.SchemaConfig)
 			protected.POST("/schema/validate", demo.ValidateSchema)
 			protected.POST("/upload/init", demo.InitUpload)
 			protected.POST("/upload/chunk", demo.UploadChunk)
 			protected.POST("/upload/complete", demo.CompleteUpload)
-			protected.GET("/upload/status/:uploadId", demo.GetUploadStatus)
+			protected.GET("/upload/status/:uploadId", demo.UploadStatus)
 			protected.GET("/upload/sessions", demo.ListUploadSessions)
 			protected.POST("/rbac/check", demo.CheckPermissions)
-			protected.GET("/services", demo.GetServices)
-			protected.GET("/config", demo.GetConfig)
-			protected.GET("/logs", demo.GetLogs)
+			protected.GET("/services", demo.Services)
+			protected.GET("/config", demo.Config)
+			protected.GET("/logs", demo.Logs)
 			protected.GET("/request-loading/demo", demo.DemoRequest)
 			protected.POST("/payments/create", payment.CreatePayment)
 			protected.POST("/payments/process/:id", payment.ProcessPayment)
-			protected.GET("/payments/order/:id", payment.GetOrder)
+			protected.GET("/payments/order/:id", payment.OrderDetail)
 			protected.GET("/payments/orders", payment.ListOrders)
 			protected.POST("/payments/transition/:id", payment.TransitionPayment)
 			protected.POST("/payments/idempotency-test", payment.IdempotencyTest)
@@ -191,11 +191,11 @@ func main() {
 		}
 
 		api.POST("/vitals/report", demo.ReportVitals)
-		api.GET("/vitals/summary", demo.GetVitalsSummary)
-		api.GET("/vitals/history", demo.GetVitalsHistory)
+		api.GET("/vitals/summary", demo.VitalsSummaryReport)
+		api.GET("/vitals/history", demo.VitalsHistory)
 		api.POST("/vitals/page-report", demo.ReportPage)
-		api.GET("/vitals/pages", demo.GetPageSummary)
-		api.GET("/vitals/page-history", demo.GetPageHistory)
+		api.GET("/vitals/pages", demo.PageSummaryReport)
+		api.GET("/vitals/page-history", demo.PageHistory)
 	}
 
 	r.GET("/healthz", func(c *gin.Context) {

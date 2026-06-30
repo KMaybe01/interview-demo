@@ -1,4 +1,4 @@
-﻿package memory
+package memory
 
 import (
 	"sort"
@@ -7,25 +7,25 @@ import (
 	"time"
 
 	"github.com/google/uuid"
-	"interview-demo/backend/internal/models"
+	"interview-demo/backend/internal/model"
 )
 
-type MemoryService struct {
-	memories map[string][]models.Memory
+type Service struct {
+	memories map[string][]model.Memory
 	mu       sync.RWMutex
 }
 
-func NewMemoryService() *MemoryService {
-	return &MemoryService{
-		memories: make(map[string][]models.Memory),
+func NewService() *Service {
+	return &Service{
+		memories: make(map[string][]model.Memory),
 	}
 }
 
-func (s *MemoryService) Add(conversationID string, msg models.Message) models.Memory {
+func (s *Service) Add(conversationID string, msg model.Message) model.Memory {
 	s.mu.Lock()
 	defer s.mu.Unlock()
 
-	memory := models.Memory{
+	memory := model.Memory{
 		ID:             uuid.New().String(),
 		ConversationID: conversationID,
 		Content:        msg.Content,
@@ -40,17 +40,17 @@ func (s *MemoryService) Add(conversationID string, msg models.Message) models.Me
 	return memory
 }
 
-func (s *MemoryService) Search(conversationID string, query string, topK int) []models.Memory {
+func (s *Service) Search(conversationID string, query string, topK int) []model.Memory {
 	s.mu.Lock()
 	defer s.mu.Unlock()
 
 	memories, exists := s.memories[conversationID]
 	if !exists {
-		return []models.Memory{}
+		return []model.Memory{}
 	}
 
 	type scoredMemory struct {
-		memory models.Memory
+		memory model.Memory
 		score  float64
 	}
 
@@ -70,7 +70,7 @@ func (s *MemoryService) Search(conversationID string, query string, topK int) []
 		topK = len(scored)
 	}
 
-	result := make([]models.Memory, topK)
+	result := make([]model.Memory, topK)
 	for i := 0; i < topK; i++ {
 		result[i] = scored[i].memory
 		result[i].AccessedAt = time.Now()
@@ -80,20 +80,20 @@ func (s *MemoryService) Search(conversationID string, query string, topK int) []
 	return result
 }
 
-func (s *MemoryService) GetHistory(conversationID string, limit int) []models.Memory {
+func (s *Service) History(conversationID string, limit int) []model.Memory {
 	s.mu.RLock()
 	defer s.mu.RUnlock()
 
 	memories, exists := s.memories[conversationID]
 	if !exists {
-		return []models.Memory{}
+		return []model.Memory{}
 	}
 
 	if limit > len(memories) {
 		limit = len(memories)
 	}
 
-	result := make([]models.Memory, limit)
+	result := make([]model.Memory, limit)
 	latest := memories[len(memories)-limit:]
 	for i, m := range latest {
 		result[len(latest)-1-i] = m
@@ -101,7 +101,7 @@ func (s *MemoryService) GetHistory(conversationID string, limit int) []models.Me
 	return result
 }
 
-func (s *MemoryService) Summarize(conversationID string) string {
+func (s *Service) Summarize(conversationID string) string {
 	s.mu.RLock()
 	defer s.mu.RUnlock()
 
@@ -120,14 +120,14 @@ func (s *MemoryService) Summarize(conversationID string) string {
 	return summary
 }
 
-func (s *MemoryService) Clear(conversationID string) {
+func (s *Service) Clear(conversationID string) {
 	s.mu.Lock()
 	defer s.mu.Unlock()
 
 	delete(s.memories, conversationID)
 }
 
-func (s *MemoryService) calculateImportance(msg models.Message) float64 {
+func (s *Service) calculateImportance(msg model.Message) float64 {
 	importance := 0.5
 
 	keywords := []string{"重要", "关键", "记住", "提醒", "注意", "必须", "一定"}
@@ -148,7 +148,7 @@ func (s *MemoryService) calculateImportance(msg models.Message) float64 {
 	return importance
 }
 
-func (s *MemoryService) calculateRelevanceScore(content, query string) float64 {
+func (s *Service) calculateRelevanceScore(content, query string) float64 {
 	if query == "" {
 		return 0
 	}

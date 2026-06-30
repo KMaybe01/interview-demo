@@ -1,4 +1,4 @@
-﻿package chat
+package chat
 
 import (
 	"context"
@@ -7,7 +7,7 @@ import (
 	"io"
 
 	openai "github.com/sashabaranov/go-openai"
-	"interview-demo/backend/internal/models"
+	"interview-demo/backend/internal/model"
 )
 
 type LLMService struct {
@@ -23,7 +23,7 @@ func NewLLMService(apiKey string) *LLMService {
 	}
 }
 
-func toOpenAIMessages(messages []models.Message) []openai.ChatCompletionMessage {
+func toOpenAIMessages(messages []model.Message) []openai.ChatCompletionMessage {
 	openaiMessages := make([]openai.ChatCompletionMessage, len(messages))
 	for i, msg := range messages {
 		role := openai.ChatMessageRoleUser
@@ -43,9 +43,9 @@ func toOpenAIMessages(messages []models.Message) []openai.ChatCompletionMessage 
 	return openaiMessages
 }
 
-func (s *LLMService) Chat(ctx context.Context, messages []models.Message, model string) (*models.ChatResponse, error) {
-	if model == "" {
-		model = openai.GPT3Dot5Turbo
+func (s *LLMService) Chat(ctx context.Context, messages []model.Message, modelName string) (*model.ChatResponse, error) {
+	if modelName == "" {
+		modelName = openai.GPT3Dot5Turbo
 	}
 
 	openaiMessages := toOpenAIMessages(messages)
@@ -53,7 +53,7 @@ func (s *LLMService) Chat(ctx context.Context, messages []models.Message, model 
 	resp, err := s.client.CreateChatCompletion(
 		ctx,
 		openai.ChatCompletionRequest{
-			Model:    model,
+			Model:    modelName,
 			Messages: openaiMessages,
 		},
 	)
@@ -62,12 +62,12 @@ func (s *LLMService) Chat(ctx context.Context, messages []models.Message, model 
 		return nil, fmt.Errorf("API 调用失败: %w", err)
 	}
 
-	return &models.ChatResponse{
-		Message: models.Message{
+	return &model.ChatResponse{
+		Message: model.Message{
 			Role:    "assistant",
 			Content: resp.Choices[0].Message.Content,
 		},
-		Usage: models.Usage{
+		Usage: model.Usage{
 			PromptTokens:     resp.Usage.PromptTokens,
 			CompletionTokens: resp.Usage.CompletionTokens,
 			TotalTokens:      resp.Usage.TotalTokens,
@@ -75,9 +75,9 @@ func (s *LLMService) Chat(ctx context.Context, messages []models.Message, model 
 	}, nil
 }
 
-func (s *LLMService) ChatStream(ctx context.Context, messages []models.Message, model string) (*openai.ChatCompletionStream, error) {
-	if model == "" {
-		model = openai.GPT3Dot5Turbo
+func (s *LLMService) ChatStream(ctx context.Context, messages []model.Message, modelName string) (*openai.ChatCompletionStream, error) {
+	if modelName == "" {
+		modelName = openai.GPT3Dot5Turbo
 	}
 
 	openaiMessages := toOpenAIMessages(messages)
@@ -85,7 +85,7 @@ func (s *LLMService) ChatStream(ctx context.Context, messages []models.Message, 
 	stream, err := s.client.CreateChatCompletionStream(
 		ctx,
 		openai.ChatCompletionRequest{
-			Model:    model,
+			Model:    modelName,
 			Messages: openaiMessages,
 			Stream:   true,
 		},
@@ -98,18 +98,18 @@ func (s *LLMService) ChatStream(ctx context.Context, messages []models.Message, 
 	return stream, nil
 }
 
-func ReadStream(stream *openai.ChatCompletionStream, ch chan<- models.StreamChunk) {
+func ReadStream(stream *openai.ChatCompletionStream, ch chan<- model.StreamChunk) {
 	defer close(ch)
 
 	for {
 		response, err := stream.Recv()
 		if err == io.EOF {
-			ch <- models.StreamChunk{Done: true}
+			ch <- model.StreamChunk{Done: true}
 			return
 		}
 
 		if err != nil {
-			ch <- models.StreamChunk{
+			ch <- model.StreamChunk{
 				Content: fmt.Sprintf("错误: %v", err),
 				Done:    true,
 			}
@@ -117,7 +117,7 @@ func ReadStream(stream *openai.ChatCompletionStream, ch chan<- models.StreamChun
 		}
 
 		if len(response.Choices) > 0 {
-			ch <- models.StreamChunk{
+			ch <- model.StreamChunk{
 				Content: response.Choices[0].Delta.Content,
 				Done:    false,
 			}
@@ -125,15 +125,15 @@ func ReadStream(stream *openai.ChatCompletionStream, ch chan<- models.StreamChun
 	}
 }
 
-type ChatResponseWithTools struct {
-	Message   models.Message
-	Usage     models.Usage
-	ToolCalls []models.ToolCall
+type ResponseWithTools struct {
+	Message   model.Message
+	Usage     model.Usage
+	ToolCalls []model.ToolCall
 }
 
-func (s *LLMService) ChatWithTools(ctx context.Context, messages []models.Message, model string, tools []models.ToolDefinition) (*ChatResponseWithTools, error) {
-	if model == "" {
-		model = openai.GPT3Dot5Turbo
+func (s *LLMService) ChatWithTools(ctx context.Context, messages []model.Message, modelName string, tools []model.ToolDefinition) (*ResponseWithTools, error) {
+	if modelName == "" {
+		modelName = openai.GPT3Dot5Turbo
 	}
 
 	openaiMessages := toOpenAIMessages(messages)
@@ -153,7 +153,7 @@ func (s *LLMService) ChatWithTools(ctx context.Context, messages []models.Messag
 	resp, err := s.client.CreateChatCompletion(
 		ctx,
 		openai.ChatCompletionRequest{
-			Model:    model,
+			Model:    modelName,
 			Messages: openaiMessages,
 			Tools:    openaiTools,
 		},
@@ -163,14 +163,14 @@ func (s *LLMService) ChatWithTools(ctx context.Context, messages []models.Messag
 		return nil, fmt.Errorf("API 调用失败: %w", err)
 	}
 
-	var toolCalls []models.ToolCall
+	var toolCalls []model.ToolCall
 	if len(resp.Choices) > 0 && resp.Choices[0].Message.ToolCalls != nil {
 		for _, tc := range resp.Choices[0].Message.ToolCalls {
 			var args map[string]interface{}
 			if err := json.Unmarshal([]byte(tc.Function.Arguments), &args); err != nil {
 				args = make(map[string]interface{})
 			}
-			toolCalls = append(toolCalls, models.ToolCall{
+			toolCalls = append(toolCalls, model.ToolCall{
 				ID:        tc.ID,
 				Name:      tc.Function.Name,
 				Arguments: args,
@@ -178,12 +178,12 @@ func (s *LLMService) ChatWithTools(ctx context.Context, messages []models.Messag
 		}
 	}
 
-	return &ChatResponseWithTools{
-		Message: models.Message{
+	return &ResponseWithTools{
+		Message: model.Message{
 			Role:    "assistant",
 			Content: resp.Choices[0].Message.Content,
 		},
-		Usage: models.Usage{
+		Usage: model.Usage{
 			PromptTokens:     resp.Usage.PromptTokens,
 			CompletionTokens: resp.Usage.CompletionTokens,
 			TotalTokens:      resp.Usage.TotalTokens,
@@ -192,9 +192,9 @@ func (s *LLMService) ChatWithTools(ctx context.Context, messages []models.Messag
 	}, nil
 }
 
-func (s *LLMService) ChatStreamWithTools(ctx context.Context, messages []models.Message, model string, tools []models.ToolDefinition) (*openai.ChatCompletionStream, error) {
-	if model == "" {
-		model = openai.GPT3Dot5Turbo
+func (s *LLMService) ChatStreamWithTools(ctx context.Context, messages []model.Message, modelName string, tools []model.ToolDefinition) (*openai.ChatCompletionStream, error) {
+	if modelName == "" {
+		modelName = openai.GPT3Dot5Turbo
 	}
 
 	openaiMessages := toOpenAIMessages(messages)
@@ -213,7 +213,7 @@ func (s *LLMService) ChatStreamWithTools(ctx context.Context, messages []models.
 	stream, err := s.client.CreateChatCompletionStream(
 		ctx,
 		openai.ChatCompletionRequest{
-			Model:    model,
+			Model:    modelName,
 			Messages: openaiMessages,
 			Tools:    openaiTools,
 			Stream:   true,

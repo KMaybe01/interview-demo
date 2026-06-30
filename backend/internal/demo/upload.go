@@ -1,4 +1,4 @@
-﻿package demo
+package demo
 
 import (
 	"crypto/sha256"
@@ -167,7 +167,7 @@ func InitUpload(c *gin.Context) {
 
 	chunkDir := filepath.Join(uploadDir, id)
 	if err := os.MkdirAll(chunkDir, 0755); err != nil {
-		c.JSON(http.StatusInternalServerError, gin.H{"error": "Failed to create chunk directory"})
+		c.JSON(http.StatusInternalServerError, gin.H{"error": "failed to create chunk directory"})
 		return
 	}
 
@@ -187,12 +187,12 @@ func InitUpload(c *gin.Context) {
 // @Success     200 {object} map[string]interface{}
 // @Failure     404 {object} map[string]interface{}
 // @Router      /upload/status/{uploadId} [get]
-func GetUploadStatus(c *gin.Context) {
+func UploadStatus(c *gin.Context) {
 	ensureUploadInit()
 	uploadID := c.Param("uploadId")
 	val, ok := uploadSessions.Load(uploadID)
 	if !ok {
-		c.JSON(http.StatusNotFound, gin.H{"error": "Upload session not found"})
+		c.JSON(http.StatusNotFound, gin.H{"error": "upload session not found"})
 		return
 	}
 	session := val.(*UploadSession)
@@ -240,19 +240,19 @@ func DownloadUpload(c *gin.Context) {
 	uploadID := c.Param("uploadId")
 	val, ok := uploadSessions.Load(uploadID)
 	if !ok {
-		c.JSON(http.StatusNotFound, gin.H{"error": "Upload session not found"})
+		c.JSON(http.StatusNotFound, gin.H{"error": "upload session not found"})
 		return
 	}
 	session := val.(*UploadSession)
 	safeName := sanitizeFilename(session.Filename)
 	if safeName == "" {
-		c.JSON(http.StatusNotFound, gin.H{"error": "Filename not found"})
+		c.JSON(http.StatusNotFound, gin.H{"error": "filename not found"})
 		return
 	}
 
 	filePath := filepath.Join(uploadDir, fmt.Sprintf("%s_%s", uploadID, safeName))
 	if _, err := os.Stat(filePath); os.IsNotExist(err) {
-		c.JSON(http.StatusNotFound, gin.H{"error": "File not found"})
+		c.JSON(http.StatusNotFound, gin.H{"error": "file not found"})
 		return
 	}
 
@@ -316,32 +316,32 @@ func UploadChunk(c *gin.Context) {
 
 	var chunkIndex int
 	if _, err := fmt.Sscanf(chunkIndexStr, "%d", &chunkIndex); err != nil {
-		c.JSON(http.StatusBadRequest, gin.H{"error": "Invalid chunk index"})
+		c.JSON(http.StatusBadRequest, gin.H{"error": "invalid chunk index"})
 		return
 	}
 
 	val, ok := uploadSessions.Load(uploadID)
 	if !ok {
-		c.JSON(http.StatusNotFound, gin.H{"error": "Upload session not found"})
+		c.JSON(http.StatusNotFound, gin.H{"error": "upload session not found"})
 		return
 	}
 	session := val.(*UploadSession)
 
 	if hash == "" {
-		c.JSON(http.StatusBadRequest, gin.H{"error": "Missing hash"})
+		c.JSON(http.StatusBadRequest, gin.H{"error": "missing hash"})
 		return
 	}
 
 	file, _, err := c.Request.FormFile("chunk")
 	if err != nil {
-		c.JSON(http.StatusBadRequest, gin.H{"error": "Missing chunk file"})
+		c.JSON(http.StatusBadRequest, gin.H{"error": "missing chunk file"})
 		return
 	}
 	defer file.Close()
 
 	chunkData, err := io.ReadAll(file)
 	if err != nil {
-		c.JSON(http.StatusInternalServerError, gin.H{"error": "Failed to read chunk"})
+		c.JSON(http.StatusInternalServerError, gin.H{"error": "failed to read chunk"})
 		return
 	}
 
@@ -349,7 +349,7 @@ func UploadChunk(c *gin.Context) {
 	serverHashStr := hex.EncodeToString(serverHash[:])
 	if serverHashStr != hash {
 		c.JSON(http.StatusBadRequest, gin.H{
-			"error":      "Hash mismatch",
+			"error":      "hash mismatch",
 			"expected":   hash,
 			"computed":   serverHashStr,
 			"chunkIndex": chunkIndex,
@@ -359,7 +359,7 @@ func UploadChunk(c *gin.Context) {
 
 	chunkPath := filepath.Join(uploadDir, uploadID, fmt.Sprintf("chunk_%d", chunkIndex))
 	if err := os.WriteFile(chunkPath, chunkData, 0644); err != nil {
-		c.JSON(http.StatusInternalServerError, gin.H{"error": "Failed to save chunk"})
+		c.JSON(http.StatusInternalServerError, gin.H{"error": "failed to save chunk"})
 		return
 	}
 
@@ -400,7 +400,7 @@ func CompleteUpload(c *gin.Context) {
 
 	val, ok := uploadSessions.Load(req.UploadID)
 	if !ok {
-		c.JSON(http.StatusNotFound, gin.H{"error": "Upload session not found"})
+		c.JSON(http.StatusNotFound, gin.H{"error": "upload session not found"})
 		return
 	}
 	session := val.(*UploadSession)
@@ -415,7 +415,7 @@ func CompleteUpload(c *gin.Context) {
 		}
 		session.mu.Unlock()
 		c.JSON(http.StatusBadRequest, gin.H{
-			"error":   "Not all chunks received",
+			"error":   "not all chunks received",
 			"missing": missing,
 		})
 		return
@@ -428,7 +428,7 @@ func CompleteUpload(c *gin.Context) {
 
 	outFile, err := os.Create(outputPath)
 	if err != nil {
-		c.JSON(http.StatusInternalServerError, gin.H{"error": "Failed to create output file"})
+		c.JSON(http.StatusInternalServerError, gin.H{"error": "failed to create output file"})
 		return
 	}
 
@@ -440,12 +440,12 @@ func CompleteUpload(c *gin.Context) {
 		chunkData, err := os.ReadFile(chunkPath)
 		if err != nil {
 			outFile.Close()
-			c.JSON(http.StatusInternalServerError, gin.H{"error": fmt.Sprintf("Failed to read chunk %d", i)})
+			c.JSON(http.StatusInternalServerError, gin.H{"error": fmt.Sprintf("failed to read chunk %d", i)})
 			return
 		}
 		if _, err := multiWriter.Write(chunkData); err != nil {
 			outFile.Close()
-			c.JSON(http.StatusInternalServerError, gin.H{"error": "Failed to write merged data"})
+			c.JSON(http.StatusInternalServerError, gin.H{"error": "failed to write merged data"})
 			return
 		}
 	}

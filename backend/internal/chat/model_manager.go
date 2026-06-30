@@ -1,4 +1,4 @@
-﻿package chat
+package chat
 
 import (
 	"context"
@@ -7,7 +7,7 @@ import (
 	"time"
 
 	"github.com/google/uuid"
-	"interview-demo/backend/internal/models"
+	"interview-demo/backend/internal/model"
 )
 
 type ModelProvider string
@@ -37,9 +37,9 @@ type ModelManager struct {
 }
 
 type ModelClient interface {
-	Chat(ctx context.Context, messages []models.Message) (string, error)
-	ChatWithTools(ctx context.Context, messages []models.Message, tools []ToolDefinition) (*ChatResponse, error)
-	GetModelInfo() ModelInfo
+	Chat(ctx context.Context, messages []model.Message) (string, error)
+	ChatWithTools(ctx context.Context, messages []model.Message, tools []ToolDefinition) (*ChatResponse, error)
+	ModelInfo() ModelInfo
 }
 
 type ToolDefinition struct {
@@ -91,7 +91,7 @@ func (m *ModelManager) RegisterModel(config *ModelConfig) {
 	m.clients[config.ID] = m.createClient(config)
 }
 
-func (m *ModelManager) GetClient(id string) (ModelClient, bool) {
+func (m *ModelManager) Client(id string) (ModelClient, bool) {
 	m.mu.RLock()
 	defer m.mu.RUnlock()
 
@@ -123,16 +123,16 @@ func (m *ModelManager) createClient(config *ModelConfig) ModelClient {
 	}
 }
 
-func (m *ModelManager) Chat(ctx context.Context, modelID string, messages []models.Message) (string, error) {
-	client, exists := m.GetClient(modelID)
+func (m *ModelManager) Chat(ctx context.Context, modelID string, messages []model.Message) (string, error) {
+	client, exists := m.Client(modelID)
 	if !exists {
 		return "", fmt.Errorf("模型 %s 不存在", modelID)
 	}
 	return client.Chat(ctx, messages)
 }
 
-func (m *ModelManager) ChatWithTools(ctx context.Context, modelID string, messages []models.Message, tools []ToolDefinition) (*ChatResponse, error) {
-	client, exists := m.GetClient(modelID)
+func (m *ModelManager) ChatWithTools(ctx context.Context, modelID string, messages []model.Message, tools []ToolDefinition) (*ChatResponse, error) {
+	client, exists := m.Client(modelID)
 	if !exists {
 		return nil, fmt.Errorf("模型 %s 不存在", modelID)
 	}
@@ -147,11 +147,11 @@ func NewOpenAIClient(config *ModelConfig) *OpenAIClient {
 	return &OpenAIClient{config: config}
 }
 
-func (c *OpenAIClient) Chat(ctx context.Context, messages []models.Message) (string, error) {
+func (c *OpenAIClient) Chat(ctx context.Context, messages []model.Message) (string, error) {
 	return fmt.Sprintf("OpenAI %s 响应: 我理解了你的请求。", c.config.ModelName), nil
 }
 
-func (c *OpenAIClient) ChatWithTools(ctx context.Context, messages []models.Message, tools []ToolDefinition) (*ChatResponse, error) {
+func (c *OpenAIClient) ChatWithTools(ctx context.Context, messages []model.Message, tools []ToolDefinition) (*ChatResponse, error) {
 	if len(tools) == 0 {
 		content, err := c.Chat(ctx, messages)
 		if err != nil {
@@ -184,7 +184,7 @@ func (c *OpenAIClient) ChatWithTools(ctx context.Context, messages []models.Mess
 	}, nil
 }
 
-func (c *OpenAIClient) GetModelInfo() ModelInfo {
+func (c *OpenAIClient) ModelInfo() ModelInfo {
 	return ModelInfo{
 		Provider:        ProviderOpenAI,
 		ModelName:       c.config.ModelName,
@@ -203,11 +203,11 @@ func NewDeepSeekClient(config *ModelConfig) *DeepSeekClient {
 	return &DeepSeekClient{config: config}
 }
 
-func (c *DeepSeekClient) Chat(ctx context.Context, messages []models.Message) (string, error) {
+func (c *DeepSeekClient) Chat(ctx context.Context, messages []model.Message) (string, error) {
 	return fmt.Sprintf("DeepSeek %s 响应: 让我来帮你分析这个问题。", c.config.ModelName), nil
 }
 
-func (c *DeepSeekClient) ChatWithTools(ctx context.Context, messages []models.Message, tools []ToolDefinition) (*ChatResponse, error) {
+func (c *DeepSeekClient) ChatWithTools(ctx context.Context, messages []model.Message, tools []ToolDefinition) (*ChatResponse, error) {
 	return &ChatResponse{
 		Content: "DeepSeek 推理中...",
 		Usage: TokenUsage{
@@ -219,7 +219,7 @@ func (c *DeepSeekClient) ChatWithTools(ctx context.Context, messages []models.Me
 	}, nil
 }
 
-func (c *DeepSeekClient) GetModelInfo() ModelInfo {
+func (c *DeepSeekClient) ModelInfo() ModelInfo {
 	return ModelInfo{
 		Provider:        ProviderDeepSeek,
 		ModelName:       c.config.ModelName,
@@ -238,11 +238,11 @@ func NewOllamaClient(config *ModelConfig) *OllamaClient {
 	return &OllamaClient{config: config}
 }
 
-func (c *OllamaClient) Chat(ctx context.Context, messages []models.Message) (string, error) {
+func (c *OllamaClient) Chat(ctx context.Context, messages []model.Message) (string, error) {
 	return fmt.Sprintf("Ollama %s 本地响应: 你好！我是本地模型。", c.config.ModelName), nil
 }
 
-func (c *OllamaClient) ChatWithTools(ctx context.Context, messages []models.Message, tools []ToolDefinition) (*ChatResponse, error) {
+func (c *OllamaClient) ChatWithTools(ctx context.Context, messages []model.Message, tools []ToolDefinition) (*ChatResponse, error) {
 	return &ChatResponse{
 		Content: "Ollama 本地模型处理中...",
 		Usage: TokenUsage{
@@ -254,7 +254,7 @@ func (c *OllamaClient) ChatWithTools(ctx context.Context, messages []models.Mess
 	}, nil
 }
 
-func (c *OllamaClient) GetModelInfo() ModelInfo {
+func (c *OllamaClient) ModelInfo() ModelInfo {
 	return ModelInfo{
 		Provider:        ProviderOllama,
 		ModelName:       c.config.ModelName,
@@ -303,13 +303,13 @@ func (s *ModelSelector) SelectModel(taskType string) string {
 	return ""
 }
 
-func (s *ModelSelector) GetModelCapabilities(modelID string) map[string]bool {
-	client, exists := s.manager.GetClient(modelID)
+func (s *ModelSelector) ModelCapabilities(modelID string) map[string]bool {
+	client, exists := s.manager.Client(modelID)
 	if !exists {
 		return nil
 	}
 
-	info := client.GetModelInfo()
+	info := client.ModelInfo()
 	return map[string]bool{
 		"tools":        info.SupportsTools,
 		"vision":       info.SupportsVision,

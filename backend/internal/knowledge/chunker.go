@@ -292,7 +292,7 @@ func NewChunkerManager() *ChunkerManager {
 	}
 }
 
-func (m *ChunkerManager) GetChunker(strategy ChunkingStrategy) *TextChunker {
+func (m *ChunkerManager) Chunker(strategy ChunkingStrategy) *TextChunker {
 	if chunker, exists := m.chunkers[strategy]; exists {
 		return chunker
 	}
@@ -301,7 +301,7 @@ func (m *ChunkerManager) GetChunker(strategy ChunkingStrategy) *TextChunker {
 
 func (m *ChunkerManager) ChunkDocument(content, mimeType string) []Chunk {
 	strategy := m.selectStrategy(mimeType)
-	chunker := m.GetChunker(strategy)
+	chunker := m.Chunker(strategy)
 	return chunker.ChunkText(content)
 }
 

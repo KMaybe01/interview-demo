@@ -1,4 +1,4 @@
-﻿package knowledge
+package knowledge
 
 import (
 	"fmt"
@@ -6,23 +6,23 @@ import (
 
 	"github.com/gin-gonic/gin"
 	"github.com/google/uuid"
-	"interview-demo/backend/internal/models"
+	"interview-demo/backend/internal/model"
 )
 
-type KnowledgeHandler struct {
+type Handler struct {
 	ragService       *RAGService
 	chunkerManager   *ChunkerManager
 	embeddingService *EmbeddingService
 	vectorDB         *VectorDatabase
 }
 
-func NewKnowledgeHandler(
+func NewHandler(
 	ragService *RAGService,
 	chunkerManager *ChunkerManager,
 	embeddingService *EmbeddingService,
 	vectorDB *VectorDatabase,
-) *KnowledgeHandler {
-	return &KnowledgeHandler{
+) *Handler {
+	return &Handler{
 		ragService:       ragService,
 		chunkerManager:   chunkerManager,
 		embeddingService: embeddingService,
@@ -41,7 +41,7 @@ func NewKnowledgeHandler(
 // @Failure     400  {object} map[string]interface{}
 // @Failure     500  {object} map[string]interface{}
 // @Router      /knowledge-base [post]
-func (h *KnowledgeHandler) CreateKnowledgeBase(c *gin.Context) {
+func (h *Handler) CreateKnowledgeBase(c *gin.Context) {
 	var req struct {
 		Name        string `json:"name" binding:"required"`
 		Description string `json:"description"`
@@ -76,7 +76,7 @@ func (h *KnowledgeHandler) CreateKnowledgeBase(c *gin.Context) {
 // @Produce     json
 // @Success     200 {object} map[string]interface{}
 // @Router      /knowledge-base [get]
-func (h *KnowledgeHandler) ListKnowledgeBases(c *gin.Context) {
+func (h *Handler) ListKnowledgeBases(c *gin.Context) {
 	kbs := h.ragService.ListKnowledgeBases()
 
 	var result []gin.H
@@ -107,16 +107,16 @@ func (h *KnowledgeHandler) ListKnowledgeBases(c *gin.Context) {
 // @Success     200 {object} map[string]interface{}
 // @Failure     404 {object} map[string]interface{}
 // @Router      /knowledge-base/{id} [get]
-func (h *KnowledgeHandler) GetKnowledgeBase(c *gin.Context) {
+func (h *Handler) KnowledgeBaseDetail(c *gin.Context) {
 	id := c.Param("id")
 
-	kb, exists := h.ragService.GetKnowledgeBase(id)
+	kb, exists := h.ragService.KnowledgeBase(id)
 	if !exists {
 		c.JSON(http.StatusNotFound, gin.H{"error": "知识库不存在"})
 		return
 	}
 
-	docs := h.ragService.GetDocuments(id)
+	docs := h.ragService.Documents(id)
 
 	c.JSON(http.StatusOK, gin.H{
 		"id":          kb.ID,
@@ -139,7 +139,7 @@ func (h *KnowledgeHandler) GetKnowledgeBase(c *gin.Context) {
 // @Success     200 {object} map[string]interface{}
 // @Failure     404 {object} map[string]interface{}
 // @Router      /knowledge-base/{id} [delete]
-func (h *KnowledgeHandler) DeleteKnowledgeBase(c *gin.Context) {
+func (h *Handler) DeleteKnowledgeBase(c *gin.Context) {
 	id := c.Param("id")
 
 	if !h.ragService.DeleteKnowledgeBase(id) {
@@ -164,7 +164,7 @@ func (h *KnowledgeHandler) DeleteKnowledgeBase(c *gin.Context) {
 // @Failure     400  {object} map[string]interface{}
 // @Failure     404  {object} map[string]interface{}
 // @Router      /knowledge-base/{id}/document [post]
-func (h *KnowledgeHandler) AddDocument(c *gin.Context) {
+func (h *Handler) AddDocument(c *gin.Context) {
 	kbID := c.Param("id")
 
 	var req struct {
@@ -179,12 +179,12 @@ func (h *KnowledgeHandler) AddDocument(c *gin.Context) {
 		return
 	}
 
-	if _, exists := h.ragService.GetKnowledgeBase(kbID); !exists {
+	if _, exists := h.ragService.KnowledgeBase(kbID); !exists {
 		c.JSON(http.StatusNotFound, gin.H{"error": "知识库不存在"})
 		return
 	}
 
-	doc := models.Document{
+	doc := model.Document{
 		ID:      uuid.New().String(),
 		Title:   req.Title,
 		Content: req.Content,
@@ -206,7 +206,7 @@ func (h *KnowledgeHandler) AddDocument(c *gin.Context) {
 			continue
 		}
 
-		err = h.vectorDB.InsertVector(kbID, result.Vector, chunk.Metadata, &models.DocumentChunk{
+		err = h.vectorDB.InsertVector(kbID, result.Vector, chunk.Metadata, &model.DocumentChunk{
 			ID:         fmt.Sprintf("%d", chunk.Index),
 			Content:    chunk.Content,
 			ChunkIndex: chunk.Index,
@@ -231,10 +231,10 @@ func (h *KnowledgeHandler) AddDocument(c *gin.Context) {
 // @Param       id path string true "知识库 ID"
 // @Success     200 {object} map[string]interface{}
 // @Router      /knowledge-base/{id}/document [get]
-func (h *KnowledgeHandler) GetDocuments(c *gin.Context) {
+func (h *Handler) KnowledgeBaseDocuments(c *gin.Context) {
 	kbID := c.Param("id")
 
-	docs := h.ragService.GetDocuments(kbID)
+	docs := h.ragService.Documents(kbID)
 
 	c.JSON(http.StatusOK, gin.H{
 		"documents": docs,
@@ -252,7 +252,7 @@ func (h *KnowledgeHandler) GetDocuments(c *gin.Context) {
 // @Success     200 {object} map[string]interface{}
 // @Failure     404 {object} map[string]interface{}
 // @Router      /knowledge-base/{id}/document/{docId} [delete]
-func (h *KnowledgeHandler) DeleteDocument(c *gin.Context) {
+func (h *Handler) DeleteDocument(c *gin.Context) {
 	kbID := c.Param("id")
 	docID := c.Param("docId")
 
@@ -276,7 +276,7 @@ func (h *KnowledgeHandler) DeleteDocument(c *gin.Context) {
 // @Failure     400  {object} map[string]interface{}
 // @Failure     404  {object} map[string]interface{}
 // @Router      /knowledge-base/{id}/documents/batch [post]
-func (h *KnowledgeHandler) BatchAddDocuments(c *gin.Context) {
+func (h *Handler) BatchAddDocuments(c *gin.Context) {
 	kbID := c.Param("id")
 
 	var req struct {
@@ -293,7 +293,7 @@ func (h *KnowledgeHandler) BatchAddDocuments(c *gin.Context) {
 		return
 	}
 
-	if _, exists := h.ragService.GetKnowledgeBase(kbID); !exists {
+	if _, exists := h.ragService.KnowledgeBase(kbID); !exists {
 		c.JSON(http.StatusNotFound, gin.H{"error": "知识库不存在"})
 		return
 	}
@@ -302,7 +302,7 @@ func (h *KnowledgeHandler) BatchAddDocuments(c *gin.Context) {
 	var addedCount, failedCount int
 
 	for _, docReq := range req.Documents {
-		doc := models.Document{
+		doc := model.Document{
 			ID:      uuid.New().String(),
 			Title:   docReq.Title,
 			Content: docReq.Content,
@@ -320,7 +320,7 @@ func (h *KnowledgeHandler) BatchAddDocuments(c *gin.Context) {
 			if err != nil {
 				continue
 			}
-			_ = h.vectorDB.InsertVector(kbID, result.Vector, chunk.Metadata, &models.DocumentChunk{
+			_ = h.vectorDB.InsertVector(kbID, result.Vector, chunk.Metadata, &model.DocumentChunk{
 				ID:         fmt.Sprintf("%d", chunk.Index),
 				Content:    chunk.Content,
 				ChunkIndex: chunk.Index,
@@ -355,7 +355,7 @@ func (h *KnowledgeHandler) BatchAddDocuments(c *gin.Context) {
 // @Success     200  {object} map[string]interface{}
 // @Failure     400  {object} map[string]interface{}
 // @Router      /knowledge-base/search [post]
-func (h *KnowledgeHandler) Search(c *gin.Context) {
+func (h *Handler) Search(c *gin.Context) {
 	var req struct {
 		Query           string `json:"query" binding:"required"`
 		KnowledgeBaseID string `json:"knowledgeBaseId"`

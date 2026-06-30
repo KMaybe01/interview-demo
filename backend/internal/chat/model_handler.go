@@ -1,4 +1,4 @@
-﻿package chat
+package chat
 
 import (
 	"context"
@@ -6,7 +6,7 @@ import (
 	"time"
 
 	"github.com/gin-gonic/gin"
-	"interview-demo/backend/internal/models"
+	"interview-demo/backend/internal/model"
 )
 
 type ModelHandler struct {
@@ -29,8 +29,8 @@ func (h *ModelHandler) ListModels(c *gin.Context) {
 
 	var result []gin.H
 	for _, config := range configs {
-		client, _ := h.manager.GetClient(config.ID)
-		info := client.GetModelInfo()
+		client, _ := h.manager.Client(config.ID)
+		info := client.ModelInfo()
 
 		result = append(result, gin.H{
 			"id":              config.ID,
@@ -59,16 +59,16 @@ func (h *ModelHandler) ListModels(c *gin.Context) {
 // @Success     200 {object} map[string]interface{}
 // @Failure     404 {object} map[string]interface{}
 // @Router      /models/{id} [get]
-func (h *ModelHandler) GetModel(c *gin.Context) {
+func (h *ModelHandler) ModelDetail(c *gin.Context) {
 	id := c.Param("id")
 
-	client, exists := h.manager.GetClient(id)
+	client, exists := h.manager.Client(id)
 	if !exists {
 		c.JSON(http.StatusNotFound, gin.H{"error": "模型不存在"})
 		return
 	}
 
-	info := client.GetModelInfo()
+	info := client.ModelInfo()
 
 	c.JSON(http.StatusOK, gin.H{
 		"provider":        info.Provider,
@@ -87,7 +87,7 @@ func (h *ModelHandler) GetModel(c *gin.Context) {
 // @Accept      json
 // @Produce     json
 // @Param       id   path string                 true "模型 ID"
-// @Param       body body  object{messages=[]models.Message} true "对话请求"
+// @Param       body body  object{messages=[]model.Message} true "对话请求"
 // @Success     200  {object} map[string]interface{}
 // @Failure     400  {object} map[string]interface{}
 // @Failure     404  {object} map[string]interface{}
@@ -97,7 +97,7 @@ func (h *ModelHandler) Chat(c *gin.Context) {
 	modelID := c.Param("id")
 
 	var req struct {
-		Messages []models.Message `json:"messages" binding:"required"`
+		Messages []model.Message `json:"messages" binding:"required"`
 	}
 
 	if err := c.ShouldBindJSON(&req); err != nil {

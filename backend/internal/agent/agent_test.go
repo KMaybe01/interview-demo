@@ -1,4 +1,4 @@
-﻿package agent
+package agent
 
 import (
 	"context"
@@ -6,38 +6,38 @@ import (
 
 	"interview-demo/backend/internal/chat"
 	"interview-demo/backend/internal/knowledge"
-	"interview-demo/backend/internal/models"
+	"interview-demo/backend/internal/model"
 )
 
-func TestAgentServiceRegisterTool(t *testing.T) {
+func TestServiceRegisterTool(t *testing.T) {
 	llm := chat.NewLLMService("")
-	s := NewAgentService(llm)
+	s := NewService(llm)
 
-	s.RegisterTool(models.Tool{
+	s.RegisterTool(model.Tool{
 		Name:        "test_tool",
 		Description: "a test tool",
 	})
 
-	tools := s.GetTools()
+	tools := s.Tools()
 	if len(tools) == 0 {
 		t.Fatal("expected at least 1 tool")
 	}
 }
 
-func TestAgentServiceGetTools(t *testing.T) {
+func TestServiceGetTools(t *testing.T) {
 	llm := chat.NewLLMService("")
-	s := NewAgentService(llm)
+	s := NewService(llm)
 
-	tools := s.GetTools()
+	tools := s.Tools()
 	if len(tools) == 0 {
 		t.Fatal("expected default tools to be registered")
 	}
 }
 
 func TestExecuteToolCalls(t *testing.T) {
-	s := NewAgentService(chat.NewLLMService(""))
+	s := NewService(chat.NewLLMService(""))
 
-	results := s.executeToolCalls(context.Background(), []models.ToolCall{
+	results := s.executeToolCalls(context.Background(), []model.ToolCall{
 		{Name: "get_current_time"},
 		{Name: "calculate", Arguments: map[string]interface{}{"expression": "2+3"}},
 		{Name: "unknown_tool"},
@@ -107,21 +107,21 @@ func TestParseArguments(t *testing.T) {
 	}
 }
 
-func TestAgentServiceToolDefinitions(t *testing.T) {
-	s := NewAgentService(chat.NewLLMService(""))
-	defs := s.GetToolDefinitions()
+func TestServiceToolDefinitions(t *testing.T) {
+	s := NewService(chat.NewLLMService(""))
+	defs := s.ToolDefinitions()
 	if len(defs) == 0 {
 		t.Fatal("expected tool definitions")
 	}
 }
 
-func TestNewEnhancedAgent(t *testing.T) {
-	a := NewEnhancedAgent("test-agent", AgentTypeReAct)
+func TestNewAgent(t *testing.T) {
+	a := NewAgent("test-agent", TypeReAct)
 	if a.Name != "test-agent" {
 		t.Errorf("expected 'test-agent', got %s", a.Name)
 	}
-	if a.Type != AgentTypeReAct {
-		t.Errorf("expected AgentTypeReAct, got %s", a.Type)
+	if a.Type != TypeReAct {
+		t.Errorf("expected TypeReAct, got %s", a.Type)
 	}
 	if a.ID == "" {
 		t.Fatal("expected non-empty ID")
@@ -131,9 +131,9 @@ func TestNewEnhancedAgent(t *testing.T) {
 	}
 }
 
-func TestEnhancedAgentRegisterTool(t *testing.T) {
-	a := NewEnhancedAgent("tool-agent", AgentTypeReAct)
-	a.RegisterTool(AgentTool{
+func TestAgentRegisterTool(t *testing.T) {
+	a := NewAgent("tool-agent", TypeReAct)
+	a.RegisterTool(Tool{
 		Name:        "hello",
 		Description: "says hello",
 	})
@@ -146,9 +146,9 @@ func TestEnhancedAgentRegisterTool(t *testing.T) {
 	}
 }
 
-func TestEnhancedAgentExecuteFunctionCalling(t *testing.T) {
-	a := NewEnhancedAgent("func-agent", AgentTypeFunction)
-	a.RegisterTool(AgentTool{
+func TestAgentExecuteFunctionCalling(t *testing.T) {
+	a := NewAgent("func-agent", TypeFunction)
+	a.RegisterTool(Tool{
 		Name:        "greet",
 		Description: "greets the user",
 		Function: func(ctx context.Context, input string) (string, error) {
@@ -165,9 +165,9 @@ func TestEnhancedAgentExecuteFunctionCalling(t *testing.T) {
 	}
 }
 
-func TestEnhancedAgentExecuteReAct(t *testing.T) {
-	a := NewEnhancedAgent("react-agent", AgentTypeReAct)
-	a.RegisterTool(AgentTool{
+func TestAgentExecuteReAct(t *testing.T) {
+	a := NewAgent("react-agent", TypeReAct)
+	a.RegisterTool(Tool{
 		Name:        "say_hello",
 		Description: "says hello",
 		Function: func(ctx context.Context, input string) (string, error) {
@@ -184,9 +184,9 @@ func TestEnhancedAgentExecuteReAct(t *testing.T) {
 	}
 }
 
-func TestEnhancedAgentGetExecutionLog(t *testing.T) {
-	a := NewEnhancedAgent("log-agent", AgentTypeReAct)
-	log := a.GetExecutionLog()
+func TestAgentGetExecutionLog(t *testing.T) {
+	a := NewAgent("log-agent", TypeReAct)
+	log := a.ExecutionLog()
 	if log == nil {
 		t.Fatal("expected non-nil log")
 	}
@@ -195,9 +195,9 @@ func TestEnhancedAgentGetExecutionLog(t *testing.T) {
 	}
 }
 
-func TestEnhancedAgentClearState(t *testing.T) {
-	a := NewEnhancedAgent("clear-agent", AgentTypeReAct)
-	a.State.Messages = append(a.State.Messages, models.Message{Role: "user", Content: "test"})
+func TestAgentClearState(t *testing.T) {
+	a := NewAgent("clear-agent", TypeReAct)
+	a.State.Messages = append(a.State.Messages, model.Message{Role: "user", Content: "test"})
 	a.ClearState()
 
 	if len(a.State.Messages) != 0 {
@@ -213,8 +213,8 @@ func TestNewRAGAgent(t *testing.T) {
 	if agent == nil {
 		t.Fatal("expected non-nil RAG agent")
 	}
-	if agent.EnhancedAgent == nil {
-		t.Fatal("expected embedded EnhancedAgent")
+	if agent.Agent == nil {
+		t.Fatal("expected embedded Agent")
 	}
 	if len(agent.Tools) == 0 {
 		t.Fatal("expected RAG agent to have tools")
@@ -224,7 +224,7 @@ func TestNewRAGAgent(t *testing.T) {
 func TestRAGAgentSearchKnowledge(t *testing.T) {
 	rag := knowledge.NewRAGService()
 	kb := rag.CreateKnowledgeBase("test", "")
-	rag.AddDocument(kb.ID, models.Document{
+	rag.AddDocument(kb.ID, model.Document{
 		Title:   "doc",
 		Content: "test content",
 	})
@@ -279,31 +279,31 @@ func TestToolCallingAgentWeather(t *testing.T) {
 	}
 }
 
-func TestAgentFactoryCreateAgent(t *testing.T) {
+func TestFactoryCreateAgent(t *testing.T) {
 	llm := chat.NewLLMService("")
 	rag := knowledge.NewRAGService()
-	f := NewAgentFactory(llm, rag)
+	f := NewFactory(llm, rag)
 
-	react := f.CreateAgent(AgentTypeReAct, "react")
-	if react.Type != AgentTypeReAct {
+	react := f.CreateAgent(TypeReAct, "react")
+	if react.Type != TypeReAct {
 		t.Errorf("expected ReAct type, got %s", react.Type)
 	}
 
-	funcAgent := f.CreateAgent(AgentTypeFunction, "func")
-	if funcAgent.Type != AgentTypeFunction {
+	funcAgent := f.CreateAgent(TypeFunction, "func")
+	if funcAgent.Type != TypeFunction {
 		t.Errorf("expected Function type, got %s", funcAgent.Type)
 	}
 
-	multi := f.CreateAgent(AgentTypeMulti, "multi")
-	if multi.Type != AgentTypeMulti {
+	multi := f.CreateAgent(TypeMulti, "multi")
+	if multi.Type != TypeMulti {
 		t.Errorf("expected Multi type, got %s", multi.Type)
 	}
 }
 
-func TestAgentFactoryCreateRAGAgent(t *testing.T) {
+func TestFactoryCreateRAGAgent(t *testing.T) {
 	llm := chat.NewLLMService("")
 	rag := knowledge.NewRAGService()
-	f := NewAgentFactory(llm, rag)
+	f := NewFactory(llm, rag)
 
 	ragAgent := f.CreateRAGAgent()
 	if ragAgent == nil {
@@ -311,10 +311,10 @@ func TestAgentFactoryCreateRAGAgent(t *testing.T) {
 	}
 }
 
-func TestAgentFactoryCreateMultiAgentSystem(t *testing.T) {
+func TestFactoryCreateMultiAgentSystem(t *testing.T) {
 	llm := chat.NewLLMService("")
 	rag := knowledge.NewRAGService()
-	f := NewAgentFactory(llm, rag)
+	f := NewFactory(llm, rag)
 
 	system := f.CreateMultiAgentSystem()
 	if system == nil {
@@ -327,8 +327,8 @@ func TestAgentFactoryCreateMultiAgentSystem(t *testing.T) {
 
 func TestMultiAgentSystemRegisterAndRoute(t *testing.T) {
 	system := NewMultiAgentSystem()
-	a1 := NewEnhancedAgent("agent1", AgentTypeReAct)
-	a2 := NewEnhancedAgent("agent2", AgentTypeReAct)
+	a1 := NewAgent("agent1", TypeReAct)
+	a2 := NewAgent("agent2", TypeReAct)
 
 	system.RegisterAgent(a1)
 	system.RegisterAgent(a2)
@@ -344,8 +344,8 @@ func TestMultiAgentSystemRegisterAndRoute(t *testing.T) {
 
 func TestMultiAgentSystemExecuteWorkflow(t *testing.T) {
 	system := NewMultiAgentSystem()
-	a := NewEnhancedAgent("wf-agent", AgentTypeReAct)
-	a.RegisterTool(AgentTool{
+	a := NewAgent("wf-agent", TypeReAct)
+	a.RegisterTool(Tool{
 		Name: "echo",
 		Function: func(ctx context.Context, input string) (string, error) {
 			return "echo: " + input, nil
@@ -365,8 +365,8 @@ func TestMultiAgentSystemExecuteWorkflow(t *testing.T) {
 }
 
 func TestBuildToolDescriptions(t *testing.T) {
-	a := NewEnhancedAgent("desc-agent", AgentTypeReAct)
-	a.RegisterTool(AgentTool{
+	a := NewAgent("desc-agent", TypeReAct)
+	a.RegisterTool(Tool{
 		Name:        "tool1",
 		Description: "desc1",
 	})

@@ -1,4 +1,4 @@
-﻿package knowledge
+package knowledge
 
 import (
 	"math"
@@ -8,29 +8,29 @@ import (
 	"time"
 
 	"github.com/google/uuid"
-	"interview-demo/backend/internal/models"
+	"interview-demo/backend/internal/model"
 )
 
 type RAGService struct {
-	knowledgeBases map[string]*models.KnowledgeBase
-	documents      map[string][]models.Document
-	chunks         map[string][]models.DocumentChunk
+	knowledgeBases map[string]*model.KnowledgeBase
+	documents      map[string][]model.Document
+	chunks         map[string][]model.DocumentChunk
 	mu             sync.RWMutex
 }
 
 func NewRAGService() *RAGService {
 	return &RAGService{
-		knowledgeBases: make(map[string]*models.KnowledgeBase),
-		documents:      make(map[string][]models.Document),
-		chunks:         make(map[string][]models.DocumentChunk),
+		knowledgeBases: make(map[string]*model.KnowledgeBase),
+		documents:      make(map[string][]model.Document),
+		chunks:         make(map[string][]model.DocumentChunk),
 	}
 }
 
-func (s *RAGService) CreateKnowledgeBase(name, description string) models.KnowledgeBase {
+func (s *RAGService) CreateKnowledgeBase(name, description string) model.KnowledgeBase {
 	s.mu.Lock()
 	defer s.mu.Unlock()
 
-	kb := models.KnowledgeBase{
+	kb := model.KnowledgeBase{
 		ID:          uuid.New().String(),
 		Name:        name,
 		Description: description,
@@ -41,13 +41,13 @@ func (s *RAGService) CreateKnowledgeBase(name, description string) models.Knowle
 	}
 
 	s.knowledgeBases[kb.ID] = &kb
-	s.documents[kb.ID] = []models.Document{}
-	s.chunks[kb.ID] = []models.DocumentChunk{}
+	s.documents[kb.ID] = []model.Document{}
+	s.chunks[kb.ID] = []model.DocumentChunk{}
 
 	return kb
 }
 
-func (s *RAGService) GetKnowledgeBase(id string) (*models.KnowledgeBase, bool) {
+func (s *RAGService) KnowledgeBase(id string) (*model.KnowledgeBase, bool) {
 	s.mu.RLock()
 	defer s.mu.RUnlock()
 
@@ -55,11 +55,11 @@ func (s *RAGService) GetKnowledgeBase(id string) (*models.KnowledgeBase, bool) {
 	return kb, exists
 }
 
-func (s *RAGService) ListKnowledgeBases() []models.KnowledgeBase {
+func (s *RAGService) ListKnowledgeBases() []model.KnowledgeBase {
 	s.mu.RLock()
 	defer s.mu.RUnlock()
 
-	var result []models.KnowledgeBase
+	var result []model.KnowledgeBase
 	for _, kb := range s.knowledgeBases {
 		result = append(result, *kb)
 	}
@@ -80,7 +80,7 @@ func (s *RAGService) DeleteKnowledgeBase(id string) bool {
 	return true
 }
 
-func (s *RAGService) AddDocument(kbID string, doc models.Document) models.Document {
+func (s *RAGService) AddDocument(kbID string, doc model.Document) model.Document {
 	s.mu.Lock()
 	defer s.mu.Unlock()
 
@@ -102,13 +102,13 @@ func (s *RAGService) AddDocument(kbID string, doc models.Document) models.Docume
 	return doc
 }
 
-func (s *RAGService) GetDocuments(kbID string) []models.Document {
+func (s *RAGService) Documents(kbID string) []model.Document {
 	s.mu.RLock()
 	defer s.mu.RUnlock()
 
 	docs := s.documents[kbID]
 	if docs == nil {
-		return []models.Document{}
+		return []model.Document{}
 	}
 	return docs
 }
@@ -128,7 +128,7 @@ func (s *RAGService) DeleteDocument(kbID, docID string) bool {
 	return false
 }
 
-func (s *RAGService) Search(query string, kbID string, topK int) models.SearchResponse {
+func (s *RAGService) Search(query string, kbID string, topK int) model.SearchResponse {
 	s.mu.RLock()
 	defer s.mu.RUnlock()
 
@@ -136,7 +136,7 @@ func (s *RAGService) Search(query string, kbID string, topK int) models.SearchRe
 		topK = 5
 	}
 
-	var allChunks []models.DocumentChunk
+	var allChunks []model.DocumentChunk
 	chunkToDoc := make(map[string]string)
 
 	if kbID != "" {
@@ -157,7 +157,7 @@ func (s *RAGService) Search(query string, kbID string, topK int) models.SearchRe
 	}
 
 	type scoredChunk struct {
-		chunk models.DocumentChunk
+		chunk model.DocumentChunk
 		score float64
 		docID string
 	}
@@ -182,7 +182,7 @@ func (s *RAGService) Search(query string, kbID string, topK int) models.SearchRe
 		topK = len(scored)
 	}
 
-	var results []models.SearchResult
+	var results []model.SearchResult
 	for i := 0; i < topK; i++ {
 		docTitle := ""
 		docSource := ""
@@ -191,7 +191,7 @@ func (s *RAGService) Search(query string, kbID string, topK int) models.SearchRe
 			docSource = doc.Source
 		}
 
-		results = append(results, models.SearchResult{
+		results = append(results, model.SearchResult{
 			Chunk:     scored[i].chunk,
 			Score:     scored[i].score,
 			DocTitle:  docTitle,
@@ -199,11 +199,11 @@ func (s *RAGService) Search(query string, kbID string, topK int) models.SearchRe
 		})
 	}
 
-	return models.SearchResponse{Results: results}
+	return model.SearchResponse{Results: results}
 }
 
-func (s *RAGService) chunkDocument(doc models.Document) []models.DocumentChunk {
-	var chunks []models.DocumentChunk
+func (s *RAGService) chunkDocument(doc model.Document) []model.DocumentChunk {
+	var chunks []model.DocumentChunk
 	content := doc.Content
 	chunkSize := 500
 	overlap := 50
@@ -214,7 +214,7 @@ func (s *RAGService) chunkDocument(doc models.Document) []models.DocumentChunk {
 			end = len(content)
 		}
 
-		chunk := models.DocumentChunk{
+		chunk := model.DocumentChunk{
 			ID:         uuid.New().String(),
 			DocumentID: doc.ID,
 			Content:    content[i:end],
@@ -299,7 +299,7 @@ func (s *RAGService) buildChunkDocMap(kbID string) map[string]string {
 
 func (s *RAGService) deleteChunksByDoc(kbID, docID string) {
 	chunks := s.chunks[kbID]
-	var newChunks []models.DocumentChunk
+	var newChunks []model.DocumentChunk
 	for _, chunk := range chunks {
 		if chunk.DocumentID != docID {
 			newChunks = append(newChunks, chunk)
@@ -338,7 +338,7 @@ func tokenizeForEmbedding(text string) []string {
 	return tokens
 }
 
-func (s *RAGService) findDocument(docID string) (models.Document, bool) {
+func (s *RAGService) findDocument(docID string) (model.Document, bool) {
 	for _, docs := range s.documents {
 		for _, doc := range docs {
 			if doc.ID == docID {
@@ -346,10 +346,10 @@ func (s *RAGService) findDocument(docID string) (models.Document, bool) {
 			}
 		}
 	}
-	return models.Document{}, false
+	return model.Document{}, false
 }
 
-func (s *RAGService) GetContextForQuery(query string, kbID string) string {
+func (s *RAGService) ContextForQuery(query string, kbID string) string {
 	response := s.Search(query, kbID, 3)
 
 	if len(response.Results) == 0 {

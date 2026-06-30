@@ -1,4 +1,4 @@
-﻿package demo
+package demo
 
 import (
 	"math"
@@ -91,7 +91,7 @@ func ReportVitals(c *gin.Context) {
 // @Produce     json
 // @Success     200 {array}  VitalsSummary
 // @Router      /vitals/summary [get]
-func GetVitalsSummary(c *gin.Context) {
+func VitalsSummaryReport(c *gin.Context) {
 	vitalsMu.RLock()
 	defer vitalsMu.RUnlock()
 
@@ -147,7 +147,7 @@ func GetVitalsSummary(c *gin.Context) {
 // @Produce     json
 // @Success     200 {object} map[string]interface{} "按 metric 分组的历史点阵"
 // @Router      /vitals/history [get]
-func GetVitalsHistory(c *gin.Context) {
+func VitalsHistory(c *gin.Context) {
 	vitalsMu.RLock()
 	defer vitalsMu.RUnlock()
 
@@ -293,7 +293,7 @@ type pageAcc struct {
 // @Produce     json
 // @Success     200 {array}  PageSummary
 // @Router      /vitals/pages [get]
-func GetPageSummary(c *gin.Context) {
+func PageSummaryReport(c *gin.Context) {
 	pageMu.RLock()
 	defer pageMu.RUnlock()
 
@@ -363,7 +363,7 @@ func GetPageSummary(c *gin.Context) {
 // @Produce     json
 // @Success     200 {object} map[string]interface{} "按 path 分组的历史点阵"
 // @Router      /vitals/page-history [get]
-func GetPageHistory(c *gin.Context) {
+func PageHistory(c *gin.Context) {
 	pageMu.RLock()
 	defer pageMu.RUnlock()
 

@@ -1,4 +1,4 @@
-﻿package demo
+package demo
 
 import (
 	"net/http"
@@ -13,7 +13,7 @@ func TestGetGISPoints_DefaultCount(t *testing.T) {
 	c, _ := gin.CreateTestContext(w)
 	c.Request = httptest.NewRequest(http.MethodGet, "/api/gis/points", nil)
 
-	GetGISPoints(c)
+	GISPoints(c)
 
 	if w.Code != http.StatusOK {
 		t.Fatalf("expected 200, got %d", w.Code)
@@ -31,7 +31,7 @@ func TestGetGISPoints_CustomCount(t *testing.T) {
 	c, _ := gin.CreateTestContext(w)
 	c.Request = httptest.NewRequest(http.MethodGet, "/api/gis/points?count=10", nil)
 
-	GetGISPoints(c)
+	GISPoints(c)
 
 	if w.Code != http.StatusOK {
 		t.Fatalf("expected 200, got %d", w.Code)
@@ -49,7 +49,7 @@ func TestGetGISPoints_ExceedsLimit(t *testing.T) {
 	c, _ := gin.CreateTestContext(w)
 	c.Request = httptest.NewRequest(http.MethodGet, "/api/gis/points?count=600000", nil)
 
-	GetGISPoints(c)
+	GISPoints(c)
 
 	if w.Code != http.StatusOK {
 		t.Fatalf("expected 200, got %d", w.Code)
@@ -67,7 +67,7 @@ func TestGetGISPoints_InvalidCount(t *testing.T) {
 	c, _ := gin.CreateTestContext(w)
 	c.Request = httptest.NewRequest(http.MethodGet, "/api/gis/points?count=abc", nil)
 
-	GetGISPoints(c)
+	GISPoints(c)
 
 	if w.Code != http.StatusOK {
 		t.Fatalf("expected 200, got %d", w.Code)
@@ -85,7 +85,7 @@ func TestGetGISPoints_NegativeCount(t *testing.T) {
 	c, _ := gin.CreateTestContext(w)
 	c.Request = httptest.NewRequest(http.MethodGet, "/api/gis/points?count=-5", nil)
 
-	GetGISPoints(c)
+	GISPoints(c)
 
 	if w.Code != http.StatusOK {
 		t.Fatalf("expected 200, got %d", w.Code)

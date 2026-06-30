@@ -1191,7 +1191,7 @@ const docTemplate = `{
                                 "messages": {
                                     "type": "array",
                                     "items": {
-                                        "$ref": "#/definitions/models.Message"
+                                        "$ref": "#/definitions/model.Message"
                                     }
                                 }
                             }
@@ -1255,7 +1255,7 @@ const docTemplate = `{
                         "in": "body",
                         "required": true,
                         "schema": {
-                            "$ref": "#/definitions/payment.PaymentRequest"
+                            "$ref": "#/definitions/payment.Request"
                         }
                     }
                 ],
@@ -1480,7 +1480,7 @@ const docTemplate = `{
                         "in": "body",
                         "required": true,
                         "schema": {
-                            "$ref": "#/definitions/payment.RetryDemoRequest"
+                            "$ref": "#/definitions/payment.DemoRequest"
                         }
                     }
                 ],
@@ -1520,7 +1520,7 @@ const docTemplate = `{
                         "in": "body",
                         "required": true,
                         "schema": {
-                            "$ref": "#/definitions/payment.SecurityCheckRequest"
+                            "$ref": "#/definitions/payment.CheckRequest"
                         }
                     }
                 ],
@@ -2602,7 +2602,7 @@ const docTemplate = `{
                 }
             }
         },
-        "models.Message": {
+        "model.Message": {
             "type": "object",
             "required": [
                 "content",
@@ -2629,32 +2629,7 @@ const docTemplate = `{
                 }
             }
         },
-        "payment.PaymentRequest": {
-            "type": "object",
-            "properties": {
-                "amount": {
-                    "type": "integer"
-                },
-                "channel": {
-                    "type": "string"
-                },
-                "idempotencyKey": {
-                    "type": "string"
-                },
-                "orderNo": {
-                    "type": "string"
-                }
-            }
-        },
-        "payment.RetryDemoRequest": {
-            "type": "object",
-            "properties": {
-                "maxRetries": {
-                    "type": "integer"
-                }
-            }
-        },
-        "payment.SecurityCheckRequest": {
+        "payment.CheckRequest": {
             "type": "object",
             "properties": {
                 "amount": {
@@ -2667,6 +2642,31 @@ const docTemplate = `{
                     "type": "string"
                 },
                 "sign": {
+                    "type": "string"
+                }
+            }
+        },
+        "payment.DemoRequest": {
+            "type": "object",
+            "properties": {
+                "maxRetries": {
+                    "type": "integer"
+                }
+            }
+        },
+        "payment.Request": {
+            "type": "object",
+            "properties": {
+                "amount": {
+                    "type": "integer"
+                },
+                "channel": {
+                    "type": "string"
+                },
+                "idempotencyKey": {
+                    "type": "string"
+                },
+                "orderNo": {
                     "type": "string"
                 }
             }

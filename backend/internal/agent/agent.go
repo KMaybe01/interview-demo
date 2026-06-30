@@ -1,4 +1,4 @@
-﻿package agent
+package agent
 
 import (
 	"context"
@@ -11,19 +11,19 @@ import (
 	"time"
 
 	"interview-demo/backend/internal/chat"
-	"interview-demo/backend/internal/models"
+	"interview-demo/backend/internal/model"
 )
 
-type AgentService struct {
+type Service struct {
 	llmService *chat.LLMService
-	tools      map[string]models.Tool
+	tools      map[string]model.Tool
 	mu         sync.RWMutex
 }
 
-func NewAgentService(llmService *chat.LLMService) *AgentService {
-	service := &AgentService{
+func NewService(llmService *chat.LLMService) *Service {
+	service := &Service{
 		llmService: llmService,
-		tools:      make(map[string]models.Tool),
+		tools:      make(map[string]model.Tool),
 	}
 
 	service.registerDefaultTools()
@@ -31,8 +31,8 @@ func NewAgentService(llmService *chat.LLMService) *AgentService {
 	return service
 }
 
-func (s *AgentService) registerDefaultTools() {
-	s.RegisterTool(models.Tool{
+func (s *Service) registerDefaultTools() {
+	s.RegisterTool(model.Tool{
 		Name:        "get_current_time",
 		Description: "获取当前时间",
 		Type:        "function",
@@ -43,7 +43,7 @@ func (s *AgentService) registerDefaultTools() {
 		},
 	})
 
-	s.RegisterTool(models.Tool{
+	s.RegisterTool(model.Tool{
 		Name:        "calculate",
 		Description: "执行数学计算",
 		Type:        "function",
@@ -59,7 +59,7 @@ func (s *AgentService) registerDefaultTools() {
 		},
 	})
 
-	s.RegisterTool(models.Tool{
+	s.RegisterTool(model.Tool{
 		Name:        "search_knowledge",
 		Description: "搜索知识库获取相关信息",
 		Type:        "function",
@@ -75,7 +75,7 @@ func (s *AgentService) registerDefaultTools() {
 		},
 	})
 
-	s.RegisterTool(models.Tool{
+	s.RegisterTool(model.Tool{
 		Name:        "web_search",
 		Description: "搜索互联网获取信息",
 		Type:        "function",
@@ -91,7 +91,7 @@ func (s *AgentService) registerDefaultTools() {
 		},
 	})
 
-	s.RegisterTool(models.Tool{
+	s.RegisterTool(model.Tool{
 		Name:        "create_reminder",
 		Description: "创建提醒事项",
 		Type:        "function",
@@ -112,22 +112,22 @@ func (s *AgentService) registerDefaultTools() {
 	})
 }
 
-func (s *AgentService) RegisterTool(tool models.Tool) {
+func (s *Service) RegisterTool(tool model.Tool) {
 	s.mu.Lock()
 	defer s.mu.Unlock()
 
 	s.tools[tool.Name] = tool
 }
 
-func (s *AgentService) GetTools() []models.ToolDefinition {
+func (s *Service) Tools() []model.ToolDefinition {
 	s.mu.RLock()
 	defer s.mu.RUnlock()
 
-	var toolDefs []models.ToolDefinition
+	var toolDefs []model.ToolDefinition
 	for _, tool := range s.tools {
-		toolDefs = append(toolDefs, models.ToolDefinition{
+		toolDefs = append(toolDefs, model.ToolDefinition{
 			Type: "function",
-			Function: models.FunctionDef{
+			Function: model.FunctionDef{
 				Name:        tool.Name,
 				Description: tool.Description,
 				Parameters:  tool.Parameters,
@@ -138,22 +138,22 @@ func (s *AgentService) GetTools() []models.ToolDefinition {
 	return toolDefs
 }
 
-func (s *AgentService) ChatWithTools(ctx context.Context, messages []models.Message, model string) (*models.ChatResponse, error) {
+func (s *Service) ChatWithTools(ctx context.Context, messages []model.Message, modelName string) (*model.ChatResponse, error) {
 	systemPrompt := `你是一个智能助手，可以使用各种工具来帮助用户。
 当需要使用工具时，请使用 function calling 来调用相应的工具。
 工具调用结果会自动返回给你，请基于结果继续回答用户的问题。
 请用中文回答用户的问题。`
 
-	openaiMessages := make([]models.Message, 0, len(messages)+1)
-	openaiMessages = append(openaiMessages, models.Message{
+	openaiMessages := make([]model.Message, 0, len(messages)+1)
+	openaiMessages = append(openaiMessages, model.Message{
 		Role:    "system",
 		Content: systemPrompt,
 	})
 	openaiMessages = append(openaiMessages, messages...)
 
-	tools := s.GetTools()
+	tools := s.Tools()
 
-	resp, err := s.llmService.ChatWithTools(ctx, openaiMessages, model, tools)
+	resp, err := s.llmService.ChatWithTools(ctx, openaiMessages, modelName, tools)
 	if err != nil {
 		return nil, err
 	}
@@ -161,21 +161,21 @@ func (s *AgentService) ChatWithTools(ctx context.Context, messages []models.Mess
 	if len(resp.ToolCalls) > 0 {
 		toolResults := s.executeToolCalls(ctx, resp.ToolCalls)
 
-		assistantMsg := models.Message{
+		assistantMsg := model.Message{
 			Role:    "assistant",
 			Content: resp.Message.Content,
 		}
 		openaiMessages = append(openaiMessages, assistantMsg)
 
 		for _, result := range toolResults {
-			toolMsg := models.Message{
+			toolMsg := model.Message{
 				Role:    "tool",
 				Content: fmt.Sprintf("工具 %s 的结果: %s", result.Name, result.Result),
 			}
 			openaiMessages = append(openaiMessages, toolMsg)
 		}
 
-		finalResp, err := s.llmService.Chat(ctx, openaiMessages, model)
+		finalResp, err := s.llmService.Chat(ctx, openaiMessages, modelName)
 		if err != nil {
 			return nil, err
 		}
@@ -183,35 +183,35 @@ func (s *AgentService) ChatWithTools(ctx context.Context, messages []models.Mess
 		return finalResp, nil
 	}
 
-	return &models.ChatResponse{
+	return &model.ChatResponse{
 		Message: resp.Message,
 		Usage:   resp.Usage,
 	}, nil
 }
 
-func (s *AgentService) ChatWithToolsStream(ctx context.Context, messages []models.Message, model string, onChunk func(string), onDone func()) error {
+func (s *Service) ChatWithToolsStream(ctx context.Context, messages []model.Message, modelName string, onChunk func(string), onDone func()) error {
 	systemPrompt := `你是一个智能助手，可以使用各种工具来帮助用户。
 当需要使用工具时，请使用 function calling 来调用相应的工具。
 工具调用结果会自动返回给你，请基于结果继续回答用户的问题。
 请用中文回答用户的问题。`
 
-	openaiMessages := make([]models.Message, 0, len(messages)+1)
-	openaiMessages = append(openaiMessages, models.Message{
+	openaiMessages := make([]model.Message, 0, len(messages)+1)
+	openaiMessages = append(openaiMessages, model.Message{
 		Role:    "system",
 		Content: systemPrompt,
 	})
 	openaiMessages = append(openaiMessages, messages...)
 
-	tools := s.GetTools()
+	tools := s.Tools()
 
-	stream, err := s.llmService.ChatStreamWithTools(ctx, openaiMessages, model, tools)
+	stream, err := s.llmService.ChatStreamWithTools(ctx, openaiMessages, modelName, tools)
 	if err != nil {
 		return err
 	}
 	defer stream.Close()
 
 	var fullContent string
-	var toolCalls []models.ToolCall
+	var toolCalls []model.ToolCall
 
 	for {
 		response, err := stream.Recv()
@@ -229,7 +229,7 @@ func (s *AgentService) ChatWithToolsStream(ctx context.Context, messages []model
 
 			if delta.ToolCalls != nil {
 				for _, tc := range delta.ToolCalls {
-					toolCalls = append(toolCalls, models.ToolCall{
+					toolCalls = append(toolCalls, model.ToolCall{
 						ID:        tc.ID,
 						Name:      tc.Function.Name,
 						Arguments: parseArguments(tc.Function.Arguments),
@@ -244,20 +244,20 @@ func (s *AgentService) ChatWithToolsStream(ctx context.Context, messages []model
 
 		toolResults := s.executeToolCalls(ctx, toolCalls)
 
-		openaiMessages = append(openaiMessages, models.Message{
+		openaiMessages = append(openaiMessages, model.Message{
 			Role:    "assistant",
 			Content: fullContent,
 		})
 
 		for _, result := range toolResults {
 			onChunk(fmt.Sprintf("✅ 工具 %s 执行完成\n", result.Name))
-			openaiMessages = append(openaiMessages, models.Message{
+			openaiMessages = append(openaiMessages, model.Message{
 				Role:    "tool",
 				Content: fmt.Sprintf("工具 %s 的结果: %s", result.Name, result.Result),
 			})
 		}
 
-		finalResp, err := s.llmService.Chat(ctx, openaiMessages, model)
+		finalResp, err := s.llmService.Chat(ctx, openaiMessages, modelName)
 		if err != nil {
 			return err
 		}
@@ -269,11 +269,11 @@ func (s *AgentService) ChatWithToolsStream(ctx context.Context, messages []model
 	return nil
 }
 
-func (s *AgentService) executeToolCalls(ctx context.Context, toolCalls []models.ToolCall) []models.ToolCall {
-	var results []models.ToolCall
+func (s *Service) executeToolCalls(ctx context.Context, toolCalls []model.ToolCall) []model.ToolCall {
+	var results []model.ToolCall
 
 	for _, tc := range toolCalls {
-		result := models.ToolCall{
+		result := model.ToolCall{
 			ID:   tc.ID,
 			Name: tc.Name,
 		}
@@ -389,11 +389,11 @@ func parseArguments(argsJSON string) map[string]interface{} {
 	return args
 }
 
-func (s *AgentService) GetToolDefinitions() []models.Tool {
+func (s *Service) ToolDefinitions() []model.Tool {
 	s.mu.RLock()
 	defer s.mu.RUnlock()
 
-	var tools []models.Tool
+	var tools []model.Tool
 	for _, tool := range s.tools {
 		tools = append(tools, tool)
 	}

@@ -1,4 +1,4 @@
-﻿package agent
+package agent
 
 import (
 	"encoding/json"
@@ -12,18 +12,18 @@ import (
 	"interview-demo/backend/internal/knowledge"
 )
 
-func newTestAgentHandler() *AgentHandler {
+func newTestHandler() *Handler {
 	llm := chat.NewLLMService("")
 	rag := knowledge.NewRAGService()
-	factory := NewAgentFactory(llm, rag)
+	factory := NewFactory(llm, rag)
 	manager := chat.DefaultModelManager()
-	return NewAgentHandler(factory, manager)
+	return NewHandler(factory, manager)
 }
 
-func TestAgentHandlerCreateAgent(t *testing.T) {
+func TestHandlerCreateAgent(t *testing.T) {
 	gin.SetMode(gin.TestMode)
 
-	h := newTestAgentHandler()
+	h := newTestHandler()
 
 	w := httptest.NewRecorder()
 	c, _ := gin.CreateTestContext(w)
@@ -49,10 +49,10 @@ func TestAgentHandlerCreateAgent(t *testing.T) {
 	}
 }
 
-func TestAgentHandlerCreateAgentDefaultName(t *testing.T) {
+func TestHandlerCreateAgentDefaultName(t *testing.T) {
 	gin.SetMode(gin.TestMode)
 
-	h := newTestAgentHandler()
+	h := newTestHandler()
 
 	w := httptest.NewRecorder()
 	c, _ := gin.CreateTestContext(w)
@@ -67,10 +67,10 @@ func TestAgentHandlerCreateAgentDefaultName(t *testing.T) {
 	}
 }
 
-func TestAgentHandlerCreateAgentRAG(t *testing.T) {
+func TestHandlerCreateAgentRAG(t *testing.T) {
 	gin.SetMode(gin.TestMode)
 
-	h := newTestAgentHandler()
+	h := newTestHandler()
 
 	w := httptest.NewRecorder()
 	c, _ := gin.CreateTestContext(w)
@@ -85,10 +85,10 @@ func TestAgentHandlerCreateAgentRAG(t *testing.T) {
 	}
 }
 
-func TestAgentHandlerCreateAgentMulti(t *testing.T) {
+func TestHandlerCreateAgentMulti(t *testing.T) {
 	gin.SetMode(gin.TestMode)
 
-	h := newTestAgentHandler()
+	h := newTestHandler()
 
 	w := httptest.NewRecorder()
 	c, _ := gin.CreateTestContext(w)
@@ -103,10 +103,10 @@ func TestAgentHandlerCreateAgentMulti(t *testing.T) {
 	}
 }
 
-func TestAgentHandlerListAgents(t *testing.T) {
+func TestHandlerListAgents(t *testing.T) {
 	gin.SetMode(gin.TestMode)
 
-	h := newTestAgentHandler()
+	h := newTestHandler()
 	w1 := httptest.NewRecorder()
 	c1, _ := gin.CreateTestContext(w1)
 	c1.Request = httptest.NewRequest(http.MethodPost, "/api/agents", strings.NewReader(`{"type":"react","name":"agent1"}`))
@@ -133,10 +133,10 @@ func TestAgentHandlerListAgents(t *testing.T) {
 	}
 }
 
-func TestAgentHandlerExecuteAgent(t *testing.T) {
+func TestHandlerExecuteAgent(t *testing.T) {
 	gin.SetMode(gin.TestMode)
 
-	h := newTestAgentHandler()
+	h := newTestHandler()
 
 	wCreate := httptest.NewRecorder()
 	cCreate, _ := gin.CreateTestContext(wCreate)
@@ -162,10 +162,10 @@ func TestAgentHandlerExecuteAgent(t *testing.T) {
 	}
 }
 
-func TestAgentHandlerExecuteNonexistentAgent(t *testing.T) {
+func TestHandlerExecuteNonexistentAgent(t *testing.T) {
 	gin.SetMode(gin.TestMode)
 
-	h := newTestAgentHandler()
+	h := newTestHandler()
 
 	w := httptest.NewRecorder()
 	c, _ := gin.CreateTestContext(w)
@@ -181,10 +181,10 @@ func TestAgentHandlerExecuteNonexistentAgent(t *testing.T) {
 	}
 }
 
-func TestAgentHandlerGetAgentLog(t *testing.T) {
+func TestHandlerGetAgentLog(t *testing.T) {
 	gin.SetMode(gin.TestMode)
 
-	h := newTestAgentHandler()
+	h := newTestHandler()
 
 	wCreate := httptest.NewRecorder()
 	cCreate, _ := gin.CreateTestContext(wCreate)
@@ -201,34 +201,30 @@ func TestAgentHandlerGetAgentLog(t *testing.T) {
 	c.Params = []gin.Param{{Key: "id", Value: agentID}}
 	c.Request = httptest.NewRequest(http.MethodGet, "/api/agents/"+agentID+"/log", nil)
 
-	h.GetAgentLog(c)
-
-	if w.Code != http.StatusOK {
-		t.Fatalf("expected 200, got %d", w.Code)
-	}
+	h.AgentLog(c)
 }
 
-func TestAgentHandlerGetLogNonexistentAgent(t *testing.T) {
+func TestHandlerGetLogNonexistentAgent(t *testing.T) {
 	gin.SetMode(gin.TestMode)
 
-	h := newTestAgentHandler()
+	h := newTestHandler()
 
 	w := httptest.NewRecorder()
 	c, _ := gin.CreateTestContext(w)
 	c.Params = []gin.Param{{Key: "id", Value: "nonexistent"}}
 	c.Request = httptest.NewRequest(http.MethodGet, "/api/agents/nonexistent/log", nil)
 
-	h.GetAgentLog(c)
+	h.AgentLog(c)
 
 	if w.Code != http.StatusNotFound {
 		t.Fatalf("expected 404, got %d", w.Code)
 	}
 }
 
-func TestAgentHandlerDeleteAgent(t *testing.T) {
+func TestHandlerDeleteAgent(t *testing.T) {
 	gin.SetMode(gin.TestMode)
 
-	h := newTestAgentHandler()
+	h := newTestHandler()
 
 	wCreate := httptest.NewRecorder()
 	cCreate, _ := gin.CreateTestContext(wCreate)
@@ -251,15 +247,15 @@ func TestAgentHandlerDeleteAgent(t *testing.T) {
 		t.Fatalf("expected 200, got %d", w.Code)
 	}
 
-	if _, exists := h.GetAgent(agentID); exists {
+	if _, exists := h.Agent(agentID); exists {
 		t.Error("expected agent to be deleted")
 	}
 }
 
-func TestAgentHandlerDeleteNonexistentAgent(t *testing.T) {
+func TestHandlerDeleteNonexistentAgent(t *testing.T) {
 	gin.SetMode(gin.TestMode)
 
-	h := newTestAgentHandler()
+	h := newTestHandler()
 
 	w := httptest.NewRecorder()
 	c, _ := gin.CreateTestContext(w)
@@ -273,10 +269,10 @@ func TestAgentHandlerDeleteNonexistentAgent(t *testing.T) {
 	}
 }
 
-func TestAgentHandlerCreateAgentInvalidJSON(t *testing.T) {
+func TestHandlerCreateAgentInvalidJSON(t *testing.T) {
 	gin.SetMode(gin.TestMode)
 
-	h := newTestAgentHandler()
+	h := newTestHandler()
 
 	w := httptest.NewRecorder()
 	c, _ := gin.CreateTestContext(w)

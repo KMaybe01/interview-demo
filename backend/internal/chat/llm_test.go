@@ -1,11 +1,11 @@
-﻿package chat
+package chat
 
 import (
 	"context"
 	"testing"
 
 	openai "github.com/sashabaranov/go-openai"
-	"interview-demo/backend/internal/models"
+	"interview-demo/backend/internal/model"
 )
 
 func TestLLMServiceChatWithEmptyKey(t *testing.T) {
@@ -17,7 +17,7 @@ func TestLLMServiceChatWithEmptyKey(t *testing.T) {
 }
 
 func TestToOpenAIMessages(t *testing.T) {
-	msgs := []models.Message{
+	msgs := []model.Message{
 		{Role: "system", Content: "sys"},
 		{Role: "user", Content: "usr"},
 		{Role: "assistant", Content: "ast"},
@@ -40,8 +40,8 @@ func TestToOpenAIMessages(t *testing.T) {
 func TestReadStreamClosedChannel(t *testing.T) {
 	// Create a channel and immediately close it to test ReadStream behavior
 	// Since we can't easily create a real stream, we test the pattern
-	ch := make(chan models.StreamChunk, 1)
-	ch <- models.StreamChunk{Done: true}
+	ch := make(chan model.StreamChunk, 1)
+	ch <- model.StreamChunk{Done: true}
 	close(ch)
 
 	count := 0
@@ -60,13 +60,13 @@ func TestDefaultModelDefaults(t *testing.T) {
 	}
 }
 
-func TestChatResponseWithToolsDefaults(t *testing.T) {
-	r := &ChatResponseWithTools{
-		Message: models.Message{
+func TestResponseWithToolsDefaults(t *testing.T) {
+	r := &ResponseWithTools{
+		Message: model.Message{
 			Role:    "assistant",
 			Content: "test",
 		},
-		ToolCalls: []models.ToolCall{
+		ToolCalls: []model.ToolCall{
 			{ID: "call1", Name: "test_tool", Arguments: map[string]interface{}{"key": "val"}},
 		},
 	}
@@ -85,7 +85,7 @@ func TestChatResponseWithToolsDefaults(t *testing.T) {
 func TestChatErrorHandling(t *testing.T) {
 	// LLMService with empty key should still return valid struct
 	s := NewLLMService("")
-	resp, err := s.Chat(context.Background(), []models.Message{
+	resp, err := s.Chat(context.Background(), []model.Message{
 		{Role: "user", Content: "hello"},
 	}, "gpt-3.5-turbo")
 
@@ -96,10 +96,10 @@ func TestChatErrorHandling(t *testing.T) {
 }
 
 func TestToolDefinitionConversion(t *testing.T) {
-	tools := []models.ToolDefinition{
+	tools := []model.ToolDefinition{
 		{
 			Type: "function",
-			Function: models.FunctionDef{
+			Function: model.FunctionDef{
 				Name:        "test",
 				Description: "a test tool",
 				Parameters: map[string]interface{}{

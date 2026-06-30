@@ -1,4 +1,4 @@
-﻿package agent
+package agent
 
 import (
 	"context"
@@ -10,89 +10,89 @@ import (
 	"github.com/google/uuid"
 	"interview-demo/backend/internal/chat"
 	"interview-demo/backend/internal/knowledge"
-	"interview-demo/backend/internal/models"
+	"interview-demo/backend/internal/model"
 )
 
-type AgentType string
+type Type string
 
 const (
-	AgentTypeReAct    AgentType = "react"
-	AgentTypeFunction AgentType = "function"
-	AgentTypeMulti    AgentType = "multi"
+	TypeReAct    Type = "react"
+	TypeFunction Type = "function"
+	TypeMulti    Type = "multi"
 )
 
-type AgentTool struct {
+type Tool struct {
 	Name        string                 `json:"name"`
 	Description string                 `json:"description"`
 	Parameters  map[string]interface{} `json:"parameters"`
 	Function    func(ctx context.Context, input string) (string, error)
 }
 
-type AgentStep struct {
+type Step struct {
 	Thought     string `json:"thought"`
 	Action      string `json:"action"`
 	ActionInput string `json:"action_input"`
 	Observation string `json:"observation"`
 }
 
-type AgentState struct {
-	Messages    []models.Message `json:"messages"`
-	Steps       []AgentStep      `json:"steps"`
-	FinalAnswer string           `json:"final_answer,omitempty"`
-	MaxSteps    int              `json:"max_steps"`
+type State struct {
+	Messages    []model.Message `json:"messages"`
+	Steps       []Step          `json:"steps"`
+	FinalAnswer string          `json:"final_answer,omitempty"`
+	MaxSteps    int             `json:"max_steps"`
 }
 
-type EnhancedAgent struct {
-	ID           string      `json:"id"`
-	Name         string      `json:"name"`
-	Type         AgentType   `json:"type"`
-	Tools        []AgentTool `json:"tools"`
-	SystemPrompt string      `json:"system_prompt"`
-	MaxSteps     int         `json:"max_steps"`
-	State        *AgentState `json:"state"`
+type Agent struct {
+	ID           string `json:"id"`
+	Name         string `json:"name"`
+	Type         Type   `json:"type"`
+	Tools        []Tool `json:"tools"`
+	SystemPrompt string `json:"system_prompt"`
+	MaxSteps     int    `json:"max_steps"`
+	State        *State `json:"state"`
 	mu           sync.RWMutex
 }
 
-func NewEnhancedAgent(name string, agentType AgentType) *EnhancedAgent {
-	return &EnhancedAgent{
+func NewAgent(name string, agentType Type) *Agent {
+	return &Agent{
 		ID:       uuid.New().String(),
 		Name:     name,
 		Type:     agentType,
-		Tools:    make([]AgentTool, 0),
+		Tools:    make([]Tool, 0),
 		MaxSteps: 10,
-		State: &AgentState{
-			Messages: make([]models.Message, 0),
-			Steps:    make([]AgentStep, 0),
+		State: &State{
+			Messages: make([]model.Message, 0),
+			Steps:    make([]Step, 0),
 			MaxSteps: 10,
 		},
 	}
 }
 
-func (a *EnhancedAgent) RegisterTool(tool AgentTool) {
+func (a *Agent) RegisterTool(tool Tool) {
 	a.mu.Lock()
 	defer a.mu.Unlock()
 	a.Tools = append(a.Tools, tool)
 }
 
-func (a *EnhancedAgent) Execute(ctx context.Context, input string) (string, error) {
+func (a *Agent) Execute(ctx context.Context, input string) (string, error) {
 	a.mu.Lock()
 	defer a.mu.Unlock()
 
-	a.State.Messages = append(a.State.Messages, models.Message{
+	a.State.Messages = append(a.State.Messages, model.Message{
 		ID:        uuid.New().String(),
 		Role:      "user",
 		Content:   input,
 		CreatedAt: time.Now(),
 	})
 
-	if a.Type == AgentTypeReAct {
+	if a.Type == TypeReAct {
 		return a.executeReAct(ctx, input)
 	}
 
 	return a.executeFunctionCalling(ctx, input)
 }
 
-func (a *EnhancedAgent) executeReAct(ctx context.Context, input string) (string, error) {
+func (a *Agent) executeReAct(ctx context.Context, input string) (string, error) {
 	state := a.State
 
 	for step := 0; step < state.MaxSteps; step++ {
@@ -102,7 +102,7 @@ func (a *EnhancedAgent) executeReAct(ctx context.Context, input string) (string,
 
 		if action == "Final Answer" {
 			state.FinalAnswer = actionInput
-			state.Steps = append(state.Steps, AgentStep{
+			state.Steps = append(state.Steps, Step{
 				Thought:     thought,
 				Action:      action,
 				ActionInput: actionInput,
@@ -115,7 +115,7 @@ func (a *EnhancedAgent) executeReAct(ctx context.Context, input string) (string,
 			observation = fmt.Sprintf("工具执行错误: %v", err)
 		}
 
-		state.Steps = append(state.Steps, AgentStep{
+		state.Steps = append(state.Steps, Step{
 			Thought:     thought,
 			Action:      action,
 			ActionInput: actionInput,
@@ -127,7 +127,7 @@ func (a *EnhancedAgent) executeReAct(ctx context.Context, input string) (string,
 		}
 	}
 
-	a.State.Messages = append(a.State.Messages, models.Message{
+	a.State.Messages = append(a.State.Messages, model.Message{
 		ID:        uuid.New().String(),
 		Role:      "assistant",
 		Content:   state.FinalAnswer,
@@ -137,7 +137,7 @@ func (a *EnhancedAgent) executeReAct(ctx context.Context, input string) (string,
 	return state.FinalAnswer, nil
 }
 
-func (a *EnhancedAgent) executeFunctionCalling(ctx context.Context, input string) (string, error) {
+func (a *Agent) executeFunctionCalling(ctx context.Context, input string) (string, error) {
 	for _, tool := range a.Tools {
 		if strings.Contains(input, tool.Name) || strings.Contains(input, tool.Description) {
 			result, err := tool.Function(ctx, input)
@@ -151,14 +151,14 @@ func (a *EnhancedAgent) executeFunctionCalling(ctx context.Context, input string
 	return "我可以帮你处理这个请求。请提供更多信息。", nil
 }
 
-func (a *EnhancedAgent) generateThought(input string, state *AgentState) string {
+func (a *Agent) generateThought(input string, state *State) string {
 	if len(state.Steps) == 0 {
 		return fmt.Sprintf("用户请求: %s。我需要分析这个请求并选择合适的工具来处理。", input)
 	}
 	return "我已经收集了足够的信息，现在可以给出最终答案。"
 }
 
-func (a *EnhancedAgent) selectTool(thought, input string) (string, string) {
+func (a *Agent) selectTool(thought, input string) (string, string) {
 	for _, tool := range a.Tools {
 		if strings.Contains(input, tool.Name) ||
 			strings.Contains(strings.ToLower(input), strings.ToLower(tool.Name)) {
@@ -168,7 +168,7 @@ func (a *EnhancedAgent) selectTool(thought, input string) (string, string) {
 	return "Final Answer", "我可以帮你处理这个请求。"
 }
 
-func (a *EnhancedAgent) executeTool(ctx context.Context, toolName, input string) (string, error) {
+func (a *Agent) executeTool(ctx context.Context, toolName, input string) (string, error) {
 	for _, tool := range a.Tools {
 		if tool.Name == toolName {
 			return tool.Function(ctx, input)
@@ -177,7 +177,7 @@ func (a *EnhancedAgent) executeTool(ctx context.Context, toolName, input string)
 	return "", fmt.Errorf("工具 %s 不存在", toolName)
 }
 
-func (a *EnhancedAgent) buildToolDescriptions() string {
+func (a *Agent) buildToolDescriptions() string {
 	var descriptions []string
 	for _, tool := range a.Tools {
 		descriptions = append(descriptions, fmt.Sprintf("- %s: %s", tool.Name, tool.Description))
@@ -185,40 +185,40 @@ func (a *EnhancedAgent) buildToolDescriptions() string {
 	return strings.Join(descriptions, "\n")
 }
 
-func (a *EnhancedAgent) GetExecutionLog() []AgentStep {
+func (a *Agent) ExecutionLog() []Step {
 	a.mu.RLock()
 	defer a.mu.RUnlock()
 	return a.State.Steps
 }
 
-func (a *EnhancedAgent) ClearState() {
+func (a *Agent) ClearState() {
 	a.mu.Lock()
 	defer a.mu.Unlock()
-	a.State = &AgentState{
-		Messages: make([]models.Message, 0),
-		Steps:    make([]AgentStep, 0),
+	a.State = &State{
+		Messages: make([]model.Message, 0),
+		Steps:    make([]Step, 0),
 		MaxSteps: a.MaxSteps,
 	}
 }
 
 type MultiAgentSystem struct {
-	Agents map[string]*EnhancedAgent
+	Agents map[string]*Agent
 	mu     sync.RWMutex
 }
 
 func NewMultiAgentSystem() *MultiAgentSystem {
 	return &MultiAgentSystem{
-		Agents: make(map[string]*EnhancedAgent),
+		Agents: make(map[string]*Agent),
 	}
 }
 
-func (s *MultiAgentSystem) RegisterAgent(agent *EnhancedAgent) {
+func (s *MultiAgentSystem) RegisterAgent(agent *Agent) {
 	s.mu.Lock()
 	defer s.mu.Unlock()
 	s.Agents[agent.ID] = agent
 }
 
-func (s *MultiAgentSystem) RouteMessage(input string) *EnhancedAgent {
+func (s *MultiAgentSystem) RouteMessage(input string) *Agent {
 	s.mu.RLock()
 	defer s.mu.RUnlock()
 
@@ -261,21 +261,21 @@ type WorkflowStep struct {
 }
 
 type RAGAgent struct {
-	*EnhancedAgent
+	*Agent
 	ragService *knowledge.RAGService
 	llmService *chat.LLMService
 }
 
 func NewRAGAgent(ragService *knowledge.RAGService, llmService *chat.LLMService) *RAGAgent {
-	agent := NewEnhancedAgent("RAG智能体", AgentTypeReAct)
+	agent := NewAgent("RAG智能体", TypeReAct)
 
 	ragAgent := &RAGAgent{
-		EnhancedAgent: agent,
-		ragService:    ragService,
-		llmService:    llmService,
+		Agent:      agent,
+		ragService: ragService,
+		llmService: llmService,
 	}
 
-	ragAgent.RegisterTool(AgentTool{
+	ragAgent.RegisterTool(Tool{
 		Name:        "search_knowledge",
 		Description: "搜索知识库获取相关信息",
 		Parameters: map[string]interface{}{
@@ -287,7 +287,7 @@ func NewRAGAgent(ragService *knowledge.RAGService, llmService *chat.LLMService) 
 		Function: ragAgent.searchKnowledge,
 	})
 
-	ragAgent.RegisterTool(AgentTool{
+	ragAgent.RegisterTool(Tool{
 		Name:        "generate_answer",
 		Description: "基于检索结果生成回答",
 		Parameters: map[string]interface{}{
@@ -334,19 +334,19 @@ func (a *RAGAgent) generateAnswer(ctx context.Context, input string) (string, er
 }
 
 type ToolCallingAgent struct {
-	*EnhancedAgent
+	*Agent
 	llmService *chat.LLMService
 }
 
 func NewToolCallingAgent(llmService *chat.LLMService) *ToolCallingAgent {
-	agent := NewEnhancedAgent("工具调用智能体", AgentTypeFunction)
+	agent := NewAgent("工具调用智能体", TypeFunction)
 
 	toolAgent := &ToolCallingAgent{
-		EnhancedAgent: agent,
-		llmService:    llmService,
+		Agent:      agent,
+		llmService: llmService,
 	}
 
-	toolAgent.RegisterTool(AgentTool{
+	toolAgent.RegisterTool(Tool{
 		Name:        "calculator",
 		Description: "数学计算器",
 		Parameters: map[string]interface{}{
@@ -358,7 +358,7 @@ func NewToolCallingAgent(llmService *chat.LLMService) *ToolCallingAgent {
 		Function: toolAgent.calculator,
 	})
 
-	toolAgent.RegisterTool(AgentTool{
+	toolAgent.RegisterTool(Tool{
 		Name:        "weather",
 		Description: "查询天气",
 		Parameters: map[string]interface{}{
@@ -381,43 +381,43 @@ func (a *ToolCallingAgent) getWeather(ctx context.Context, input string) (string
 	return fmt.Sprintf("%s 当前天气: 晴, 温度: 25°C", input), nil
 }
 
-type AgentFactory struct {
+type Factory struct {
 	llmService *chat.LLMService
 	ragService *knowledge.RAGService
 }
 
-func NewAgentFactory(llmService *chat.LLMService, ragService *knowledge.RAGService) *AgentFactory {
-	return &AgentFactory{
+func NewFactory(llmService *chat.LLMService, ragService *knowledge.RAGService) *Factory {
+	return &Factory{
 		llmService: llmService,
 		ragService: ragService,
 	}
 }
 
-func (f *AgentFactory) CreateAgent(agentType AgentType, name string) *EnhancedAgent {
+func (f *Factory) CreateAgent(agentType Type, name string) *Agent {
 	switch agentType {
-	case AgentTypeReAct:
-		return NewEnhancedAgent(name, AgentTypeReAct)
-	case AgentTypeFunction:
-		return NewToolCallingAgent(f.llmService).EnhancedAgent
-	case AgentTypeMulti:
-		return NewEnhancedAgent(name, AgentTypeMulti)
+	case TypeReAct:
+		return NewAgent(name, TypeReAct)
+	case TypeFunction:
+		return NewToolCallingAgent(f.llmService).Agent
+	case TypeMulti:
+		return NewAgent(name, TypeMulti)
 	default:
-		return NewEnhancedAgent(name, AgentTypeReAct)
+		return NewAgent(name, TypeReAct)
 	}
 }
 
-func (f *AgentFactory) CreateRAGAgent() *RAGAgent {
+func (f *Factory) CreateRAGAgent() *RAGAgent {
 	return NewRAGAgent(f.ragService, f.llmService)
 }
 
-func (f *AgentFactory) CreateMultiAgentSystem() *MultiAgentSystem {
+func (f *Factory) CreateMultiAgentSystem() *MultiAgentSystem {
 	system := NewMultiAgentSystem()
 
 	ragAgent := f.CreateRAGAgent()
-	searchAgent := f.CreateAgent(AgentTypeFunction, "搜索助手")
-	analysisAgent := f.CreateAgent(AgentTypeReAct, "分析助手")
+	searchAgent := f.CreateAgent(TypeFunction, "搜索助手")
+	analysisAgent := f.CreateAgent(TypeReAct, "分析助手")
 
-	system.RegisterAgent(ragAgent.EnhancedAgent)
+	system.RegisterAgent(ragAgent.Agent)
 	system.RegisterAgent(searchAgent)
 	system.RegisterAgent(analysisAgent)
 

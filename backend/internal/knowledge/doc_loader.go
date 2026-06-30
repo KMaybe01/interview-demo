@@ -7,7 +7,7 @@ import (
 	"strings"
 
 	"github.com/google/uuid"
-	"interview-demo/backend/internal/models"
+	"interview-demo/backend/internal/model"
 )
 
 type DocLoader struct {
@@ -121,7 +121,7 @@ func (l *DocLoader) loadDirAsKB(dirPath, dirName string) (*LoadResult, error) {
 
 func (l *DocLoader) loadFilesAsKB(mdFiles []string, basePath, kbName, kbDesc string) (*LoadResult, error) {
 	existingKBs := l.ragService.ListKnowledgeBases()
-	var kb models.KnowledgeBase
+	var kb model.KnowledgeBase
 	for _, existing := range existingKBs {
 		if existing.Name == kbName {
 			kb = existing
@@ -153,7 +153,7 @@ func (l *DocLoader) loadFilesAsKB(mdFiles []string, basePath, kbName, kbDesc str
 
 		mimeType := "text/markdown"
 
-		doc := models.Document{
+		doc := model.Document{
 			ID:      uuid.New().String(),
 			Title:   title,
 			Content: string(content),
@@ -173,7 +173,7 @@ func (l *DocLoader) loadFilesAsKB(mdFiles []string, basePath, kbName, kbDesc str
 				fmt.Printf("⚠️  生成嵌入失败 [%s]: %v\n", title, err)
 				continue
 			}
-			_ = l.vectorDB.InsertVector(kb.ID, result.Vector, chunk.Metadata, &models.DocumentChunk{
+			_ = l.vectorDB.InsertVector(kb.ID, result.Vector, chunk.Metadata, &model.DocumentChunk{
 				ID:         fmt.Sprintf("%d", chunk.Index),
 				Content:    chunk.Content,
 				ChunkIndex: chunk.Index,

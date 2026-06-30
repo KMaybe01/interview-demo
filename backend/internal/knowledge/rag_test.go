@@ -1,9 +1,9 @@
-﻿package knowledge
+package knowledge
 
 import (
 	"testing"
 
-	"interview-demo/backend/internal/models"
+	"interview-demo/backend/internal/model"
 )
 
 func TestCreateAndGetKnowledgeBase(t *testing.T) {
@@ -17,7 +17,7 @@ func TestCreateAndGetKnowledgeBase(t *testing.T) {
 		t.Errorf("expected name 'test-kb', got %s", kb.Name)
 	}
 
-	got, exists := s.GetKnowledgeBase(kb.ID)
+	got, exists := s.KnowledgeBase(kb.ID)
 	if !exists {
 		t.Fatal("expected knowledge base to exist")
 	}
@@ -28,7 +28,7 @@ func TestCreateAndGetKnowledgeBase(t *testing.T) {
 
 func TestGetNonexistentKnowledgeBase(t *testing.T) {
 	s := NewRAGService()
-	_, exists := s.GetKnowledgeBase("nonexistent")
+	_, exists := s.KnowledgeBase("nonexistent")
 	if exists {
 		t.Fatal("expected nonexistent KB to return false")
 	}
@@ -62,7 +62,7 @@ func TestAddAndGetDocument(t *testing.T) {
 	s := NewRAGService()
 	kb := s.CreateKnowledgeBase("docs", "")
 
-	doc := s.AddDocument(kb.ID, models.Document{
+	doc := s.AddDocument(kb.ID, model.Document{
 		Title:   "test doc",
 		Content: "this is test content for the document",
 	})
@@ -70,7 +70,7 @@ func TestAddAndGetDocument(t *testing.T) {
 		t.Fatal("expected non-empty document ID")
 	}
 
-	docs := s.GetDocuments(kb.ID)
+	docs := s.Documents(kb.ID)
 	if len(docs) != 1 {
 		t.Fatalf("expected 1 document, got %d", len(docs))
 	}
@@ -79,7 +79,7 @@ func TestAddAndGetDocument(t *testing.T) {
 func TestDeleteDocument(t *testing.T) {
 	s := NewRAGService()
 	kb := s.CreateKnowledgeBase("del-doc", "")
-	doc := s.AddDocument(kb.ID, models.Document{Title: "doc", Content: "content"})
+	doc := s.AddDocument(kb.ID, model.Document{Title: "doc", Content: "content"})
 
 	if !s.DeleteDocument(kb.ID, doc.ID) {
 		t.Fatal("expected delete to succeed")
@@ -92,8 +92,8 @@ func TestDeleteDocument(t *testing.T) {
 func TestSearch(t *testing.T) {
 	s := NewRAGService()
 	kb := s.CreateKnowledgeBase("search", "")
-	s.AddDocument(kb.ID, models.Document{Title: "weather", Content: "today is sunny and warm"})
-	s.AddDocument(kb.ID, models.Document{Title: "news", Content: "breaking news alert"})
+	s.AddDocument(kb.ID, model.Document{Title: "weather", Content: "today is sunny and warm"})
+	s.AddDocument(kb.ID, model.Document{Title: "news", Content: "breaking news alert"})
 
 	results := s.Search("sunny", kb.ID, 5)
 	if len(results.Results) == 0 {
@@ -105,8 +105,8 @@ func TestSearchAcrossAll(t *testing.T) {
 	s := NewRAGService()
 	kb1 := s.CreateKnowledgeBase("kb1", "")
 	kb2 := s.CreateKnowledgeBase("kb2", "")
-	s.AddDocument(kb1.ID, models.Document{Title: "doc1", Content: "alpha content"})
-	s.AddDocument(kb2.ID, models.Document{Title: "doc2", Content: "beta content"})
+	s.AddDocument(kb1.ID, model.Document{Title: "doc1", Content: "alpha content"})
+	s.AddDocument(kb2.ID, model.Document{Title: "doc2", Content: "beta content"})
 
 	results := s.Search("alpha", "", 5)
 	if len(results.Results) == 0 {
@@ -117,9 +117,9 @@ func TestSearchAcrossAll(t *testing.T) {
 func TestGetContextForQuery(t *testing.T) {
 	s := NewRAGService()
 	kb := s.CreateKnowledgeBase("ctx", "")
-	s.AddDocument(kb.ID, models.Document{Title: "info", Content: "relevant information here"})
+	s.AddDocument(kb.ID, model.Document{Title: "info", Content: "relevant information here"})
 
-	ctx := s.GetContextForQuery("relevant", kb.ID)
+	ctx := s.ContextForQuery("relevant", kb.ID)
 	if ctx == "" {
 		t.Fatal("expected non-empty context")
 	}
@@ -127,7 +127,7 @@ func TestGetContextForQuery(t *testing.T) {
 		t.Errorf("expected context to contain 'relevant', got %s", ctx)
 	}
 
-	empty := s.GetContextForQuery("zzzzz", kb.ID)
+	empty := s.ContextForQuery("zzzzz", kb.ID)
 	if empty != "" {
 		t.Fatal("expected empty context for no match")
 	}

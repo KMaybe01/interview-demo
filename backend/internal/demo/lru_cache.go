@@ -1,4 +1,4 @@
-﻿package demo
+package demo
 
 import (
 	"fmt"
@@ -46,7 +46,7 @@ var logSources = []string{"api-gateway", "user-svc", "order-svc", "payment-svc",
 // @Security    Bearer
 // @Success     200 {object} map[string]interface{}
 // @Router      /services [get]
-func GetServices(c *gin.Context) {
+func Services(c *gin.Context) {
 	services := make([]ServiceItem, 30)
 	for i := range 30 {
 		services[i] = ServiceItem{
@@ -69,7 +69,7 @@ func GetServices(c *gin.Context) {
 // @Security    Bearer
 // @Success     200 {object} map[string]interface{}
 // @Router      /config [get]
-func GetConfig(c *gin.Context) {
+func Config(c *gin.Context) {
 	ts := time.Now().UnixMilli()
 	cfg := ConfigData{
 		ClusterName: "prod-cluster-" + fmt.Sprintf("%04d", ts%10000),
@@ -88,7 +88,7 @@ func GetConfig(c *gin.Context) {
 // @Security    Bearer
 // @Success     200 {object} map[string]interface{}
 // @Router      /logs [get]
-func GetLogs(c *gin.Context) {
+func Logs(c *gin.Context) {
 	now := time.Now()
 	logs := make([]LogEntry, 200)
 	for i := range 200 {

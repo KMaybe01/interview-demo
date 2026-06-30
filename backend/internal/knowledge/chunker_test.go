@@ -75,7 +75,7 @@ func TestChunkerEmptyInput(t *testing.T) {
 
 func TestChunkerManager(t *testing.T) {
 	m := NewChunkerManager()
-	if m.GetChunker("invalid") == nil {
+	if m.Chunker("invalid") == nil {
 		t.Fatal("expected default chunker for unknown strategy")
 	}
 }

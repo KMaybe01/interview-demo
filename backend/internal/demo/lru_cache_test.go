@@ -1,4 +1,4 @@
-﻿package demo
+package demo
 
 import (
 	"net/http"
@@ -13,7 +13,7 @@ func TestGetServices(t *testing.T) {
 	c, _ := gin.CreateTestContext(w)
 	c.Request = httptest.NewRequest(http.MethodGet, "/api/services", nil)
 
-	GetServices(c)
+	Services(c)
 
 	if w.Code != http.StatusOK {
 		t.Fatalf("expected 200, got %d", w.Code)
@@ -35,7 +35,7 @@ func TestGetConfig(t *testing.T) {
 	c, _ := gin.CreateTestContext(w)
 	c.Request = httptest.NewRequest(http.MethodGet, "/api/config", nil)
 
-	GetConfig(c)
+	Config(c)
 
 	if w.Code != http.StatusOK {
 		t.Fatalf("expected 200, got %d", w.Code)
@@ -59,7 +59,7 @@ func TestGetLogs(t *testing.T) {
 	c, _ := gin.CreateTestContext(w)
 	c.Request = httptest.NewRequest(http.MethodGet, "/api/logs", nil)
 
-	GetLogs(c)
+	Logs(c)
 
 	if w.Code != http.StatusOK {
 		t.Fatalf("expected 200, got %d", w.Code)

@@ -1,4 +1,4 @@
-﻿package demo
+package demo
 
 import (
 	"net/http"
@@ -65,7 +65,7 @@ func TestGetVitalsSummary_Empty(t *testing.T) {
 	c, _ := gin.CreateTestContext(w)
 	c.Request = httptest.NewRequest(http.MethodGet, "/api/vitals/summary", nil)
 
-	GetVitalsSummary(c)
+	VitalsSummaryReport(c)
 
 	if w.Code != http.StatusOK {
 		t.Fatalf("expected 200, got %d", w.Code)
@@ -90,7 +90,7 @@ func TestGetVitalsSummary_WithData(t *testing.T) {
 	c, _ := gin.CreateTestContext(w)
 	c.Request = httptest.NewRequest(http.MethodGet, "/api/vitals/summary", nil)
 
-	GetVitalsSummary(c)
+	VitalsSummaryReport(c)
 
 	if w.Code != http.StatusOK {
 		t.Fatalf("expected 200, got %d", w.Code)
@@ -112,7 +112,7 @@ func TestGetVitalsHistory(t *testing.T) {
 	c, _ := gin.CreateTestContext(w)
 	c.Request = httptest.NewRequest(http.MethodGet, "/api/vitals/history", nil)
 
-	GetVitalsHistory(c)
+	VitalsHistory(c)
 
 	if w.Code != http.StatusOK {
 		t.Fatalf("expected 200, got %d", w.Code)
@@ -172,7 +172,7 @@ func TestGetPageSummary_Empty(t *testing.T) {
 	c, _ := gin.CreateTestContext(w)
 	c.Request = httptest.NewRequest(http.MethodGet, "/api/vitals/pages", nil)
 
-	GetPageSummary(c)
+	PageSummaryReport(c)
 
 	if w.Code != http.StatusOK {
 		t.Fatalf("expected 200, got %d", w.Code)
@@ -196,7 +196,7 @@ func TestGetPageSummary_WithData(t *testing.T) {
 	c, _ := gin.CreateTestContext(w)
 	c.Request = httptest.NewRequest(http.MethodGet, "/api/vitals/pages", nil)
 
-	GetPageSummary(c)
+	PageSummaryReport(c)
 
 	if w.Code != http.StatusOK {
 		t.Fatalf("expected 200, got %d", w.Code)
@@ -227,7 +227,7 @@ func TestGetPageHistory(t *testing.T) {
 	c, _ := gin.CreateTestContext(w)
 	c.Request = httptest.NewRequest(http.MethodGet, "/api/vitals/page-history", nil)
 
-	GetPageHistory(c)
+	PageHistory(c)
 
 	if w.Code != http.StatusOK {
 		t.Fatalf("expected 200, got %d", w.Code)

@@ -1,4 +1,4 @@
-﻿package demo
+package demo
 
 import (
 	"fmt"
@@ -303,7 +303,7 @@ func formatFloat(f float64) string {
 // @Security    Bearer
 // @Success     200 {object} map[string]interface{}
 // @Router      /schema/config [get]
-func GetSchemaConfig(c *gin.Context) {
+func SchemaConfig(c *gin.Context) {
 	c.JSON(http.StatusOK, gin.H{
 		"schema": gin.H{
 			"type": "tabs",

@@ -1,4 +1,4 @@
-﻿package knowledge
+package knowledge
 
 import (
 	"encoding/json"
@@ -9,7 +9,7 @@ import (
 	"time"
 
 	"github.com/google/uuid"
-	"interview-demo/backend/internal/models"
+	"interview-demo/backend/internal/model"
 )
 
 var ErrCollectionNotFound = errors.New("collection not found")
@@ -111,7 +111,7 @@ type VectorEntry struct {
 	ID       string
 	Vector   []float64
 	Metadata map[string]interface{}
-	Document *models.DocumentChunk
+	Document *model.DocumentChunk
 }
 
 func NewVectorDatabase() *VectorDatabase {
@@ -152,7 +152,7 @@ func (db *VectorDatabase) DeleteCollection(id string) bool {
 	return true
 }
 
-func (db *VectorDatabase) GetCollection(id string) (*Collection, bool) {
+func (db *VectorDatabase) Collection(id string) (*Collection, bool) {
 	db.mu.RLock()
 	defer db.mu.RUnlock()
 
@@ -160,7 +160,7 @@ func (db *VectorDatabase) GetCollection(id string) (*Collection, bool) {
 	return collection, exists
 }
 
-func (db *VectorDatabase) InsertVector(collectionID string, vector []float64, metadata map[string]interface{}, chunk *models.DocumentChunk) error {
+func (db *VectorDatabase) InsertVector(collectionID string, vector []float64, metadata map[string]interface{}, chunk *model.DocumentChunk) error {
 	db.mu.Lock()
 	defer db.mu.Unlock()
 
@@ -229,7 +229,7 @@ type SearchResultItem struct {
 	ID       string
 	Score    float64
 	Metadata map[string]interface{}
-	Chunk    *models.DocumentChunk
+	Chunk    *model.DocumentChunk
 }
 
 func cosineSimilarity(a, b []float64) float64 {

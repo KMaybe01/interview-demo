@@ -1,4 +1,4 @@
-﻿package chat
+package chat
 
 import (
 	"context"
@@ -11,7 +11,7 @@ import (
 	"github.com/gin-gonic/gin"
 	"interview-demo/backend/internal/knowledge"
 	"interview-demo/backend/internal/memory"
-	"interview-demo/backend/internal/models"
+	"interview-demo/backend/internal/model"
 )
 
 type mockAgent struct{}
@@ -20,11 +20,11 @@ func (m *mockAgent) Execute(_ context.Context, _ string) (string, error) {
 	return "agent response", nil
 }
 
-func newTestChatHandler() *ChatHandler {
+func newTestHandler() *Handler {
 	llm := NewLLMService("")
-	mem := memory.NewMemoryService()
+	mem := memory.NewService()
 	rag := knowledge.NewRAGService()
-	return NewChatHandler(llm, mem, rag,
+	return NewHandler(llm, mem, rag,
 		func(id string) AgentExecutor {
 			return &mockAgent{}
 		},
@@ -34,10 +34,10 @@ func newTestChatHandler() *ChatHandler {
 	)
 }
 
-func TestChatHandlerChatWithAgent(t *testing.T) {
+func TestHandlerChatWithAgent(t *testing.T) {
 	gin.SetMode(gin.TestMode)
 
-	h := newTestChatHandler()
+	h := newTestHandler()
 
 	w := httptest.NewRecorder()
 	c, _ := gin.CreateTestContext(w)
@@ -60,10 +60,10 @@ func TestChatHandlerChatWithAgent(t *testing.T) {
 	}
 }
 
-func TestChatHandlerChatWithAgentByID(t *testing.T) {
+func TestHandlerChatWithAgentByID(t *testing.T) {
 	gin.SetMode(gin.TestMode)
 
-	h := newTestChatHandler()
+	h := newTestHandler()
 
 	w := httptest.NewRecorder()
 	c, _ := gin.CreateTestContext(w)
@@ -78,10 +78,10 @@ func TestChatHandlerChatWithAgentByID(t *testing.T) {
 	}
 }
 
-func TestChatHandlerChatInvalidJSON(t *testing.T) {
+func TestHandlerChatInvalidJSON(t *testing.T) {
 	gin.SetMode(gin.TestMode)
 
-	h := newTestChatHandler()
+	h := newTestHandler()
 
 	w := httptest.NewRecorder()
 	c, _ := gin.CreateTestContext(w)
@@ -95,19 +95,19 @@ func TestChatHandlerChatInvalidJSON(t *testing.T) {
 	}
 }
 
-func TestChatHandlerGetHistory(t *testing.T) {
+func TestHandlerGetHistory(t *testing.T) {
 	gin.SetMode(gin.TestMode)
 
-	h := newTestChatHandler()
+	h := newTestHandler()
 
-	h.memoryService.Add("hist-conv", models.Message{Role: "user", Content: "hi"})
+	h.memoryService.Add("hist-conv", model.Message{Role: "user", Content: "hi"})
 
 	w := httptest.NewRecorder()
 	c, _ := gin.CreateTestContext(w)
 	c.Params = []gin.Param{{Key: "conversationId", Value: "hist-conv"}}
 	c.Request = httptest.NewRequest(http.MethodGet, "/api/chat/hist-conv/history", nil)
 
-	h.GetHistory(c)
+	h.History(c)
 
 	if w.Code != http.StatusOK {
 		t.Fatalf("expected 200, got %d: %s", w.Code, w.Body.String())
@@ -123,12 +123,12 @@ func TestChatHandlerGetHistory(t *testing.T) {
 	}
 }
 
-func TestChatHandlerClearHistory(t *testing.T) {
+func TestHandlerClearHistory(t *testing.T) {
 	gin.SetMode(gin.TestMode)
 
-	h := newTestChatHandler()
+	h := newTestHandler()
 
-	h.memoryService.Add("clear-conv", models.Message{Role: "user", Content: "test"})
+	h.memoryService.Add("clear-conv", model.Message{Role: "user", Content: "test"})
 
 	w := httptest.NewRecorder()
 	c, _ := gin.CreateTestContext(w)
@@ -141,16 +141,16 @@ func TestChatHandlerClearHistory(t *testing.T) {
 		t.Fatalf("expected 200, got %d", w.Code)
 	}
 
-	history := h.memoryService.GetHistory("clear-conv", 10)
+	history := h.memoryService.History("clear-conv", 10)
 	if len(history) != 0 {
 		t.Error("expected empty history after clear")
 	}
 }
 
-func TestChatHandlerChatStream(t *testing.T) {
+func TestHandlerChatStream(t *testing.T) {
 	gin.SetMode(gin.TestMode)
 
-	h := newTestChatHandler()
+	h := newTestHandler()
 
 	w := httptest.NewRecorder()
 	c, _ := gin.CreateTestContext(w)
@@ -172,10 +172,10 @@ func TestChatHandlerChatStream(t *testing.T) {
 	}
 }
 
-func TestChatHandlerNewConversationID(t *testing.T) {
+func TestHandlerNewConversationID(t *testing.T) {
 	gin.SetMode(gin.TestMode)
 
-	h := newTestChatHandler()
+	h := newTestHandler()
 
 	w := httptest.NewRecorder()
 	c, _ := gin.CreateTestContext(w)
@@ -194,12 +194,12 @@ func TestChatHandlerNewConversationID(t *testing.T) {
 	}
 }
 
-func TestChatHandlerWithKnowledgeBase(t *testing.T) {
+func TestHandlerWithKnowledgeBase(t *testing.T) {
 	gin.SetMode(gin.TestMode)
 
-	h := newTestChatHandler()
+	h := newTestHandler()
 	kb := h.ragService.CreateKnowledgeBase("test-kb", "")
-	h.ragService.AddDocument(kb.ID, models.Document{Title: "test", Content: "test content for RAG"})
+	h.ragService.AddDocument(kb.ID, model.Document{Title: "test", Content: "test content for RAG"})
 
 	w := httptest.NewRecorder()
 	c, _ := gin.CreateTestContext(w)
@@ -214,13 +214,13 @@ func TestChatHandlerWithKnowledgeBase(t *testing.T) {
 	}
 }
 
-func TestChatHandlerDefaultModelFailsWithoutAPIKey(t *testing.T) {
+func TestHandlerDefaultModelFailsWithoutAPIKey(t *testing.T) {
 	gin.SetMode(gin.TestMode)
 
 	llm := NewLLMService("")
-	mem := memory.NewMemoryService()
+	mem := memory.NewService()
 	rag := knowledge.NewRAGService()
-	h := NewChatHandler(llm, mem, rag, nil, nil)
+	h := NewHandler(llm, mem, rag, nil, nil)
 
 	w := httptest.NewRecorder()
 	c, _ := gin.CreateTestContext(w)
@@ -235,10 +235,10 @@ func TestChatHandlerDefaultModelFailsWithoutAPIKey(t *testing.T) {
 	}
 }
 
-func TestChatHandlerWithConversationID(t *testing.T) {
+func TestHandlerWithConversationID(t *testing.T) {
 	gin.SetMode(gin.TestMode)
 
-	h := newTestChatHandler()
+	h := newTestHandler()
 
 	w := httptest.NewRecorder()
 	c, _ := gin.CreateTestContext(w)

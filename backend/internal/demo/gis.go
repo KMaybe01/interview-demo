@@ -1,4 +1,4 @@
-﻿package demo
+package demo
 
 import (
 	"math"
@@ -23,7 +23,7 @@ type Point struct {
 // @Param       count query int false "点数 (1-500000)" default(100000)
 // @Success     200 {object} map[string]interface{}
 // @Router      /gis/points [get]
-func GetGISPoints(c *gin.Context) {
+func GISPoints(c *gin.Context) {
 	countStr := c.DefaultQuery("count", "100000")
 	count, err := strconv.Atoi(countStr)
 	if err != nil || count <= 0 || count > 500000 {

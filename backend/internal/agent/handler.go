@@ -1,4 +1,4 @@
-﻿package agent
+package agent
 
 import (
 	"context"
@@ -10,18 +10,18 @@ import (
 	"interview-demo/backend/internal/chat"
 )
 
-type AgentHandler struct {
-	factory *AgentFactory
+type Handler struct {
+	factory *Factory
 	manager *chat.ModelManager
-	agents  map[string]*EnhancedAgent
+	agents  map[string]*Agent
 	mu      sync.RWMutex
 }
 
-func NewAgentHandler(factory *AgentFactory, manager *chat.ModelManager) *AgentHandler {
-	return &AgentHandler{
+func NewHandler(factory *Factory, manager *chat.ModelManager) *Handler {
+	return &Handler{
 		factory: factory,
 		manager: manager,
-		agents:  make(map[string]*EnhancedAgent),
+		agents:  make(map[string]*Agent),
 	}
 }
 
@@ -32,7 +32,7 @@ func NewAgentHandler(factory *AgentFactory, manager *chat.ModelManager) *AgentHa
 // @Produce     json
 // @Success     200 {object} map[string]interface{}
 // @Router      /agents [get]
-func (h *AgentHandler) ListAgents(c *gin.Context) {
+func (h *Handler) ListAgents(c *gin.Context) {
 	h.mu.RLock()
 	defer h.mu.RUnlock()
 
@@ -63,7 +63,7 @@ func (h *AgentHandler) ListAgents(c *gin.Context) {
 // @Success     201  {object} map[string]interface{}
 // @Failure     400  {object} map[string]interface{}
 // @Router      /agents [post]
-func (h *AgentHandler) CreateAgent(c *gin.Context) {
+func (h *Handler) CreateAgent(c *gin.Context) {
 	var req struct {
 		Type string `json:"type"`
 		Name string `json:"name"`
@@ -78,19 +78,19 @@ func (h *AgentHandler) CreateAgent(c *gin.Context) {
 		req.Name = "智能助手"
 	}
 
-	var agt *EnhancedAgent
+	var agt *Agent
 	switch req.Type {
 	case "react":
-		agt = h.factory.CreateAgent(AgentTypeReAct, req.Name)
+		agt = h.factory.CreateAgent(TypeReAct, req.Name)
 	case "function":
-		agt = h.factory.CreateAgent(AgentTypeFunction, req.Name)
+		agt = h.factory.CreateAgent(TypeFunction, req.Name)
 	case "multi":
-		agt = h.factory.CreateAgent(AgentTypeMulti, req.Name)
+		agt = h.factory.CreateAgent(TypeMulti, req.Name)
 	case "rag":
 		ragAgent := h.factory.CreateRAGAgent()
-		agt = ragAgent.EnhancedAgent
+		agt = ragAgent.Agent
 	default:
-		agt = h.factory.CreateAgent(AgentTypeReAct, req.Name)
+		agt = h.factory.CreateAgent(TypeReAct, req.Name)
 	}
 
 	h.mu.Lock()
@@ -119,7 +119,7 @@ func (h *AgentHandler) CreateAgent(c *gin.Context) {
 // @Failure     404  {object} map[string]interface{}
 // @Failure     500  {object} map[string]interface{}
 // @Router      /agents/{id}/execute [post]
-func (h *AgentHandler) ExecuteAgent(c *gin.Context) {
+func (h *Handler) ExecuteAgent(c *gin.Context) {
 	agentID := c.Param("id")
 
 	h.mu.RLock()
@@ -145,7 +145,7 @@ func (h *AgentHandler) ExecuteAgent(c *gin.Context) {
 		return
 	}
 
-	log := agent.GetExecutionLog()
+	log := agent.ExecutionLog()
 
 	c.JSON(http.StatusOK, gin.H{
 		"agent_id":  agentID,
@@ -156,7 +156,7 @@ func (h *AgentHandler) ExecuteAgent(c *gin.Context) {
 	})
 }
 
-func (h *AgentHandler) GetAgentLog(c *gin.Context) {
+func (h *Handler) AgentLog(c *gin.Context) {
 	agentID := c.Param("id")
 
 	h.mu.RLock()
@@ -167,7 +167,7 @@ func (h *AgentHandler) GetAgentLog(c *gin.Context) {
 		return
 	}
 
-	log := agent.GetExecutionLog()
+	log := agent.ExecutionLog()
 
 	c.JSON(http.StatusOK, gin.H{
 		"agent_id": agentID,
@@ -176,7 +176,7 @@ func (h *AgentHandler) GetAgentLog(c *gin.Context) {
 	})
 }
 
-func (h *AgentHandler) GetAgent(id string) (*EnhancedAgent, bool) {
+func (h *Handler) Agent(id string) (*Agent, bool) {
 	h.mu.RLock()
 	defer h.mu.RUnlock()
 	agent, ok := h.agents[id]
@@ -192,7 +192,7 @@ func (h *AgentHandler) GetAgent(id string) (*EnhancedAgent, bool) {
 // @Success     200 {object} map[string]interface{}
 // @Failure     404 {object} map[string]interface{}
 // @Router      /agents/{id} [delete]
-func (h *AgentHandler) DeleteAgent(c *gin.Context) {
+func (h *Handler) DeleteAgent(c *gin.Context) {
 	agentID := c.Param("id")
 
 	h.mu.Lock()

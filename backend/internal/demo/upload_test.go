@@ -1,4 +1,4 @@
-﻿package demo
+package demo
 
 import (
 	"bytes"
@@ -81,7 +81,7 @@ func TestGetUploadStatus_NotFound(t *testing.T) {
 	c.Request = httptest.NewRequest(http.MethodGet, "/api/upload/status/nonexistent", nil)
 	c.Params = gin.Params{{Key: "uploadId", Value: "nonexistent"}}
 
-	GetUploadStatus(c)
+	UploadStatus(c)
 
 	if w.Code != 404 {
 		t.Fatalf("expected 404, got %d", w.Code)

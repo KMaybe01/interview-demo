@@ -35,7 +35,7 @@ jobs:
         with:
           go-version: ${{ env.GO_VERSION }}
           cache: true
-      - run: go test -count=1 ./handlers/
+      - run: go test ./internal/...
         working-directory: backend
       - name: Test race
         run: go test -v -race -coverprofile=coverage.out ./...

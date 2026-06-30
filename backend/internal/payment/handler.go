@@ -1,4 +1,4 @@
-﻿package payment
+package payment
 
 import (
 	"fmt"
@@ -11,42 +11,42 @@ import (
 	"github.com/gin-gonic/gin"
 )
 
-type PaymentStatus string
+type Status string
 
 const (
-	StatusPending    PaymentStatus = "PENDING"
-	StatusProcessing PaymentStatus = "PROCESSING"
-	StatusSuccess    PaymentStatus = "SUCCESS"
-	StatusFail       PaymentStatus = "FAIL"
-	StatusRefunding  PaymentStatus = "REFUNDING"
-	StatusRefunded   PaymentStatus = "REFUNDED"
-	StatusClosed     PaymentStatus = "CLOSED"
+	StatusPending    Status = "PENDING"
+	StatusProcessing Status = "PROCESSING"
+	StatusSuccess    Status = "SUCCESS"
+	StatusFail       Status = "FAIL"
+	StatusRefunding  Status = "REFUNDING"
+	StatusRefunded   Status = "REFUNDED"
+	StatusClosed     Status = "CLOSED"
 )
 
-type PaymentOrder struct {
-	ID             string        `json:"id"`
-	OrderNo        string        `json:"orderNo"`
-	Channel        string        `json:"channel"`
-	Amount         int64         `json:"amount"`
-	Status         PaymentStatus `json:"status"`
-	IdempotencyKey string        `json:"idempotencyKey"`
-	Version        int           `json:"version"`
-	CreatedAt      time.Time     `json:"createdAt"`
-	UpdatedAt      time.Time     `json:"updatedAt"`
+type Order struct {
+	ID             string    `json:"id"`
+	OrderNo        string    `json:"orderNo"`
+	Channel        string    `json:"channel"`
+	Amount         int64     `json:"amount"`
+	Status         Status    `json:"status"`
+	IdempotencyKey string    `json:"idempotencyKey"`
+	Version        int       `json:"version"`
+	CreatedAt      time.Time `json:"createdAt"`
+	UpdatedAt      time.Time `json:"updatedAt"`
 }
 
-type PaymentRequest struct {
+type Request struct {
 	OrderNo        string `json:"orderNo"`
 	Channel        string `json:"channel"`
 	Amount         int64  `json:"amount"`
 	IdempotencyKey string `json:"idempotencyKey"`
 }
 
-type RetryDemoRequest struct {
+type DemoRequest struct {
 	MaxRetries int `json:"maxRetries"`
 }
 
-type SecurityCheckRequest struct {
+type CheckRequest struct {
 	OrderNo string `json:"orderNo"`
 	Amount  int64  `json:"amount"`
 	IP      string `json:"ip"`
@@ -54,8 +54,8 @@ type SecurityCheckRequest struct {
 }
 
 var (
-	paymentOrders   = make(map[string]*PaymentOrder)
-	idempotentCache = make(map[string]*PaymentOrder)
+	paymentOrders   = make(map[string]*Order)
+	idempotentCache = make(map[string]*Order)
 	mu              sync.RWMutex
 	orderCounter    int
 )
@@ -70,7 +70,7 @@ func generateOrderNo() string {
 	return fmt.Sprintf("ORD%d%04d", time.Now().UnixMilli(), orderCounter)
 }
 
-func copyOrder(o *PaymentOrder) PaymentOrder {
+func copyOrder(o *Order) Order {
 	return *o
 }
 
@@ -81,12 +81,12 @@ func copyOrder(o *PaymentOrder) PaymentOrder {
 // @Accept      json
 // @Produce     json
 // @Security    Bearer
-// @Param       body body     PaymentRequest true "创建支付请求"
+// @Param       body body     Request true "创建支付请求"
 // @Success     200  {object} map[string]interface{}
 // @Failure     400  {object} map[string]interface{}
 // @Router      /payments/create [post]
 func CreatePayment(c *gin.Context) {
-	var req PaymentRequest
+	var req Request
 	if err := c.ShouldBindJSON(&req); err != nil {
 		c.JSON(http.StatusBadRequest, gin.H{"error": "参数错误"})
 		return
@@ -112,7 +112,7 @@ func CreatePayment(c *gin.Context) {
 	}
 
 	now := time.Now()
-	order := &PaymentOrder{
+	order := &Order{
 		ID:             fmt.Sprintf("PAY%d", time.Now().UnixNano()),
 		OrderNo:        req.OrderNo,
 		Channel:        req.Channel,
@@ -197,7 +197,7 @@ func ProcessPayment(c *gin.Context) {
 // @Success     200 {object} map[string]interface{}
 // @Failure     404 {object} map[string]interface{}
 // @Router      /payments/order/{id} [get]
-func GetOrder(c *gin.Context) {
+func OrderDetail(c *gin.Context) {
 	orderID := c.Param("id")
 
 	mu.RLock()
@@ -223,7 +223,7 @@ func GetOrder(c *gin.Context) {
 // @Router      /payments/orders [get]
 func ListOrders(c *gin.Context) {
 	mu.RLock()
-	orders := make([]PaymentOrder, 0, len(paymentOrders))
+	orders := make([]Order, 0, len(paymentOrders))
 	for _, o := range paymentOrders {
 		orders = append(orders, copyOrder(o))
 	}
@@ -252,7 +252,7 @@ func ListOrders(c *gin.Context) {
 func TransitionPayment(c *gin.Context) {
 	orderID := c.Param("id")
 	var body struct {
-		Status PaymentStatus `json:"status"`
+		Status Status `json:"status"`
 	}
 	if err := c.ShouldBindJSON(&body); err != nil {
 		c.JSON(http.StatusBadRequest, gin.H{"error": "参数错误"})
@@ -267,7 +267,7 @@ func TransitionPayment(c *gin.Context) {
 		return
 	}
 
-	allowedTransitions := map[PaymentStatus][]PaymentStatus{
+	allowedTransitions := map[Status][]Status{
 		StatusPending:    {StatusProcessing, StatusClosed},
 		StatusProcessing: {StatusSuccess, StatusFail, StatusClosed},
 		StatusSuccess:    {StatusRefunding},
@@ -346,7 +346,7 @@ func IdempotencyTest(c *gin.Context) {
 	}
 
 	now := time.Now()
-	order := &PaymentOrder{
+	order := &Order{
 		ID:             fmt.Sprintf("PAY%d", time.Now().UnixNano()),
 		OrderNo:        req.OrderNo,
 		Channel:        "wechat",
@@ -377,12 +377,12 @@ func IdempotencyTest(c *gin.Context) {
 // @Accept      json
 // @Produce     json
 // @Security    Bearer
-// @Param       body body     SecurityCheckRequest true "安全校验请求"
+// @Param       body body     CheckRequest true "安全校验请求"
 // @Success     200  {object} map[string]interface{}
 // @Failure     400  {object} map[string]interface{}
 // @Router      /payments/security-check [post]
 func SecurityCheck(c *gin.Context) {
-	var req SecurityCheckRequest
+	var req CheckRequest
 	if err := c.ShouldBindJSON(&req); err != nil {
 		c.JSON(http.StatusBadRequest, gin.H{"error": "参数错误"})
 		return
@@ -449,11 +449,11 @@ func SecurityCheck(c *gin.Context) {
 // @Accept      json
 // @Produce     json
 // @Security    Bearer
-// @Param       body body     RetryDemoRequest true "重试请求"
+// @Param       body body     DemoRequest true "重试请求"
 // @Success     200  {object} map[string]interface{}
 // @Router      /payments/retry-demo [post]
 func RetryDemo(c *gin.Context) {
-	var req RetryDemoRequest
+	var req DemoRequest
 	if err := c.ShouldBindJSON(&req); err != nil {
 		req.MaxRetries = 3
 	} else if req.MaxRetries < 1 {
