@@ -3,7 +3,6 @@ import {
   BookOutlined,
   CheckCircleOutlined,
   CloudServerOutlined,
-  DashboardOutlined,
   MessageOutlined,
   RobotOutlined,
   ThunderboltOutlined,
@@ -12,7 +11,7 @@ import { Button, Card, Col, List, Row, Space, Statistic, Typography, theme } fro
 import { useCallback, useEffect, useState } from 'react';
 import { agentAPI, knowledgeAPI, modelAPI } from '../services/api';
 
-const { Title, Text } = Typography;
+const { Text } = Typography;
 
 interface DashboardProps {
   onNavigate: (key: string) => void;
@@ -90,10 +89,6 @@ function Dashboard({ onNavigate }: DashboardProps) {
 
   return (
     <div>
-      <Title level={4} style={{ marginBottom: 24 }}>
-        <DashboardOutlined /> 控制台概览
-      </Title>
-
       <Row gutter={[16, 16]}>
         <Col xs={24} sm={8}>
           <Card hoverable>
