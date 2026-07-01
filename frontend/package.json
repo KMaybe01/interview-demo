@@ -9,7 +9,8 @@
     "preview": "vite preview",
     "lint": "biome check --write src/",
     "format": "biome format --write src/",
-    "prepare": "cd .. && husky"
+    "prepare": "cd .. && husky",
+    "changelog": "conventional-changelog -p conventionalcommits -i CHANGELOG.md -s"
   },
   "lint-staged": {
     "src/**/*.{ts,tsx,js,jsx}": [
@@ -46,6 +47,8 @@
     "@types/react-dom": "^19.2.3",
     "@vitejs/plugin-react": "^6.0.2",
     "babel-plugin-react-compiler": "^1.0.0",
+    "conventional-changelog": "^8.0.0",
+    "conventional-changelog-conventionalcommits": "^10.2.0",
     "husky": "^9.1.7",
     "lint-staged": "^17.0.8",
     "typescript": "~6.0.3",
