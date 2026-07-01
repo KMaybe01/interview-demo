@@ -130,6 +130,30 @@ bun run lint        # Biome check
 bun run format      # Biome format
 ```
 
+## 测试
+
+```bash
+bun test            # 单次运行（CI 环境）
+bun run test:watch  # 监听模式（开发环境）
+```
+
+测试文件与源码保持同层 `__tests__/` 目录：
+
+```
+src/
+├── test/
+│   └── setup.ts             # 全局初始化（jest-dom 匹配器 + matchMedia mock）
+├── utils/__tests__/         # 纯函数单元测试（token / lru / rbac / fetchClient）
+├── stores/__tests__/        # Zustand store 测试（auth / theme / alert / requestLoading / lruRoute）
+├── components/__tests__/    # 组件渲染测试（AuthGuard）
+└── pages/__tests__/         # 页面集成测试（Login / Dashboard）
+```
+
+- 框架: **Vitest 4** + **@testing-library/react 16**
+- 环境: jsdom + CSS 模块非作用域模式
+- 用户事件: **@testing-library/user-event 14**（代替 fireEvent）
+- 匹配器: **@testing-library/jest-dom**（toBeInTheDocument 等）
+
 ## 状态管理
 
 6 个 Zustand store:
