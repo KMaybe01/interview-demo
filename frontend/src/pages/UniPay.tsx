@@ -120,14 +120,14 @@ function StatusFlowDiagram({ currentStatus }: { currentStatus: PaymentStatus }) 
         items={
           currentStatus === 'FAIL'
             ? [
-                { title: 'PENDING', description: '订单已创建' },
-                { title: 'PROCESSING', description: '已调起支付渠道' },
-                { title: 'FAIL', description: '支付失败', status: 'error' },
+                { title: 'PENDING', content: '订单已创建' },
+                { title: 'PROCESSING', content: '已调起支付渠道' },
+                { title: 'FAIL', content: '支付失败', status: 'error' },
               ]
             : currentStatus === 'CLOSED'
               ? [
-                  { title: 'PENDING', description: '订单已创建' },
-                  { title: 'CLOSED', description: '订单已关闭', status: 'error' },
+                  { title: 'PENDING', content: '订单已创建' },
+                  { title: 'CLOSED', content: '订单已关闭', status: 'error' },
                 ]
               : STATE_MACHINE_STEPS
         }
