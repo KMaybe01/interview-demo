@@ -1,9 +1,11 @@
 {
-  "$schema": "https://turbo.build/schema.json",
+  "$schema": "https://v2-10-3.turborepo.dev/schema.json",
+  "globalEnv": ["NODE_ENV"],
+  "globalDependencies": [".env*"],
   "tasks": {
     "build": {
       "dependsOn": ["^build"],
-      "outputs": ["dist/**"],
+      "outputs": ["dist/**", ".tsbuildinfo/**"],
       "inputs": ["$TURBO_DEFAULT$", "!dist/**"]
     },
     "dev": {
@@ -11,7 +13,6 @@
       "persistent": true
     },
     "test": {
-      "dependsOn": ["^build"],
       "outputs": []
     },
     "lint": {
@@ -21,7 +22,7 @@
       "outputs": []
     },
     "typecheck": {
-      "outputs": []
+      "outputs": [".tsbuildinfo/**"]
     }
   }
 }

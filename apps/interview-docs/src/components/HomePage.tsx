@@ -53,7 +53,7 @@ export default function HomePage() {
               开始学习
             </Link>
             <a
-              href="https://github.com/KMaybe01/interview-demo"
+              href="https://gitlab.com/KMaybe-01/interview-demo"
               target="_blank"
               rel="noopener noreferrer"
               className="hero-btn hero-btn-secondary"

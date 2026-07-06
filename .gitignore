@@ -23,6 +23,9 @@ dist-ssr
 *.sln
 *.sw?
 .turbo/*
+# Turbo build info
+.tsbuildinfo/
+
 # Build binaries
 backend/bin/
 backend/coverage/

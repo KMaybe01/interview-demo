@@ -355,14 +355,19 @@ graph TB
 graph LR
     A["💻 代码提交"] --> B["GitLab CI 触发"]
     B --> C1["lint-backend<br/>go vet"]
-    B --> C2["lint-frontend<br/>turbo run lint<br/>biome check"]
-    C1 --> D["build-backend<br/>go build"]
-    C2 --> D
-    D --> E["🐳 Docker 多阶段构建"]
-    E --> F["📦 推送镜像仓库"]
-    F --> G["☸ Helm upgrade --install"]
-    G --> H["✅ --wait 滚动更新确认"]
-    H --> I["🚀 部署完成"]
+    B --> C2["test-backend<br/>go test -race"]
+    B --> C3["lint-frontend<br/>turbo run lint<br/>biome"]
+    B --> C4["test-frontend<br/>turbo run test<br/>vitest"]
+    B --> C5["typecheck<br/>turbo run typecheck<br/>tsc -b"]
+    C1 & C2 & C3 & C4 & C5 --> D["build-backend<br/>go build"]
+    C3 & C4 & C5 --> E["build-frontend<br/>turbo --filter<br/>Vite + Rolldown"]
+    C3 & C4 & C5 --> F["build-ai-demo<br/>turbo --filter"]
+    C3 & C4 & C5 --> G["build-interview-docs<br/>turbo --filter"]
+    D & E & F & G --> H["🐳 Docker 多阶段构建"]
+    H --> I["📦 推送镜像仓库"]
+    I --> J["☸ Helm upgrade --install"]
+    J --> K["✅ --wait 滚动更新确认"]
+    K --> L["🚀 部署完成"]
 ```
 
 ### 十、面试价值总结
@@ -4553,6 +4558,16 @@ graph LR
 | `chunkFileNames: assets/[name]-[hash].js` | 内容哈希文件名，长缓存复用 |
 | vendor 优先级分层 | `priority: 30`(React) → `25`(antd/echarts) → `20`(axios) 精准控制合并 |
 
+**Turborepo 2 配置优化**：
+
+| 优化项 | 变更 | 效果 |
+|--------|------|------|
+| `test` 移除 `^build` 依赖 | test 不再等待 build 完成后执行 | `turbo run build test` 完全并行，CI 提速 |
+| `.tsbuildinfo/**` 加入缓存输出 | build / typecheck 产出缓存增量编译信息 | 二次运行跳过 tsc 增量编译 |
+| `tsBuildInfoFile` 移出 node_modules | frontend 的 `.tsbuildinfo` 从 `node_modules/.tmp/` 移至 `./.tsbuildinfo/` | Turbo 可以缓存 typecheck 增量信息 |
+| `globalEnv: ["NODE_ENV"]` | 环境变量加入全局哈希 | NODE_ENV 变更自动触发缓存失效 |
+| `globalDependencies: [".env*"]` | `.env` 文件变更影响全局哈希 | 配置变更后自动重建 |
+
 ### 5.6 性能基准数据
 
 > 以下数据来自 React DevTools Profiler + Chrome Performance Tab 实测
@@ -4894,24 +4909,28 @@ build: {
 ```yaml
 # .gitlab-ci.yml 核心阶段 (turbo 并行加速 + 缓存复用)
 stages:
-  - validate  # lint-backend (go vet) + test-backend (go test) + lint-frontend (turbo run lint)
-  - build     # build-backend (go build) + build-frontend (turbo --filter=@interview-demo/frontend) + build-interview-docs (turbo --filter=frontend-interview-notes)
+  - validate  # lint-backend (go vet) + test-backend (go test) + lint/test/typecheck-workspaces (turbo 并行)
+  - build     # build-backend (go build) + build-frontend/ai-demo/interview-docs (turbo --filter)
   - package   # Docker 多阶段构建 + 推送 Registry
   - deploy    # helm upgrade --install --wait
 ```
 
-流水线包含 4 个阶段 10 个 Job：
+流水线包含 4 个阶段 12 个 Job：
 
 | 阶段 | Job | 命令 | 失败阻断 |
 |------|-----|------|----------|
 | validate | lint-backend | `go vet ./...` | ✅ 阻断后续阶段 |
-| validate | lint-frontend | `bun run lint` (turbo 并行) | ✅ 阻断后续阶段 |
-| validate | test-backend | `go test ./internal/... -v` | ✅ 阻断后续阶段 |
+| validate | test-backend | `go test ./internal/... -v -race` | ✅ 阻断后续阶段 |
+| validate | lint-frontend | `bun run lint` (turbo 三 workspace 并行) | ✅ 阻断后续阶段 |
+| validate | test-frontend | `bun run test` (turbo 并行, 无 build 依赖) | ✅ 阻断后续阶段 |
+| validate | typecheck-workspaces | `bun run typecheck` (turbo 并行, 缓存 .tsbuildinfo) | ✅ 阻断后续阶段 |
 | build | build-backend | `go build -o bin/server ./cmd/server/` | ✅ |
-| build | build-frontend | `bun run build --filter=@interview-demo/frontend` (turbo) | ✅ |
-| build | build-interview-docs | `bun run build --filter=frontend-interview-notes` (turbo) | ✅ |
+| build | build-frontend | `bun run build --filter=@interview-demo/frontend` (turbo 缓存) | ✅ |
+| build | build-ai-demo | `bun run build --filter=@interview-demo/ai-demo` (turbo 缓存) | ✅ |
+| build | build-interview-docs | `bun run build --filter=frontend-interview-notes` (turbo 缓存) | ✅ |
 | package | docker-backend | 多阶段构建 backend 镜像 | ✅ |
 | package | docker-frontend | 多阶段构建 frontend 镜像 | ✅ |
+| package | docker-ai-demo | 多阶段构建 ai-demo 镜像 | ✅ |
 | package | docker-interview-docs | 多阶段构建 interview-docs 镜像 | ✅ |
 | deploy | deploy-k8s | `helm upgrade --install --wait` (含 `interviewDocs.image`) | ✅ 回滚 |
 

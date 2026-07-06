@@ -153,7 +153,7 @@ export default function Header() {
               </span>
             </label>
             <a
-              href="https://github.com/KMaybe01/interview-demo"
+              href="https://gitlab.com/KMaybe-01/interview-demo"
               target="_blank"
               rel="noopener noreferrer"
               className="header-action-btn"

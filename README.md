@@ -195,6 +195,12 @@ bun run build
 # 仅构建 frontend
 bun run build --filter=@interview-demo/frontend
 
+# 类型检查（turbo 并行 + 缓存 .tsbuildinfo）
+bun run typecheck
+
+# 运行测试（turbo 并行，与 build 无依赖关系）
+bun run test
+
 # 单独构建前端
 cd apps/frontend && bun run build   # tsc -b + vite build (Rolldown Rust bundler)
 bun run lint                        # Biome check
@@ -272,15 +278,15 @@ bun run lint                        # Biome check
 | POST | `/api/payments/security-check` | 安全校验演示 |
 | POST | `/api/payments/retry-demo` | 重试机制演示 |
 
-## 代码校验 (GitHub Actions, Turborepo 编排)
+## 代码校验 (GitHub Actions + GitLab CI, Turborepo 编排)
 
 | Job | 命令 | 工具 |
 |-----|------|------|
 | lint-backend | `go vet ./...` | Go vet |
 | test-backend | `go test ./internal/...` | Go test |
-| lint-frontend | `bun run lint`（turbo 并行两 workspace） | Biome 2.5 |
-| tsc-frontend | `bun run typecheck`（turbo 并行缓存） | TypeScript 6 |
-| test-frontend | `bun run test`（turbo 并行缓存） | Vitest 4 |
+| lint-workspaces | `bun run lint`（turbo 三 workspace 并行） | Biome 2.5 |
+| test-workspaces | `bun run test`（turbo 并行缓存，不依赖 build） | Vitest 4 |
+| typecheck-workspaces | `bun run typecheck`（turbo 并行缓存 .tsbuildinfo） | TypeScript 6 |
 
 ## CI/CD + K8s 部署
 

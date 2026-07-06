@@ -11,6 +11,7 @@
     "test:watch": "vitest",
     "lint": "biome check --write src/",
     "format": "biome format --write src/",
+    "typecheck": "tsc -b --noEmit",
     "changelog": "conventional-changelog -p conventionalcommits -i CHANGELOG.md -s"
   },
   "lint-staged": {
@@ -30,7 +31,7 @@
     "axios": "^1.18.0",
     "dayjs": "^1.11.11",
     "echarts": "^6.1.0",
-    "ol": "^10.9.0",
+    "ol": "10.9.0",
     "react": "^19.2.7",
     "react-dom": "^19.2.7",
     "react-router-dom": "^7.17.0",

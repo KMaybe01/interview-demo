@@ -1,12 +1,10 @@
 import react from '@vitejs/plugin-react'
-import {defineConfig} from 'vitest/config'
+import { defineConfig } from 'vitest/config'
 
 const base = process.env.VITE_BASE_PATH || '/'
 
 export default defineConfig({
-  plugins: [
-    react(),
-  ],
+  plugins: [react()],
   base,
   server: {
     port: 5000,

@@ -190,7 +190,7 @@ export default function Login() {
         <span>© {new Date().getFullYear()} Interview Demo</span>
         <span style={{ color: '#e8e8e8' }}>|</span>
         <a
-          href="https://github.com/KMaybe01/interview-demo.git/"
+          href="https://gitlab.com/KMaybe-01/interview-demo.git/"
           target="_blank"
           rel="noopener noreferrer"
           className={styles.githubLink}

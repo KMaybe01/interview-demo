@@ -31,7 +31,7 @@ bun install          # 只能用 bun, 不能用 npm（从根目录安装所有 w
 | `bun run --cwd apps/frontend test:watch` | `vitest` (监听模式) |
 | `bun run --cwd apps/frontend lint` | `biome check --write src/` (Biome 是**唯一**的 linter/formatter) |
 | `bun run --cwd apps/frontend format` | `biome format --write src/` |
-| `cd apps/frontend && bunx tsc -b --noEmit` | TypeScript 类型检查 (CI 用) |
+| `bun run --cwd apps/frontend typecheck` | `tsc -b --noEmit` — 类型检查 |
 
 也可直接 `cd apps/frontend` 后执行上述命令。
 
@@ -230,7 +230,7 @@ PageTracker (App.tsx 中包裹每个路由)
 ## CI/CD
 
 - **GitHub Actions**:
-  - `.github/workflows/lint.yml`：push/PR 到 `main` → `go vet`、`go test`、`bun run lint`、`bun run test`、`bunx tsc -b --noEmit`（使用 `turbo run` 并行加速前端任务）
+  - `.github/workflows/lint.yml`：push/PR 到 `main` → `go vet`、`go test`、`bun run lint`、`bun run test`、`bun run typecheck`（使用 `turbo run` 并行加速前端任务，且 `test` 不再依赖 `^build`，可和 `build` 完全并行）
   - `.github/workflows/deploy-interview-docs.yml`：push 到 `main` 且改动 `apps/interview-docs/` → build + deploy 到 GitHub Pages
 - **GitLab CI** (`.gitlab-ci.yml`)：validate → build → package (Docker `frontend`/`backend`/`interview-docs` 三镜像) → deploy (Helm 到 K8s)
 

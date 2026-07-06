@@ -10,9 +10,9 @@ cache:
     - backend/bin/
     - ~/.cache/go-build/
     - ~/.bun/install/cache/
-    - node_modules/
-    - apps/*/node_modules/
     - .turbo/
+    - apps/*/.tsbuildinfo/
+    - apps/*/.turbo/
 
 stages:
   - validate
@@ -47,6 +47,46 @@ lint-frontend:
   image: oven/bun:${BUN_VERSION}
   script:
     - bun install --frozen-lockfile && bun run lint
+  cache:
+    key: ${CI_COMMIT_REF_SLUG}-workspaces
+    paths:
+      - ~/.bun/install/cache/
+      - .turbo/
+      - apps/*/.turbo/
+    policy: pull-push
+  only:
+    - main
+    - merge_requests
+
+test-frontend:
+  stage: validate
+  image: oven/bun:${BUN_VERSION}
+  script:
+    - bun install --frozen-lockfile && bun run test
+  cache:
+    key: ${CI_COMMIT_REF_SLUG}-workspaces
+    paths:
+      - ~/.bun/install/cache/
+      - .turbo/
+      - apps/*/.turbo/
+    policy: pull-push
+  only:
+    - main
+    - merge_requests
+
+typecheck-workspaces:
+  stage: validate
+  image: oven/bun:${BUN_VERSION}
+  script:
+    - bun install --frozen-lockfile && bun run typecheck
+  cache:
+    key: ${CI_COMMIT_REF_SLUG}-workspaces
+    paths:
+      - ~/.bun/install/cache/
+      - .turbo/
+      - apps/*/.tsbuildinfo/
+      - apps/*/.turbo/
+    policy: pull-push
   only:
     - main
     - merge_requests
@@ -74,6 +114,14 @@ build-frontend:
     paths:
       - apps/frontend/dist
     expire_in: 1 hour
+  cache:
+    key: ${CI_COMMIT_REF_SLUG}-workspaces
+    paths:
+      - ~/.bun/install/cache/
+      - .turbo/
+      - apps/*/.tsbuildinfo/
+      - apps/*/.turbo/
+    policy: pull-push
   only:
     - main
 
@@ -86,18 +134,36 @@ build-ai-demo:
     paths:
       - apps/ai-demo/dist
     expire_in: 1 hour
+  cache:
+    key: ${CI_COMMIT_REF_SLUG}-workspaces
+    paths:
+      - ~/.bun/install/cache/
+      - .turbo/
+      - apps/*/.tsbuildinfo/
+      - apps/*/.turbo/
+    policy: pull-push
   only:
     - main
 
 build-interview-docs:
   stage: build
   image: oven/bun:${BUN_VERSION}
+  variables:
+    VITE_BASE_PATH: "/${CI_PROJECT_NAME}/"
   script:
     - bun install --frozen-lockfile && bun run build --filter=frontend-interview-notes
   artifacts:
     paths:
       - apps/interview-docs/dist
     expire_in: 1 hour
+  cache:
+    key: ${CI_COMMIT_REF_SLUG}-workspaces
+    paths:
+      - ~/.bun/install/cache/
+      - .turbo/
+      - apps/*/.tsbuildinfo/
+      - apps/*/.turbo/
+    policy: pull-push
   only:
     - main
 
@@ -163,8 +229,8 @@ pages:
   needs:
     - build-interview-docs
   script:
-    - mkdir -p public/interview-demo
-    - cp -r apps/interview-docs/dist/* public/interview-demo
+    - mkdir -p public
+    - cp -r apps/interview-docs/dist/* public/
   artifacts:
     paths:
       - public

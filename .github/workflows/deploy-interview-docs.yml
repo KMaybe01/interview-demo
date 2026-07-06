@@ -39,6 +39,8 @@ jobs:
         working-directory: apps/interview-docs
       - run: bun run build
         working-directory: apps/interview-docs
+        env:
+          VITE_BASE_PATH: /${{ github.event.repository.name }}/
       - name: Upload Pages artifact
         uses: actions/upload-pages-artifact@v3
         with:
