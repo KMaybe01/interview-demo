@@ -18,9 +18,9 @@ import {
   Typography,
 } from 'antd';
 import { useCallback, useEffect, useState } from 'react';
-import { useMessageApi } from '../AIDemo';
-import { modelAPI } from '../services/api';
-import type { Model } from '../types';
+import { useMessageApi } from '../AIDemo.tsx';
+import { modelAPI } from '../services/api.ts';
+import type { Model } from '../types/index.ts';
 
 const { Text } = Typography;
 

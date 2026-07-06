@@ -9,15 +9,15 @@ import {
 import { App as AntApp, Tabs, theme } from 'antd';
 import type { ReactNode } from 'react';
 import { createContext, useCallback, useContext, useEffect, useMemo, useState } from 'react';
-import { useThemeStore } from '../../stores';
+import { useThemeStore } from './stores/themeStore.ts';
 import styles from './AIDemo.module.css';
-import Agents from './components/Agents';
-import Chat from './components/Chat';
-import Dashboard from './components/Dashboard';
-import { ErrorBoundary } from './components/ErrorBoundary';
-import KnowledgeBase from './components/KnowledgeBase';
-import Models from './components/Models';
-import Plugins from './components/Plugins';
+import Agents from './components/Agents.tsx';
+import Chat from './components/Chat.tsx';
+import Dashboard from './components/Dashboard.tsx';
+import { ErrorBoundary } from './components/ErrorBoundary.tsx';
+import KnowledgeBase from './components/KnowledgeBase.tsx';
+import Models from './components/Models.tsx';
+import Plugins from './components/Plugins.tsx';
 
 interface MessageApi {
   success: (msg: string) => void;

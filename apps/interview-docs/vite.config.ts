@@ -1,9 +1,13 @@
 import react from '@vitejs/plugin-react'
-import { defineConfig } from 'vite'
+import {defineConfig} from 'vitest/config'
+
+const base = process.env.VITE_BASE_PATH || '/'
 
 export default defineConfig({
-  plugins: [react()],
-  base: '/interview-demo/',
+  plugins: [
+    react(),
+  ],
+  base,
   server: {
     port: 5000,
     host: 'localhost',
@@ -21,5 +25,11 @@ export default defineConfig({
         },
       },
     },
+  },
+  test: {
+    globals: true,
+    environment: 'jsdom',
+    setupFiles: './src/test-setup.ts',
+    css: { modules: { classNameStrategy: 'non-scoped' } },
   },
 })

@@ -26,9 +26,9 @@ import {
   Typography,
 } from 'antd';
 import { useCallback, useEffect, useRef, useState } from 'react';
-import { useMessageApi } from '../AIDemo';
-import { knowledgeAPI } from '../services/api';
-import type { Document, KnowledgeBase, KnowledgeSearchResult } from '../types';
+import { useMessageApi } from '../AIDemo.tsx';
+import { knowledgeAPI } from '../services/api.ts';
+import type { Document, KnowledgeBase, KnowledgeSearchResult } from '../types/index.ts';
 
 const { Text } = Typography;
 const { TextArea } = Input;

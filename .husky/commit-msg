@@ -1,1 +1,1 @@
-cat "$1" | node apps/frontend/node_modules/@commitlint/cli/lib/cli.js --config apps/frontend/commitlint.config.cjs
+cat "$1" | node node_modules/@commitlint/cli/lib/cli.js --config commitlint.config.cjs

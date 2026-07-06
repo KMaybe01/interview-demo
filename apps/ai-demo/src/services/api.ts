@@ -14,7 +14,7 @@ import type {
   KnowledgeSearchResponse,
   ModelListResponse,
   StreamChunk,
-} from '../types';
+} from '../types/index.ts';
 
 const API_BASE = '/api';
 const REQUEST_TIMEOUT = 30_000;

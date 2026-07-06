@@ -18,10 +18,10 @@ import {
 import { Button, Input, Modal, Spin, Tag, Tooltip, Typography, theme } from 'antd';
 import type { TextAreaRef } from 'antd/es/input/TextArea';
 import { useCallback, useEffect, useRef, useState } from 'react';
-import { useMessageApi } from '../AIDemo';
-import { agentAPI, chatAPI, knowledgeAPI, modelAPI } from '../services/api';
-import { useChatStore } from '../stores/chatStore';
-import type { Agent, KnowledgeBase, Model } from '../types';
+import { useMessageApi } from '../AIDemo.tsx';
+import { agentAPI, chatAPI, knowledgeAPI, modelAPI } from '../services/api.ts';
+import { useChatStore } from '../stores/chatStore.ts';
+import type { Agent, KnowledgeBase, Model } from '../types/index.ts';
 
 const { Text } = Typography;
 

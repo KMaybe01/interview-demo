@@ -32,10 +32,11 @@ jobs:
         uses: actions/cache@v5
         with:
           path: ~/.bun/install/cache
-          key: ${{ runner.os }}-bun-${{ hashFiles('bun.lock') }}
+          key: ${{ runner.os }}-bun-interview-docs-${{ hashFiles('apps/interview-docs/bun.lock') }}
           restore-keys: |
-            ${{ runner.os }}-bun-
+            ${{ runner.os }}-bun-interview-docs-
       - run: bun install --frozen-lockfile
+        working-directory: apps/interview-docs
       - run: bun run build
         working-directory: apps/interview-docs
       - name: Upload Pages artifact

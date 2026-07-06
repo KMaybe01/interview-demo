@@ -19,8 +19,8 @@ import {
   Typography,
 } from 'antd';
 import { useState } from 'react';
-import { useMessageApi } from '../AIDemo';
-import type { Plugin } from '../types';
+import { useMessageApi } from '../AIDemo.tsx';
+import type { Plugin } from '../types/index.ts';
 
 const { Title, Text } = Typography;
 

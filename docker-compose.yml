@@ -32,6 +32,22 @@ services:
       retries: 3
       start_period: 5s
 
+  ai-demo:
+    build:
+      context: .
+      target: ai-demo
+    ports:
+      - "5175:80"
+    depends_on:
+      backend:
+        condition: service_healthy
+    healthcheck:
+      test: ["CMD", "wget", "-qO-", "http://localhost:80/"]
+      interval: 10s
+      timeout: 3s
+      retries: 3
+      start_period: 5s
+
   interview-docs:
     build:
       context: .
@@ -39,7 +55,7 @@ services:
     ports:
       - "5000:80"
     healthcheck:
-      test: ["CMD", "wget", "-qO-", "http://localhost:80/interview-demo/"]
+      test: ["CMD", "wget", "-qO-", "http://localhost:80/"]
       interval: 10s
       timeout: 3s
       retries: 3

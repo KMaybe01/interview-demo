@@ -12,7 +12,7 @@ bun install          # 只能用 bun, 不能用 npm（从根目录安装所有 w
 
 | 命令 | 说明 |
 |------|------|
-| `bun run dev` | 并行启动所有 dev server（frontend :5173 + interview-docs :5000） |
+| `bun run dev` | 并行启动所有 dev server（frontend :5173 + ai-demo :5175 + interview-docs :5000） |
 | `bun run build` | `turbo run build` — 构建所有 workspace（缓存加速） |
 | `bun run build --filter=@interview-demo/frontend` | 仅构建 frontend |
 | `bun run test` | `turbo run test` — 运行所有 workspace 测试 |
@@ -35,6 +35,16 @@ bun install          # 只能用 bun, 不能用 npm（从根目录安装所有 w
 
 也可直接 `cd apps/frontend` 后执行上述命令。
 
+`apps/ai-demo/`（AI Demo 独立项目）：
+
+| 命令 | 说明 |
+|------|------|
+| `bun run --cwd apps/ai-demo dev` | Vite 开发服务器 (port 5175, `/api` 代理到 `:8080`) |
+| `bun run --cwd apps/ai-demo build` | `tsc -b && vite build` |
+| `bun run --cwd apps/ai-demo test` | `vitest run` |
+| `bun run --cwd apps/ai-demo lint` | `biome check --write src/` |
+| `bun run --cwd apps/ai-demo typecheck` | `tsc -b --noEmit` |
+
 `apps/interview-docs/`（前端知识库文档站点）：
 
 | 命令 | 说明 |
@@ -53,12 +63,13 @@ go test ./internal/... -v
 ## 架构
 
 - **前端入口**: `apps/frontend/src/main.tsx` → `apps/frontend/src/App.tsx` → `apps/frontend/src/layouts/MainLayout.tsx`
-- **路由**: `apps/frontend/src/routes/index.tsx` — 15 个懒加载页面（含 Dashboard）+ 1 个 Eager 加载登录页，自动映射到侧边栏
+- **路由**: `apps/frontend/src/routes/index.tsx` — 14 个懒加载页面（含 Dashboard）+ 1 个 Eager 加载登录页，自动映射到侧边栏
 - **认证守卫**: `apps/frontend/src/components/AuthGuard.tsx` 保护除 `/login` 外的所有路由
 - **状态管理**: Zustand store 位于 `apps/frontend/src/stores/`，通过 `apps/frontend/src/stores/index.ts` 桶文件导出
 - **API 客户端**: `apps/frontend/src/utils/fetchClient.ts` (Axios，自动注入 Bearer Token，401 自动刷新 + 请求重放)
 - **后端**: Go 1.26 + Gin — 全内存存储，无外部数据库，19 个内部包，67 个 .go 文件
 - **前端知识库**: `apps/interview-docs/` — React 19 文档站点，Markdown 内容，GitHub Pages 部署
+- **AI Demo**: `apps/ai-demo/` — 独立项目，6 选项卡 AI 演示（聊天/知识库/模型/智能体/插件/控制台）
 
 ## 代码规范
 
@@ -83,10 +94,11 @@ go test ./internal/... -v
 
 ## AI Demo 架构
 
-路径：`apps/frontend/src/pages/AIDemo/`
+路径：`apps/ai-demo/`
 
 | 文件 | 职责 |
 |------|------|
+| `App.tsx` | 根组件，ConfigProvider + 主题切换 + 布局 |
 | `AIDemo.tsx` | 主页面，6 选项卡布局（Chat / KnowledgeBase / Models / Agents / Plugins / Dashboard） |
 | `components/Chat.tsx` | LLM 聊天（流式对话） |
 | `components/KnowledgeBase.tsx` | 知识库管理（CRUD + 文档添加） |
@@ -97,6 +109,7 @@ go test ./internal/... -v
 | `components/ErrorBoundary.tsx` | 错误边界 |
 | `services/api.ts` | AI 相关 API 封装 |
 | `stores/chatStore.ts` | 聊天状态管理 |
+| `stores/themeStore.ts` | 主题状态管理（light/dark） |
 | `types/index.ts` | AI Demo 类型定义 |
 
 ## 关键模式
@@ -183,10 +196,10 @@ PageTracker (App.tsx 中包裹每个路由)
 ## 测试
 
 - Vitest 4 + jsdom + `@testing-library/react` 16 + `@testing-library/user-event` 14
-- 测试设置：`src/test/setup.ts` (引入 jest-dom matcher，mock ResizeObserver + matchMedia)
+- 测试设置：`src/test/setup.ts` (frontend) / `src/test-setup.ts` (ai-demo, interview-docs) (引入 jest-dom vitest matcher，mock ResizeObserver + matchMedia)
 - 测试文件与源码同目录，放在 `__tests__/` 下
 - 用 `userEvent` 而不是 `fireEvent` 模拟用户交互
-- 19 个测试文件覆盖所有页面 + stores + utils
+- frontend 28 测试文件 148 测试，interview-docs 7 测试文件 39 测试，ai-demo 1 测试文件 1 测试
 
 ## 后端模块
 
@@ -236,7 +249,7 @@ PageTracker (App.tsx 中包裹每个路由)
 
 ## 注意事项
 
-- `.husky/` 目录不在 git 中 — 本地需运行 `bun run prepare` 安装 hooks
+- commitlint 配置在根 `commitlint.config.cjs`，作为全局 devDependencies 管理
 - `backend/Makefile` **不存在**于仓库中
 - **Monorepo**: 使用 Bun workspaces + Turborepo 管理，根 `package.json` 定义 `apps/*` 工作区，`turbo.json` 配置编排管道
 - `package.json` 必须包含 `"packageManager": "bun@1.3.14"` 字段（Turborepo 2+ 要求）

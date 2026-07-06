@@ -9,7 +9,7 @@ import {
 } from '@ant-design/icons';
 import { Button, Card, Col, List, Row, Space, Statistic, Typography, theme } from 'antd';
 import { useCallback, useEffect, useState } from 'react';
-import { agentAPI, knowledgeAPI, modelAPI } from '../services/api';
+import { agentAPI, knowledgeAPI, modelAPI } from '../services/api.ts';
 
 const { Text } = Typography;
 

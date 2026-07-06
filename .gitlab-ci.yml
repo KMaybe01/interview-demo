@@ -77,6 +77,18 @@ build-frontend:
   only:
     - main
 
+build-ai-demo:
+  stage: build
+  image: oven/bun:${BUN_VERSION}
+  script:
+    - bun install --frozen-lockfile && bun run build --filter=@interview-demo/ai-demo
+  artifacts:
+    paths:
+      - apps/ai-demo/dist
+    expire_in: 1 hour
+  only:
+    - main
+
 build-interview-docs:
   stage: build
   image: oven/bun:${BUN_VERSION}
@@ -123,6 +135,16 @@ docker-frontend:
     - docker tag $CI_REGISTRY_IMAGE/frontend:$CI_COMMIT_SHORT_SHA $CI_REGISTRY_IMAGE/frontend:latest
     - docker push $CI_REGISTRY_IMAGE/frontend:$CI_COMMIT_SHORT_SHA
     - docker push $CI_REGISTRY_IMAGE/frontend:latest
+
+docker-ai-demo:
+  extends: .docker-job
+  needs:
+    - build-ai-demo
+  script:
+    - docker build --target ai-demo -t $CI_REGISTRY_IMAGE/ai-demo:$CI_COMMIT_SHORT_SHA .
+    - docker tag $CI_REGISTRY_IMAGE/ai-demo:$CI_COMMIT_SHORT_SHA $CI_REGISTRY_IMAGE/ai-demo:latest
+    - docker push $CI_REGISTRY_IMAGE/ai-demo:$CI_COMMIT_SHORT_SHA
+    - docker push $CI_REGISTRY_IMAGE/ai-demo:latest
 
 docker-interview-docs:
   extends: .docker-job

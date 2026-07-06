@@ -20,8 +20,8 @@ bun run changelog # conventional-changelog
 
 ## Routing & Content
 
-- **HashRouter** (`/interview-demo/#/path`) — not BrowserRouter. All internal links are hash-free in code; the router adds the hash.
-- Vite base path `/interview-demo/` matches the GitHub Pages repo subpath.
+- **HashRouter** — not BrowserRouter. All internal links are hash-free in code; the router adds the hash.
+- Vite base path `/` (default) — overridden to `/interview-demo/` for GitHub Pages deploy via `VITE_BASE_PATH` env.
 - Route `/*` → `DocPage` (catch-all). Route `/` → `HomePage`.
 - Content files live in `S1-*/` through `S6-*/` directories (outside `src/`).
 - Loaded via `import.meta.glob('/S{1,2,3,4,5,6}-*/**/*.md', { query: '?raw' })` in `src/data/content.ts`.

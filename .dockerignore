@@ -14,6 +14,8 @@ backend/bin/
 backend/uploads/
 apps/frontend/dist/
 apps/frontend/node_modules/
+apps/ai-demo/dist/
+apps/ai-demo/node_modules/
 apps/interview-docs/dist/
 apps/interview-docs/node_modules/
 apps/interview-docs/.github/

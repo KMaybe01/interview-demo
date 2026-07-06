@@ -25,9 +25,9 @@ import {
   Typography,
 } from 'antd';
 import { useCallback, useEffect, useState } from 'react';
-import { useMessageApi } from '../AIDemo';
-import { agentAPI } from '../services/api';
-import type { Agent, AgentExecuteResponse, AgentStep } from '../types';
+import { useMessageApi } from '../AIDemo.tsx';
+import { agentAPI } from '../services/api.ts';
+import type { Agent, AgentExecuteResponse, AgentStep } from '../types/index.ts';
 
 const { Text } = Typography;
 const { Panel } = Collapse;

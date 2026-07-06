@@ -1,6 +1,6 @@
 # Interview Demo — Frontend
 
-React 19 + TypeScript 6 + Vite 8 前端 SPA，为 **16 个技术场景**（含仪表盘首页 + 15 个核心演示）提供交互界面。
+React 19 + TypeScript 6 + Vite 8 前端 SPA，为 **15 个技术场景**（含仪表盘首页 + 14 个核心演示）提供交互界面。
 
 ## 技术栈
 
@@ -64,14 +64,8 @@ src/
 │   ├── TreeDataEngine.tsx      # /tree-data-engine 树形数据引擎
 │   ├── WebWorkerMerge.tsx      # /web-worker-merge Worker 分治合并
 │   ├── UniPay.tsx              # /unipay 统一支付中台
-│   └── AIDemo/
-│       ├── AIDemo.tsx          # /ai-demo AI Demo (6 选项卡)
-│       ├── components/         # Chat / Agents / KnowledgeBase / Models / Plugins / Dashboard
-│       ├── services/api.ts     # AI 相关 API 调用
-│       ├── stores/chatStore.ts # 聊天状态
-│       └── types/index.ts      # AI Demo 类型定义
 ├── routes/
-│   └── index.tsx               # 15 条路由配置（懒加载）
+│   └── index.tsx               # 14 条路由配置（懒加载）
 ├── stores/                     # Zustand 状态管理
 │   ├── authStore.ts            # 认证状态（hydrate + Token 过期自检）
 │   ├── alertStore.ts           # WebSocket 告警（MAX_ALERTS=5000）
@@ -112,7 +106,6 @@ src/
 | `/log-stream` | LogStream | RSA 密钥对 + AES-256-GCM Worker 并行解密 + 虚拟滚动（10 万行） |
 | `/chunked-upload` | ChunkedUpload | SHA-256 分片哈希 + 并发滑动窗口 + 暂停/恢复/停止 + 代际锁 |
 | `/unipay` | UniPay | 支付状态机 (7×6) + Idempotency-Key + 指数退避 + T+1 对账 |
-| `/ai-demo` | AIDemo | LLM 聊天流式、RAG 知识库、智能体、模型管理（6 子选项卡） |
 
 ## 快速启动
 
