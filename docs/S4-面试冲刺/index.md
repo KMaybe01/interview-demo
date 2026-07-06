@@ -17,12 +17,14 @@
 
 - [📶 5G核心网测试用例管理系统](./项目/5G核心网测试用例管理系统.md) — React 19 动态表单、SSE 实时日志
 - [🏢 AeMS 企业级综合网络管理系统](./项目/AeMS企业级综合网络管理系统.md) — Angular GIS 渲染、WebSocket 告警
+- [🏢 GNB-UI企业级5G网元管理系统](./项目/GNB-UI企业级5G网元管理系统.md) — Angular21、Bun
+- [🏗️ FMS-UI 企业级融合管理系统](./项目/FMS-UI企业级融合管理系统.md) — 企业级融合管理系统前端深度技术分析
 - [⚙️ LI-OAM 网元运维与数据管理系统](./项目/LI-OAM%20网元运维与数据管理系统.md) — Web Worker 解密、审计追踪
 - [🔒 Axyom ACL & HTTP Decorator](./项目/Axyom%20ACL%20%26%20HTTP%20Decorator%20Library.md) — Angular 装饰器、ACL 权限
 - [📋 Axyom Form](./项目/Axyom-Form%20项目技术分析.md) — 动态表单引擎技术分析
 - [📊 Axyom Table](./项目/Axyom-Table%20项目技术分析.md) — 高性能表格组件技术分析
 - [📈 Prometheus+Grafana](./项目/Prometheus+Grafana.md) — 监控体系与可视化
-- [🏗️ FMS-UI 企业级融合管理系统](./项目/FMS-UI企业级融合管理系统.md) — 企业级融合管理系统前端深度技术分析
+
 
 ## 项目独立运行
 

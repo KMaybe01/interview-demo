@@ -19,7 +19,7 @@ cache:
   key: ${CI_COMMIT_REF_SLUG}
   paths:
     - backend/bin/
-    - frontend/node_modules/
+    - apps/frontend/node_modules/
     - ~/.cache/go-build/
     - ~/.bun/install/cache/
 
@@ -51,7 +51,7 @@ test-backend:
 lint-frontend:
   stage: validate
   script:
-    - cd frontend && bun install && bun run lint
+    - cd apps/frontend && bun install && bun run lint
   only:
     - main
     - merge_requests
@@ -72,10 +72,21 @@ build-backend:
 build-frontend:
   stage: build
   script:
-    - cd frontend && bun install && bun run build
+    - cd apps/frontend && bun install && bun run build
   artifacts:
     paths:
-      - frontend/dist
+      - apps/frontend/dist
+    expire_in: 1 hour
+  only:
+    - main
+
+build-interview-docs:
+  stage: build
+  script:
+    - cd apps/interview-docs && bun install && bun run build
+  artifacts:
+    paths:
+      - apps/interview-docs/dist
     expire_in: 1 hour
   only:
     - main
@@ -108,6 +119,18 @@ docker-frontend:
   only:
     - main
 
+docker-interview-docs:
+  stage: package
+  needs:
+    - build-interview-docs
+  script:
+    - docker build --target interview-docs -t $CI_REGISTRY_IMAGE/interview-docs:$CI_COMMIT_SHORT_SHA .
+    - docker tag $CI_REGISTRY_IMAGE/interview-docs:$CI_COMMIT_SHORT_SHA $CI_REGISTRY_IMAGE/interview-docs:latest
+    - docker push $CI_REGISTRY_IMAGE/interview-docs:$CI_COMMIT_SHORT_SHA
+    - docker push $CI_REGISTRY_IMAGE/interview-docs:latest
+  only:
+    - main
+
 # ── Deploy ────────────────────────────────────────────────
 
 deploy-k8s:
@@ -115,6 +138,7 @@ deploy-k8s:
   needs:
     - docker-backend
     - docker-frontend
+    - docker-interview-docs
   image: alpine/helm:3.17.0
   script:
     - helm upgrade --install interview-demo ./helm
@@ -124,6 +148,8 @@ deploy-k8s:
         --set backend.image.tag=$CI_COMMIT_SHORT_SHA
         --set frontend.image.repository=$CI_REGISTRY_IMAGE/frontend
         --set frontend.image.tag=$CI_COMMIT_SHORT_SHA
+        --set interviewDocs.image.repository=$CI_REGISTRY_IMAGE/interview-docs
+        --set interviewDocs.image.tag=$CI_COMMIT_SHORT_SHA
         --wait --timeout 120s
   only:
     - main

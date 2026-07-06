@@ -26,4 +26,8 @@ dist-ssr
 # Build binaries
 backend/bin/
 backend/coverage/
-frontend/dist/
+apps/frontend/dist/
+apps/interview-docs/dist/
+
+# TypeScript build info
+*.tsbuildinfo

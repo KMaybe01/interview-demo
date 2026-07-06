@@ -27,7 +27,7 @@
 │                                                                     │
 │  ┌─────────────────┐  ┌─────────────────┐  ┌─────────────────┐     │
 │  │   配置类模块    │  │   渲染引擎模块   │  │   验证器模块    │     │
-│  │  21种组件类型   │  │  动态组件分发   │  │  10种自定义     │     │
+│  │  20种组件类型   │  │  动态组件分发   │  │  10种自定义     │     │
 │  │  声明式配置    │  │  注册表模式     │  │  跨字段联动     │     │
 │  └────────┬────────┘  └────────┬────────┘  └────────┬────────┘     │
 │           │                    │                    │               │
@@ -36,7 +36,15 @@
 │  │                     核心基础设施                              │   │
 │  │  ┌──────────┐  ┌──────────┐  ┌──────────┐  ┌──────────┐   │   │
 │  │  │ FormBase │  │Registry  │  │ DI配置   │  │ 工具函数  │   │   │
-│  │  │ 抽象基类 │  │ 注册表   │  │ InjectionToken│ │ 验证器库│   │   │
+│  │  │ 抽象基类 │  │ 注册表   │  │InjectionToken│ │ 验证器库 │   │   │
+│  │  └──────────┘  └──────────┘  └──────────┘  └──────────┘   │   │
+│  └─────────────────────────────────────────────────────────────┘   │
+│                                                                     │
+│  ┌─────────────────────────────────────────────────────────────┐   │
+│  │                   弹层扩展模块                                │   │
+│  │  ┌──────────┐  ┌──────────┐  ┌──────────┐  ┌──────────┐   │   │
+│  │  │DialogModal│  │FormModal │  │DynamicModal│ │FormFixed │   │   │
+│  │  │ 确认弹窗  │  │ 表单弹窗 │  │  Service  │ │Label指令 │   │   │
 │  │  └──────────┘  └──────────┘  └──────────┘  └──────────┘   │   │
 │  └─────────────────────────────────────────────────────────────┘   │
 │                                                                     │
@@ -47,7 +55,7 @@
 
 | 功能 | 说明 |
 |------|------|
-| **21种组件类型** | String/Number/Select/DatePicker等完整表单控件 |
+| **20种组件类型** | String/Number/Select/DatePicker等完整表单控件 + view只读模式 |
 | **声明式配置** | TypeScript配置类描述表单字段 |
 | **类型安全** | 泛型约束 + 工具类型，完整类型推导 |
 | **条件显示** | 支持布尔值和函数两种策略 |
@@ -60,15 +68,25 @@
 | **注册表模式** | 类型→组件映射，支持运行时扩展 |
 | **Signal响应式** | computed缓存输入对象，精准更新 |
 | **模板插槽** | 支持自定义组件渲染 |
+| **视图模式** | 一键切换只读展示，所有组件自动转为ViewUnitComponent |
 
 #### 模块3：验证器模块
 
 | 功能 | 说明 |
 |------|------|
 | **10种自定义验证器** | IP/URL/手机号/身份证等 |
-| **跨字段联动** | equalTo验证器，订阅目标字段变化 |
+| **跨字段联动** | equalTo/notEqualTo/laterTo，订阅目标字段变化 |
 | **超大数值验证** | BigInt突破JS精度限制 |
 | **异步选项加载** | 支持Observable流式加载 |
+
+#### 模块4：弹层扩展模块
+
+| 功能 | 说明 |
+|------|------|
+| **DialogModal** | 确认弹窗配置类，支持Loading自动管理 |
+| **FormModal** | 表单弹窗配置类，内置表单布局+Loading+错误处理 |
+| **DynamicModalService** | 统一弹窗服务，支持全局配置注入 |
+| **AXYOM_FORM_CONFIG** | InjectionToken全局配置，包括弹窗和表单默认值 |
 
 ### 四、技术架构
 
@@ -81,13 +99,14 @@
 ├─────────────────────────────────────────────────────────────┤
 │                     容器层 (Container)                        │
 │         AxyomFormComponent - 表单容器，管理布局              │
+│         AxyomFormModalComponent - 表单弹窗容器               │
 ├─────────────────────────────────────────────────────────────┤
 │                     调度层 (Dispatcher)                       │
 │         FormUnitComponent - 根据类型动态分发组件             │
 │         FormUnitRegistryService - 类型→组件映射注册表        │
 ├─────────────────────────────────────────────────────────────┤
 │                     组件层 (Component)                        │
-│         21种具体UI组件 (StringUnitComponent等)               │
+│         20种具体UI组件 (StringUnitComponent等)               │
 ├─────────────────────────────────────────────────────────────┤
 │                     基类层 (Base)                             │
 │         FormBase - 数据模型 + FormControl                    │
@@ -95,7 +114,8 @@
 │         OptionBase - 选项类组件抽象                          │
 ├─────────────────────────────────────────────────────────────┤
 │                     基础设施层 (Infrastructure)               │
-│         验证器库 / 工具函数 / 配置注入Token                   │
+│         验证器库 / 工具函数 / 配置注入Token                  │
+│         plainToClass / mergeDefault 工具                     │
 └─────────────────────────────────────────────────────────────┘
 ```
 
@@ -103,9 +123,11 @@
 
 | 维度 | 数量 | 说明 |
 |------|------|------|
-| **支持组件类型** | 21种 | 完整表单控件覆盖 |
-| **自定义验证器** | 10种 | IP/URL/手机号等 |
-| **测试用例** | 46+ | 完整单元测试覆盖 |
+| **支持组件类型** | 20种 | 10种基础 + 4种日期 + 6种选项 |
+| **配置类数量** | 20个 | String/Number/Select/Option等 |
+| **自定义验证器** | 10种 | IP/MAC/跨字段/大数等 |
+| **测试用例** | 42个 | 12个spec文件全面覆盖 |
+| **测试框架** | Vitest | 高效运行，无TestBed依赖 |
 | **打包方式** | ng-packagr | FESM格式，支持tree shaking |
 | **Angular版本** | 21.x | 最新版本 |
 | **ng-zorro版本** | 21.x | 最新版本 |
@@ -115,17 +137,19 @@
 #### FormBase 抽象基类
 
 ```typescript
-export abstract class FormBase<T> {
+export abstract class FormBase<T = any> {
   abstract readonly controlType: string;  // 子类必须实现
-  readonly key: string;                   // 字段标识
-  readonly label: string;                 // 显示标签
-  readonly required: boolean;             // 是否必填
-  readonly control: FormControl;          // Angular表单控件
-  readonly show: boolean;                 // 显示状态
-  readonly display: ((form: any) => boolean) | boolean;  // 条件显示
+  readonly key!: string;                  // 字段标识
+  readonly label = '';                    // 显示标签
+  readonly required = false;              // 是否必填
+  readonly value: T | null = null;        // 初始值
+  readonly control!: FormControl;         // Angular表单控件
+  readonly show = true;                   // 显示状态
+  readonly display: ((form: any) => boolean) | boolean = true;  // 条件显示
+  readonly view = signal('');             // 视图模式展示值
 
   // 模板方法 - 子类可重写扩展验证
-  protected getValid(instance: FormBase<T>): ValidatorFn[] {
+  protected getValid(instance: BaseInf<FormBase<T>>): ValidatorFn[] {
     // 通用验证逻辑
   }
 }
@@ -157,6 +181,7 @@ new StringUnit({
 | **类型安全配置** | 泛型约束 + 工具类型，完整类型推导 | ⭐⭐⭐ |
 | **跨字段验证** | 订阅目标字段变化，触发联动验证 | ⭐⭐ |
 | **Signal响应式** | computed缓存，精准更新 | ⭐⭐ |
+| **plainToClass** | 选择性属性复制，避免Object.assign覆盖 | ⭐⭐ |
 | **BigInt验证** | 突破JS精度限制，支持超大数值 | ⭐ |
 
 ### 八、部署架构
@@ -167,7 +192,7 @@ new StringUnit({
 ├─────────────────────────────────────────────────────────────────────┤
 │                                                                     │
 │  ┌─────────────┐      ┌─────────────┐      ┌─────────────┐         │
-│  │  源码开发   │ ───► │  构建打包   │ ───► │  npm发布    │         │
+│  │  源码开发   │ ───► │  构建打包   │ ───► │  GitLab发布 │         │
 │  │  (TypeScript)│      │ (ng-packagr)│      │ (@axyom-ui) │         │
 │  └─────────────┘      └─────────────┘      └─────────────┘         │
 │                                               │                     │
@@ -186,14 +211,14 @@ new StringUnit({
 ### 九、CI/CD流程
 
 ```
-代码提交 → GitLab CI触发 → 代码检查(ESLint/TypeScript) → 构建打包 → 单元测试 → npm发布
+代码提交(projects/form/package.json变化) → GitLab CI触发 → pnpm安装依赖 → 单元测试 → 构建打包 → GitLab NPM Registry发布
 ```
 
 ### 十、面试价值总结
 
 本项目具有以下面试讲述价值：
 
-1. **架构设计能力**：五层架构、注册表模式、模板方法、建造者模式
+1. **架构设计能力**：五层架构、注册表模式、模板方法、策略模式
 2. **类型体操能力**：泛型约束、工具类型、抽象类、方法重写
 3. **Angular高级特性**：Signal响应式、动态组件、依赖注入、新控制流
 4. **响应式编程**：RxJS操作符、内存管理、跨字段验证
@@ -213,14 +238,16 @@ export class FormUnitRegistryService {
     string: StringUnitComponent,
     number: NumberUnitComponent,
     select: SelectUnitComponent,
-    // ... 21种组件
+    cascader: CascaderUnitComponent,
+    upload: UploadUnitComponent,
+    view: ViewUnitComponent,
+    // ... 20种组件
   };
 
   getFormUnit(type: string): Type<any> {
     return this.units[type] ?? this.units['string']; // 兜底策略
   }
 
-  // 支持运行时扩展
   register(type: string, formUnit: Type<any>): void {
     this.units[type] = formUnit;
   }
@@ -236,16 +263,14 @@ export class FormUnitRegistryService {
 
 ```typescript
 // FormBase 基类定义算法骨架
-export abstract class FormBase<T> {
-  // 子类必须实现
+export abstract class FormBase<T = any> {
   abstract readonly controlType: string;
 
-  // 模板方法
-  protected getValid(instance: FormBase<T>): ValidatorFn[] {
+  protected getValid(instance: BaseInf<FormBase<T>>): ValidatorFn[] {
     const valid: ValidatorFn[] = [];
     if (instance.valid) {
-      Array.isArray(instance.valid) 
-        ? valid.push(...instance.valid) 
+      Array.isArray(instance.valid)
+        ? valid.push(...instance.valid)
         : valid.push(instance.valid);
     }
     if (instance.required) {
@@ -266,21 +291,7 @@ export class StringUnit extends FormBase<string> {
 }
 ```
 
-### 1.3 建造者模式 (Builder Pattern)
-
-```typescript
-// dialog-modal.ts - 链式调用构建复杂对象
-DialogModal.builder()
-  .setTitle('确认删除')
-  .setContent('确定要删除这条记录吗？')
-  .setOkText('确定')
-  .setOkDanger(true)
-  .setOk(() => this.deleteService.delete())
-  .setCancelText('取消')
-  .setWidth(400);
-```
-
-### 1.4 策略模式 (Strategy Pattern)
+### 1.3 策略模式 (Strategy Pattern)
 
 ```typescript
 // 条件显示策略 - 支持布尔值和函数两种策略
@@ -290,11 +301,48 @@ display: ((form: any) => boolean) | boolean = true;
 new StringUnit({ key: 'p1', display: false }) // 始终隐藏
 
 // 动态策略
-new StringUnit({ 
-  key: 'p2', 
-  display: (formValue) => formValue.p1 != 2 
+new StringUnit({
+  key: 'p2',
+  display: (formValue) => formValue.p1 != 2
 })
 ```
+
+### 1.4 plainToClass 模式 (选择性属性复制)
+
+```typescript
+// tool/plain-to-class.ts
+export function plainToClass(instance: any, op: any, keys: string[]) {
+  keys
+    .filter((key) => has(op, key))
+    .forEach((key) => {
+      instance[key] = op[key];
+    });
+}
+
+// 使用：避免 Object.assign 覆盖默认值
+export class DialogModal {
+  title = '';
+  content = '';
+  okText: string | undefined = undefined;
+
+  constructor(op: Partial<DialogModal> & { title: string, content: string }) {
+    plainToClass(this, op, [
+      'title', 'content', 'okText', 'okType', 'okDanger',
+      'onOk', 'cancelText', 'onCancel', 'width',
+    ]);
+  }
+
+  mergeDialogConfig(config: Partial<DialogConfig>) {
+    // 只有实例值为 undefined 时才使用默认值
+    mergeDefault(this, defaults, ['okText', 'okDanger', 'okType', 'cancelText', 'width']);
+  }
+}
+```
+
+**设计价值：**
+- 细粒度控制：只复制指定属性，避免意外覆盖
+- 默认值保留：`mergeDefault` 只在 `undefined` 时覆盖
+- 分层配置：实例配置 > 全局配置 > 内置默认值
 
 ---
 
@@ -314,32 +362,47 @@ new StringUnit({
 // form-unit.component.ts
 @Component({
   template: `
-    @if (fb().show) {
-      <ng-container 
-        *ngComponentOutlet="component; inputs: formInput()" />
+    @if (!!fb().label) {
+      <nz-form-label ...>{{ fb().label }}</nz-form-label>
     }
+    <nz-form-control ...>
+      <ng-container *ngComponentOutlet="component; inputs: formInput()" />
+    </nz-form-control>
   `
 })
-export class FormUnitComponent {
+export class FormUnitComponent implements OnInit {
+  private registry = inject(FormUnitRegistryService);
+
+  readonly fb = input.required<FormBase>();
+  readonly form = input.required<FormGroup>();
+  readonly isView = input(false);
+
   readonly formInput = computed(() => ({
     fb: this.fb(),
     formGroup: this.form(),
   }));
-  
+
+  component!: Type<FormBaseUnit<FormBase, any>>;
+
   ngOnInit() {
     this.component = this.getFormItemComponent();
+  }
+
+  getFormItemComponent() {
+    const type = this.isView() ? 'view' : this.fb().controlType;
+    return this.registry.getFormUnit(type);
   }
 }
 ```
 
 **优化点：**
 1. `computed` 缓存输入对象，避免每次变更检测重新创建
-2. 仅在 `show=true` 时渲染，减少不必要的组件实例化
+2. 视图模式一键切换：`isView` 为 true 时所有字段自动转为只读
 3. 使用 `NgComponentOutlet` 替代多个 `ngIf` 分支
 
 ### 2.2 类型安全的配置推断
 
-**位置**: `form.model.ts`
+**位置**: `form-base.ts`
 
 #### 难点分析
 
@@ -382,16 +445,13 @@ export function updateShow(form: FormGroup, fbs: FormBase[], value: any = null):
     value = form.getRawValue();
   }
   fbs.forEach((fb) => {
-    // 计算显示状态
     fb.show = typeof fb.display == 'boolean' ? fb.display : fb.display(value);
-    
+
     if (fb.show) {
-      // 动态添加 FormControl
       if (!form.controls[fb.key]) {
         form.addControl(fb.key, fb.control);
       }
     } else {
-      // 动态移除 FormControl
       if (form.controls[fb.key]) {
         form.removeControl(fb.key);
       }
@@ -417,31 +477,30 @@ Angular 原生验证器不支持跨字段监听，需要实现联动验证。
 
 ```typescript
 // valid/equal-to.ts
-export const equalTo = (targetFb: FormBase, destroyRef?: DestroyRef): ValidatorFn => {
+export const equalTo = (fb: FormBase): ValidatorFn => {
+  let subscribe = false;
   return (control: AbstractControl): ValidResult => {
     if (isEmptyInputValue(control.value)) {
       return null;
     }
-    
-    // 关键：订阅目标字段的变化，触发自身重新验证
-    // 注意：在独立验证器函数中需要传递 DestroyRef 参数
-    targetFb.control.valueChanges
-      .pipe(takeUntilDestroyed(destroyRef))
-      .subscribe(() => {
-        control.updateValueAndValidity({ onlySelf: false });
-      });
-    
-    return control.value === targetFb.control.value 
-      ? null 
-      : { equalTo: `The value must be equal to ${targetFb.label}` };
+
+    // 延迟订阅，避免循环调用
+    if (!subscribe) {
+      subscribe = true;
+      fb.control.valueChanges.subscribe(() => control.updateValueAndValidity());
+    }
+
+    return fb.control.value === control.value
+      ? null
+      : { equalTo: `The input value should be equal ${fb.label} value` };
   };
 };
 ```
 
 **技术难点突破：**
 - Angular 原生验证器不支持跨字段监听
-- 通过订阅目标字段的 `valueChanges` 实现联动
-- 使用 `takeUntilDestroyed()` 防止内存泄漏
+- 通过闭包中的 `subscribe` 标识实现一次性延迟订阅，避免循环调用
+- 目标字段变化时触发自身重新验证
 
 ### 2.5 超大数值范围验证 (突破 JS 精度限制)
 
@@ -455,23 +514,25 @@ JavaScript `Number` 类型最大安全整数为 `2^53 - 1`，需要支持超大�
 
 ```typescript
 // valid/big-range.ts
-export const bigRange = (
-  params: { min?: string; max?: string },
-  isInt = false
-): ValidatorFn => {
+export const bigRange = (param: string[], isInt = false): ValidatorFn => {
   return (control: AbstractControl): ValidResult => {
-    if (isEmptyInputValue(control.value)) return null;
-    
-    // 使用 BigInt 处理超大数值
-    const bigValue = BigInt(control.value);
-    
-    if (params.min != null && bigValue < BigInt(params.min)) {
-      return { bigRange: `Value must be >= ${params.min}` };
+    if (!param || isEmptyInputValue(control.value)) return null;
+    let v: string = control.value;
+
+    // 校验格式
+    const regexp = new RegExp(isInt ? /^\d+$/ : /^\d+(\.\d+)?$/);
+    if (!regexp.test(v)) {
+      return { bigRange: `The input value not ${isInt ? 'integer' : 'number'}` };
     }
-    if (params.max != null && bigValue > BigInt(params.max)) {
-      return { bigRange: `Value must be <= ${params.max}` };
-    }
-    return null;
+
+    // 去除前导零后，用字符串逐位比较
+    v = v.replace(/\b(0+)/gi, '');
+    const x = compareBigNumber(param[0], v);
+    const y = compareBigNumber(v, param[1]);
+
+    return !!x || !!y
+      ? { bigRange: `The input value should be between ${param[0]} and ${param[1]}` }
+      : null;
   };
 };
 ```
@@ -488,40 +549,89 @@ export const bigRange = (
 
 ```typescript
 // option-base.ts
-export abstract class OptionBase<T> extends FormBase<T> {
+export abstract class OptionBase<T = any> extends FormBase<T> {
   options: Option[] = [];
   load: (() => Observable<OptionInf>) | null = null;
-  isLoading = false;
+  readonly isLoading = signal(false);
+  separatorOnViewMode = '\n';
 
   override toView() {
     if (isEmptyInputValue(this.control.value)) {
       this.view.set('');
-    }
-    
-    // 策略1：本地选项直接转换
-    if (this.options.length > 0) {
+    } else if (this.options.length > 0) {
       this.view.set(this.getOptionLabels());
-    } 
-    // 策略2：异步加载
-    else if (this.load != null) {
-      if (!this.isLoading) {
-        this.isLoading = true;
-        this.load()
-          .pipe(finalize(() => this.isLoading = false))
-          .subscribe((data) => {
-            this.options = toOptions(data);
-            this.view.set(this.getOptionLabels());
-          });
+    } else if (this.load != null) {
+      if (!this.isLoading()) {
+        this.isLoading.set(true);
+        this.load().pipe(finalize(() => this.isLoading.set(false))).subscribe((data) => {
+          this.options = toOptions(data);
+          this.view.set(this.getOptionLabels());
+        });
       }
+    }
+  }
+}
+
+// 组件初始化时异步加载
+@Directive()
+export class OptionBaseUnit<T extends OptionBase<R>, R>
+  extends FormBaseUnit<T, R>
+  implements OnInit {
+  ngOnInit() {
+    if (this.fb().options.length == 0 && this.fb().load != null) {
+      this.fb().load!().subscribe((data) => {
+        this.fb().options = toOptions(data);
+      });
     }
   }
 }
 ```
 
 **支持的加载模式：**
-1. **同步加载**：组件初始化时一次性加载
-2. **异步加载**：支持 Observable 流式加载
-3. **分页加载**：`SelectLoadUnit` 支持无限滚动分页
+1. **同步加载**：组件初始化时直接传入 options
+2. **异步加载**：支持 Observable 流式加载，signal 状态管理
+3. **分页加载**：`SelectLoadUnit` 支持 loadMore 无限滚动分页
+
+### 2.7 全局配置注入体系
+
+**位置**: `config.ts`
+
+#### 难点分析
+
+需要支持全局默认配置 + 局部实例配置的分层覆盖机制。
+
+#### 设计方案
+
+```typescript
+// config.ts - 配置类型定义
+export type AxyomFormConfig = Partial<{
+  dialog: Partial<DialogConfig>;
+  formModal: Partial<FormModalConfig>;
+}>;
+
+export const AXYOM_FORM_CONFIG = new InjectionToken<AxyomFormConfig>('AXYOM_FORM_CONFIG');
+
+export function provideAxyomFormConfig(config: AxyomFormConfig) {
+  return { provide: AXYOM_FORM_CONFIG, useValue: config };
+}
+
+// 分层合并逻辑：实例值(undefined) → 全局配置 → 内置默认值
+export function mergeDefault(instance: any, op: any, keys: string[]) {
+  keys
+    .filter((key) => has(op, key))
+    .forEach((key) => {
+      if (instance[key] === undefined) {
+        instance[key] = op[key];
+      }
+    });
+}
+
+// 使用：DialogModal 在 DynamicModalService 中自动合并
+confirm(modal: DialogModal): NzModalRef {
+  modal.mergeDialogConfig(this.config.dialog ?? {});
+  return this.modalService.confirm({ ... });
+}
+```
 
 ---
 
@@ -532,7 +642,7 @@ export abstract class OptionBase<T> extends FormBase<T> {
 | 优化项 | 实现方式 | 效果 |
 |--------|----------|------|
 | Tree-shaking | `sideEffects: false` | 移除未使用代码 |
-| 独立组件 | `standalone: true` | 按需导入模块 |
+| Standalone 组件 | Angular 20+ 默认 | 按需导入模块 |
 | 懒加载 | `loadComponent` | 路由级代码分割 |
 
 ### 3.2 运行时优化
@@ -541,8 +651,9 @@ export abstract class OptionBase<T> extends FormBase<T> {
 |--------|----------|------|
 | Signal 响应式 | `signal()` / `computed()` | 精准更新 |
 | 列表优化 | `@for track fb.key` | 减少 DOM 操作 |
-| 订阅管理 | `takeWhile` / `takeUntilDestroyed` | 防止内存泄漏 |
+| 订阅管理 | `takeUntilDestroyed` | 防止内存泄漏 |
 | 计算缓存 | `computed()` | 避免重复计算 |
+| Upload防抖 | `debounceTime(200)` | 减少重复触发 |
 
 ### 3.3 包体积优化
 
@@ -568,7 +679,7 @@ export abstract class OptionBase<T> extends FormBase<T> {
 
 **回答要点：**
 1. **五层架构**：基础设施层 → 基类层 → 组件层 → 调度层 → 容器层
-2. **设计模式**：注册表模式、模板方法、建造者模式、策略模式
+2. **设计模式**：注册表模式、模板方法、策略模式、plainToClass 模式
 3. **扩展性**：支持自定义组件注册、自定义验证器、全局配置注入
 
 ---
@@ -595,12 +706,13 @@ export abstract class OptionBase<T> extends FormBase<T> {
 
 ```typescript
 // 1. Signal - 状态管理（同步、细粒度）
-readonly view = signal('');  // 组件状态
+readonly view = signal('');   // 组件状态
+readonly isLoading = signal(false); // 异步加载状态
 
 // 2. RxJS - 异步流处理
 this.form()
   .valueChanges
-  .pipe(takeWhile(() => this.alive))
+  .pipe(takeUntilDestroyed(this.ref))
   .subscribe(() => updateShow(this.form(), this.fbs()));
 
 // 3. 混用场景：Signal 驱动的 computed
@@ -626,7 +738,7 @@ readonly formInput = computed(() => ({
 
 **技术决策理由：**
 1. **可扩展性**：ngSwitch 需要编译时知道所有类型，NgComponentOutlet 支持运行时注册
-2. **代码量**：21 种组件用 ngSwitch 需要 21 个 case，NgComponentOutlet 只需 1 行
+2. **代码量**：20 种组件用 ngSwitch 需要 20 个 case，NgComponentOutlet 只需 1 行
 3. **性能**：NgComponentOutlet 只实例化需要的组件
 4. **微前端**：NgComponentOutlet 支持动态加载远程组件
 
@@ -646,7 +758,11 @@ export function provideAxyomFormConfig(config: AxyomFormConfig) {
 // 3. 库内部消费
 @Injectable({ providedIn: 'root' })
 export class DynamicModalService {
-  private config = inject(AXYOM_FORM_CONFIG); // 类型安全
+  private config = inject(AXYOM_FORM_CONFIG);
+  // 自动合并全局配置到弹窗实例
+  confirm(modal: DialogModal) {
+    modal.mergeDialogConfig(this.config.dialog ?? {});
+  }
 }
 ```
 
@@ -654,6 +770,7 @@ export class DynamicModalService {
 - InjectionToken 解决字符串 token 的类型安全问题
 - `providedIn: 'root'` 实现单例，无需额外配置
 - `provideXxx` 函数符合 Angular 最佳实践
+- 分层配置：实例 > 全局 > 默认值
 
 ### 4.3 TypeScript 高级用法类
 
@@ -696,46 +813,35 @@ interface StringUnit {
 #### Q8: 跨字段验证是怎么实现的？内存泄漏怎么处理？
 
 ```typescript
-// 问题：密码确认需要监听密码字段变化
-export const equalTo = (targetFb: FormBase): ValidatorFn => {
-  // 1. 闭包持有目标字段引用
+// valid/equal-to.ts
+export const equalTo = (fb: FormBase): ValidatorFn => {
+  let subscribe = false;
   return (control: AbstractControl): ValidResult => {
     if (isEmptyInputValue(control.value)) return null;
-    
-    // 2. 订阅目标字段的 valueChanges
-    targetFb.control.valueChanges
-      .pipe(takeUntilDestroyed()) // 3. 自动取消订阅
-      .subscribe(() => {
-        // 4. 目标字段变化时，触发自身重新验证
-        control.updateValueAndValidity({ onlySelf: false });
+
+    // 延迟订阅：避免验证器初始化时的循环调用
+    if (!subscribe) {
+      subscribe = true;
+      fb.control.valueChanges.subscribe(() => {
+        control.updateValueAndValidity();
       });
-    
-    return control.value === targetFb.control.value 
-      ? null 
-      : { equalTo: `${targetFb.label} 不匹配` };
+    }
+
+    return fb.control.value === control.value
+      ? null
+      : { equalTo: `The input value should be equal ${fb.label} value` };
   };
 };
 ```
 
-**内存泄漏防护：**
+**面试回答框架：**
 
-```typescript
-// 方案1：takeUntilDestroyed（推荐，Angular 16+）
-import { takeUntilDestroyed } from '@angular/core/rxjs-interop';
-targetFb.control.valueChanges
-  .pipe(takeUntilDestroyed(this.destroyRef))
-  .subscribe();
-
-// 方案2：takeWhile（组件内使用）
-private alive = true;
-ngOnDestroy() { this.alive = false; }
-this.form().valueChanges
-  .pipe(takeWhile(() => this.alive))
-  .subscribe();
-
-// 方案3：async pipe（模板中使用，自动取消）
-{{ form.valueChanges | async }}
-```
+| 方案 | 适用场景 | 说明 |
+|------|----------|------|
+| **subscribe 标识** | 验证器函数内 | 闭包持有，一次性延迟订阅 |
+| **takeUntilDestroyed** | 组件内订阅 | Angular 16+，自动监听 DestroyRef |
+| **takeWhile** | 组件内订阅 | 手动控制生命周期 |
+| **async pipe** | 模板中使用 | 自动取消订阅 |
 
 ### 4.5 性能优化类
 
@@ -800,56 +906,57 @@ import { StringUnit, toForm } from '@axyom-ui/form';
 # .gitlab-ci.yml
 stages:
   - test
-  - deploy
+  - build
+
+before_script:
+  - corepack enable
+  - pnpm install --frozen-lockfile
 
 test:
   stage: test
   script:
-    - pnpm install
-    - pnpm run build:form
-    - pnpm run test:form -- --code-coverage
-  coverage: '/Lines\s*:\s*(\d+\.?\d*)%/'
+    - npm run test_lib
 
 deploy:
-  stage: deploy
+  stage: build
   only:
-    - main
-  when: on-success  # 测试通过才发布
+    refs:
+      - main
+    changes:
+      - projects/form/package.json
+  needs:
+    - job: test
+      artifacts: false
   script:
-    - cd projects/form
-    - npm publish --registry https://gitlab.com/api/v4/projects/${CI_PROJECT_ID}/packages/npm
+    - npm run build_lib
+    - cd dist/form
+    - npm publish
 ```
 
 **工程化亮点：**
 1. **测试先行**：test 阶段必须通过才能 deploy
-2. **覆盖率报告**：自动提取覆盖率数据
-3. **条件发布**：仅 main 分支 + 测试通过时发布
-4. **版本管理**：package.json 版本号控制发布
+2. **条件发布**：仅 main 分支 + 包版本变更时发布
+3. **GitLab NPM Registry**：私有包管理
+4. **依赖锁定**：`pnpm install --frozen-lockfile` 保证可复现构建
 
 ---
 
-#### Q12: 单元测试怎么写的？
+#### Q12: 单元测试怎么写的？(Vitest)
 
 ```typescript
 // valid/ip.spec.ts
 describe('ip validator', () => {
   it('should validate IPv4 address', () => {
-    // 1. 创建 FormControl
     const control = new FormControl('192.168.1.1');
-    
-    // 2. 应用验证器
     const validator = ip('ipv4');
     const result = validator(control);
-    
-    // 3. 断言结果
-    expect(result).toBeNull(); // 验证通过
+    expect(result).toBeNull();
   });
 
   it('should reject invalid IPv4', () => {
     const control = new FormControl('256.1.1.1');
     const validator = ip('ipv4');
     const result = validator(control);
-    
     expect(result).toEqual({ ip: 'The input value should be IPv4' });
   });
 });
@@ -857,8 +964,9 @@ describe('ip validator', () => {
 
 **测试策略：**
 - **纯逻辑测试**：验证器是纯函数，无需 TestBed
+- **Vitest 运行**：比 Karma 更快，更好的开发者体验
 - **边界覆盖**：测试正常值、边界值、异常值
-- **快速反馈**：单个测试 < 10ms
+- **12个spec文件**：42个测试用例，覆盖所有验证器和工具函数
 
 ### 4.7 问题解决能力类
 
@@ -876,12 +984,12 @@ describe('ip validator', () => {
 ```typescript
 export function updateShow(form: FormGroup, fbs: FormBase[], value: any = null): void {
   if (value == null) value = form.getRawValue(); // 获取所有值（包括 disabled）
-  
+
   fbs.forEach((fb) => {
-    const shouldShow = typeof fb.display === 'boolean' 
-      ? fb.display 
+    const shouldShow = typeof fb.display === 'boolean'
+      ? fb.display
       : fb.display(value);
-    
+
     if (shouldShow && !fb.show) {
       // 显示：添加 FormControl
       form.addControl(fb.key, fb.control);
@@ -891,7 +999,7 @@ export function updateShow(form: FormGroup, fbs: FormBase[], value: any = null):
       form.removeControl(fb.key);
       // control 对象仍然存在，只是从 FormGroup 移除
     }
-    
+
     fb.show = shouldShow;
   });
 }
@@ -911,42 +1019,45 @@ export function updateShow(form: FormGroup, fbs: FormBase[], value: any = null):
 用户点击"确定"按钮
 - 如果回调是同步函数，直接关闭弹窗
 - 如果回调是 Observable，显示 loading，等待完成后关闭
-- 如果 Observable 出错，隐藏 loading，不关闭弹窗
+- 如果 Observable 出错，隐藏 loading，不关闭弹窗，显示错误信息
 ```
 
 **解决方案：**
 
 ```typescript
-executeFun(fun: any) {
-  if (fun != null) {
-    const result = fun(); // 执行回调
-    
-    // 检测是否返回 Observable
-    if (result instanceof Observable) {
-      // 转为 Promise，ng-zorro 会自动等待 Promise resolve
-      return firstValueFrom(
-        result.pipe(
-          catchError(() => of(true)) // 错误时不关闭弹窗
-        )
-      );
-      // Promise resolve → 关闭弹窗 + 隐藏 loading
-      // Promise reject → 只隐藏 loading，不关闭弹窗
-    }
+// form-modal.component.ts
+ok() {
+  const fun = this.data.onOk(this.data.form.getRawValue());
+  if (fun instanceof Observable) {
+    this.data.okLoading.set(true);
+    fun.pipe(takeUntilDestroyed(this.ref)).subscribe({
+      next: () => {
+        this.error.set('');
+        this.data.okLoading.set(false);
+        this.modal.destroy();
+      },
+      error: (data) => {
+        this.data.okLoading.set(false);
+        this.error.set(data.error.message); // 显示错误信息
+      },
+    });
+  } else {
+    this.destroyModal();
   }
-  return null;
 }
 ```
 
 **技术细节：**
-- ng-zorro 的 `nzOnOk` 支持返回 Promise，会自动管理 loading
-- `firstValueFrom` 将 Observable 转为 Promise
-- `catchError(() => of(true))` 吞掉错误，返回成功（不关闭弹窗）
+- Loading 状态使用 Signal 管理，模板自动响应
+- Observable 成功 → 清除错误 + 关闭弹窗
+- Observable 失败 → 隐藏 loading + 显示错误信息（不关闭弹窗）
+- 同步函数 → 直接关闭
 
 ### 4.8 面试话术模板
 
 #### 开场白（30秒）
 
-> "我做了一个基于 ng-zorro 封装的配置驱动型动态表单框架，核心解决的问题是：**用 TypeScript 配置替代手写重复的模板代码**。通过声明式的配置类描述表单字段，自动生成对应的 UI 表单。目前支持 21 种组件类型、10 种自定义验证器，支持条件显示、异步选项加载、跨字段验证等高级功能。"
+> "我做了一个基于 ng-zorro 封装的配置驱动型动态表单框架，核心解决的问题是：**用 TypeScript 配置替代手写重复的模板代码**。通过声明式的配置类描述表单字段，自动生成对应的 UI 表单。目前支持 20 种组件类型、10 种自定义验证器，支持条件显示、异步选项加载、跨字段验证、表单弹窗等高级功能。"
 
 #### 技术深度展示（选择 2-3 个点深入）
 
@@ -978,7 +1089,7 @@ executeFun(fun: any) {
 | **性能** | Tree-shaking 原理？ | 静态分析 import/export，移除未使用代码 |
 | **性能** | computed 缓存原理？ | 依赖追踪 + 惰性计算 + 结果缓存 |
 | **测试** | 验证器怎么测试？ | 纯函数测试，无需 TestBed |
-| **工程化** | CI/CD 流程？ | test → build → deploy，条件发布 |
+| **工程化** | CI/CD 流程？ | test → build → GitLab NPM Registry 发布 |
 
 ---
 
@@ -998,7 +1109,7 @@ executeFun(fun: any) {
 │                                                                 │
 │  ┌───────────────────────────────────────────────────────────┐  │
 │  │  架构设计能力                                               │  │
-│  │  注册表模式 · 模板方法 · 建造者模式 · 策略模式              │  │
+│  │  注册表模式 · 模板方法 · 策略模式 · plainToClass模式       │  │
 │  │  五层架构 · 依赖注入 · 组件/服务分离                        │  │
 │  └───────────────────────────────────────────────────────────┘  │
 │                                                                 │
@@ -1022,7 +1133,7 @@ executeFun(fun: any) {
 │                                                                 │
 │  ┌───────────────────────────────────────────────────────────┐  │
 │  │  工程化                                                     │  │
-│  │  ng-packagr构建 · 单元测试 · CI/CD · npm发布                │  │
+│  │  ng-packagr构建 · Vitest · CI/CD · GitLab NPM发布          │  │
 │  │  TypeScript严格模式 · ESLint · Prettier                     │  │
 │  └───────────────────────────────────────────────────────────┘  │
 └─────────────────────────────────────────────────────────────────┘
@@ -1059,9 +1170,10 @@ executeFun(fun: any) {
 
 ### 中期演进
 
-1. **Signal Forms**：迁移到 Angular 21+ 的新 Signal Forms API
+1. **Signal Forms**：迁移到 Angular 21+ 的新 Signal Forms API（实验性）
 2. **Schema 驱动**：支持 JSON Schema 自动生成表单
 3. **国际化**：支持多语言错误消息
+4. **组件级测试**：集成 TestBed + Vitest 测试组件渲染
 
 ### 长期规划
 

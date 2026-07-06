@@ -54,13 +54,13 @@ jobs:
         uses: actions/cache@v5
         with:
           path: ~/.bun/install/cache
-          key: ${{ runner.os }}-bun-${{ hashFiles('frontend/bun.lock') }}
+          key: ${{ runner.os }}-bun-${{ hashFiles('apps/frontend/bun.lock') }}
           restore-keys: |
             ${{ runner.os }}-bun-
       - run: bun install --frozen-lockfile
-        working-directory: frontend
+        working-directory: apps/frontend
       - run: bun run lint
-        working-directory: frontend
+        working-directory: apps/frontend
 
   test-frontend:
     runs-on: ubuntu-latest
@@ -73,13 +73,13 @@ jobs:
         uses: actions/cache@v5
         with:
           path: ~/.bun/install/cache
-          key: ${{ runner.os }}-bun-${{ hashFiles('frontend/bun.lock') }}
+          key: ${{ runner.os }}-bun-${{ hashFiles('apps/frontend/bun.lock') }}
           restore-keys: |
             ${{ runner.os }}-bun-
       - run: bun install --frozen-lockfile
-        working-directory: frontend
+        working-directory: apps/frontend
       - run: bun run test
-        working-directory: frontend
+        working-directory: apps/frontend
 
   tsc-frontend:
     runs-on: ubuntu-latest
@@ -92,10 +92,10 @@ jobs:
         uses: actions/cache@v5
         with:
           path: ~/.bun/install/cache
-          key: ${{ runner.os }}-bun-${{ hashFiles('frontend/bun.lock') }}
+          key: ${{ runner.os }}-bun-${{ hashFiles('apps/frontend/bun.lock') }}
           restore-keys: |
             ${{ runner.os }}-bun-
       - run: bun install --frozen-lockfile
-        working-directory: frontend
+        working-directory: apps/frontend
       - run: bunx tsc -b --noEmit
-        working-directory: frontend
+        working-directory: apps/frontend

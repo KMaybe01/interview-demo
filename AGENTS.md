@@ -3,23 +3,32 @@
 ## 先做
 
 ```bash
-cd frontend
-bun install          # 只能用 bun, 不能用 npm
+bun install          # 只能用 bun, 不能用 npm（从根目录安装所有 workspace）
 ```
 
 ## 开发命令
 
-除非注明，均在 `frontend/` 下执行：
+除非注明，均在 `apps/frontend/` 下执行：
 
 | 命令 | 说明 |
 |------|------|
-| `bun run dev` | Vite 开发服务器 (port 5173, `/api` + `/ws` 代理到 `:8080`) |
-| `bun run build` | `tsc -b && vite build` (Rolldown Rust 打包) |
-| `bun run test` | `vitest run` |
-| `bun run test:watch` | `vitest` (监听模式) |
-| `bun run lint` | `biome check --write src/` (Biome 是**唯一**的 linter/formatter) |
-| `bun run format` | `biome format --write src/` |
-| `bunx tsc -b --noEmit` | TypeScript 类型检查 (CI 用) |
+| `bun run --cwd apps/frontend dev` | Vite 开发服务器 (port 5173, `/api` + `/ws` 代理到 `:8080`) |
+| `bun run --cwd apps/frontend build` | `tsc -b && vite build` (Rolldown Rust 打包) |
+| `bun run --cwd apps/frontend test` | `vitest run` |
+| `bun run --cwd apps/frontend test:watch` | `vitest` (监听模式) |
+| `bun run --cwd apps/frontend lint` | `biome check --write src/` (Biome 是**唯一**的 linter/formatter) |
+| `bun run --cwd apps/frontend format` | `biome format --write src/` |
+| `cd apps/frontend && bunx tsc -b --noEmit` | TypeScript 类型检查 (CI 用) |
+
+也可直接 `cd apps/frontend` 后执行上述命令。
+
+`apps/interview-docs/` 下（前端知识库文档站点）：
+
+| 命令 | 说明 |
+|------|------|
+| `cd apps/interview-docs && bun run dev` | Vite 开发服务器 (port 5000) |
+| `cd apps/interview-docs && bun run build` | `tsc -b && vite build && node gen-version.mjs` |
+| `cd apps/interview-docs && bun run lint` | `biome check --write .` |
 
 `backend/` 下：
 
@@ -30,12 +39,13 @@ go test ./internal/... -v
 
 ## 架构
 
-- **前端入口**: `src/main.tsx` → `src/App.tsx` → `src/layouts/MainLayout.tsx`
-- **路由**: `src/routes/index.tsx` — 15 个懒加载页面，自动映射到侧边栏
-- **认证守卫**: `src/components/AuthGuard.tsx` 保护除 `/login` 外的所有路由
-- **状态管理**: Zustand store 位于 `src/stores/`，通过 `src/stores/index.ts` 桶文件导出
-- **API 客户端**: `src/utils/fetchClient.ts` (Axios，自动注入 Bearer Token，401 自动刷新 + 请求重放)
+- **前端入口**: `apps/frontend/src/main.tsx` → `apps/frontend/src/App.tsx` → `apps/frontend/src/layouts/MainLayout.tsx`
+- **路由**: `apps/frontend/src/routes/index.tsx` — 15 个懒加载页面，自动映射到侧边栏
+- **认证守卫**: `apps/frontend/src/components/AuthGuard.tsx` 保护除 `/login` 外的所有路由
+- **状态管理**: Zustand store 位于 `apps/frontend/src/stores/`，通过 `apps/frontend/src/stores/index.ts` 桶文件导出
+- **API 客户端**: `apps/frontend/src/utils/fetchClient.ts` (Axios，自动注入 Bearer Token，401 自动刷新 + 请求重放)
 - **后端**: Go 1.26 + Gin — 全内存存储，无外部数据库
+- **前端知识库**: `apps/interview-docs/` — React 19 文档站点，Markdown 内容，GitHub Pages 部署
 
 ## 代码规范
 
@@ -52,9 +62,9 @@ go test ./internal/... -v
 ## 状态管理
 
 - 简单页面级状态：`useState` + `useRef`
-- 全局共享：Zustand（通过 `src/stores/index.ts` 桶文件导出）
+- 全局共享：Zustand（通过 `apps/frontend/src/stores/index.ts` 桶文件导出）
 - 持久化：Zustand `persist` 中间件 (仅 uploadStore)
-- 新增 store 必须在 `src/stores/index.ts` 中添加导出
+- 新增 store 必须在 `apps/frontend/src/stores/index.ts` 中添加导出
 
 ## 关键模式
 
@@ -65,7 +75,7 @@ go test ./internal/... -v
 
 ## 动态表单引擎
 
-路径：`src/components/dynamic-form/`
+路径：`apps/frontend/src/components/dynamic-form/`
 
 | 文件 | 职责 |
 |------|------|
@@ -145,8 +155,10 @@ PageTracker (App.tsx 中包裹每个路由)
 
 ## CI/CD
 
-- **GitHub Actions** (`.github/workflows/lint.yml`)：push/PR 到 `main` → `go vet`、`go test`、`bun run lint`、`bun run test`、`bunx tsc -b --noEmit`
-- **GitLab CI** (`.gitlab-ci.yml`)：validate → build → package (Docker) → deploy (Helm 到 K8s)
+- **GitHub Actions**:
+  - `.github/workflows/lint.yml`：push/PR 到 `main` → `go vet`、`go test`、`bun run lint`、`bun run test`、`bunx tsc -b --noEmit`
+  - `.github/workflows/deploy-interview-docs.yml`：push 到 `main` 且改动 `apps/interview-docs/` → build + deploy 到 GitHub Pages
+- **GitLab CI** (`.gitlab-ci.yml`)：validate → build → package (Docker `frontend`/`backend`/`interview-docs` 三镜像) → deploy (Helm 到 K8s)
 
 ## Git
 
@@ -165,3 +177,4 @@ PageTracker (App.tsx 中包裹每个路由)
 
 - `.husky/` 目录不在 git 中 — 本地需运行 `bun run prepare` 安装 hooks
 - `backend/Makefile` **不存在**于仓库中
+- **Monorepo**: 使用 Bun workspaces 管理，根 `package.json` 定义 `apps/*` 工作区

@@ -92,13 +92,13 @@
 │                                                                     │
 │  ┌─────────────────────────────────────────────────────────────┐   │
 │  │                      表现层 (UI Layer)                       │   │
-│  │  Angular 21.3 + TypeScript + Ng-Zorro + @axyom-ui          │   │
+│  │  Angular 22.0 + TypeScript + Ng-Zorro + @axyom-ui          │   │
 │  │  ECharts 5.x + OpenLayers 10.x                              │   │
 │  └─────────────────────────────────────────────────────────────┘   │
 │                              │                                      │
 │  ┌─────────────────────────────────────────────────────────────┐   │
 │  │                      框架层 (Framework)                       │   │
-│  │  Angular 21.3 (Standalone + Signals + 声明式控制流)          │   │
+│  │  Angular 22.0 (Standalone + Signals + 声明式控制流)          │   │
 │  │  内置: 装饰器驱动API、LRU路由缓存、位编码权限                 │   │
 │  └─────────────────────────────────────────────────────────────┘   │
 │                              │                                      │
@@ -1147,7 +1147,7 @@ export const authInterceptor: HttpInterceptorFn = (req, next) => {
 
 ---
 
-## 四、Angular 21新特性实战应用
+## 四、Angular 22新特性实战应用
 
 ### 4.1 Signals状态管理
 
@@ -1523,7 +1523,7 @@ const scrollToPath = (path: string) => {
 
 #### Q1: 请介绍项目的整体架构设计
 
-**答：** 四层架构 — API 层 (装饰器声明式 HTTP) → Core 层 (全局服务/拦截器/守卫) → Routes 层 (业务组件) → Share 层 (14 个可复用组件)。关键决策：Angular 21 Signals 状态管理、Standalone 组件按需加载、装饰器驱动的 API 服务、LRU 路由缓存。
+**答：** 四层架构 — API 层 (装饰器声明式 HTTP) → Core 层 (全局服务/拦截器/守卫) → Routes 层 (业务组件) → Share 层 (14 个可复用组件)。关键决策：Angular 22 Signals 状态管理、Standalone 组件按需加载、装饰器驱动的 API 服务、LRU 路由缓存。
 
 #### Q2: LRU 路由缓存如何实现？
 
@@ -1555,7 +1555,7 @@ const scrollToPath = (path: string) => {
 
 **答：** TypeScript 装饰器 + Object.defineProperty 重写 getter/setter。getter 从 sessionStorage 读取并 JSON.parse，setter 写入时 JSON.stringify。业务代码直接读写静态属性，完全不感知存储层。
 
-#### Q10: 项目中 Angular 21 的新特性应用？
+#### Q10: 项目中 Angular 22 的新特性应用？
 
 **答：** ① Signals (signal/computed/effect) 状态管理；② input()/input.required() Signal Inputs；③ viewChild.required()；④ @if/@for 声明式控制流；⑤ Standalone 组件无 NgModule；⑥ 函数式守卫 CanActivateFn；⑦ 函数式拦截器 HttpInterceptorFn；⑧ takeUntilDestroyed() 内置销毁管理。
 

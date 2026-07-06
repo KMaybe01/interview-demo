@@ -1,0 +1,50 @@
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: {{ .Values.interviewDocs.name }}
+  namespace: {{ .Values.global.namespace }}
+  labels:
+    app: {{ .Values.interviewDocs.name }}
+    {{- include "interview-demo.labels" . | nindent 4 }}
+spec:
+  replicas: {{ .Values.interviewDocs.replicas }}
+  strategy:
+    type: {{ .Values.interviewDocs.strategy.type }}
+    rollingUpdate:
+      maxSurge: {{ .Values.interviewDocs.strategy.rollingUpdate.maxSurge }}
+      maxUnavailable: {{ .Values.interviewDocs.strategy.rollingUpdate.maxUnavailable }}
+  selector:
+    matchLabels:
+      app: {{ .Values.interviewDocs.name }}
+  template:
+    metadata:
+      labels:
+        app: {{ .Values.interviewDocs.name }}
+        {{- include "interview-demo.labels" . | nindent 8 }}
+    spec:
+      terminationGracePeriodSeconds: {{ .Values.interviewDocs.terminationGracePeriodSeconds }}
+      containers:
+        - name: {{ .Values.interviewDocs.name }}
+          image: "{{ .Values.interviewDocs.image.repository }}:{{ .Values.interviewDocs.image.tag }}"
+          imagePullPolicy: {{ .Values.interviewDocs.image.pullPolicy }}
+          ports:
+            - name: http
+              containerPort: {{ .Values.interviewDocs.port }}
+          resources:
+            {{- toYaml .Values.interviewDocs.resources | nindent 12 }}
+          livenessProbe:
+            httpGet:
+              path: {{ .Values.interviewDocs.livenessProbe.path }}
+              port: {{ .Values.interviewDocs.livenessProbe.port }}
+            initialDelaySeconds: {{ .Values.interviewDocs.livenessProbe.initialDelaySeconds }}
+            periodSeconds: {{ .Values.interviewDocs.livenessProbe.periodSeconds }}
+            timeoutSeconds: {{ .Values.interviewDocs.livenessProbe.timeoutSeconds }}
+            failureThreshold: {{ .Values.interviewDocs.livenessProbe.failureThreshold }}
+          readinessProbe:
+            httpGet:
+              path: {{ .Values.interviewDocs.readinessProbe.path }}
+              port: {{ .Values.interviewDocs.readinessProbe.port }}
+            initialDelaySeconds: {{ .Values.interviewDocs.readinessProbe.initialDelaySeconds }}
+            periodSeconds: {{ .Values.interviewDocs.readinessProbe.periodSeconds }}
+            timeoutSeconds: {{ .Values.interviewDocs.readinessProbe.timeoutSeconds }}
+            failureThreshold: {{ .Values.interviewDocs.readinessProbe.failureThreshold }}

@@ -30,6 +30,13 @@ spec:
                 name: {{ .Values.backend.serviceName }}
                 port:
                   name: http
+          - path: /interview-demo
+            pathType: Prefix
+            backend:
+              service:
+                name: {{ .Values.interviewDocs.serviceName }}
+                port:
+                  name: http
           - path: /
             pathType: Prefix
             backend:

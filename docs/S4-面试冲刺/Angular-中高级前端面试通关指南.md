@@ -1,7 +1,7 @@
 # Angular 中高级前端面试通关指南
 
 > 面试不是考试，是**用你的技术体系打动另一个技术人**。
-> 基于《通用前端面试指南》改编为 Angular 技术栈版本，覆盖 Angular 20+、RxJS、NgRx、Signals 等核心专题。
+> 基于《前端知识体系·中高级通关指南》改编为 Angular 技术栈版本，覆盖 Angular 22、RxJS、NgRx、Signals 等核心专题。
 
 ---
 
@@ -42,26 +42,26 @@
 ```
 我叫 XXX，目前有 4 年前端开发经验，主要方向是企业级 ToB 平台研发与实时通信系统架构。
 
-参与并主导了多个企业级平台，涵盖：
+参与并主导了多个企业级平台及内部基建，涵盖：
 - 5G 核心网测试用例管理系统
 - 企业级综合网络管理系统（AeMS）
-- 网元运维与数据管理系统
-- UniPay 统一支付中台
+- @axyom-ui 企业级内部组件库搭建
 
-技术栈上，主要使用 Angular 20+ + TypeScript 6 + NG-ZORRO + NgRx，
+技术栈上，主要使用 Angular 22 + TypeScript 6 + NG-ZORRO 21 + NgRx，
 配合 Go + Gin 后端，深度使用 TypeScript strict 模式 + Angular ESLint 规范。
 
-核心能力集中在四个方面：
-┌─ 架构设计 ─── 动态表单引擎（ControlValueAccessor）/ 多协议降级传输层 / Web Worker 分治有序合并
-├─ 性能攻坚 ─── GIS 十万级点位渲染（BBOX + Cluster 四重优化）/ 百万行日志流式解密 / 路由复用策略
-├─ 基础建设 ─── Angular Signals + OnPush CD 精准变更检测 / HttpClient 拦截器体系 / 代码分割 + 按需加载
-└─ 全栈工程 ─── K8s/Helm 部署 / GitLab CI/CD 全链路 / Prometheus + Grafana 可观测性
+核心能力集中在五个方面：
+┌─ 架构设计 ─── 递归动态表单引擎 / 装饰器声明式 API 层 / @axyom-ui 组件库
+├─ 性能攻坚 ─── GIS 十万级点位渲染（BBOX + Cluster 四重优化）/ LRU 路由缓存（RouteReuseStrategy）
+├─ 基础建设 ─── Angular 22 Signals 响应式 + RouteReuseStrategy / Biome + ESLint + TypeScript Strict 三层约束 / 代码分割首屏 ↓92%
+├─ 组件库建设 ─── Angular 22 + Signals + NG-ZORRO 搭建 @axyom-ui/table + @axyom-ui/form
+└─ 全栈工程 ─── K8s/Helm 部署 / GitLab CI/CD 全链路 / Prometheus + Grafana 可观测性 / Go 自动化工具链
 
 举个例子：
-- 用 BBOX + Cluster + dataCache + moveend 四重策略，把十万级基站点位帧率从 <10fps 优化到 60fps
-- 设计 Web Worker 分治 + 有序合并 + 流式输出三阶段策略，25MB 级日志并行解密实现"秒开"
+- 用 BBOX 视口裁剪 + Cluster 聚合 + dataCache 全量缓存 + moveend 惰性刷新四重策略，把十万级基站点位帧率从 <10fps 优化到 60fps（Angular + OpenLayers）
+- 设计装饰器声明式 API 层（@GET/@POST/@PATH/@BODY/@QUERY），消除 200+ 个接口的样板代码（Angular BaseApi + Proxy 代理）
 
-此外，我也基于 RxJS WebSocket 设计了多协议降级传输层（WebSocket → SSE → Polling），
+此外，我也设计了多协议降级传输层（WebSocket → SSE → Polling），
 背压控制 + 消息合并 + 心跳保活，4000 msg/s 全帧率渲染。
 
 未来方向，我希望往前端方向深入，持续在实时通信与性能优化领域深耕。
@@ -71,14 +71,15 @@
 
 ```
 我有 4 年前端经验，专注企业级 ToB 平台与实时通信系统架构。
-主导过 5G 测试平台、网络管理系统、UniPay 支付中台等项目。
+主导过 5G 测试平台、网络管理系统、@axyom-ui 组件库等项目。
 
-技术栈：Angular 20+ + TypeScript 6 + NG-ZORRO + NgRx + Go。
+技术栈：Angular 22 + TypeScript 6 + NG-ZORRO 21 + NgRx + Go。
 
 核心能力：
-- 架构：动态表单引擎（ControlValueAccessor）、多协议降级传输、Web Worker 并行计算
-- 性能：GIS 渲染从 <10fps 优化到 60fps、百万行日志流式解密
-- 工程：Signals + OnPush 变更检测、HttpInterceptor 体系、CI/CD + K8s 部署
+- 架构：递归表单引擎、装饰器声明式 API 层、@axyom-ui 组件库
+- 性能：GIS 渲染从 <10fps 优化到 60fps、LRU 路由缓存
+- 工程：Signals + RouteReuseStrategy、HttpInterceptor 体系、CI/CD + K8s 部署
+- 组件库：Signals 声明式表格、配置驱动动态表单、注册表模式
 ```
 
 ## 1.3 简历优化策略
@@ -163,68 +164,47 @@
 
 ## 2.1 项目全景
 
-### 项目一：5G 核心网测试用例管理系统
-
-| 属性 | 内容 |
-|------|------|
-| 类型 | ToB 企业级 — 5G 核心网 SMF 测试工具管理界面 |
-| 技术栈 | Angular 20+ + TypeScript 6 + NG-ZORRO + NgRx + RxJS 8 |
-| 状态 | 线上运行（Docker → K8s/OpenShift 内网部署） |
-| 负责 | 前端架构设计、动态表单引擎（ControlValueAccessor）、树形数据引擎、SSE 实时日志流 |
-
-**核心模块**：Pod 管理（K8s Pod 部署/删除/轮询）、测试用例模块（目录树导航/CRUD/动态 NF 配置）、事件映射模块（PCAP 上传 → JSON 转换）
-
-### 项目二：AeMS — 企业级综合网络管理系统
+### 项目一：AeMS — 企业级综合网络管理系统
 
 | 属性 | 内容 |
 |------|------|
 | 类型 | ToB 企业级 — 十万级网元统一监控与智能告警平台 |
-| 技术栈 | Angular 20+ + TypeScript 6 + NG-ZORRO + NgRx + OpenLayers + ECharts |
+| 技术栈 | Angular 22 + TypeScript 6 + NG-ZORRO 21 + NgRx + OpenLayers + ECharts |
 | 状态 | 线上运行（Docker → K8s 内网部署） |
-| 负责 | 前端架构设计、多协议降级传输层（RxJS WebSocket）、RBAC 权限体系、GIS 性能优化 |
+| 负责 | 前端架构设计、多协议降级传输层（RxJS WebSocket）、RBAC 权限体系、GIS 性能优化、LRU 路由缓存 |
 
-**核心模块**：设备管理（24+列 Active List）、告警管理（RxJS WebSocket + ECharts 实时渲染）、日志管理、系统设置（用户/LDAP/SLA）
+**核心模块**：设备管理（24+列 Active List）、告警管理（RxJS WebSocket + ECharts 实时渲染）、日志管理、系统设置（用户/LDAP/SLA）、GIS 十万级点位四重优化
 
-### 项目三：网元运维与数据管理系统
-
-| 属性 | 内容 |
-|------|------|
-| 类型 | ToB 企业级 — 5G 核心网元运维与数据治理平台 |
-| 技术栈 | Angular 20+ + TypeScript 6 + NG-ZORRO + NgRx + Go 1.26 + Gin |
-| 状态 | 线上运行（Docker → K8s/OpenShift 内网部署） |
-| 负责 | 前端架构、Web Worker 解密方案、声明式表单框架、CI/CD 流水线 |
-
-**核心模块**：网元管理（NF 注册/监控/Provision）、日志管理（Web Worker 并行 AES-256-GCM 解密）、审计日志（RSA-2048 加密）、RBAC 权限、全链路可观测（Prometheus + Grafana）
-
-### 项目四：UniPay — 统一支付中台
+### 项目二：@axyom-ui — 企业级内部组件库
 
 | 属性 | 内容 |
 |------|------|
-| 类型 | ToB 企业级 — 多渠道聚合支付接入平台 |
-| 技术栈 | Angular 20+ + TypeScript 6 + NgRx + Go 1.26 + Gin |
-| 状态 | 线上运行（日均数万笔订单） |
-| 负责 | 前端架构设计、支付状态机（NgRx Store）、幂等性方案、对账脚本、安全防护 |
+| 类型 | ToB 企业级 — 基于 Angular 22 的企业级内部组件库 |
+| 技术栈 | Angular 22 + TypeScript 6 + NG-ZORRO 21 + RxJS 7 + ng-packagr + Vitest |
+| 状态 | 线上运行（GitLab NPM Registry 私有发布） |
+| 负责 | 组件库整体架构设计、表格组件核心引擎、表单框架五层架构、工程化建设 |
 
-**核心模块**：支付核心（7 种状态状态机）、对账（T+1 异步对账）、安全（RSA 签名/验签/IP 白名单）、渠道适配（策略模式封装微信/支付宝/银联）
+**核心模块**：@axyom-ui/table（Signals 响应式表格、三态分页、TemplateRef 注册表插槽、列拖拽）、@axyom-ui/form（配置驱动动态表单、五层架构、注册表模式动态分发、20 种组件类型、10 种自定义验证器）
 
 ## 2.2 技术亮点速览
 
 | 亮点 | 技术价值 | 量化效果 |
 |------|----------|----------|
 | 动态表单引擎（ControlValueAccessor） | 4 层 AST 树 + 7 种字段 + 条件显隐 + 四级校验 + 实时 JSON 编辑 | 开发人效提升 80%（零代码驱动） |
-| 大文件断点续传 | SHA-256 分片 + NgRx persist + Observable 串行上传 | 500MB 文件仅占 5MB 内存 |
+| @axyom-ui/table 声明式表格 | Angular 22 Signals + 三态分页 + TemplateRef 注册表 + 列拖拽 + 列显隐持久化 | 表格用户代码量减少 80% |
+| @axyom-ui/form 配置驱动表单 | 五层架构 + 注册表模式 + 20 种组件类型 + 10 种验证器 + NgComponentOutlet | 表单开发人效提升 80% |
 | RxJS WebSocket 告警推送 | 三级降级链 + 背压控制 + 消息合并 + 心跳保活 | 4000 msg/s 60fps 全帧率渲染 |
-| Web Worker 分治排序 | Worker Pool + 自适应分区 + 多路归并 | 100 万数字排序 620ms → 180ms（3.4×） |
 | GIS 十万级点位渲染 | BBOX + Cluster + dataCache + moveend 四重优化 | 帧率从 <10fps 到 60fps |
 | 双 Token 无感刷新（HttpInterceptor） | Observable gate + Token Rotation + Replay 检测 | 平台可用性 99.9% |
 | RBAC 位编码权限 | 位运算 O(1) + 三层联动 + 后端双校验 | 越权漏洞降低 90% |
 | SSE 日志流（RxJS） | Observable + AbortController + 节流 | 500 行 RingBuffer 内存可控 |
-| 路由复用策略（RouteReuseStrategy） | Angular RouteReuseStrategy + 写后失效 + TTL | 页面切换性能提升 60% |
+| 路由复用策略（RouteReuseStrategy） | Angular RouteReuseStrategy + 写后失效 + TTL + LRU 淘汰 | 页面切换性能提升 60% |
+| Hub-Spoke 仪表盘 + Recording Rules | GitOps 工程化 + Prometheus 预计算 + 4 级递进告警 | 仪表盘加载 10+s → <1s，30+ 仪表盘零手工重复 |
 | 百万行日志流式解密 | ReadableStream + Web Worker AES-256-GCM + 虚拟滚动 | 首段流式输出"秒开" |
 | NgRx Signal Store | 方法-路径匹配追踪 + 精确 selector 订阅 | 消除全局 Loading 闪烁 |
 | Web Vitals 采集 | RUM 实时采集 LCP/INP/CLS + ECharts 可视化 | 生产环境性能监控 |
 
-## 2.3 六大技术难点 STAR 剖析
+## 2.3 八大技术难点 STAR 剖析
 
 > 以下每个难点均可作为 STAR 故事的素材。按"背景 → 任务 → 行动 → 结果"展开讲 2-3 分钟。
 
@@ -262,7 +242,7 @@
 └─ ngOnDestroy 清理所有 valueChanges 订阅
 ```
 
-**结果**：开发人效提升 80%，非前端人员零代码配置测试场景。7 个核心文件形成微内核架构，后续在网元运维系统中复用。
+**结果**：开发人效提升 80%，非前端人员零代码配置测试场景。7 个核心文件形成微内核架构，后续在 AeMS 项目中复用。
 
 **追问链**：
 - **Q：ControlValueAccessor 和自定义 FormControl 的区别？** → CVA 让自定义组件融入 Angular 表单体系，支持 ngModel/formControlName 绑定、Validator 集成、touched/dirty 状态同步
@@ -271,7 +251,7 @@
 
 ---
 
-### 难点 2：Web Worker 分治有序合并（网元运维系统）
+### 难点 2：Web Worker 分治有序合并（AeMS 项目）
 
 **背景**：25MB 级加密日志文件需要 RSA/AES-256-GCM 解密，单线程解密会阻塞 UI，用户等待时间过长。
 
@@ -378,43 +358,140 @@ NgRx Store 管理：
 
 ---
 
-### 难点 5：支付幂等性与失败重试（UniPay）
+### 难点 5：Signals 响应式表格架构 — @axyom-ui/table
 
-**背景**：支付场景中网络超时、服务重启、回调丢失等异常会导致重复支付或支付失败无恢复。
+**背景**：企业内部多个 Angular 项目存在大量重复的表格业务逻辑，每个项目都需单独封装分页/排序/选择等功能，维护成本高、开发效率低。
 
-**任务**：设计一套从前端到后端的四层幂等架构，支付失败自动恢复率 95%+。
+**任务**：设计一套基于 Angular 22 Signals 的企业级声明式表格组件库，支持分页/排序/选择/树形/虚拟滚动按需开启，消除重复模板代码。
 
 **行动**：
 
 ```
-幂等性四层防御：
-├─ 前端层：按钮防重复点击（debounce + disabled + CanDeactivate 路由守卫）
-├─ 网关层：Idempotency-Key 去重 → 相同 key 自动返回上次结果
-├─ 业务层：唯一索引 UNIQUE(order_id, channel) + Redis SETNX 分布式锁
-└─ 兜底层：T+1 对账脚本 → 重复订单自动退款
+Signals 响应式架构：
+├─ signal() 管理分页/排序/选中行等 UI 状态，computed 自动追踪依赖图
+├─ model() 实现父子组件双向绑定，子组件可主动更新父组件分页和选中状态
+├─ Set 信号管理展开行/加载行状态，rowChecked computed 生成 Set 实现 O(1) 查重
+└─ 对比 RxJS：Signal 同步推送、自动追踪依赖、无需 subscribe/unsubscribe
 
-失败重试分层策略：
-├─ 请求失败（网络超时/5xx）：RxJS retryWhen + 指数退避 1s/2s/4s/8s
-├─ 处理中断（服务重启/订单 stuck）：定时轮询 interval(15s/30s/60s/120s)
-├─ 回调丢失：支付后 30s 未收到回调 → 自动发起查单补偿
-└─ 手动兜底：运维后台"手动同步" + 发起退款
+三态分页设计：
+├─ 前端分页：frontPagination=true, pageSize!=0 → 本地 data 信号排序分片
+├─ 后端分页：frontPagination=false, pageSize!=0 → page model 双向绑定通知父组件发 HTTP
+├─ 不分页：pageSize=0 → 隐藏分页栏，全量数据展示
+└─ 排序策略自动适配：后端排序首次设置排序重置页码，已有排序时切换列保持当前页码
 
-支付状态机（NgRx Store）：
-├─ 7 种状态：PENDING → PROCESSING → SUCCESS/FAIL/REFUNDING/REFUNDED/CLOSED
-├─ 6 种驱动力：用户发起/渠道回调/定时轮询/人工介入/超时关闭/退款触发
-├─ Status Reducer 管理状态流转 + Action 约束状态变更
-└─ Effect 监听状态变更，触发对应的 Side Effect（查单/重试/回调）
+TemplateRef 注册表插槽：
+├─ AxyomRowSource 作为中央注册表，AxyomRowDirective 在 ngOnInit 注册 TemplateRef
+├─ { host: true } DI 隔离确保每个表格实例拥有独立注册表
+├─ CellComponent 根据列配置的 render 属性查询注册表，ngTemplateOutlet 渲染
+└─ 重复 key 防御性检查，编译时即报错
+
+列拖拽 + 列显隐持久化：
+├─ DragColumnDirective 通过 fromEvent 管理 mousedown→mousemove→mouseup 事件链
+├─ DragColumnService BehaviorSubject 作为状态总线广播列宽变化
+├─ cache input 启用 localStorage 缓存，cachePrefix 防 key 冲突
+└─ takeUntilDestroyed 安全清理，CSS user-select:none 防止拖拽文字选中
 ```
 
-**结果**：重复支付率降至 0.001% 以下，支付失败自动恢复率 95%+。
+**结果**：表格用户代码量减少 80%（最简 cols+rows 两个入参），声明式 API + 渐进增强按需无缝开启。
 
 **追问链**：
-- **Q：幂等性为什么需要四层？** → 任何一层都可能被绕过（前端禁 JS、网关超时、业务层宕机），纵深防御无死角
-- **Q：NgRx 的状态机和普通 Service 管理状态有什么区别？** → Action 约束变更方向，Reducer 纯函数保证状态可预测，Effect 隔离副作用（HTTP 请求），Selector 精确订阅
+- **Q：Signal 和 BehaviorSubject 在表格场景中怎么分工？** → Signal 适合 UI 状态（同步、细粒度、自动追踪），BehaviorSubject 保留给事件流（列拖拽广播、异步数据流）
+- **Q：三态分页如何保证排序正确性？** → 前端分页时 data 信号排序分片；后端分页时排序参数由父组件通过 model() 接收，重置页码后发 HTTP
 
 ---
 
-### 难点 6：GIS 十万级点位渲染（AeMS 项目）
+### 难点 6：配置驱动动态表单框架 — @axyom-ui/form
+
+**背景**：Angular 项目中表单开发重复模板代码多，手写 FormGroup/FormControl、校验逻辑、条件显隐等需要大量样板代码，开发效率低。
+
+**任务**：设计一套基于 Angular 22 的配置驱动型动态表单框架，五层架构 + 注册表模式，支持运行时动态组件分发。
+
+**行动**：
+
+```
+五层架构设计：
+├─ 基础设施层：提供 10 种自定义验证器（IP/URL/手机号/身份证/BigInt/跨字段联动等）
+├─ 基类层：BaseInf 泛型工具类型实现"必填 key + 可选配置"模式
+├─ 组件层：20 种内置组件类型，单行 register() 快速扩展
+├─ 调度层：FormUnitRegistryService 运行时动态组件分发
+└─ 容器层：FormModal/DynamicModalService 统一弹窗服务
+
+动态组件渲染引擎：
+├─ NgComponentOutlet + FormUnitRegistryService 实现运行时动态组件分发
+├─ computed 缓存 inputs 对象，避免每次变更检测重新创建
+├─ isView 为 true 时所有字段自动转为只读 ViewUnitComponent，一键切换视图模式
+└─ 优雅降级：未知 type 自动回退到 string 类型
+
+TypeScript 类型安全配置推断：
+├─ BaseInf<T, R> 泛型实现"必填 key + 可选配置"完整类型推导
+├─ Omit/Partial/交叉类型组合推导配置对象类型
+└─ controlType/control/view 等库内部属性编译时自动排除
+
+条件显示与 FormControl 动态管理：
+├─ display 支持布尔值（静态）和函数（动态）两种策略
+├─ form.addControl/removeControl 动态管理 FormControl，隐藏时不参与校验
+├─ form.getRawValue() 获取所有值（含 disabled），确保条件变化时数据不丢失
+└─ 再次 addControl 时 control 保留原值和验证状态
+
+跨字段联动验证：
+├─ 闭包中 subscribe 标识实现一次性延迟订阅，避免依赖循环
+├─ 目标字段变化时触发自身 updateValueAndValidity，避免死锁
+└─ 支持 equalTo/notEqualTo/laterTo 等多种联动验证器
+
+弹层扩展体系：
+├─ DialogModal/FormModal 配置类，Loading 信号自动管理
+├─ AXYOM_FORM_CONFIG InjectionToken 全局配置注入
+├─ mergeDefault 分层合并：实例值 > 全局配置 > 内置默认值
+└─ Observable 回调失败不关闭弹窗，显示错误信息
+```
+
+**结果**：表单开发人效提升 80%（配置类替代手写模板代码），五层架构每层都有明确替换边界。
+
+**追问链**：
+- **Q：NgComponentOutlet 和 *ngComponentOutlet 的区别？** → NgComponentOutlet 是类名导入，*ngComponentOutlet 是模板语法；配合 Injector.create 可动态注入不同服务实例
+- **Q：跨字段验证如何避免循环调用？** → 闭包中一次性延迟订阅 + 防循环标记，目标字段变化触发自身 updateValueAndValidity 而非源字段
+
+---
+
+### 难点 7：Hub-Spoke 仪表盘 + Recording Rules 预计算（AeMS 项目）
+
+**背景**：30+ 个网元各有独立 Prometheus 仪表盘，手工维护成本高、加载慢（10s+），新增网元需要手工复制配置。
+
+**任务**：设计 GitOps 驱动的 Hub-Spoke 仪表盘架构，实现零手工复制、秒级加载。
+
+**行动**：
+
+```
+Hub-Spoke 仪表盘架构：
+├─ Hub（主仪表盘）：展示全局概览（所有 NF 汇总），标签导航下钻
+├─ Spoke（NF 详情）：每个 NF 自动生成独立详情仪表盘
+├─ 单一数据源原则：JSON 源文件是唯一人工维护文件，ConfigMap 和 CR 全部自动生成
+└─ 新增 NF 自动获得导航，零手工复制
+
+Recording Rules 预计算：
+├─ 将复杂 PromQL 预计算结果写入 TSDB，O(n²) → O(1) 查询
+├─ 本质：用 10% 额外存储换 10 倍查询性能
+└─ 仪表盘加载从 10+ 秒降至 <1 秒
+
+4 级递进告警 + 双层告警：
+├─ Info → Warning → Critical → Emergency 逐级升级
+├─ for: 10m 防瞬态抖动，避免告警风暴
+└─ 覆盖 12 个网元关键指标
+
+5 层 CI 验证：
+├─ catalog 冲突检测 → verify-resources → 语法校验 → 二进制检测 → 打包发布
+└─ git push 即部署，可审计可回滚
+```
+
+**结果**：30+ 仪表盘零手工重复，加载从 10+s → <1s，告警误报率大幅降低。
+
+**追问链**：
+- **Q：Recording Rules 和 Grafana 自带的 caching 有什么区别？** → Recording Rules 在 TSDB 层面预计算，查询时直接读结果；Grafana caching 是 UI 层缓存，数据量大的查询仍需等待
+- **Q：GitOps 工作流中，ConfigMap 变更如何触发 Prometheus 重新加载？** → Helm upgrade 更新 ConfigMap + Prometheus sidecar 检测变更自动 reload
+
+---
+
+### 难点 8：GIS 十万级点位渲染（AeMS 项目）
 
 **背景**：十万个基站点位直接渲染到 OpenLayers 地图上，帧率 < 10fps，拖动卡顿 2s+。
 
@@ -438,6 +515,153 @@ NgRx Store 管理：
 - **Q：BBOX 和 Cluster 哪个先执行？** → BBOX 先（裁剪视口外 60%），减少 Cluster 计算量
 - **Q：百万级怎么优化？** → 10 万以内 Canvas 2D 足够；10 万~100 万需要 WebGL（Mapbox GL/Deck.gl）；超 100 万必须 Tile 分级加载
 - **Q：dataCache 会不会内存泄漏？** → ngOnDestroy 时 dataCache 释放 + LRU 淘汰时完整 cleanup + OpenLayers 资源释放
+
+---
+
+### 难点 9：多协议降级传输层 + 异步导出轮询（AeMS 项目）
+
+**背景**：AeMS 平台需要处理 1000+ QPS 的告警并发推送，企业内网可能屏蔽 WebSocket、代理超时断开。同时，导出 10 万条告警数据时后端异步生成文件，前端需要轮询状态并下载。核心目标：**任何网络环境下都能拿到数据，且实时性尽量高**。
+
+**任务**：设计一套多协议降级传输层，实现高并发告警推送 + 异步导出轮询。
+
+**行动**：
+
+```
+架构决策：将传输层抽象为独立 Transport 接口，所有实现统一契约，上层组件无感知。
+
+第一步：定义统一 Transport 接口
+├─ interface Transport<T> { messages$, status$, connect(), disconnect() }
+├─ status$: Observable<TransportStatus> — 'connected' | 'connecting' | 'disconnected' | 'degraded'
+└─ messages$: Observable<T> — 统一的实时消息流
+
+第二步：三种 Transport 实现
+├─ WsTransport — rxjs/webSocket：webSocket({ url, serializer, deserializer })
+│   └─ 指数退避重连：retry({ count: 10, delay: (_, i) => timer(min(1000*2**i, 30s)) })
+├─ SseTransport — EventSource：降级到 HTTP 长连接单向推送
+│   └─ retry 操作符 + 指数退避自动重连
+└─ PollingTransport — interval + HttpClient：保底轮询
+    └─ interval(1000) + switchMap(http.get) + concatMap 拉平数组
+
+第三步：ReconnectingTransport 降级链管理器
+├─ 三级链路：WebSocket(0) → SSE(1) → Polling(2)
+├─ 降级触发：WS 连续 10 次重连失败 → 切换 SSE；SSE 连接失败 → 即时切 Polling
+├─ 手动切换：forceTransport(index) 断开全部 → 重建指定协议
+└─ 降级信号：status$ 驱动 UI 展示 "WebSocket/SSE/轮询" 状态 Tag
+
+第四步：背压控制 + 消息合并 — bufferTime + animationFrameScheduler
+├─ bufferTime(16, undefined, 64)：16ms 窗口 / 64 条上限，双条件合并
+├─ observeOn(animationFrameScheduler)：RAF 双缓冲渲染
+├─ 4000 msg/s → 每帧合并约 64 条 → set 60 次/s → 60fps
+└─ 对比直接 set：每秒 set 4000 次 → reconciliation 来不及完成 → 丢帧 47%
+
+第五步：异步导出 — RxJS expand/takeWhile 流式轮询
+├─ 发起导出 → mergeMap 切换 → expand 递归轮询
+├─ 2s 间隔 timer + mergeMap 检查状态 → takeWhile('executing', true)
+└─ success 时 <a> 标签浏览器直下，100k 级不占内存
+```
+
+```typescript
+// Transport 接口
+interface Transport<T = unknown> {
+  readonly messages$: Observable<T>
+  readonly status$: Observable<TransportStatus>
+  connect(): void
+  disconnect(): void
+}
+
+// WsTransport — rxjs/webSocket
+@Injectable({ providedIn: 'root' })
+export class WsTransport implements Transport<string> {
+  readonly #status = signal<TransportStatus>('disconnected');
+  readonly status$ = toObservable(this.#status);
+  readonly #subject$ = new BehaviorSubject<WebSocketConfig | null>(null);
+
+  readonly messages$ = this.#subject$.pipe(
+    filter(Boolean),
+    switchMap(cfg => webSocket<string>(cfg).pipe(
+      retry({ count: 10, delay: (_, i) => timer(Math.min(1000 * 2 ** i, 30_000)) }),
+    )),
+    share(),
+  );
+
+  connect(url = '/hems-web-ui/alert/ws') {
+    this.#status.set('connecting');
+    this.#subject$.next({ url, serializer: JSON.stringify,
+      deserializer: e => e.data,
+      openObserver: { next: () => this.#status.set('connected') },
+      closeObserver: { next: () => this.#status.set('disconnected') },
+    });
+  }
+
+  disconnect() { this.#subject$.next(null); this.#status.set('disconnected'); }
+}
+
+// 背压控制 + 消息合并 — RAF 双缓冲
+messages$.pipe(
+  bufferTime(16, undefined, 64),
+  filter(arr => arr.length > 0),
+  observeOn(animationFrameScheduler),
+  map(arr => arr.map(m => JSON.parse(m))),
+).subscribe(alerts => {
+  displayAlerts.update(list => [...list, ...alerts].slice(-2000));
+});
+
+// ReconnectingTransport — 降级链
+@Injectable({ providedIn: 'root' })
+export class ReconnectingTransport implements Transport<string> {
+  readonly #ws = inject(WsTransport);
+  readonly #sse = new SseTransport();
+  readonly #poll = new PollingTransport();
+  readonly #transports: Transport[] = [this.#ws, this.#sse, this.#poll];
+
+  readonly status$ = this.#ws.status$;
+  readonly messages$ = this.#ws.messages$;
+
+  forceTransport(index: number) {
+    this.#transports.forEach(t => t.disconnect());
+    this.#transports[index].connect();
+  }
+}
+
+// 异步导出 — RxJS expand/takeWhile 流式轮询
+export() {
+  this.neService.exportNeList(data).pipe(
+    mergeMap(({ requestId }) =>
+      this.common.downloadNeList(requestId).pipe(
+        expand(res =>
+          res.status === 'executing'
+            ? timer(2000).pipe(mergeMap(() => this.common.downloadNeList(requestId)))
+            : EMPTY
+        ),
+        takeWhile(res => res.status === 'executing', true),
+      )
+    ),
+    takeUntilDestroyed(this.destroyRef),
+  ).subscribe(res => {
+    if (res.status === 'success') downloadFileByRequestId(res.requestId);
+  });
+}
+```
+
+**核心优化矩阵：**
+
+| 方向 | Angular 21 实现 | 效果 |
+|------|----------------|------|
+| **传输降级** | WebSocket → SSE → Polling 三级 + Segmented 手动切换 | 任何网络环境都能工作 |
+| **背压控制** | `bufferTime(16, undefined, 64)` + `animationFrameScheduler` | 4000 msg/s → 60 次/s set |
+| **消息合并** | 16ms / 64KB 双条件窗口合并 | 减少 50x+ 渲染调用 |
+| **断线重连** | `retry` 指数退避 1s→2s→4s...→30s + random jitter | 避免重连风暴 |
+| **心跳保活** | `webSocket` 持连接 + 应用层 30s ping 检测 | 5s 内发现僵尸连接 |
+| **连接管理** | `takeUntilDestroyed()` 组件销毁自动退订 | 消除内存泄漏 |
+| **异步导出** | `expand/takeWhile` RxJS 操作符链 + `<a>` 标签浏览器直下 | 100k 级导出不占内存 |
+
+**结果**：1000+ QPS 告警并发推送下 60fps 全帧率渲染，平台可用性 99.9%，任意网络环境告警秒级触达。异步导出支持 10 万级数据流式下载。
+
+**追问链**：
+- **Q：为什么用 `rxjs/webSocket` 替代原生 WebSocket？** → Observable 接口统一（与 HttpClient/Router.events 一致），`retry` 操作符天然支持指数退避重连，`switchMap` 实现协议切换，`takeUntilDestroyed` 自动清理
+- **Q：三级降级的触发阈值？** → WS→SSE：连续 10 次重连失败（指数退避 1s→2s→4s...→30s，约 5 分钟后降级）。SSE→Polling：SSE 连接失败即时降级。Polling 永不降级
+- **Q：`bufferTime(16, undefined, 64)` 的三个参数分别控制什么？** → ① 16ms 时间窗口（匹配 RAF 帧周期）② `undefined` 不限制启动间隔（首条消息立即启动）③ 64 条最大缓冲（防止高频场景单帧合并过多导致单次渲染卡顿）
+- **Q：导出轮询为什么用 `expand` 而非循环 `setInterval`？** → `expand` 天然支持递归异步调用且完全 RxJS 链式表达；`setInterval` 需要手动管理清理逻辑、竞态问题（前一次未返回后一次已发出）
 
 ---
 
@@ -491,10 +715,10 @@ CSP 检测到限制时降级到 DSL 方案。
 ```
 RxJS WebSocket（webSocket() / WebSocketSubject）：
 ├─ Observable 接口统一：与 HttpClient、Router.events 等数据源一致
-├─ 自动重连：retryWhen 操作符实现指数退避
-├─ 背压控制：Subject 天然支持 backpressure
-├─ 消息合并：bufferTime 操作符实现批量发送
-├─ 生命周期管理：takeUntil + ngOnDestroy 自动清理订阅
+├─ 自动重连：retry 操作符实现指数退避（count=10, delay=指数退避）
+├─ 背压控制：bufferTime + animationFrameScheduler 实现 RAF 双缓冲
+├─ 消息合并：bufferTime(16, undefined, 64) 合并 4000 msg/s → 60 次/s set
+├─ 生命周期管理：takeUntilDestroyed() 组件销毁自动退订
 └─ 降级链：switchMap 实现 WebSocket → SSE → Polling 无缝切换
 
 对比原生 WebSocket：
@@ -503,12 +727,72 @@ RxJS WebSocket（webSocket() / WebSocketSubject）：
 └─ 核心差异：回调 → 可组合的 Observable 管道
 ```
 
+```typescript
+// WsTransport — webSocket() 封装
+@Injectable({ providedIn: 'root' })
+export class WsTransport implements Transport<string> {
+  readonly #subject$ = new BehaviorSubject<WebSocketConfig | null>(null);
+
+  readonly messages$ = this.#subject$.pipe(
+    filter(Boolean),
+    switchMap(cfg => webSocket<string>(cfg).pipe(
+      retry({ count: 10, delay: (_, i) => timer(Math.min(1000 * 2 ** i, 30_000)) }),
+    )),
+    share(),
+  );
+
+  connect(url: string) {
+    this.#subject$.next({
+      url,
+      serializer: JSON.stringify,
+      deserializer: e => e.data,
+      openObserver: { next: () => /* status='connected' */ },
+      closeObserver: { next: () => /* status='disconnected' */ },
+    });
+  }
+
+  disconnect() { this.#subject$.next(null); }
+}
+```
+
 **Q2：三级降级的触发阈值是什么？**
 
 ```
 WebSocket → SSE：连续 10 次重连失败（指数退避 1s→2s→4s...→30s，约 5 分钟后降级）
 SSE → Polling：SSE 连接失败 → 即时降级
 Polling 保底：永不降级
+每次降级 UI 显示状态 Tag："SSE 降级" / "轮询降级"
+```
+
+**Q3：1000+ QPS 告警如何保证 60fps？**
+
+```
+核心：bufferTime(16, undefined, 64) + animationFrameScheduler
+
+┌─ bufferTime 三个参数：
+│   ① 16ms — 时间窗口，匹配 RAF 帧周期
+│   ② undefined — 不限制启动间隔，首条消息立即启动定时器
+│   ③ 64 — 最大缓冲条数，防止单帧合并过多导致渲染卡顿
+├─ observeOn(animationFrameScheduler) — RAF 调度，帧头批量 set
+└─ filter(arr => arr.length > 0) — 跳过空帧
+
+效果：4000 msg/s → 每帧合并 ~64 条 → set 60 次/s → 60fps
+对比直接 set：每秒 set 4000 次 → reconciliation 来不及 → 丢帧 47%
+```
+
+**Q4：异步导出轮询为什么用 expand 而非 setInterval？**
+
+```
+expand 优势：
+├─ 完全 RxJS 链式表达 — mergeMap + expand + takeWhile 一条管道
+├─ 天然防竞态 — 前一次请求返回后才发出下一次，不会重叠
+├─ 自动完成 — status !== 'executing' 时 expand 返回 EMPTY 自然终止
+└─ takeUntilDestroyed 集成 — 组件销毁自动退订
+
+setInterval 缺陷：
+├─ 手动清理 — clearInterval + ngOnDestroy 模板代码
+├─ 竞态问题 — 前一次未返回后一次已发出，需要 switchMap 额外防护
+└─ 边界处理 — 导出失败需要手动判断终止条件
 ```
 
 **Q3：如何用 RxJS 实现 SSE 流式读取？**
@@ -560,32 +844,6 @@ sseLogs(url: string, signal?: AbortSignal): Observable<string> {
 消息到达 → 推入 pendingBuffer
 RAF callback → 交换 pendingBuffer ↔ displayBuffer → 仅 displayBuffer 更新时触发变更检测
 效果：4000 msg/s → 16ms 一帧 → 每帧合并约 64 条消息 → CD 60 次/s → 60fps
-```
-
-### 断点续传相关
-
-**Q1：为什么并发上限设为 4？**
-
-```
-网络连接数过多 → TCP 拥塞控制退化（HOL blocking）。
-经验值：普通网络 3-6，5G/光纤 6-10。本项目默认 4，用户可调 1-10。
-```
-
-**Q2：SHA-256 对比 MD5 的优势？**
-
-```
-MD5：128 位，防碰撞弱（2004 年已破解）
-SHA-256：256 位，防碰撞强（至今未破解）
-Web Worker 计算 SHA-256，主线程无感知，文件完整性场景更安全。
-```
-
-**Q3：暂停后刷新，如何精确恢复进度？**
-
-```
-├─ NgRx Store + localStorage persist 恢复文件元数据
-├─ GET /api/upload/status/:uploadId → 获取服务端已接收分片
-├─ 对比本地 vs 服务端 → 标记差异
-└─ 用户点击"续传" → 仅上传 missing 分片
 ```
 
 ### Angular Signals 相关
@@ -898,38 +1156,30 @@ RouteReuseStrategy（路由复用）：
     └─ @defer 支持更细粒度的触发条件
 ```
 
+### Angular 19-22 核心变化
+
+```
+├─ Signals API 全面稳定
+│   └─ signal/computed/effect/model 成为一等公民，推荐替代 RxJS 管理 UI 状态
+├─ linkedSignal() 新原语
+│   └─ 声明式响应式链，自动追踪 source 变化
+├─ resource() / rxResource() API
+│   └─ 基于 Signal 的数据获取原语，支持加载/错误状态自动管理
+├─ Zoneless 正式可用
+│   └─ 不依赖 Zone.js，bundle 减少 ~20KB，首屏性能提升
+├─ Effect API 增强
+│   └─ afterRenderEffect() 精确控制 DOM 更新时机
+└─ Standalone 成为默认
+    └─ NgModule 完全可选，新项目默认 standalone
+```
+
 ---
 
 # 第四部分：模拟面试
 
 ## 4.1 项目深挖模拟
 
-### 项目一：5G 核心网测试用例管理系统
-
-**面试官**：你这个平台最大的技术难点是什么？
-
-```
-最大难点是基于 Angular Reactive Forms 的动态表单引擎。
-7 种网元配置各不相同且频繁变动，传统模板驱动表单无法满足。
-
-自研 ControlValueAccessor 动态表单引擎：
-Schema 抽象为 4 层 AST 树，基于 FormGroup 动态构建，7 种字段类型，
-条件显隐 + 字段联动 + 四级校验（同步 Validator → AsyncValidator → AJV → 后端）。
-
-选型对比：
-├─ 模板驱动：静态绑定，无法动态生成控件
-├─ @rjsf（React 生态）：Angular 无直接等价替代
-└─ 自研 ControlValueAccessor：复用 Angular 表单体系，完全可控
-
-最终效果：开发人效提升 80%，编辑性能提升 40%（OnPush CD + 不可变数据）
-```
-
-**追问模拟**：
-- Q：ControlValueAccessor 的核心方法是什么？什么时候触发 writeValue？
-- Q：valueChanges 防抖和 distinctUntilChanged 分别在解决什么问题？
-- Q：FormGroup 递归构建时如何保证 formControl 层级正确？
-
-### 项目二：AeMS — 企业级综合网络管理系统
+### 项目一：AeMS — 企业级综合网络管理系统
 
 **面试官**：十万级设备地图怎么优化？
 
@@ -950,57 +1200,83 @@ Schema 抽象为 4 层 AST 树，基于 FormGroup 动态构建，7 种字段类�
 - Q：百万级怎么优化？
 - Q：LRU 缓存的 RouteReuseStrategy 和 GIS 页面结合时内存泄漏怎么处理？
 
-### 项目三：网元运维与数据管理系统
+---
 
-**面试官**：Web Worker 并行解密怎么实现的？
-
-```
-核心问题：百万行日志的 RSA/AES-256-GCM 解密是 CPU 密集型操作，单线程阻塞 UI。
-
-三阶段策略：
-├─ 自适应分区：首段 2000 行快速展示，其余均匀分配
-├─ Worker Pool 并行：poolSize = navigator.hardwareConcurrency
-├─ 有序合并：seq 序号 → 顺序到达直接输出，乱序到达缓冲区等待
-└─ 流式输出：首段小分区快速首屏，后续批量输出
-
-效果：25MB 级日志并行解密，首段流式输出"秒开"，主线程零阻塞。
-```
-
-**追问模拟**：
-- Q：Worker Pool 数量怎么确定的？
-- Q：Worker 出错怎么容错？
-- Q：postMessage 传输大数组会卡主线程吗？
-
-### 项目四：UniPay — 统一支付中台
-
-**面试官**：支付幂等性怎么设计的？
+**面试官**：RouteReuseStrategy 路由复用怎么设计的？
 
 ```
-四层纵深防御：
-├─ 前端：按钮防重复点击（exhaustMap + CanDeactivate 路由守卫）
-├─ 网关：Idempotency-Key 去重
-├─ 业务：唯一索引 + Redis SETNX 分布式锁
-└─ 兜底：T+1 对账脚本自动退款
+基于 Angular RouteReuseStrategy 实现 LRU 路由缓存。
 
-失败重试分层策略（RxJS 实现）：
-├─ 请求失败 → retryWhen + 指数退避 1s/2s/4s/8s
-├─ 处理中断 → interval(15s/30s/60s/120s) 轮询
-├─ 回调丢失 → 定时查单补偿
-└─ 人工兜底 → 运维后台手动同步
+四阶段生命周期：
+├─ shouldDetach → 判断 route.data.keepAlive 是否缓存
+├─ store → 存储组件引用 + 滚动位置 + 模块名到 handlers Map
+├─ shouldAttach → 目标路由是否有缓存
+├─ retrieve → LRU 刷新（先 delete 后重新 insert，移到末尾）
 
-支付状态机基于 NgRx：
-├─ Reducer 管理 7 种状态流转，Action 约束变更方向
-├─ Effect 处理副作用（HTTP + 定时器 + 渠道回调）
-├─ Selector 供组件精确订阅
-└─ 乐观锁 version 防并发更新（回调 + 人工同时操作）
-
-效果：重复支付率降至 0.001% 以下，自动恢复率 95%+。
+LRU 淘汰：最多 6 个页面，超出自动销毁最久未访问的
+模块级隔离：切换大模块（如 Setting→Manage）时清理目标模块缓存
+声明式控制：路由 data: { keepAlive: true, moduleName: 'manage' } 声明缓存策略
 ```
 
 **追问模拟**：
-- Q：NgRx 状态机和普通 Service 管理状态有什么区别？
-- Q：exhaustMap 和 switchMap 在支付场景中各适合什么？
-- Q：如果对账也失败了怎么办？
+- Q：RouteReuseStrategy 和 display:none 方案的区别？
+- Q：如何避免缓存数据不一致？
+- Q：GIS 页面被缓存时内存泄漏风险怎么处理？
+
+### 项目二：@axyom-ui — 企业级内部组件库
+
+**面试官**：@axyom-ui/table 为什么要用 Signals 替代 RxJS？
+
+```
+核心决策：Signal 适合 UI 状态（同步、细粒度、自动追踪依赖），RxJS 适合事件流（异步、流式）。
+
+Signal 的应用场景：
+├─ signal() 管理分页/排序/选中行等 UI 状态
+├─ computed() 自动追踪依赖图，派生 displayData、rowChecked 等
+├─ model() 实现父子组件双向绑定（分页、选中状态）
+└─ Set 信号管理展开行/加载行状态，O(1) 查重
+
+保留 RxJS 的场景：
+├─ 列拖拽事件流（fromEvent + mousemove 事件链）
+├─ 列宽变化广播（DragColumnService BehaviorSubject 状态总线）
+└─ 异步数据请求（表格数据 HTTP 请求）
+
+对比效果：
+├─ Signal：同步推送、自动追踪依赖、无需 subscribe/unsubscribe
+├─ RxJS BehaviorSubject：需要手动订阅、手动清理、依赖链不透明
+└─ 声明式 API：最简 cols+rows 两个入参，用户代码量减少 80%
+```
+
+**追问模拟**：
+- Q：Signal 和 BehaviorSubject 在组件库中怎么分工？
+- Q：三态分页如何保证排序正确性？
+- Q：TemplateRef 注册表如何防止模板冲突？
+
+---
+
+**面试官**：@axyom-ui/form 的五层架构怎么设计的？
+
+```
+五层架构，每层职责清晰、可独立测试和替换：
+
+├─ 基础设施层：10 种自定义验证器（IP/URL/手机号/身份证/BigInt/跨字段联动）
+├─ 基类层：BaseInf 泛型实现"必填 key + 可选配置"类型推导
+├─ 组件层：20 种内置组件类型，register(type, Comp) 单行扩展
+├─ 调度层：FormUnitRegistryService + NgComponentOutlet 运行时动态组件分发
+└─ 容器层：FormModal/DynamicModalService 统一弹窗 + AXYOM_FORM_CONFIG 全局配置
+
+核心亮点：
+├─ 类型安全：BaseInf<T, R> 泛型 + Omit/Partial 交叉类型推导配置对象类型
+├─ 条件显示：FormControl 动态 add/remove，getRawValue() 保留隐藏字段值
+├─ 跨字段联动：闭包延迟订阅避免循环依赖与死锁
+├─ 弹层扩展：mergeDefault 分层合并（实例 > 全局 > 默认），回调失败不关闭弹窗
+└─ 优雅降级：未知 type 自动回退到 string 类型
+```
+
+**追问模拟**：
+- Q：NgComponentOutlet 动态分发如何保证类型安全？
+- Q：条件显示隐藏的必填字段提交时怎么处理？
+- Q：跨字段验证如何避免循环调用？
 
 ## 4.2 手写题速览
 
@@ -1166,6 +1442,56 @@ class LRURouteReuseStrategy implements RouteReuseStrategy {
     }
     return cached.handle
   }
+}
+```
+
+### @axyom-ui/table Signals 响应式架构
+
+```typescript
+// 核心状态：Signal 管理 UI 状态
+@Component({ standalone: true, selector: 'axyom-table' })
+class AxyomTableComponent<T> {
+  // 双向绑定：model() 替代 @Input + @Output
+  readonly page = model<number>(1)
+  readonly pageSize = model<number>(10)
+  readonly selectedRows = model<T[]>([])
+
+  // 内部状态：signal() 管理
+  readonly sortField = signal<string | null>(null)
+  readonly sortOrder = signal<'asc' | 'desc'>('asc')
+  readonly expandedRows = signal<Set<string | number>>(new Set())
+
+  // 派生状态：computed() 自动追踪依赖
+  readonly displayData = computed(() => {
+    const data = this.rows()
+    const field = this.sortField()
+    const order = this.sortOrder()
+    if (!field) return data
+    return [...data].sort((a, b) =>
+      order === 'asc' ? a[field] - b[field] : b[field] - a[field]
+    )
+  })
+
+  // 选中行 O(1) 查重
+  readonly rowChecked = computed(() => new Set(this.selectedRows().map(r => r.id)))
+}
+
+// TemplateRef 注册表模式
+@Directive({ selector: '[axyomRow]' })
+class AxyomRowDirective {
+  constructor(
+    @Host() private source: AxyomRowSource,
+    public template: TemplateRef<any>
+  ) {
+    this.source.register(this.axyomRow, template) // key → TemplateRef
+  }
+}
+
+// 列拖拽服务（保留 RxJS 处理事件流）
+@Injectable()
+class DragColumnService {
+  private resizeSubject = new BehaviorSubject<ColumnResizeEvent | null>(null)
+  resize$ = this.resizeSubject.asObservable().pipe(filter(Boolean))
 }
 ```
 

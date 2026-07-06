@@ -6,7 +6,7 @@
 
 ### 一、项目背景
 
-本项目是一个 Angular 21+ 企业级 UI 基础设施库，包含两个核心子包，旨在解决 Angular 企业项目中的**权限控制声明式管理**和 **HTTP 调用样板代码消除**两大核心问题。
+本项目是一个 Angular 22+ 企业级 UI 基础设施库，包含两个核心子包，旨在解决 Angular 企业项目中的**权限控制声明式管理**和 **HTTP 调用样板代码消除**两大核心问题。
 
 ### 二、核心定位
 
@@ -15,7 +15,7 @@
 | **项目名称** | @axyom-ui ACL & HTTP Decorator Library |
 | **产品定位** | Angular企业级UI基础设施库 |
 | **目标用户** | Angular企业项目开发团队 |
-| **技术栈** | Angular 21+、Standalone Components、RxJS、TypeScript 5.x |
+| **技术栈** | Angular 22+、Standalone Components、RxJS、TypeScript 5.x |
 | **发布方式** | npm包，支持tree shaking |
 
 ### 三、核心功能模块
@@ -395,7 +395,7 @@ return (acl instanceof Observable ? acl : of(acl))
 | 方向 | 建议 |
 |------|------|
 | **Angular Signals** | 迁移到 `signal()` / `computed()` 替代 BehaviorSubject，获得更好的性能 |
-| **httpResource 集成** | 利用 Angular 21+ 的 httpResource 实现声明式数据获取 |
+| **httpResource 集成** | 利用 Angular 22+ 的 httpResource 实现声明式数据获取 |
 | **类型收窄** | 为 `can()` 方法添加更精确的类型重载 |
 | **缓存策略** | 在 BaseApi 中增加请求缓存/防抖装饰器 |
 | **请求拦截器** | 基于装饰器元数据实现自动重试、Loading 状态管理 |
@@ -763,7 +763,7 @@ function makeMethod(method: METHOD_TYPE) {
 │                                                                 │
 │  ┌───────────────────────────────────────────────────────────┐  │
 │  │  前沿技术应用                                               │  │
-│  │  Angular 21+ · Standalone Components · RxJS                │  │
+│  │  Angular 22+ · Standalone Components · RxJS                │  │
 │  │  TypeScript 5.x · Tree Shaking · 零依赖                    │  │
 │  └───────────────────────────────────────────────────────────┘  │
 │                                                                 │
