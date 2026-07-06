@@ -1,6 +1,6 @@
-import { describe, expect, it, vi } from 'vitest'
 import { render, screen } from '@testing-library/react'
 import userEvent from '@testing-library/user-event'
+import { describe, expect, it, vi } from 'vitest'
 import ErrorBoundary from '../ErrorBoundary'
 
 const GoodChild = () => <div>正常内容</div>

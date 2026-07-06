@@ -22,7 +22,7 @@ dist-ssr
 *.njsproj
 *.sln
 *.sw?
-
+.turbo/*
 # Build binaries
 backend/bin/
 backend/coverage/

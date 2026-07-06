@@ -75,7 +75,7 @@ export default function DocVirtualScroll({ content }: { content: string }) {
     if (!rawHash) return ''
 
     const stripped = rawHash.startsWith('#') ? rawHash.slice(1) : rawHash
-    const targetHash = stripped.includes('#') ? stripped.split('#').pop() ?? '' : stripped
+    const targetHash = stripped.includes('#') ? (stripped.split('#').pop() ?? '') : stripped
     const normalized = targetHash.replace(/^\/+/, '')
     try {
       return decodeURIComponent(normalized)
@@ -123,7 +123,7 @@ export default function DocVirtualScroll({ content }: { content: string }) {
 
   useEffect(() => {
     scrollToResolvedHash(window.location.hash || location.hash)
-  }, [location.hash, location.pathname, sections, scrollToResolvedHash])
+  }, [location.hash, scrollToResolvedHash])
 
   useEffect(() => {
     const handleHashChange = () => scrollToResolvedHash(window.location.hash)

@@ -54,13 +54,11 @@ jobs:
         uses: actions/cache@v5
         with:
           path: ~/.bun/install/cache
-          key: ${{ runner.os }}-bun-${{ hashFiles('apps/frontend/bun.lock') }}
+          key: ${{ runner.os }}-bun-${{ hashFiles('bun.lock') }}
           restore-keys: |
             ${{ runner.os }}-bun-
       - run: bun install --frozen-lockfile
-        working-directory: apps/frontend
       - run: bun run lint
-        working-directory: apps/frontend
 
   test-frontend:
     runs-on: ubuntu-latest
@@ -73,13 +71,18 @@ jobs:
         uses: actions/cache@v5
         with:
           path: ~/.bun/install/cache
-          key: ${{ runner.os }}-bun-${{ hashFiles('apps/frontend/bun.lock') }}
+          key: ${{ runner.os }}-bun-${{ hashFiles('bun.lock') }}
           restore-keys: |
             ${{ runner.os }}-bun-
+      - name: Cache turbo
+        uses: actions/cache@v5
+        with:
+          path: .turbo
+          key: ${{ runner.os }}-turbo-${{ github.sha }}
+          restore-keys: |
+            ${{ runner.os }}-turbo-
       - run: bun install --frozen-lockfile
-        working-directory: apps/frontend
       - run: bun run test
-        working-directory: apps/frontend
 
   tsc-frontend:
     runs-on: ubuntu-latest
@@ -92,10 +95,15 @@ jobs:
         uses: actions/cache@v5
         with:
           path: ~/.bun/install/cache
-          key: ${{ runner.os }}-bun-${{ hashFiles('apps/frontend/bun.lock') }}
+          key: ${{ runner.os }}-bun-${{ hashFiles('bun.lock') }}
           restore-keys: |
             ${{ runner.os }}-bun-
+      - name: Cache turbo
+        uses: actions/cache@v5
+        with:
+          path: .turbo
+          key: ${{ runner.os }}-turbo-${{ github.sha }}
+          restore-keys: |
+            ${{ runner.os }}-turbo-
       - run: bun install --frozen-lockfile
-        working-directory: apps/frontend
-      - run: bunx tsc -b --noEmit
-        working-directory: apps/frontend
+      - run: bun run typecheck

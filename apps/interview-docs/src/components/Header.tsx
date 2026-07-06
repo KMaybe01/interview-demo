@@ -1,7 +1,7 @@
-import {useRef, useState} from 'react'
-import {Link, useLocation} from 'react-router'
-import {navConfig, type NavItem} from '../data/navigation'
-import {useTheme} from '../hooks/useTheme'
+import { useRef, useState } from 'react'
+import { Link, useLocation } from 'react-router'
+import { type NavItem, navConfig } from '../data/navigation'
+import { useTheme } from '../hooks/useTheme'
 import GlobalSearch from './GlobalSearch'
 
 function NavDropdown({
@@ -61,7 +61,11 @@ export default function Header() {
       <header className="header">
         <div className="header-inner">
           <Link to="/" className="header-logo">
-            <img src={`${import.meta.env.BASE_URL}logo.svg`} alt="Logo" className="header-logo-img" />
+            <img
+              src={`${import.meta.env.BASE_URL}logo.svg`}
+              alt="Logo"
+              className="header-logo-img"
+            />
             <span className="header-logo-text">前端知识体系</span>
           </Link>
 

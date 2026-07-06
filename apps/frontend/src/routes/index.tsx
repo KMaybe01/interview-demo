@@ -8,7 +8,6 @@ import {
   FileTextOutlined,
   FormOutlined,
   KeyOutlined,
-  LineChartOutlined,
   NodeIndexOutlined,
   PartitionOutlined,
   RobotOutlined,

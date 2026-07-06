@@ -26,15 +26,15 @@ backend/
 │   ├── agent/               # 智能体引擎（ReAct / Function Calling / Multi-Agent）
 │   ├── alert/               # 多协议告警（WebSocket / SSE / HTTP Polling 统一分发）
 │   ├── auth/                # JWT 双 Token 认证（登录/刷新/重放检测）
-│   ├── chat/                # LLM 对话（流式 / 模型管理 / 对话历史）
+│   ├── chat/                # LLM 对话（流式 / 模型管理 / 对话历史 / OpenAI/DeepSeek/Ollama）
 │   ├── encryptedlog/        # 加密日志流（RSA 密钥交换 + AES-256-GCM 加密）
 │   ├── gis/                 # GIS 随机点位生成（上限 50 万点）
 │   ├── health/              # 健康检查端点
-│   ├── knowledge/           # RAG 知识库（文档加载 / 分块 / 嵌入 / 向量搜索）
+│   ├── knowledge/           # RAG 知识库（文档加载 / 分块 / 嵌入 / 向量搜索 / 9 个源文件）
 │   ├── lrucache/            # LRU 缓存演示（服务列表 / 配置 / 日志）
 │   ├── memory/              # 对话记忆管理
 │   ├── middleware/          # CORS 中间件
-│   ├── model/               # 领域类型（按 domain 拆分多文件）
+│   ├── model/               # 领域类型（按 domain 拆分 7 个文件）
 │   ├── payment/             # 支付状态机 + 幂等性 + 指数退避重试 + 安全校验
 │   ├── rbac/                # RBAC 位运算权限校验
 │   ├── requestload/         # 模拟请求延迟 / 失败
@@ -47,7 +47,7 @@ backend/
 ├── go.mod / go.sum
 ├── .env.example
 ├── .gitignore
-└── Makefile
+└── README.md
 ```
 
 ## 快速启动
@@ -74,7 +74,7 @@ swag init -g cmd/server/main.go -o docs
 go test ./internal/... -v
 ```
 
-当前覆盖 **19 个模块**，共 82+ 测试用例。
+当前覆盖 **19 个内部包**，共 67 个 .go 源文件。
 
 ## API 路由
 

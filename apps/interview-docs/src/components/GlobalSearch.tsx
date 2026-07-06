@@ -51,7 +51,6 @@ function firstLink(items: NavItem[]): string | undefined {
   }
 }
 
-
 const GS_HEADING_RE = /^(#{1,3})\s+(.+)$/gm
 
 function extractHeadings(content: string): { text: string; id: string }[] {

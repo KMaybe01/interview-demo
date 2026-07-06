@@ -229,7 +229,7 @@ export default function ChunkedUpload() {
   const timerRef = useRef<ReturnType<typeof setInterval> | undefined>(undefined);
   const uploadingRef = useRef(false);
   const uploadGenRef = useRef(0);
-  const checkAbort = (): boolean => abortRef.current;
+  const checkAbort = useCallback((): boolean => abortRef.current, []);
 
   useEffect(() => {
     return () => {

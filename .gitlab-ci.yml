@@ -10,6 +10,9 @@ cache:
     - backend/bin/
     - ~/.cache/go-build/
     - ~/.bun/install/cache/
+    - node_modules/
+    - apps/*/node_modules/
+    - .turbo/
 
 stages:
   - validate
@@ -42,12 +45,8 @@ test-backend:
 lint-frontend:
   stage: validate
   image: oven/bun:${BUN_VERSION}
-  cache:
-    key: ${CI_COMMIT_REF_SLUG}-frontend
-    paths:
-      - apps/frontend/node_modules/
   script:
-    - cd apps/frontend && bun install --frozen-lockfile && bun run lint
+    - bun install --frozen-lockfile && bun run lint
   only:
     - main
     - merge_requests
@@ -69,12 +68,8 @@ build-backend:
 build-frontend:
   stage: build
   image: oven/bun:${BUN_VERSION}
-  cache:
-    key: ${CI_COMMIT_REF_SLUG}-frontend
-    paths:
-      - apps/frontend/node_modules/
   script:
-    - cd apps/frontend && bun install --frozen-lockfile && bun run build
+    - bun install --frozen-lockfile && bun run build --filter=@interview-demo/frontend
   artifacts:
     paths:
       - apps/frontend/dist
@@ -85,12 +80,8 @@ build-frontend:
 build-interview-docs:
   stage: build
   image: oven/bun:${BUN_VERSION}
-  cache:
-    key: ${CI_COMMIT_REF_SLUG}-interview-docs
-    paths:
-      - apps/interview-docs/node_modules/
   script:
-    - cd apps/interview-docs && bun install --frozen-lockfile && bun run build
+    - bun install --frozen-lockfile && bun run build --filter=frontend-interview-notes
   artifacts:
     paths:
       - apps/interview-docs/dist
@@ -157,4 +148,3 @@ pages:
       - public
   rules:
     - if: $CI_COMMIT_REF_NAME == $CI_DEFAULT_BRANCH
-

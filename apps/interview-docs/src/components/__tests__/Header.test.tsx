@@ -1,12 +1,18 @@
-import {describe, expect, it, vi} from 'vitest'
-import {render, screen} from '@testing-library/react'
+import { render, screen } from '@testing-library/react'
 import userEvent from '@testing-library/user-event'
-import {MemoryRouter} from 'react-router'
+import { MemoryRouter } from 'react-router'
+import { describe, expect, it, vi } from 'vitest'
 import Header from '../Header'
 
 vi.mock('../GlobalSearch', () => ({
   default: function MockSearch({ onClose }: { onClose: () => void }) {
-    return <div data-testid="global-search"><button onClick={onClose} type="button">close</button></div>
+    return (
+      <div data-testid="global-search">
+        <button onClick={onClose} type="button">
+          close
+        </button>
+      </div>
+    )
   },
 }))
 

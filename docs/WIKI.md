@@ -65,6 +65,8 @@ graph TB
 | **当前状态** | 本地开发运行，Docker/Helm 可部署 |
 | **一句话定位** | 覆盖 15 个高级技术场景的 React 19 + Go 全栈演示平台，聚焦前端工程化、性能优化与架构设计 |
 | **部署环境** | Docker 多阶段构建 → Kubernetes Helm (滚动更新) |
+| **构建编排** | Bun workspaces + Turborepo 2 (缓存加速 + 并行编排) |
+| **CI/CD** | GitHub Actions + GitLab CI, Turbo 缓存复用 |
 | **访问方式** | 浏览器访问，React Router 路由模式 |
 
 ### 三、技术栈全景
@@ -86,6 +88,7 @@ graph TB
 
     subgraph Build["🔧 构建层 Build"]
         Vite["Vite 8 + Rolldown"]
+        Turbo["Turborepo 2 编排"]
         Biome["Biome 2.5 + ESLint 9"]
         Babel["Babel React 编译器"]
     end
@@ -173,14 +176,15 @@ mindmap
 
 | 维度 | 数量 | 说明 |
 |------|------|------|
-| **演示页面** | 15 个 | 覆盖实时通信/性能优化/工程架构/性能监控/支付五大领域 |
+| **演示页面** | 15 个 | 覆盖实时通信/性能优化/工程架构/AI 智能/支付五大领域 |
 | **自定义组件** | 7 个 | 递归表单引擎的 7 种字段类型 |
-| **路由配置** | 15 条 | 包含仪表盘 |
-| **后端 API** | 25+ | 覆盖认证/校验/文件/SSE/WebSocket/RBAC/请求加载/Vitals/支付 |
-| **Go 测试用例** | 82 个 | auth(17) + alert(16) + vitals(14) + upload(12) + schema(10) + request_loading(10) + rbac(7) + gis(5) + lru_cache(3) + sse(3) + encrypted_logs(3)，`go test ./handlers/` 全量通过 |
+| **路由配置** | 15 条 | 包含仪表盘 + 1 条 Eager 加载登录页 |
+| **后端 API** | 50+ | 覆盖认证/校验/文件/SSE/WebSocket/RBAC/请求加载/Vitals/支付/AI 智能体/知识库 |
+| **Go 内部包** | 19 个 | agent/alert/auth/chat/encryptedlog/gis/health/knowledge/lrucache/memory/middleware/model/payment/rbac/requestload/schema/sse/upload/vitals |
+| **Go 源码文件** | 67 个 | `go test ./internal/... -v` 全量通过 |
 | **状态存储** | 6 个 | Zustand 状态管理 (alert/auth/lru/request/theme/upload) |
-| **工具函数** | 5 个 | Token/LRU/RBAC/WS传输层/VitalsSnapshot |
-| **Web Worker** | 3 个 | 归并排序 + 解密 + 文件哈希 |
+| **工具函数** | 11 个 | Token/LRU/RBAC/WS 传输层/VitalsReporter/VitalsSnapshot/RequestResource + 3 Workers |
+| **Web Worker** | 3 个 | 归并排序 + AES-GCM 解密 + SHA-256 文件哈希 |
 | **第三方依赖** | 20+ | React 生态核心库 |
 
 ### 六、核心数据结构
@@ -351,7 +355,7 @@ graph TB
 graph LR
     A["💻 代码提交"] --> B["GitLab CI 触发"]
     B --> C1["lint-backend<br/>go vet"]
-    B --> C2["lint-frontend<br/>biome check"]
+    B --> C2["lint-frontend<br/>turbo run lint<br/>biome check"]
     C1 --> D["build-backend<br/>go build"]
     C2 --> D
     D --> E["🐳 Docker 多阶段构建"]
@@ -1219,7 +1223,7 @@ const handleTransportChange = (v: string) => {
 | **性能** | aliveRef 卸载保护 | 组件 unmount 时立即停止 RAF 循环，避免切换页面卡顿 |
 | **性能** | DISPLAY_LIMIT=2000 渲染上限 | 控制最后一次渲染 reconciliation 成本 |
 | **心跳** | 30s Ping / 10s Pong | 5s 内发现僵尸连接 |
-| **后端** | 100ms ticker (非 1ms) | 避免 4000 msg/s 压垮连接 |
+| **后端** | 100ms ticker（`rate × 0.1` 条/tick） | 避免 4000 msg/s 压垮连接 |
 | **交互** | 手动连接 | 进入页面不自动连接 WS，用户按需点击"重连" |
 
 #### 体系化
@@ -2188,7 +2192,7 @@ if ok && nonceFromToken != storedNonce.(string) {
 
 #### 测试
 
-**位置**: `backend/handlers/auth_test.go`
+**位置**: `backend/internal/auth/service_test.go`
 
 17 个测试用例覆盖所有认证流程：
 
@@ -2212,7 +2216,7 @@ if ok && nonceFromToken != storedNonce.(string) {
 | `TestAuthMiddleware_SessionReplaced` | nonce 不匹配中止 + SESSION_REPLACED | context.Abort 调用 |
 | `TestAuthMiddleware_NoSessionRecord` | 无 activeSessions 记录时放行 | 兼容服务端重启场景 |
 
-运行方式：`cd backend && go test -v -run "TestAuth" ./handlers/`
+运行方式：`cd backend && go test -v -run "TestAuth" ./internal/auth/`
 
 ### 2.8 RBAC 位编码权限 ⭐⭐⭐
 
@@ -4525,11 +4529,12 @@ async function uploadChunk(chunk) {
 | vitalsSnapshot 共享快照 | 页面访问与指标关联 | 每页对应 LCP/INP/CLS 聚合视图 |
 | 后端按页面聚合 | `/api/vitals/pages` | 平均/最新 LCP/INP/CLS 趋势分析 |
 
-### 5.5 构建级优化
+### 5.5 构建级优化 (Turborepo 编排 + 缓存)
 
 ```mermaid
 graph LR
-    SRC["📁 TypeScript 源码<br/>3912 模块"] --> TSC["tsc -b<br/>项目引用模式<br/>增量编译"]
+    SRC["📁 TypeScript 源码<br/>3912 模块"] --> TURBO["Turbo 2<br/>编排 + 缓存命中跳过"]
+    TURBO --> TSC["tsc -b<br/>项目引用模式<br/>增量编译"]
     TSC --> ROLLDOWN["Rolldown Rust 打包<br/>~2.4s 构建"]
     ROLLDOWN --> BABEL["Babel React 编译器<br/>构建期注入自动 memo"]
     BABEL --> DIST["📦 dist/ 产物<br/>代码分割 + 按需加载"]
@@ -4715,7 +4720,7 @@ go vet ./...          # 静态分析
 # Go 1.26 内置格式化（gofmt 风格）
 ```
 
-Go 后端无额外 lint 工具，依赖 Go 官方工具链：`gofmt`（格式化）+ `go vet`（静态分析）。CI 中 `go vet` 作为准入关卡。认证模块 (`handlers/auth_test.go`) 提供 17 个测试用例覆盖登录/刷新/校验/中间件全流程，CI 中 `go test ./handlers/` 阻断失败构建。
+Go 后端无额外 lint 工具，依赖 Go 官方工具链：`gofmt`（格式化）+ `go vet`（静态分析）。CI 中 `go vet` 作为准入关卡。认证模块 (`internal/auth/service_test.go`) 提供 17 个测试用例覆盖登录/刷新/校验/中间件全流程，CI 中 `go test ./internal/auth/` 阻断失败构建。
 
 ##### 安全加固
 
@@ -4884,13 +4889,13 @@ build: {
 
 ---
 
-### 6.3 CI/CD 流水线
+### 6.3 CI/CD 流水线 (Turborepo 编排)
 
 ```yaml
-# .gitlab-ci.yml 核心阶段
+# .gitlab-ci.yml 核心阶段 (turbo 并行加速 + 缓存复用)
 stages:
-  - validate  # lint-backend (go vet) + test-backend (go test) + lint-frontend (biome check)
-  - build     # build-backend (go build) + build-frontend (bun run build) + build-interview-docs (bun run build)
+  - validate  # lint-backend (go vet) + test-backend (go test) + lint-frontend (turbo run lint)
+  - build     # build-backend (go build) + build-frontend (turbo --filter=@interview-demo/frontend) + build-interview-docs (turbo --filter=frontend-interview-notes)
   - package   # Docker 多阶段构建 + 推送 Registry
   - deploy    # helm upgrade --install --wait
 ```
@@ -4900,11 +4905,11 @@ stages:
 | 阶段 | Job | 命令 | 失败阻断 |
 |------|-----|------|----------|
 | validate | lint-backend | `go vet ./...` | ✅ 阻断后续阶段 |
-| validate | lint-frontend | `biome check --write src/` | ✅ 阻断后续阶段 |
-| validate | test-backend | `go test ./internal/...` | ✅ 阻断后续阶段 |
+| validate | lint-frontend | `bun run lint` (turbo 并行) | ✅ 阻断后续阶段 |
+| validate | test-backend | `go test ./internal/... -v` | ✅ 阻断后续阶段 |
 | build | build-backend | `go build -o bin/server ./cmd/server/` | ✅ |
-| build | build-frontend | `bun install && bun run build` | ✅ |
-| build | build-interview-docs | `bun install && bun run build` | ✅ |
+| build | build-frontend | `bun run build --filter=@interview-demo/frontend` (turbo) | ✅ |
+| build | build-interview-docs | `bun run build --filter=frontend-interview-notes` (turbo) | ✅ |
 | package | docker-backend | 多阶段构建 backend 镜像 | ✅ |
 | package | docker-frontend | 多阶段构建 frontend 镜像 | ✅ |
 | package | docker-interview-docs | 多阶段构建 interview-docs 镜像 | ✅ |

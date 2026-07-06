@@ -1,4 +1,4 @@
-import {Link} from 'react-router'
+import { Link } from 'react-router'
 import HeroCanvas from './HeroCanvas'
 
 const features = [

@@ -8,13 +8,26 @@ bun install          # 只能用 bun, 不能用 npm（从根目录安装所有 w
 
 ## 开发命令
 
-除非注明，均在 `apps/frontend/` 下执行：
+### Turborepo（根目录执行）
+
+| 命令 | 说明 |
+|------|------|
+| `bun run dev` | 并行启动所有 dev server（frontend :5173 + interview-docs :5000） |
+| `bun run build` | `turbo run build` — 构建所有 workspace（缓存加速） |
+| `bun run build --filter=@interview-demo/frontend` | 仅构建 frontend |
+| `bun run test` | `turbo run test` — 运行所有 workspace 测试 |
+| `bun run lint` | `turbo run lint` — 并行 lint 所有 workspace |
+| `bun run format` | `turbo run format` — 并行 format 所有 workspace |
+| `bun run typecheck` | `turbo run typecheck` — 并行类型检查 |
+
+### 单个 workspace 直接执行
+
+`apps/frontend/`：
 
 | 命令 | 说明 |
 |------|------|
 | `bun run --cwd apps/frontend dev` | Vite 开发服务器 (port 5173, `/api` + `/ws` 代理到 `:8080`) |
 | `bun run --cwd apps/frontend build` | `tsc -b && vite build` (Rolldown Rust 打包) |
-| `bun run --cwd apps/frontend test` | `vitest run` |
 | `bun run --cwd apps/frontend test:watch` | `vitest` (监听模式) |
 | `bun run --cwd apps/frontend lint` | `biome check --write src/` (Biome 是**唯一**的 linter/formatter) |
 | `bun run --cwd apps/frontend format` | `biome format --write src/` |
@@ -22,7 +35,7 @@ bun install          # 只能用 bun, 不能用 npm（从根目录安装所有 w
 
 也可直接 `cd apps/frontend` 后执行上述命令。
 
-`apps/interview-docs/` 下（前端知识库文档站点）：
+`apps/interview-docs/`（前端知识库文档站点）：
 
 | 命令 | 说明 |
 |------|------|
@@ -30,7 +43,7 @@ bun install          # 只能用 bun, 不能用 npm（从根目录安装所有 w
 | `cd apps/interview-docs && bun run build` | `tsc -b && vite build && node gen-version.mjs` |
 | `cd apps/interview-docs && bun run lint` | `biome check --write .` |
 
-`backend/` 下：
+`backend/`：
 
 ```bash
 go run ./cmd/server/          # Gin :8080
@@ -40,11 +53,11 @@ go test ./internal/... -v
 ## 架构
 
 - **前端入口**: `apps/frontend/src/main.tsx` → `apps/frontend/src/App.tsx` → `apps/frontend/src/layouts/MainLayout.tsx`
-- **路由**: `apps/frontend/src/routes/index.tsx` — 15 个懒加载页面，自动映射到侧边栏
+- **路由**: `apps/frontend/src/routes/index.tsx` — 15 个懒加载页面（含 Dashboard）+ 1 个 Eager 加载登录页，自动映射到侧边栏
 - **认证守卫**: `apps/frontend/src/components/AuthGuard.tsx` 保护除 `/login` 外的所有路由
 - **状态管理**: Zustand store 位于 `apps/frontend/src/stores/`，通过 `apps/frontend/src/stores/index.ts` 桶文件导出
 - **API 客户端**: `apps/frontend/src/utils/fetchClient.ts` (Axios，自动注入 Bearer Token，401 自动刷新 + 请求重放)
-- **后端**: Go 1.26 + Gin — 全内存存储，无外部数据库
+- **后端**: Go 1.26 + Gin — 全内存存储，无外部数据库，19 个内部包，67 个 .go 文件
 - **前端知识库**: `apps/interview-docs/` — React 19 文档站点，Markdown 内容，GitHub Pages 部署
 
 ## 代码规范
@@ -53,7 +66,7 @@ go test ./internal/... -v
 - 所有页面导入路径必须带 `.tsx` 扩展名 (`allowImportingTsExtensions`)
 - 组件：PascalCase 文件名，`export default function ComponentName()`
 - 工具函数：camelCase 文件名
-- 样式只用 Ant Design 组件 + `style` prop，无 CSS modules、无 styled-components
+- 样式只用 Ant Design 组件 + `style` prop，无 CSS modules、无 styled-components（**例外**：`Login.tsx` 使用 `Login.module.css`）
 - 避免 `any`，优先 `unknown` + 类型收窄
 - `useCallback` + `useRef` 保证引用稳定；用 ref 持有最新回调避免闭包陷阱
 - `dynamic-form/` 使用 forwardRef + useImperativeHandle + 策略模式字段注册表
@@ -66,12 +79,33 @@ go test ./internal/... -v
 - 持久化：Zustand `persist` 中间件 (仅 uploadStore)
 - 新增 store 必须在 `apps/frontend/src/stores/index.ts` 中添加导出
 
+6 个 Store：`alertStore`(告警消息)、`authStore`(认证)、`lruRouteStore`(路由缓存)、`requestLoadingStore`(请求追踪)、`themeStore`(主题切换)、`uploadStore`(上传持久化)
+
+## AI Demo 架构
+
+路径：`apps/frontend/src/pages/AIDemo/`
+
+| 文件 | 职责 |
+|------|------|
+| `AIDemo.tsx` | 主页面，6 选项卡布局（Chat / KnowledgeBase / Models / Agents / Plugins / Dashboard） |
+| `components/Chat.tsx` | LLM 聊天（流式对话） |
+| `components/KnowledgeBase.tsx` | 知识库管理（CRUD + 文档添加） |
+| `components/Models.tsx` | 模型管理与选择 |
+| `components/Agents.tsx` | 智能体管理（ReAct / Function Calling / Multi-Agent） |
+| `components/Plugins.tsx` | 插件中心 |
+| `components/Dashboard.tsx` | AI Dashboard 统计概览 |
+| `components/ErrorBoundary.tsx` | 错误边界 |
+| `services/api.ts` | AI 相关 API 封装 |
+| `stores/chatStore.ts` | 聊天状态管理 |
+| `types/index.ts` | AI Demo 类型定义 |
+
 ## 关键模式
 
 - **代际锁 (Generation Lock)**：`uploadingRef` + `genRef` 防止上传并发操作
 - **StrictMode 保护**：`reportedRef` 避免开发模式下 double-invoke 导致重复请求
 - **Web Workers**：3 个 worker 文件 (`merge.worker.ts`、`decrypt.worker.ts`、`hash.worker.ts`)
 - **性能监控**：`initVitalsReporter()` 在 `main.tsx` 模块级调用，3 秒批处理上报
+- **Promise Park**：暂停上传时用未 resolve 的 Promise 挂起循环，恢复时 resolve 继续
 
 ## 动态表单引擎
 
@@ -83,7 +117,7 @@ go test ./internal/... -v
 | `Renderer.tsx` | 递归遍历 FormSchema AST，tabs→card→form→leaf 四层渲染 |
 | `registry.tsx` | 策略模式：`Map<FieldType, Component>`，`registerField()` / `getField()` |
 | `types.ts` | FormSchema/LeafSchema 类型 + AJV 集成 + flattenSchema/validateSchema/updateValue |
-| `fields/*.tsx` | 7 个字段组件，均接收 `FieldComponentProps` 接口 |
+| `fields/*.tsx` | 7 个字段组件（StringField / NumberField / SelectField / SwitchField / DateTimeField / JsonField / ArrayField），均接收 `FieldComponentProps` 接口 |
 
 字段组件接口：
 ```typescript
@@ -125,7 +159,7 @@ interface DynamicFormHandle {
 | 文件 | 职责 |
 |------|------|
 | `stores/authStore.ts` | Zustand 认证状态 (user, isLoggedIn, login/logout) |
-| `pages/Login.tsx` | 登录表单 (admin/admin123) |
+| `pages/Login.tsx` | 登录表单 (admin/admin123)，使用 CSS Module |
 | `components/AuthGuard.tsx` | 路由守卫，ref 同步初始化免闪烁，未登录重定向 /login |
 | `utils/fetchClient.ts` | Axios 封装，自动 Bearer Token、401 无感刷新、失败后清除 Token 跳转 /login |
 | `utils/token.ts` | localStorage 管理 access_token / refresh_token |
@@ -143,7 +177,7 @@ PageTracker (App.tsx 中包裹每个路由)
   → POST /api/vitals/page-report (路径 + 耗时)
 
 后端 in-memory 存储 → GET /api/vitals/summary|history|pages
-  → WebVitals.tsx 展示: 指标卡片 + ECharts 趋势图 + 页面渲染排行
+  → Dashboard 展示: 指标卡片 + ECharts 趋势图 + 页面渲染排行
 ```
 
 ## 测试
@@ -152,11 +186,38 @@ PageTracker (App.tsx 中包裹每个路由)
 - 测试设置：`src/test/setup.ts` (引入 jest-dom matcher，mock ResizeObserver + matchMedia)
 - 测试文件与源码同目录，放在 `__tests__/` 下
 - 用 `userEvent` 而不是 `fireEvent` 模拟用户交互
+- 19 个测试文件覆盖所有页面 + stores + utils
+
+## 后端模块
+
+`backend/internal/` 包含 19 个内部包：
+
+| 包 | 职责 |
+|----|------|
+| `agent` | 智能体引擎（ReAct / Function Calling / Multi-Agent） |
+| `alert` | 多协议告警（WebSocket / SSE / HTTP Polling 统一分发） |
+| `auth` | JWT 双 Token 认证（登录/刷新/重放检测/ Session Nonce） |
+| `chat` | LLM 对话（流式 / 模型管理 / 对话历史 / OpenAI/DeepSeek/Ollama） |
+| `encryptedlog` | 加密日志流（RSA 密钥交换 + AES-256-GCM 加密） |
+| `gis` | GIS 随机点位生成（上限 50 万点） |
+| `health` | 健康检查端点 |
+| `knowledge` | RAG 知识库（文档加载 / 分块 / 嵌入 / 向量搜索） |
+| `lrucache` | LRU 缓存演示（服务列表 / 配置 / 日志） |
+| `memory` | 对话记忆管理 |
+| `middleware` | CORS 中间件 |
+| `model` | 领域类型（按 domain 拆分 7 个文件） |
+| `payment` | 支付状态机（7 状态 × 6 驱动）+ 幂等性 + 指数退避重试 + 安全校验 |
+| `rbac` | RBAC 位运算权限校验 |
+| `requestload` | 模拟请求延迟 / 失败 |
+| `schema` | 动态 JSON Schema 表单定义 + 递归校验 |
+| `sse` | SSE 日志流 |
+| `upload` | 大文件分片上传（SHA-256 校验 + 会话管理） |
+| `vitals` | Web Vitals 采集与聚合（CLS/FCP/INP/LCP/TTFB） |
 
 ## CI/CD
 
 - **GitHub Actions**:
-  - `.github/workflows/lint.yml`：push/PR 到 `main` → `go vet`、`go test`、`bun run lint`、`bun run test`、`bunx tsc -b --noEmit`
+  - `.github/workflows/lint.yml`：push/PR 到 `main` → `go vet`、`go test`、`bun run lint`、`bun run test`、`bunx tsc -b --noEmit`（使用 `turbo run` 并行加速前端任务）
   - `.github/workflows/deploy-interview-docs.yml`：push 到 `main` 且改动 `apps/interview-docs/` → build + deploy 到 GitHub Pages
 - **GitLab CI** (`.gitlab-ci.yml`)：validate → build → package (Docker `frontend`/`backend`/`interview-docs` 三镜像) → deploy (Helm 到 K8s)
 
@@ -171,10 +232,13 @@ PageTracker (App.tsx 中包裹每个路由)
 
 - 修改代码后同步更新 `README.md` 和 `docs/` 目录下相关文档
 - 更新 `README.md` 的"演示功能"表时同步更新 `routes/index.tsx`
-- 新增/修改 `docs/面试亮点.md` 的难点章节时，同步更新 `README.md` 的对应描述
+- 新增/修改 `Wiki.md` 的难点章节时，同步更新 `README.md` 的对应描述
 
 ## 注意事项
 
 - `.husky/` 目录不在 git 中 — 本地需运行 `bun run prepare` 安装 hooks
 - `backend/Makefile` **不存在**于仓库中
-- **Monorepo**: 使用 Bun workspaces 管理，根 `package.json` 定义 `apps/*` 工作区
+- **Monorepo**: 使用 Bun workspaces + Turborepo 管理，根 `package.json` 定义 `apps/*` 工作区，`turbo.json` 配置编排管道
+- `package.json` 必须包含 `"packageManager": "bun@1.3.14"` 字段（Turborepo 2+ 要求）
+- 使用 `--filter` 参数限定 turbo 只作用于特定 workspace，如 `bun run build --filter=@interview-demo/frontend`
+- Vite 配置中 `form` 代码分割组包含 ajv 但**未使用** @rjsf

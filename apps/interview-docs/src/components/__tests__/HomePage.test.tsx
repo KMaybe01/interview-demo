@@ -1,6 +1,6 @@
-import {describe, expect, it} from 'vitest'
-import {render, screen, within} from '@testing-library/react'
-import {MemoryRouter} from 'react-router'
+import { render, screen, within } from '@testing-library/react'
+import { MemoryRouter } from 'react-router'
+import { describe, expect, it } from 'vitest'
 import HomePage from '../HomePage'
 
 describe('HomePage', () => {
@@ -36,11 +36,20 @@ describe('HomePage', () => {
       </MemoryRouter>,
     )
     const featuresSection = document.querySelector('.features')
-    const featureLinks = featuresSection ? within(featuresSection as HTMLElement).getAllByRole('link') : []
+    const featureLinks = featuresSection
+      ? within(featuresSection as HTMLElement).getAllByRole('link')
+      : []
     expect(featureLinks).toHaveLength(6)
     const hrefs = featureLinks.map((l) => l.getAttribute('href'))
     expect(hrefs).toEqual(
-      expect.arrayContaining(['/S1-基础夯实/', '/S2-框架深入/', '/S3-进阶提升/', '/S4-面试冲刺/', '/S5-AI/', '/S6-Go/']),
+      expect.arrayContaining([
+        '/S1-基础夯实/',
+        '/S2-框架深入/',
+        '/S3-进阶提升/',
+        '/S4-面试冲刺/',
+        '/S5-AI/',
+        '/S6-Go/',
+      ]),
     )
   })
 

@@ -1,7 +1,7 @@
 {
   "$schema": "./node_modules/@biomejs/biome/configuration_schema.json",
   "files": {
-    "ignore": [".history"]
+    "ignore": [".history", "dist", "**/__tests__"]
   },
   "organizeImports": {
     "enabled": true
