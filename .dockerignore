@@ -3,9 +3,8 @@ node_modules/
 .gitignore
 .gitlab-ci.yml
 .github/
-docs/
 helm/
-*.md
+README.md
 AGENT.md
 .idea/
 .husky/
@@ -13,5 +12,8 @@ AGENT.md
 .gitattributes
 backend/bin/
 backend/uploads/
-frontend/dist/
-frontend/node_modules/
+apps/frontend/dist/
+apps/frontend/node_modules/
+apps/interview-docs/dist/
+apps/interview-docs/node_modules/
+apps/interview-docs/.github/

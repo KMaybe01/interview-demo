@@ -31,3 +31,16 @@ services:
       timeout: 3s
       retries: 3
       start_period: 5s
+
+  interview-docs:
+    build:
+      context: .
+      target: interview-docs
+    ports:
+      - "5000:80"
+    healthcheck:
+      test: ["CMD", "wget", "-qO-", "http://localhost:80/interview-demo/"]
+      interval: 10s
+      timeout: 3s
+      retries: 3
+      start_period: 5s

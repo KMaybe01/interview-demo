@@ -1,88 +1,102 @@
 # Interview Demo - 全栈技术演示平台
 
-> 面试亮点分析: 详见 [`docs/面试亮点.md`](docs/面试亮点.md)
-
 ## 项目概述
 
-React 19 + Go 1.26 全栈演示项目，涵盖 **16 个技术场景**（含仪表盘首页页面性能监控 + 15 个核心演示），聚焦前端工程化、性能优化与架构设计。
+Monorepo (Bun workspaces) 全栈项目，包含：
+- **interview-demo**: React 19 + Go 1.26 全栈演示项目，涵盖 **16 个技术场景**（含仪表盘首页页面性能监控 + 15 个核心演示），聚焦前端工程化、性能优化与架构设计。
+- **前端知识库**: React 19 文档站点，Markdown 内容，GitHub Pages 部署，覆盖前端面试五阶段知识体系。
 
 **Keywords:** 无感刷新 · Token Rotation · 递归表单引擎 · 双重校验 · 实时 JSON 编辑 · WebSocket 心跳 · LRU 路由缓存 · Web Worker 分治 · OpenLayers 聚类 · RBAC 位编码 · SSE 流式日志 · 请求加载 Signal · 树形数据引擎 · 大文件断点续传 · 页面性能监控 · 统一支付中台
 
 ## 技术栈
 
-| 层级     | 技术                                                                       |
-| -------- | -------------------------------------------------------------------------- |
-| 前端     | React 19, TypeScript 6, Vite 8 + Rolldown, Ant Design 6, Zustand 5, React Router 7 |
-| 工具链   | Biome 2.5 (lint + format), Husky + commitlint (conventional commits)        |
-| 样式     | Ant Design tokens + CSS Modules                                             |
-| 后端     | Go 1.26, Gin 1.12, Gorilla WebSocket, golang-jwt (双 Token 无感刷新)        |
-| GIS      | OpenLayers 10.9 (Cluster + BBOX 视口裁剪)                                   |
-| 表单     | 自定义递归渲染引擎 (非 @rjsf)                                                |
-| 运行时   | Bun 1.3（前端依赖安装 + 脚本执行 + CI/CD）                                  |
-| CI/CD    | GitHub Actions + GitLab CI + Docker (多阶段构建)                            |
-| 部署     | Kubernetes Helm (滚动更新, zero-downtime), Nginx Ingress                    |
+| 层级       | 技术                                                                       |
+| ---------- | -------------------------------------------------------------------------- |
+| 前端       | React 19, TypeScript 6, Vite 8 + Rolldown, Ant Design 6, Zustand 5, React Router 7 |
+| 前端知识库 | React 19, TypeScript 5.7, Vite 8, React Router 8, react-markdown, Mermaid  |
+| 工具链     | Biome 2.5 (lint + format), Husky + commitlint (conventional commits)        |
+| 样式       | Ant Design tokens + CSS Modules                                             |
+| 后端       | Go 1.26, Gin 1.12, Gorilla WebSocket, golang-jwt (双 Token 无感刷新)        |
+| GIS        | OpenLayers 10.9 (Cluster + BBOX 视口裁剪)                                   |
+| 表单       | 自定义递归渲染引擎 (非 @rjsf)                                                |
+| 运行时     | Bun 1.3（前端依赖安装 + 脚本执行 + CI/CD, Monorepo）                        |
+| CI/CD      | GitHub Actions + GitLab CI + Docker (多阶段构建)                            |
+| 部署       | Kubernetes Helm (滚动更新, zero-downtime), Nginx Ingress                    |
 
 ## 项目结构
 
 ```
-interview-demo/
-├── frontend/                        # React 19 前端 SPA
-│   ├── src/
-│   │   ├── main.tsx                 # React 入口 (StrictMode, BrowserRouter)
-│   │   ├── App.tsx                  # 根组件 (ConfigProvider, Routes, AuthGuard)
-│   │   ├── assets/                  # 静态资源
-│   │   ├── components/
-│   │   │   ├── AuthGuard.tsx        # 路由守卫 (Zustand 认证状态)
-│   │   │   ├── PageTracker.tsx      # 页面渲染性能监控
-│   │   │   └── dynamic-form/        # 自定义递归表单引擎
-│   │   │       ├── DynamicForm.tsx   # 容器: forwardRef + onChange + 校验调度
-│   │   │       ├── Renderer.tsx      # 递归 AST 渲染器
-│   │   │       ├── registry.tsx      # 策略模式控件注册表
-│   │   │       ├── types.ts         # Schema + AJV 校验 + 工具函数
-│   │   │       └── fields/          # 7 个字段组件
-│   │   ├── pages/                   # 15 个演示页面 + 仪表盘首页
-│   │   │   ├── Dashboard.tsx
-│   │   │   ├── Login.tsx
-│   │   │   ├── AlertWebSocket.tsx
-│   │   │   ├── JsonSchemaForm.tsx
-│   │   │   ├── ChunkedUpload.tsx
-│   │   │   ├── GisRendering.tsx
-│   │   │   ├── LogStream.tsx
-│   │   │   ├── LruRouteCache.tsx (+ Config/Logs/Monitor)
-│   │   │   ├── RbacPermission.tsx
-│   │   │   ├── RequestLoading.tsx
-│   │   │   ├── SseLogStream.tsx
-│   │   │   ├── TokenRefresh.tsx
-│   │   │   ├── TreeDataEngine.tsx
-│   │   │   ├── WebWorkerMerge.tsx
-│   │   │   ├── UniPay.tsx
-│   │   │   └── AIDemo/              # AI Demo (6 子选项卡)
-│   │   ├── stores/                  # Zustand 状态管理 (6 stores)
-│   │   │   ├── authStore.ts
-│   │   │   ├── alertStore.ts
-│   │   │   ├── lruRouteStore.ts
-│   │   │   ├── requestLoadingStore.ts
-│   │   │   ├── themeStore.ts
-│   │   │   └── uploadStore.ts
-│   │   ├── routes/
-│   │   │   └── index.tsx            # 15 条路由 (懒加载)
-│   │   └── utils/
-│   │       ├── fetchClient.ts       # 统一请求封装 (401 无感刷新)
-│   │       ├── token.ts             # JWT Token 工具
-│   │       ├── lru.ts               # LRUCache 泛型类
-│   │       ├── rbac.ts              # RBAC 位运算权限
-│   │       ├── wsTransport.ts       # WebSocket 传输层
-│   │       ├── vitalsReporter.ts    # Web Vitals 上报
-│   │       ├── vitalsSnapshot.ts    # Vitals 快照采集
-│   │       ├── requestResource.ts   # 请求资源追踪
-│   │       ├── hash.worker.ts       # SHA-256 Worker
-│   │       ├── merge.worker.ts      # 归并排序 Worker
-│   │       └── decrypt.worker.ts    # RSA + AES-256-GCM Worker
-│   ├── public/
-│   ├── vite.config.ts               # Vite 8 + Rolldown
-│   ├── tsconfig*.json
-│   ├── biome.json                   # Biome 2.5
-│   └── package.json
+interview-demo/                      # Monorepo root (Bun workspaces)
+├── apps/
+│   ├── frontend/                    # React 19 前端 SPA
+│   │   ├── src/
+│   │   │   ├── main.tsx                 # React 入口 (StrictMode, BrowserRouter)
+│   │   │   ├── App.tsx                  # 根组件 (ConfigProvider, Routes, AuthGuard)
+│   │   │   ├── assets/                  # 静态资源
+│   │   │   ├── components/
+│   │   │   │   ├── AuthGuard.tsx        # 路由守卫 (Zustand 认证状态)
+│   │   │   │   ├── PageTracker.tsx      # 页面渲染性能监控
+│   │   │   │   └── dynamic-form/        # 自定义递归表单引擎
+│   │   │   │       ├── DynamicForm.tsx   # 容器: forwardRef + onChange + 校验调度
+│   │   │   │       ├── Renderer.tsx      # 递归 AST 渲染器
+│   │   │   │       ├── registry.tsx      # 策略模式控件注册表
+│   │   │   │       ├── types.ts         # Schema + AJV 校验 + 工具函数
+│   │   │   │       └── fields/          # 7 个字段组件
+│   │   │   ├── pages/                   # 15 个演示页面 + 仪表盘首页
+│   │   │   │   ├── Dashboard.tsx
+│   │   │   │   ├── Login.tsx
+│   │   │   │   ├── AlertWebSocket.tsx
+│   │   │   │   ├── JsonSchemaForm.tsx
+│   │   │   │   ├── ChunkedUpload.tsx
+│   │   │   │   ├── GisRendering.tsx
+│   │   │   │   ├── LogStream.tsx
+│   │   │   │   ├── LruRouteCache.tsx (+ Config/Logs/Monitor)
+│   │   │   │   ├── RbacPermission.tsx
+│   │   │   │   ├── RequestLoading.tsx
+│   │   │   │   ├── SseLogStream.tsx
+│   │   │   │   ├── TokenRefresh.tsx
+│   │   │   │   ├── TreeDataEngine.tsx
+│   │   │   │   ├── WebWorkerMerge.tsx
+│   │   │   │   ├── UniPay.tsx
+│   │   │   │   └── AIDemo/              # AI Demo (6 子选项卡)
+│   │   │   ├── stores/                  # Zustand 状态管理 (6 stores)
+│   │   │   │   ├── authStore.ts
+│   │   │   │   ├── alertStore.ts
+│   │   │   │   ├── lruRouteStore.ts
+│   │   │   │   ├── requestLoadingStore.ts
+│   │   │   │   ├── themeStore.ts
+│   │   │   │   └── uploadStore.ts
+│   │   │   ├── routes/
+│   │   │   │   └── index.tsx            # 15 条路由 (懒加载)
+│   │   │   └── utils/
+│   │   │       ├── fetchClient.ts       # 统一请求封装 (401 无感刷新)
+│   │   │       ├── token.ts             # JWT Token 工具
+│   │   │       ├── lru.ts               # LRUCache 泛型类
+│   │   │       ├── rbac.ts              # RBAC 位运算权限
+│   │   │       ├── wsTransport.ts       # WebSocket 传输层
+│   │   │       ├── vitalsReporter.ts    # Web Vitals 上报
+│   │   │       ├── vitalsSnapshot.ts    # Vitals 快照采集
+│   │   │       ├── requestResource.ts   # 请求资源追踪
+│   │   │       ├── hash.worker.ts       # SHA-256 Worker
+│   │   │       ├── merge.worker.ts      # 归并排序 Worker
+│   │   │       └── decrypt.worker.ts    # RSA + AES-256-GCM Worker
+│   │   ├── public/
+│   │   ├── vite.config.ts               # Vite 8 + Rolldown
+│   │   ├── tsconfig*.json
+│   │   ├── biome.json                   # Biome 2.5
+│   │   └── package.json
+│       └── interview-docs/              # 前端知识库文档站点 (React 19)
+│       ├── src/
+│       ├── public/
+│       ├── S1-基础夯实/
+│       ├── S2-框架深入/
+│       ├── S3-进阶提升/
+│       ├── S4-面试冲刺/
+│       ├── S5-AI/
+│       ├── S6-Go/
+│       ├── vite.config.ts
+│       ├── biome.json
+│       └── package.json
 ├── backend/                         # Go 1.26 + Gin 1.12 后端
 │   ├── cmd/server/main.go           # 入口，优雅关闭，Swagger
 │   ├── docs/                        # Swagger API 文档
@@ -120,6 +134,7 @@ interview-demo/
 ├── nginx.conf / nginx.compose.conf  # Nginx 配置
 ├── .gitlab-ci.yml                   # GitLab CI/CD
 ├── .husky/                          # Git hooks
+├── package.json                     # Monorepo workspace 配置
 └── README.md
 ```
 
@@ -152,7 +167,7 @@ interview-demo/
 cd backend && go run ./cmd/server/
 
 # 前端
-cd frontend && bun dev
+cd apps/frontend && bun dev
 ```
 
 Swagger 文档启动后访问 http://localhost:8080/swagger/index.html。
@@ -168,7 +183,7 @@ docker compose up --build
 ## 构建验证
 
 ```bash
-cd frontend
+cd apps/frontend
 bun run build          # tsc -b + vite build (Rolldown Rust bundler)
 bun run lint           # Biome check
 ```
@@ -257,17 +272,20 @@ bun run lint           # Biome check
 ## CI/CD + K8s 部署
 
 ```
-用户 → Nginx Ingress → /api /ws → backend-service:8080
-                    → /       → frontend-service:80 (nginx 静态文件)
+用户 → Nginx Ingress → /api /ws        → backend-service:8080
+                    → /interview-demo → interview-docs-service:80
+                    → /               → frontend-service:80 (nginx 静态文件)
 ```
 
 ### Docker 多阶段构建
 
 | Stage | 基础镜像 | 产出 |
 |-------|----------|------|
-| `frontend-builder` | oven/bun:1.3 | `bun install && bun run build` → `dist/` |
+| `frontend-builder` | oven/bun:1.3 | `bun install && bun run build` → `apps/frontend/dist/` |
+| `interview-docs-builder` | oven/bun:1.3 | `bun install && bun run build` → `apps/interview-docs/dist/` |
 | `backend-builder` | golang:1.26 | `CGO_ENABLED=0 go build` → 二进制 |
 | `frontend` | nginx:alpine | `dist/` + `nginx.conf` → :80 |
+| `interview-docs` | nginx:alpine | `dist/` + `nginx.interview-docs.conf` → :80 (served at `/interview-demo/`) |
 | `backend` | alpine:3.19 | 二进制 + ca-certificates → :8080 |
 
 ### Helm Chart
@@ -277,6 +295,7 @@ helm upgrade --install interview-demo ./helm \
   --namespace interview-demo --create-namespace \
   --set backend.image.repository=registry.example.com/backend \
   --set frontend.image.repository=registry.example.com/frontend \
+  --set interviewDocs.image.repository=registry.example.com/interview-docs \
   --wait --timeout 120s
 ```
 
@@ -314,12 +333,12 @@ helm upgrade --install interview-demo ./helm \
 | `CORS_ORIGIN` | `*` | CORS 允许来源 |
 | `OPENAI_API_KEY` | - | OpenAI API Key |
 
-## 构建产物 (frontend/dist/)
+## 构建产物 (apps/frontend/dist/)
 
 Rolldown 代码分割 + `React.lazy()` 页面级懒加载后，首屏仅 **~50 kB**：
 
 ```
-dist/
+apps/frontend/dist/
 ├── index.html                        0.94 kB       (HTML 入口)
 ├── assets/
 │   ├── rolldown-runtime-*.js         0.82 kB       (Rolldown 运行时)

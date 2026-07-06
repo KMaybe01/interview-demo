@@ -1,13 +1,15 @@
-image: docker:latest
-
 variables:
-  DOCKER_DRIVER: overlay2
-  DOCKER_TLS_CERTDIR: ""
+  GO_VERSION: "1.26"
+  BUN_VERSION: "1.3"
   CI_REGISTRY_IMAGE: registry.gitlab.com/${CI_PROJECT_PATH}
   K8S_NAMESPACE: interview-demo
 
-services:
-  - docker:dind
+cache:
+  key: ${CI_COMMIT_REF_SLUG}
+  paths:
+    - backend/bin/
+    - ~/.cache/go-build/
+    - ~/.bun/install/cache/
 
 stages:
   - validate
@@ -15,25 +17,11 @@ stages:
   - package
   - deploy
 
-cache:
-  key: ${CI_COMMIT_REF_SLUG}
-  paths:
-    - backend/bin/
-    - frontend/node_modules/
-    - ~/.cache/go-build/
-    - ~/.bun/install/cache/
-
-before_script:
-  - apk add --no-cache go
-  - curl -fsSL https://bun.sh/install | bash
-  - export BUN_INSTALL="$HOME/.bun"
-  - export PATH="$BUN_INSTALL/bin:$PATH"
-  - docker login -u $CI_REGISTRY_USER -p $CI_REGISTRY_PASSWORD $CI_REGISTRY
-
 # ── Validate ──────────────────────────────────────────────
 
 lint-backend:
   stage: validate
+  image: golang:${GO_VERSION}-alpine
   script:
     - cd backend && go vet ./...
   only:
@@ -42,16 +30,24 @@ lint-backend:
 
 test-backend:
   stage: validate
+  image: golang:${GO_VERSION}-alpine
+  before_script:
+    - apk add --no-cache gcc musl-dev
   script:
-    - cd backend && go test -count=1 ./internal/...
+    - cd backend && go test -count=1 -v -race ./internal/...
   only:
     - main
     - merge_requests
 
 lint-frontend:
   stage: validate
+  image: oven/bun:${BUN_VERSION}
+  cache:
+    key: ${CI_COMMIT_REF_SLUG}-frontend
+    paths:
+      - apps/frontend/node_modules/
   script:
-    - cd frontend && bun install && bun run lint
+    - cd apps/frontend && bun install --frozen-lockfile && bun run lint
   only:
     - main
     - merge_requests
@@ -60,6 +56,7 @@ lint-frontend:
 
 build-backend:
   stage: build
+  image: golang:${GO_VERSION}-alpine
   script:
     - cd backend && go build -o bin/server ./cmd/server/
   artifacts:
@@ -71,19 +68,51 @@ build-backend:
 
 build-frontend:
   stage: build
+  image: oven/bun:${BUN_VERSION}
+  cache:
+    key: ${CI_COMMIT_REF_SLUG}-frontend
+    paths:
+      - apps/frontend/node_modules/
   script:
-    - cd frontend && bun install && bun run build
+    - cd apps/frontend && bun install --frozen-lockfile && bun run build
   artifacts:
     paths:
-      - frontend/dist
+      - apps/frontend/dist
+    expire_in: 1 hour
+  only:
+    - main
+
+build-interview-docs:
+  stage: build
+  image: oven/bun:${BUN_VERSION}
+  cache:
+    key: ${CI_COMMIT_REF_SLUG}-interview-docs
+    paths:
+      - apps/interview-docs/node_modules/
+  script:
+    - cd apps/interview-docs && bun install --frozen-lockfile && bun run build
+  artifacts:
+    paths:
+      - apps/interview-docs/dist
     expire_in: 1 hour
   only:
     - main
 
 # ── Package ───────────────────────────────────────────────
 
-docker-backend:
+.docker-job:
   stage: package
+  image: docker:latest
+  services:
+    - docker:dind
+  before_script:
+    - export CI_REGISTRY_IMAGE=$(echo "${CI_REGISTRY_IMAGE}" | tr '[:upper:]' '[:lower:]')
+    - docker login -u $CI_REGISTRY_USER -p $CI_REGISTRY_PASSWORD $CI_REGISTRY
+  only:
+    - main
+
+docker-backend:
+  extends: .docker-job
   needs:
     - build-backend
     - build-frontend
@@ -92,11 +121,9 @@ docker-backend:
     - docker tag $CI_REGISTRY_IMAGE/backend:$CI_COMMIT_SHORT_SHA $CI_REGISTRY_IMAGE/backend:latest
     - docker push $CI_REGISTRY_IMAGE/backend:$CI_COMMIT_SHORT_SHA
     - docker push $CI_REGISTRY_IMAGE/backend:latest
-  only:
-    - main
 
 docker-frontend:
-  stage: package
+  extends: .docker-job
   needs:
     - build-backend
     - build-frontend
@@ -105,17 +132,26 @@ docker-frontend:
     - docker tag $CI_REGISTRY_IMAGE/frontend:$CI_COMMIT_SHORT_SHA $CI_REGISTRY_IMAGE/frontend:latest
     - docker push $CI_REGISTRY_IMAGE/frontend:$CI_COMMIT_SHORT_SHA
     - docker push $CI_REGISTRY_IMAGE/frontend:latest
-  only:
-    - main
+
+docker-interview-docs:
+  extends: .docker-job
+  needs:
+    - build-interview-docs
+  script:
+    - docker build --target interview-docs -t $CI_REGISTRY_IMAGE/interview-docs:$CI_COMMIT_SHORT_SHA .
+    - docker tag $CI_REGISTRY_IMAGE/interview-docs:$CI_COMMIT_SHORT_SHA $CI_REGISTRY_IMAGE/interview-docs:latest
+    - docker push $CI_REGISTRY_IMAGE/interview-docs:$CI_COMMIT_SHORT_SHA
+    - docker push $CI_REGISTRY_IMAGE/interview-docs:latest
 
 # ── Deploy ────────────────────────────────────────────────
 
 deploy-k8s:
   stage: deploy
+  image: alpine/helm:3.17.0
   needs:
     - docker-backend
     - docker-frontend
-  image: alpine/helm:3.17.0
+    - docker-interview-docs
   script:
     - helm upgrade --install interview-demo ./helm
         --namespace $K8S_NAMESPACE
@@ -124,6 +160,8 @@ deploy-k8s:
         --set backend.image.tag=$CI_COMMIT_SHORT_SHA
         --set frontend.image.repository=$CI_REGISTRY_IMAGE/frontend
         --set frontend.image.tag=$CI_COMMIT_SHORT_SHA
+        --set interviewDocs.image.repository=$CI_REGISTRY_IMAGE/interview-docs
+        --set interviewDocs.image.tag=$CI_COMMIT_SHORT_SHA
         --wait --timeout 120s
   only:
     - main

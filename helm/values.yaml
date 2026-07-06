@@ -93,6 +93,43 @@ frontend:
     failureThreshold: 2
   terminationGracePeriodSeconds: 30
 
+interviewDocs:
+  name: interview-docs
+  serviceName: interview-docs-service
+  image:
+    repository: registry.gitlab.com/${CI_PROJECT_PATH}/interview-docs
+    tag: latest
+    pullPolicy: Always
+  replicas: 1
+  port: 80
+  strategy:
+    type: RollingUpdate
+    rollingUpdate:
+      maxSurge: 1
+      maxUnavailable: 0
+  resources:
+    requests:
+      cpu: 50m
+      memory: 32Mi
+    limits:
+      cpu: 200m
+      memory: 128Mi
+  livenessProbe:
+    path: /interview-demo/
+    port: http
+    initialDelaySeconds: 5
+    periodSeconds: 10
+    timeoutSeconds: 3
+    failureThreshold: 3
+  readinessProbe:
+    path: /interview-demo/
+    port: http
+    initialDelaySeconds: 3
+    periodSeconds: 5
+    timeoutSeconds: 3
+    failureThreshold: 2
+  terminationGracePeriodSeconds: 30
+
 configmap:
   name: backend-config
   data:

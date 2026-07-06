@@ -2283,7 +2283,7 @@ A："三大难点：
 坑 5：动态 import 图表库导致路由切换闪烁
 ├─ 表象：切换 Tab 时，图表先消失再重新出现
 ├─ 原因：ECharts/G6 按路由 lazy load，每次重新 init
-├─ 方案：keepAlive 缓存组件（React Router v6 的 Outlet + keepalive）
+├─ 方案：keepAlive 缓存组件（React Router v8.1 的 Outlet + keepalive）
 └─ 话术："配合路由级别的 keepAlive，切换 Tab 时保留 DOM 和实例"
 
 坑 6：iOS Safari 上 ECharts touch 事件不响应

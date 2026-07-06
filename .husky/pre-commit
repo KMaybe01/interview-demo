@@ -1,4 +1,4 @@
-cd "$(git rev-parse --show-toplevel)/frontend" && npx lint-staged
-cd "$(git rev-parse --show-toplevel)/frontend" && bunx tsc -b --noEmit
+cd "$(git rev-parse --show-toplevel)/apps/frontend" && npx lint-staged
+cd "$(git rev-parse --show-toplevel)/apps/frontend" && bunx tsc -b --noEmit
 cd "$(git rev-parse --show-toplevel)/backend" && go vet ./...
 cd "$(git rev-parse --show-toplevel)/backend" && go build -o /dev/null ./...

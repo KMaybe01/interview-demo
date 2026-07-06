@@ -554,20 +554,24 @@ const roles = ['admin', 'user', 'guest'] as const
 type Role = typeof roles[number]  // 'admin' | 'user' | 'guest'
 ```
 
-### 1️⃣2️⃣ 装饰器（Decorators）
+### 1️⃣2️⃣ 装饰器（Decorators）— Legacy vs 标准装饰器
+
+> **面试高频**：TypeScript 5.x 引入的 Stage 3 标准装饰器与 legacy experimentalDecorators 的本质区别。
+
+#### Legacy 装饰器（`experimentalDecorators: true`，旧版）
 
 ```typescript
+// tsconfig.json 需开启 "experimentalDecorators": true
+
 // 类装饰器
 function logClass(constructor: Function) {
   console.log(`Class ${constructor.name} 被创建`)
 }
 
 @logClass
-class MyService {
-  constructor() {}
-}
+class MyService {}
 
-// 方法装饰器
+// 方法装饰器 — 通过修改 descriptor 实现
 function Log(target: any, propertyKey: string, descriptor: PropertyDescriptor) {
   const original = descriptor.value
   descriptor.value = function(...args: any[]) {
@@ -583,25 +587,107 @@ class Calculator {
     return a + b
   }
 }
-new Calculator().add(1, 2)
-// 输出: 调用 add，参数: [1, 2]
 
 // 属性装饰器
 function Readonly(target: any, propertyKey: string) {
-  Object.defineProperty(target, propertyKey, {
-    writable: false,
-    value: '不可修改'
-  })
+  Object.defineProperty(target, propertyKey, { writable: false })
 }
 
 class Config {
   @Readonly
   static apiUrl: string
 }
-Config.apiUrl = 'new-url'  // 严格模式下不生效
 
-// ⚠️ 注意：装饰器在 ES 提案中（Stage 3），TypeScript 需开启 experimentalDecorators
+// ⚠️ Legacy 装饰器参数随装饰目标变化，类型安全性差
 ```
+
+#### Stage 3 标准装饰器（TypeScript 5.x+，无需 experimentalDecorators）
+
+```typescript
+// tsconfig.json 无需 experimentalDecorators，使用 2023 年 ES 标准
+
+// 标准装饰器签名： (value, context) => replacement
+// - value: 被装饰的值（类 / 方法 / getter / setter / 字段 / 访问器）
+// - context: 上下文对象 { kind, name, access, private, static, addInitializer }
+
+// 类装饰器
+function logClass(value: Function, context: ClassDecoratorContext) {
+  console.log(`Class: ${context.name}`)
+  return value // 可返回新类替换原类
+}
+
+@logClass
+class MyService {}
+
+// 方法装饰器 — 返回新函数实现拦截，类型安全
+function logMethod<T extends (...args: any[]) => any>(
+  value: T,
+  context: ClassMethodDecoratorContext
+): T {
+  const methodName = String(context.name)
+
+  function replacement(this: any, ...args: any[]) {
+    console.log(`调用 ${methodName}，参数:`, args)
+    const result = value.call(this, ...args)
+    console.log(`返回:`, result)
+    return result
+  }
+  return replacement as T
+}
+
+class Calculator {
+  @logMethod
+  add(a: number, b: number): number {
+    return a + b
+  }
+}
+
+// 字段装饰器 — 通过初始化器拦截
+function reactive<T>(value: T, context: ClassFieldDecoratorContext) {
+  return function(initialValue: T) {
+    console.log(`初始化字段 ${String(context.name)} =`, initialValue)
+    return initialValue
+  }
+}
+
+class State {
+  @reactive
+  count: number = 0
+}
+
+// 访问器装饰器（getter/setter）
+function tracked<T>(value: T, context: ClassGetterDecoratorContext) {
+  return function(this: any) {
+    console.log(`访问 ${String(context.name)}`)
+    return value.call(this)
+  }
+}
+
+class User {
+  private _name = ''
+
+  @tracked
+  get name() { return this._name }
+  set name(v: string) { this._name = v }
+}
+```
+
+#### Legacy vs 标准装饰器核心对比
+
+| 对比维度 | Legacy 装饰器 | 标准装饰器（Stage 3） |
+|---------|-------------|---------------------|
+| **配置要求** | `experimentalDecorators: true` | 无需额外配置 |
+| **签名** | 随目标变化（target/propertyKey/descriptor） | 统一 `(value, context)` |
+| **类型安全** | ❌ 弱（参数为 `any`/`PropertyDescriptor`） | ✅ 强（context 参数有 `kind` 细分类型） |
+| **拦截方式** | 修改 `descriptor.value` | 返回新的包装函数 |
+| **类装饰器返回值** | 修改原型，不替换类 | 返回新类替换原类 |
+| **元数据** | 需 `emitDecoratorMetadata` + `reflect-metadata` | `context.metadata` 内置支持 |
+| **私有成员** | 无法装饰私有字段 | ✅ `context.private` 标记，可安全访问 |
+| **TS 版本** | 1.5+ | 5.0+ |
+| **ES 状态** | Babel 遗留规范 | Stage 3，已进入 ES2024 候选 |
+| **未来** | TypeScript 6.x 可能移除 | 长期发展方向 |
+
+**推荐：新项目使用标准装饰器，无需开启 `experimentalDecorators`。**
 
 ### 1️⃣3️⃣ TypeScript 中的 class 增强
 
