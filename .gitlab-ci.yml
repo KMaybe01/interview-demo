@@ -145,28 +145,16 @@ docker-interview-docs:
 
 # ── Deploy ────────────────────────────────────────────────
 
-deploy-k8s:
+pages:
   stage: deploy
-  image:
-    name: alpine/helm:3.17.0
-    entrypoint: [""]
   needs:
-    - docker-backend
-    - docker-frontend
-    - docker-interview-docs
+    - build-interview-docs
   script:
-    - helm upgrade --install interview-demo ./helm
-        --namespace $K8S_NAMESPACE
-        --create-namespace
-        --set backend.image.repository=$CI_REGISTRY_IMAGE/backend
-        --set backend.image.tag=$CI_COMMIT_SHORT_SHA
-        --set frontend.image.repository=$CI_REGISTRY_IMAGE/frontend
-        --set frontend.image.tag=$CI_COMMIT_SHORT_SHA
-        --set interviewDocs.image.repository=$CI_REGISTRY_IMAGE/interview-docs
-        --set interviewDocs.image.tag=$CI_COMMIT_SHORT_SHA
-        --wait --timeout 120s
-  only:
-    - main
-  environment:
-    name: production
-    url: https://interview-demo.example.com
+    - mkdir -p public/interview-demo
+    - cp -r apps/interview-docs/dist/* public/interview-demo
+  artifacts:
+    paths:
+      - public
+  rules:
+    - if: $CI_COMMIT_REF_NAME == $CI_DEFAULT_BRANCH
+
