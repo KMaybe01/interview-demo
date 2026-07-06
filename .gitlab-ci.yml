@@ -147,7 +147,9 @@ docker-interview-docs:
 
 deploy-k8s:
   stage: deploy
-  image: alpine/helm:3.17.0
+  image:
+    name: alpine/helm:3.17.0
+    entrypoint: [""]
   needs:
     - docker-backend
     - docker-frontend
