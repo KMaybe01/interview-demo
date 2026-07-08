@@ -1,4 +1,4 @@
-import { slugify } from '../utils/slugify'
+import { normalizeHeadingText, slugify } from '../utils/slugify'
 
 interface Heading {
   level: number
@@ -25,7 +25,7 @@ export default function Outline({ headings }: { headings: Heading[] }) {
               if (el) el.scrollIntoView({ behavior: 'smooth' })
             }}
           >
-            {h.text}
+            {normalizeHeadingText(h.text)}
           </a>
         ))}
       </nav>

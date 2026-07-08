@@ -14,12 +14,42 @@ export default defineConfig({
     },
   },
   build: {
+    sourcemap: false,
+    cssCodeSplit: true,
+    cssMinify: true,
     target: 'es2020',
-    chunkSizeWarningLimit: 2000,
+    modulePreload: {
+      polyfill: false,
+    },
+    chunkSizeWarningLimit: 1200,
     rolldownOptions: {
       output: {
+        entryFileNames: 'assets/[name]-[hash].js',
+        chunkFileNames: 'assets/[name]-[hash].js',
+        assetFileNames: 'assets/[name]-[hash][extname]',
         codeSplitting: {
-          groups: [{ name: 'vendor', test: /node_modules/ }],
+          groups: [
+            {
+              name: 'vendor-react',
+              test: /node_modules[\/\\](react|react-dom|react-router|zustand|scheduler)/,
+              priority: 30,
+            },
+            {
+              name: 'antd',
+              test: /node_modules[\/\\]antd[\/\\]/,
+              priority: 25,
+            },
+            {
+              name: 'antd-icons',
+              test: /node_modules[\/\\]@ant-design[\/\\]icons/,
+              priority: 26,
+            },
+            {
+              name: 'antd-cssinjs',
+              test: /node_modules[\/\\]@ant-design[\/\\]cssinjs/,
+              priority: 26,
+            },
+          ],
         },
       },
     },

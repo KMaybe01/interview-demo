@@ -22,7 +22,7 @@
       "outputs": []
     },
     "typecheck": {
-      "outputs": [".tsbuildinfo/**"]
+      "outputs": []
     }
   }
 }
