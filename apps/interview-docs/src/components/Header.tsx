@@ -1,15 +1,19 @@
-import { useRef, useState } from 'react'
-import { Link, useLocation } from 'react-router'
-import { type NavItem, navConfig } from '../data/navigation'
-import { useTheme } from '../hooks/useTheme'
-import GlobalSearch from './GlobalSearch'
+import { useRef, useState } from 'react';
+import { Link, useLocation } from 'react-router';
+import { type NavItem, navConfig } from '../data/navigation';
+import { useTheme } from '../hooks/useTheme';
+import GlobalSearch from './GlobalSearch';
 
 function NavDropdown({
   item,
   currentPath,
   depth = 0,
-}: { item: NavItem; currentPath: string; depth?: number }) {
-  const isActive = item.link ? currentPath.startsWith(item.link) : false
+}: {
+  item: NavItem;
+  currentPath: string;
+  depth?: number;
+}) {
+  const isActive = item.link ? currentPath.startsWith(item.link) : false;
 
   if (!item.items) {
     return (
@@ -19,7 +23,7 @@ function NavDropdown({
           {item.text}
         </Link>
       </li>
-    )
+    );
   }
 
   return (
@@ -45,16 +49,16 @@ function NavDropdown({
         ))}
       </ul>
     </li>
-  )
+  );
 }
 
 export default function Header() {
-  const [menuOpen, setMenuOpen] = useState(false)
-  const [searchOpen, setSearchOpen] = useState(false)
-  const { theme, toggleTheme } = useTheme()
-  const timeoutRef = useRef<number>(undefined)
-  const location = useLocation()
-  const currentPath = location.pathname
+  const [menuOpen, setMenuOpen] = useState(false);
+  const [searchOpen, setSearchOpen] = useState(false);
+  const { theme, toggleTheme } = useTheme();
+  const timeoutRef = useRef<number>(undefined);
+  const location = useLocation();
+  const currentPath = location.pathname;
 
   return (
     <>
@@ -83,10 +87,10 @@ export default function Header() {
           <nav
             className={`header-nav${menuOpen ? ' open' : ''}`}
             onMouseEnter={() => {
-              clearTimeout(timeoutRef.current)
+              clearTimeout(timeoutRef.current);
             }}
             onMouseLeave={() => {
-              timeoutRef.current = setTimeout(() => setMenuOpen(false), 200)
+              timeoutRef.current = setTimeout(() => setMenuOpen(false), 200);
             }}
           >
             <ul className="nav-list">
@@ -168,5 +172,5 @@ export default function Header() {
       </header>
       {searchOpen && <GlobalSearch onClose={() => setSearchOpen(false)} />}
     </>
-  )
+  );
 }

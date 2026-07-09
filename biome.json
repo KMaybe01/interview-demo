@@ -1,14 +1,7 @@
 {
-  "$schema": "https://biomejs.dev/schemas/2.5.0/schema.json",
+  "$schema": "https://biomejs.dev/schemas/2.5.2/schema.json",
   "files": {
-    "includes": [
-      "**",
-      "!**/dist",
-      "!**/node_modules",
-      "!**/*.config.*",
-      "!**/__tests__",
-      "!**/__mocks__"
-    ]
+    "includes": ["**", "!!**/dist", "!!**/node_modules"]
   },
   "linter": {
     "enabled": true,
@@ -36,11 +29,7 @@
         "noArrayIndexKey": "warn",
         "noConsole": "warn",
         "noDoubleEquals": "error",
-        "noExplicitAny": "warn",
-        "noVar": "error"
-      },
-      "nursery": {
-        "useNullishCoalescing": "error"
+        "noExplicitAny": "warn"
       }
     }
   },
@@ -74,6 +63,39 @@
         "rules": {
           "correctness": {
             "noUnusedVariables": "off"
+          }
+        }
+      }
+    },
+    {
+      "includes": ["apps/interview-docs/**"],
+      "linter": {
+        "rules": {
+          "correctness": {
+            "noUnusedVariables": "off",
+            "noUnusedFunctionParameters": "off"
+          },
+          "style": {
+            "noNonNullAssertion": "off",
+            "noParameterAssign": "off",
+            "noDescendingSpecificity": "off"
+          },
+          "suspicious": {
+            "noArrayIndexKey": "off",
+            "noImplicitAnyLet": "off",
+            "noAssignInExpressions": "off"
+          },
+          "security": {
+            "noDangerouslySetInnerHtml": "off"
+          },
+          "complexity": {
+            "noImportantStyles": "off"
+          },
+          "a11y": {
+            "noSvgWithoutTitle": "off",
+            "useAltText": "off",
+            "noStaticElementInteractions": "off",
+            "useSemanticElements": "off"
           }
         }
       }

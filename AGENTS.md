@@ -29,8 +29,8 @@ bun install          # 只能用 bun, 不能用 npm（从根目录安装所有 w
 | `bun run --cwd apps/frontend dev` | Vite 开发服务器 (port 5173, `/api` + `/ws` 代理到 `:8080`) |
 | `bun run --cwd apps/frontend build` | `tsc -b && vite build` (Rolldown Rust 打包) |
 | `bun run --cwd apps/frontend test:watch` | `vitest` (监听模式) |
-| `bun run --cwd apps/frontend lint` | `biome check --write src/` (Biome 是**唯一**的 linter/formatter) |
-| `bun run --cwd apps/frontend format` | `biome format --write src/` |
+| `bun run --cwd apps/frontend lint` | `bunx biome check --write src/` (Biome 是**唯一**的 linter/formatter) |
+| `bun run --cwd apps/frontend format` | `bunx biome format --write src/` |
 | `bun run --cwd apps/frontend typecheck` | `tsc -b --noEmit` — 类型检查 |
 
 也可直接 `cd apps/frontend` 后执行上述命令。
@@ -42,7 +42,7 @@ bun install          # 只能用 bun, 不能用 npm（从根目录安装所有 w
 | `bun run --cwd apps/ai-demo dev` | Vite 开发服务器 (port 5175, `/api` 代理到 `:8080`) |
 | `bun run --cwd apps/ai-demo build` | `tsc -b && vite build` |
 | `bun run --cwd apps/ai-demo test` | `vitest run` |
-| `bun run --cwd apps/ai-demo lint` | `biome check --write src/` |
+| `bun run --cwd apps/ai-demo lint` | `bunx biome check --write src/` |
 | `bun run --cwd apps/ai-demo typecheck` | `tsc -b --noEmit` |
 
 `apps/interview-docs/`（前端知识库文档站点）：
@@ -51,7 +51,7 @@ bun install          # 只能用 bun, 不能用 npm（从根目录安装所有 w
 |------|------|
 | `cd apps/interview-docs && bun run dev` | Vite 开发服务器 (port 5000) |
 | `cd apps/interview-docs && bun run build` | `tsc -b && vite build && node gen-version.mjs` |
-| `cd apps/interview-docs && bun run lint` | `biome check --write .` |
+| `cd apps/interview-docs && bun run lint` | `bunx biome check --write .` |
 
 `backend/`：
 
@@ -73,7 +73,7 @@ go test ./internal/... -v
 
 ## 代码规范
 
-- Biome 配置 (`biome.json`) 是唯一标准：2 空格缩进、单引号、**必须分号**、尾逗号、行宽 100
+- Biome 配置 (`根目录 biome.json`) 是唯一标准：2 空格缩进、单引号、**必须分号**、尾逗号、行宽 100
 - 所有页面导入路径必须带 `.tsx` 扩展名 (`allowImportingTsExtensions`)
 - 组件：PascalCase 文件名，`export default function ComponentName()`
 - 工具函数：camelCase 文件名
@@ -255,3 +255,4 @@ PageTracker (App.tsx 中包裹每个路由)
 - `package.json` 必须包含 `"packageManager": "bun@1.3.14"` 字段（Turborepo 2+ 要求）
 - 使用 `--filter` 参数限定 turbo 只作用于特定 workspace，如 `bun run build --filter=@interview-demo/frontend`
 - Vite 配置中 `form` 代码分割组包含 ajv 但**未使用** @rjsf
+- **TypeScript 7** (Go 原生编译器 tsgo)：`@biomejs/biome` 统一在根 `package.json` 管理，各 app 无独立 biome.json

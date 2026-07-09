@@ -1039,3 +1039,160 @@ type Mutable<T> = {
   -readonly [P in keyof T]: T[P]
 }
 ```
+
+### 2️⃣1️⃣ TypeScript 6.0 vs 7.0 核心变化
+
+> TypeScript 6.0（2026.03）是**最后一个 JS 编写的编译器版本**，TypeScript 7.0（2026.07）是**Go 重写的原生编译器**，速度提升 8-12x。
+
+#### 架构变革
+
+| 对比维度 | TypeScript 6.0 | TypeScript 7.0 |
+|---------|---------------|---------------|
+| **编译器语言** | JavaScript | Go（项目名 Corsa） |
+| **构建速度** | 基线 | 8-12x 更快（全量构建） |
+| **内存** | 基线 | 减少 6-26% |
+| **并行化** | 单线程 | 多线程类型检查（`--checkers`，默认 4） |
+| **多项目构建** | 串行 | 并行（`--builders` 标志） |
+| **Watch 模式** | 轮询 | Parcel watcher（Go 移植版） |
+| **API** | 完整编译器 API | **暂无公开 API**（7.1 恢复） |
+| **编辑器** | tsserver | LSP 原生 + 多线程，故障减少 80%+ |
+| **嵌入式语言** | Vue/Svelte/Astro/Angular 可用 | 暂不支持（需 7.1+） |
+
+#### 性能对比（来自官方数据）
+
+| 项目 | TS 6.0 | TS 7.0 | 加速比 |
+|------|--------|--------|--------|
+| vscode | 125.7s | 10.6s | **11.9x** |
+| sentry | 139.8s | 15.7s | **8.9x** |
+| bluesky | 24.3s | 2.8s | **8.7x** |
+| playwright | 12.8s | 1.47s | **8.7x** |
+| tldraw | 11.2s | 0.46s | **7.7x** |
+
+#### TS 6.0 新特性
+
+```typescript
+// 1. Temporal API 支持（Stage 4）
+let yesterday = Temporal.Now.instant().subtract({ hours: 24 })
+
+// 2. Map.getOrInsert / getOrInsertComputed
+const map = new Map<string, number>()
+const value = map.getOrInsert('key', 42)  // 不存在则设置默认值
+map.getOrInsertComputed('key', () => computeExpensive())
+
+// 3. RegExp.escape
+const escaped = RegExp.escape('user@example.com')  // 转义正则特殊字符
+
+// 4. es2025 target
+// tsconfig: "target": "es2025"  — 自动支持 ES2025 内置类型
+
+// 5. less this-less functions 上下文敏感度
+// 未使用 this 的函数不再被视为上下文敏感函数，类型推断更准确
+
+// 6. 子路径导入 #/
+// tsconfig: "imports": { "#/*": "./dist/*" }
+import { utils } from '#/utils.js'
+
+// 7. 稳定类型排序标志
+// tsconfig: "stableTypeOrdering": true  — 使排序行为与 TS 7.0 一致
+```
+
+#### TS 6.0 配置默认值变更
+
+| 选项 | TS 5.x 默认值 | TS 6.0 默认值 |
+|------|-------------|-------------|
+| `strict` | `false` | **`true`** |
+| `module` | `commonjs` | **`esnext`** |
+| `target` | `es3` | **`es2025`** |
+| `esModuleInterop` | `false` | **`true`**（不能关闭） |
+| `types` | 自动扫描所有 | **`[]`**（需显式声明） |
+| `rootDir` | 自动推断 | **`.`**（tsconfig 目录） |
+| `noUncheckedSideEffectImports` | `false` | **`true`** |
+| `libReplacement` | `true` | **`false`** |
+
+#### TS 6.0 废弃/移除项（TS 7.0 中变为硬错误）
+
+```json
+{
+  "compilerOptions": {
+    "target": "es5",                    // ❌ 废弃，最低 es2015
+    "downlevelIteration": true,         // ❌ 废弃（仅 es5 相关）
+    "moduleResolution": "node",         // ❌ 改用 nodenext 或 bundler
+    "module": "amd",                    // ❌ 废弃
+    "module": "umd",                    // ❌ 废弃
+    "module": "systemjs",              // ❌ 废弃
+    "module": "none",                  // ❌ 废弃
+    "baseUrl": "./src",                // ❌ 改用 paths
+    "outFile": "./bundle.js",          // ❌ 移除，用外部打包工具
+    "esModuleInterop": false,          // ❌ 不能设为 false
+    "allowSyntheticDefaultImports": false, // ❌ 不能设为 false
+    "alwaysStrict": false              // ❌ 始终为 true
+  }
+}
+```
+
+#### TS 6.0 语法废弃
+
+```typescript
+// ❌ 废弃：module 做命名空间
+module Foo {
+  export const bar = 10
+}
+
+// ✅ 正确：用 namespace
+namespace Foo {
+  export const bar = 10
+}
+
+// ❌ 废弃：import assertions
+import data from './data.json' asserts { type: 'json' }
+
+// ✅ 正确：用 import attributes
+import data from './data.json' with { type: 'json' }
+
+// ❌ 废弃：tsc foo.ts 但目录有 tsconfig.json
+// 会报错 TS5112，需加 --ignoreConfig
+tsc --ignoreConfig foo.ts
+```
+
+#### TS 7.0 核心新特性
+
+```typescript
+// 1. 模板字面量类型保留 Unicode 码点
+type HeadTail<S> = S extends `${infer Head}${infer Tail}` ? [Head, Tail] : never
+type Result = HeadTail<'😀abc'>
+// TS 6: ["\ud83d", "\ude00abc"]  — UTF-16 代理对分割
+// TS 7: ["😀", "abc"]            — Unicode 码点分割 ✅
+
+// 2. 并行类型检查器
+// tsconfig: "checkers": 4  (默认)
+// tsconfig: "builders": 2  (并行构建项目引用)
+
+// 3. 单线程模式
+// tsc --singleThreaded
+
+// 4. JS 分析重写
+// - @enum 不再被识别 → 用 @typedef
+// - Closure 风格函数类型不再支持
+// - ? 不能单独做类型 → 用 any
+// - @class 不能让函数变构造函数 → 用 class 声明
+// - Postfix ! 不支持 → 用 T
+// - @typedef 必须标签内定义类型别名
+
+// 5. Side-by-side 兼容
+// npm install -D typescript@npm:@typescript/typescript6
+// 同时安装 TS 7 和 TS 6，tsc 指向 7，tsc6 指向 6
+```
+
+#### 迁移建议
+
+| 场景 | 建议 |
+|------|------|
+| 新项目 | 直接使用 TS 7.0 + `strict: true`，走 `esnext` + `bundler` |
+| 现有项目 | 先升级到 TS 6.0，处理所有 deprecation 警告，再升 7.0 |
+| 使用 Vue/Svelte/Astro | 暂留 TS 6.0，等待生态工具适配 7.0 API |
+| 使用 Angular | CLI 用 TS 7 编译，编辑器可降级到 TS 6 |
+| 工具/库作者 | 使用 `@typescript/typescript6` 兼容包，期待 7.1 API |
+| 大 monorepo | TS 7 CI 提速 8-10x，editor 体验极大改善 |
+
+**一句话总结：TS 7 = Go 重写 + 10x 更快 + 所有 TS 6 废弃项变硬错误。先升 6，再升 7。**
+```

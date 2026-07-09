@@ -1,23 +1,23 @@
-import { Component, type ErrorInfo, type ReactNode } from 'react'
+import { Component, type ErrorInfo, type ReactNode } from 'react';
 
 interface Props {
-  children: ReactNode
+  children: ReactNode;
 }
 
 interface State {
-  hasError: boolean
-  error: Error | null
+  hasError: boolean;
+  error: Error | null;
 }
 
 export default class ErrorBoundary extends Component<Props, State> {
-  state: State = { hasError: false, error: null }
+  state: State = { hasError: false, error: null };
 
   static getDerivedStateFromError(error: Error): State {
-    return { hasError: true, error }
+    return { hasError: true, error };
   }
 
   componentDidCatch(error: Error, info: ErrorInfo) {
-    console.error('ErrorBoundary caught:', error, info.componentStack)
+    console.error('ErrorBoundary caught:', error, info.componentStack);
   }
 
   render() {
@@ -30,8 +30,8 @@ export default class ErrorBoundary extends Component<Props, State> {
             <button
               className="doc-error-link"
               onClick={() => {
-                this.setState({ hasError: false, error: null })
-                window.location.reload()
+                this.setState({ hasError: false, error: null });
+                window.location.reload();
               }}
               type="button"
             >
@@ -39,8 +39,8 @@ export default class ErrorBoundary extends Component<Props, State> {
             </button>
           </div>
         </div>
-      )
+      );
     }
-    return this.props.children
+    return this.props.children;
   }
 }

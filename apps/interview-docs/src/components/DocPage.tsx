@@ -1,55 +1,55 @@
-import { useEffect, useMemo, useState } from 'react'
-import { Link, useLocation } from 'react-router'
-import { loadContent } from '../data/content'
-import { splitMarkdown } from '../utils/split-markdown'
-import DocVirtualScroll from './DocVirtualScroll'
-import Outline from './Outline'
+import { useEffect, useMemo, useState } from 'react';
+import { Link, useLocation } from 'react-router';
+import { loadContent } from '../data/content';
+import { splitMarkdown } from '../utils/split-markdown';
+import DocVirtualScroll from './DocVirtualScroll';
+import Outline from './Outline';
 
 interface Heading {
-  level: number
-  text: string
+  level: number;
+  text: string;
 }
 
 export default function DocPage() {
-  const location = useLocation()
-  const [content, setContent] = useState<string | null>(null)
-  const [loading, setLoading] = useState(true)
+  const location = useLocation();
+  const [content, setContent] = useState<string | null>(null);
+  const [loading, setLoading] = useState(true);
   const headings = useMemo(() => {
-    if (!content) return []
+    if (!content) return [];
     return splitMarkdown(content)
       .filter((s) => s.heading)
-      .map((s) => ({ level: s.level, text: s.heading! }))
-  }, [content])
-  const [notFound, setNotFound] = useState(false)
+      .map((s) => ({ level: s.level, text: s.heading! }));
+  }, [content]);
+  const [notFound, setNotFound] = useState(false);
 
   useEffect(() => {
-    let cancelled = false
-    setLoading(true)
-    setNotFound(false)
-    setContent(null)
+    let cancelled = false;
+    setLoading(true);
+    setNotFound(false);
+    setContent(null);
 
     loadContent(location.pathname)
       .then((result) => {
-        if (cancelled) return
+        if (cancelled) return;
         if (!result) {
-          setNotFound(true)
-          setLoading(false)
-          return
+          setNotFound(true);
+          setLoading(false);
+          return;
         }
-        setContent(result.content)
-        setLoading(false)
+        setContent(result.content);
+        setLoading(false);
       })
       .catch(() => {
         if (!cancelled) {
-          setNotFound(true)
-          setLoading(false)
+          setNotFound(true);
+          setLoading(false);
         }
-      })
+      });
 
     return () => {
-      cancelled = true
-    }
-  }, [location.pathname])
+      cancelled = true;
+    };
+  }, [location.pathname]);
 
   if (loading) {
     return (
@@ -59,7 +59,7 @@ export default function DocPage() {
           <div className="loading-text">加载中...</div>
         </div>
       </div>
-    )
+    );
   }
 
   if (notFound) {
@@ -73,7 +73,7 @@ export default function DocPage() {
           </Link>
         </div>
       </div>
-    )
+    );
   }
 
   return (
@@ -83,5 +83,5 @@ export default function DocPage() {
       </div>
       {headings.length > 0 && <Outline headings={headings} />}
     </div>
-  )
+  );
 }

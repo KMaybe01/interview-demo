@@ -9,17 +9,17 @@
     "preview": "vite preview",
     "test": "vitest run",
     "test:watch": "vitest",
-    "lint": "biome check --write src/",
-    "format": "biome format --write src/",
+    "lint": "bunx biome check --write src/",
+    "format": "bunx biome format --write src/",
     "typecheck": "tsc -b --noEmit",
     "changelog": "conventional-changelog -p conventionalcommits -i CHANGELOG.md -s"
   },
   "lint-staged": {
     "src/**/*.{ts,tsx,js,jsx}": [
-      "biome check --write --no-errors-on-unmatched"
+      "bunx biome check --write --no-errors-on-unmatched"
     ],
     "*.{json,css,md}": [
-      "biome check --write --no-errors-on-unmatched"
+      "bunx biome check --write --no-errors-on-unmatched"
     ]
   },
   "dependencies": {
@@ -41,7 +41,6 @@
   },
   "devDependencies": {
     "@babel/core": "^8.0.1",
-    "@biomejs/biome": "^2.5.0",
     "@rolldown/plugin-babel": "^0.2.3",
     "@testing-library/dom": "^10.4.1",
     "@testing-library/jest-dom": "^6.9.1",
@@ -55,7 +54,7 @@
     "husky": "^9.1.7",
     "jsdom": "^29.1.1",
     "lint-staged": "^17.0.8",
-    "typescript": "~6.0.3",
+    "typescript": "^7.0.2",
     "vite": "^8.0.16",
     "vitest": "^4.1.9"
   }

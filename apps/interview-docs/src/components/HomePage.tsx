@@ -1,5 +1,5 @@
-import { Link } from 'react-router'
-import HeroCanvas from './HeroCanvas'
+import { Link } from 'react-router';
+import HeroCanvas from './HeroCanvas';
 
 const features = [
   {
@@ -38,7 +38,7 @@ const features = [
     details: 'Go 基础 · 并发编程 · Web 开发 · 微服务架构',
     link: '/S6-Go/',
   },
-]
+];
 
 export default function HomePage() {
   return (
@@ -107,5 +107,5 @@ export default function HomePage() {
         </div>
       </section>
     </div>
-  )
+  );
 }

@@ -1,12 +1,12 @@
-import { normalizeHeadingText, slugify } from '../utils/slugify'
+import { normalizeHeadingText, slugify } from '../utils/slugify';
 
 interface Heading {
-  level: number
-  text: string
+  level: number;
+  text: string;
 }
 
 export default function Outline({ headings }: { headings: Heading[] }) {
-  if (headings.length === 0) return null
+  if (headings.length === 0) return null;
 
   return (
     <aside className="outline">
@@ -19,10 +19,10 @@ export default function Outline({ headings }: { headings: Heading[] }) {
             className="outline-item"
             style={{ paddingLeft: `${(h.level - 1) * 12}px` }}
             onClick={(e) => {
-              e.preventDefault()
-              const id = slugify(h.text)
-              const el = document.getElementById(id)
-              if (el) el.scrollIntoView({ behavior: 'smooth' })
+              e.preventDefault();
+              const id = slugify(h.text);
+              const el = document.getElementById(id);
+              if (el) el.scrollIntoView({ behavior: 'smooth' });
             }}
           >
             {normalizeHeadingText(h.text)}
@@ -30,5 +30,5 @@ export default function Outline({ headings }: { headings: Heading[] }) {
         ))}
       </nav>
     </aside>
-  )
+  );
 }

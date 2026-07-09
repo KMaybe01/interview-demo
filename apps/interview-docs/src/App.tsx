@@ -1,9 +1,9 @@
-import { Route, Routes } from 'react-router'
-import DocPage from './components/DocPage'
-import ErrorBoundary from './components/ErrorBoundary'
-import Header from './components/Header'
-import HomePage from './components/HomePage'
-import UpdateNotification from './components/UpdateNotification'
+import { Route, Routes } from 'react-router';
+import DocPage from './components/DocPage';
+import ErrorBoundary from './components/ErrorBoundary';
+import Header from './components/Header';
+import HomePage from './components/HomePage';
+import UpdateNotification from './components/UpdateNotification';
 
 export default function App() {
   return (
@@ -19,5 +19,5 @@ export default function App() {
       </main>
       <UpdateNotification />
     </div>
-  )
+  );
 }

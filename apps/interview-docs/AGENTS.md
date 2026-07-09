@@ -8,7 +8,7 @@ React 19 静态文档站点，GitHub Pages 部署，内容为前端面试知识�
 bun dev           # dev server (port 5000)
 bun run build     # tsc -b → vite build → node gen-version.mjs
 bun run preview   # serve dist/
-bun run lint      # biome check --write . (auto-fix + format)
+bun run lint      # bunx biome check --write . (auto-fix + format)
 bun run typecheck # tsc -b --noEmit
 bun test          # vitest run
 bun run test:watch # vitest (watch mode)
@@ -40,8 +40,8 @@ bun run changelog # conventional-changelog
 
 ## Coding Conventions
 
-- **Biome** (not ESLint/Prettier): space indent 2, single quotes, semicolons `asNeeded`, line width 100.
-- Several rules disabled (noNonNullAssertion, noArrayIndexKey, noDangerouslySetInnerHtml, a11y rules).
+- **Biome** (根目录统一管理): space indent 2, single quotes, semicolons `always`, trailing commas `all`, line width 100.
+- interview-docs 有独立 override (noNonNullAssertion, noArrayIndexKey, noDangerouslySetInnerHtml, a11y rules).
 - TypeScript: `strict: true`, `jsx: "react-jsx"`.
 - Docs: Chinese, UTF-8, filename pattern `NN-中文标题.md`.
 - Nav icons use emoji prefixes.

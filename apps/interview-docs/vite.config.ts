@@ -1,7 +1,7 @@
-import react from '@vitejs/plugin-react'
-import { defineConfig } from 'vitest/config'
+import react from '@vitejs/plugin-react';
+import { defineConfig } from 'vitest/config';
 
-const base = process.env.VITE_BASE_PATH || '/'
+const base = process.env.VITE_BASE_PATH || '/';
 
 export default defineConfig({
   plugins: [react()],
@@ -31,22 +31,22 @@ export default defineConfig({
           groups: [
             {
               name: 'vendor-react',
-              test: /node_modules[\/\\](react|react-dom|react-router|zustand|scheduler)/,
+              test: /node_modules[/\\](react|react-dom|react-router|zustand|scheduler)/,
               priority: 30,
             },
             {
               name: 'antd',
-              test: /node_modules[\/\\]antd[\/\\]/,
+              test: /node_modules[/\\]antd[/\\]/,
               priority: 25,
             },
             {
               name: 'antd-icons',
-              test: /node_modules[\/\\]@ant-design[\/\\]icons/,
+              test: /node_modules[/\\]@ant-design[/\\]icons/,
               priority: 26,
             },
             {
               name: 'antd-cssinjs',
-              test: /node_modules[\/\\]@ant-design[\/\\]cssinjs/,
+              test: /node_modules[/\\]@ant-design[/\\]cssinjs/,
               priority: 26,
             },
           ],
@@ -60,4 +60,4 @@ export default defineConfig({
     setupFiles: './src/test-setup.ts',
     css: { modules: { classNameStrategy: 'non-scoped' } },
   },
-})
+});

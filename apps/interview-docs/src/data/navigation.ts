@@ -1,8 +1,8 @@
 export interface NavItem {
-  text: string
-  icon?: string
-  link?: string
-  items?: NavItem[]
+  text: string;
+  icon?: string;
+  link?: string;
+  items?: NavItem[];
 }
 
 export const navConfig: NavItem[] = [
@@ -207,4 +207,4 @@ export const navConfig: NavItem[] = [
       { text: '中间件深度 (26-32)', icon: '⚙️', link: '/S6-Go/阶段26-Redis' },
     ],
   },
-]
+];
