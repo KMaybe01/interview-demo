@@ -23,6 +23,7 @@ import {
   Timeline,
   Tooltip,
   Typography,
+  theme,
 } from 'antd';
 import { useCallback, useEffect, useState } from 'react';
 import { useMessageApi } from '../AIDemo.tsx';
@@ -48,6 +49,7 @@ const AGENT_TYPE_LABELS: Record<string, string> = {
 
 function Agents() {
   const message = useMessageApi();
+  const { token } = theme.useToken();
   const [agents, setAgents] = useState<Agent[]>([]);
   const [loading, setLoading] = useState(false);
   const [createModalVisible, setCreateModalVisible] = useState(false);
@@ -358,7 +360,11 @@ function Agents() {
         </Form>
 
         {executeResult && (
-          <Card title="执行结果" style={{ marginTop: 16, background: '#f6ffed' }} size="small">
+          <Card
+            title="执行结果"
+            style={{ marginTop: 16, background: token.colorSuccessBg }}
+            size="small"
+          >
             <Text strong>响应:</Text>
             <br />
             <Text>{executeResult.response}</Text>

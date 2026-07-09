@@ -2,13 +2,23 @@ import {
   AppstoreOutlined,
   BookOutlined,
   DashboardOutlined,
+  MenuFoldOutlined,
+  MenuUnfoldOutlined,
   MessageOutlined,
   RobotOutlined,
   SettingOutlined,
 } from '@ant-design/icons';
-import { App as AntApp, Tabs, theme } from 'antd';
+import { App as AntApp, theme } from 'antd';
 import type { ReactNode } from 'react';
-import { createContext, useCallback, useContext, useEffect, useMemo, useState } from 'react';
+import {
+  createContext,
+  useCallback,
+  useContext,
+  useEffect,
+  useMemo,
+  useRef,
+  useState,
+} from 'react';
 import styles from './AIDemo.module.css';
 import Agents from './components/Agents.tsx';
 import Chat from './components/Chat.tsx';
@@ -48,14 +58,21 @@ export default function AIDemo() {
   const { token } = theme.useToken();
   const mode = useThemeStore((s) => s.mode);
   const [activeTab, setActiveTab] = useState<TabKey>('dashboard');
+  const [collapsed, setCollapsed] = useState(() => window.innerWidth < 768);
+  const userToggledRef = useRef(false);
+
+  useEffect(() => {
+    const onResize = () => {
+      if (userToggledRef.current) return;
+      setCollapsed(window.innerWidth < 768);
+    };
+    window.addEventListener('resize', onResize);
+    return () => window.removeEventListener('resize', onResize);
+  }, []);
 
   useEffect(() => {
     document.documentElement.setAttribute('data-theme', mode);
   }, [mode]);
-
-  const handleTabChange = useCallback((key: string) => {
-    setActiveTab(key as TabKey);
-  }, []);
 
   const navigateToTab = useCallback((key: string) => {
     setActiveTab(key as TabKey);
@@ -103,6 +120,16 @@ export default function AIDemo() {
     [navigateToTab],
   );
 
+  const activeComponent = useMemo(
+    () => tabs.find((t) => t.key === activeTab)?.component,
+    [tabs, activeTab],
+  );
+
+  const toggleCollapsed = useCallback(() => {
+    userToggledRef.current = true;
+    setCollapsed((prev) => !prev);
+  }, []);
+
   return (
     <MessageApiContext.Provider value={message}>
       <div
@@ -122,30 +149,49 @@ export default function AIDemo() {
             '--upload-zone-border': token.colorBorder,
             '--upload-zone-bg': token.colorFillAlter,
             '--upload-zone-hover-border': token.colorPrimary,
+            '--sidebar-bg': token.colorBgElevated,
+            '--border-color': token.colorBorderSecondary,
+            '--item-hover-bg': token.colorFillTertiary,
+            '--item-active-bg': token.colorPrimaryBg,
+            '--color-primary': token.colorPrimary,
+            '--header-bg': token.colorBgContainer,
+            '--text-primary': token.colorText,
+            '--text-secondary': token.colorTextSecondary,
           } as React.CSSProperties
         }
       >
-        <Tabs
-          activeKey={activeTab}
-          onChange={handleTabChange}
-          className={styles.tabs}
-          items={tabs.map((tab) => ({
-            key: tab.key,
-            label: (
-              <span>
-                {tab.icon}
-                <span style={{ marginLeft: 8 }}>{tab.label}</span>
-              </span>
-            ),
-            children: <ErrorBoundary key={tab.key}>{tab.component}</ErrorBoundary>,
-          }))}
-          tabBarStyle={{
-            marginBottom: 0,
-            paddingLeft: 8,
-            background: token.colorBgContainer,
-            borderBottom: `1px solid ${token.colorBorderSecondary}`,
-          }}
-        />
+        <div
+          className={`${styles.sidebar} ${collapsed ? styles['sidebar--collapsed'] : styles['sidebar--expanded']}`}
+        >
+          <nav className={styles.navList}>
+            {tabs.map((tab) => (
+              <button
+                key={tab.key}
+                type="button"
+                className={`${styles.navItem} ${activeTab === tab.key ? styles['navItem--active'] : ''}`}
+                onClick={() => setActiveTab(tab.key)}
+              >
+                <span className={styles.navIcon}>{tab.icon}</span>
+                <span
+                  className={`${styles.navLabel} ${collapsed ? styles['navLabel--hidden'] : ''}`}
+                >
+                  {tab.label}
+                </span>
+              </button>
+            ))}
+          </nav>
+          <button
+            type="button"
+            className={styles.toggleBtn}
+            onClick={toggleCollapsed}
+            aria-label={collapsed ? '展开侧边栏' : '折叠侧边栏'}
+          >
+            {collapsed ? <MenuUnfoldOutlined /> : <MenuFoldOutlined />}
+          </button>
+        </div>
+        <div className={styles.content}>
+          <ErrorBoundary key={activeTab}>{activeComponent}</ErrorBoundary>
+        </div>
       </div>
     </MessageApiContext.Provider>
   );

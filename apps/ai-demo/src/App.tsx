@@ -1,20 +1,24 @@
 import { StyleProvider } from '@ant-design/cssinjs';
-import { App as AntApp, ConfigProvider, theme } from 'antd';
+import { MoonOutlined, SunOutlined } from '@ant-design/icons';
+import { App as AntApp, ConfigProvider, Switch, theme } from 'antd';
 import zhCN from 'antd/locale/zh_CN';
 import { useCallback, useEffect, useState } from 'react';
 import AIDemo from './AIDemo.tsx';
 
 function App() {
-  const [mode, setMode] = useState<'light' | 'dark'>('light');
-
-  useEffect(() => {
+  const [mode, setMode] = useState<'light' | 'dark'>(() => {
     try {
       const stored = localStorage.getItem('theme-mode');
-      if (stored === 'dark' || stored === 'light') setMode(stored);
+      if (stored === 'dark' || stored === 'light') return stored;
     } catch {
       /* ignore */
     }
-  }, []);
+    return 'light';
+  });
+
+  useEffect(() => {
+    document.documentElement.setAttribute('data-theme', mode);
+  }, [mode]);
 
   const toggleTheme = useCallback(() => {
     setMode((prev) => {
@@ -23,10 +27,6 @@ function App() {
       return next;
     });
   }, []);
-
-  useEffect(() => {
-    document.documentElement.setAttribute('data-theme', mode);
-  }, [mode]);
 
   return (
     <ConfigProvider
@@ -38,35 +38,53 @@ function App() {
     >
       <StyleProvider layer>
         <AntApp>
-          <div
-            style={{
-              height: '100vh',
-              display: 'flex',
-              flexDirection: 'column',
-            }}
-          >
-            <header
-              style={{
-                display: 'flex',
-                alignItems: 'center',
-                justifyContent: 'space-between',
-                padding: '8px 16px',
-                borderBottom: '1px solid var(--border-color, #f0f0f0)',
-                background: 'var(--header-bg, #fff)',
-              }}
-            >
-              <h2 style={{ margin: 0 }}>AI Demo</h2>
-              <button onClick={toggleTheme} type="button" style={{ cursor: 'pointer' }}>
-                {mode === 'light' ? '🌙 暗色' : '☀️ 亮色'}
-              </button>
-            </header>
-            <main style={{ flex: 1, overflow: 'hidden' }}>
-              <AIDemo />
-            </main>
-          </div>
+          <ThemedLayout mode={mode} onToggleTheme={toggleTheme} />
         </AntApp>
       </StyleProvider>
     </ConfigProvider>
+  );
+}
+
+function ThemedLayout({
+  mode,
+  onToggleTheme,
+}: {
+  mode: 'light' | 'dark';
+  onToggleTheme: () => void;
+}) {
+  const { token } = theme.useToken();
+
+  return (
+    <div
+      style={{
+        height: '100vh',
+        display: 'flex',
+        flexDirection: 'column',
+      }}
+    >
+      <header
+        style={{
+          display: 'flex',
+          alignItems: 'center',
+          justifyContent: 'space-between',
+          padding: '8px 16px',
+          borderBottom: `1px solid ${token.colorBorderSecondary}`,
+          background: token.colorBgContainer,
+          color: token.colorText,
+        }}
+      >
+        <h2 style={{ margin: 0, color: token.colorText }}>AI Demo</h2>
+        <Switch
+          checked={mode === 'dark'}
+          onChange={onToggleTheme}
+          checkedChildren={<MoonOutlined />}
+          unCheckedChildren={<SunOutlined />}
+        />
+      </header>
+      <main style={{ flex: 1, overflow: 'hidden' }}>
+        <AIDemo />
+      </main>
+    </div>
   );
 }
 

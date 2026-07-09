@@ -24,6 +24,7 @@ import {
   Tag,
   Tooltip,
   Typography,
+  theme,
 } from 'antd';
 import { useCallback, useEffect, useRef, useState } from 'react';
 import { useMessageApi } from '../AIDemo.tsx';
@@ -42,6 +43,7 @@ interface UploadFileEntry {
 
 function KnowledgeBasePage() {
   const message = useMessageApi();
+  const { token } = theme.useToken();
   const [knowledgeBases, setKnowledgeBases] = useState<KnowledgeBase[]>([]);
   const [loading, setLoading] = useState(false);
   const [createModalVisible, setCreateModalVisible] = useState(false);
@@ -523,7 +525,7 @@ function KnowledgeBasePage() {
                       style={{
                         marginTop: 8,
                         padding: 12,
-                        background: '#f6f8fa',
+                        background: token.colorFillQuaternary,
                         borderRadius: 6,
                         maxHeight: 200,
                         overflow: 'auto',

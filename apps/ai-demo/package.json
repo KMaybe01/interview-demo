@@ -17,8 +17,10 @@
     "@ant-design/cssinjs": "^2.1.2",
     "@ant-design/icons": "^6.2.5",
     "antd": "^6.4.5",
+    "is-mobile": "^5",
     "react": "^19.2.7",
     "react-dom": "^19.2.7",
+    "react-is": "^19",
     "zustand": "^5.0.14"
   },
   "devDependencies": {

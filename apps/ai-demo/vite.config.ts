@@ -4,6 +4,7 @@ import react from '@vitejs/plugin-react'
 export default defineConfig({
   plugins: [react()],
   optimizeDeps: {
+    include: ['react-is', 'is-mobile'],
     exclude: ['@rc-component/cascader'],
   },
   server: {
