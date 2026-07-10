@@ -43,6 +43,15 @@
   padding: 0;
 }
 
+/* ── Theme reveal overlay ── */
+.theme-reveal-overlay {
+  position: fixed;
+  inset: 0;
+  z-index: 9999;
+  pointer-events: none;
+  will-change: clip-path;
+}
+
 html {
   scroll-padding-top: calc(var(--header-height) + 16px);
   scroll-behavior: smooth;
@@ -564,6 +573,7 @@ pre:hover .code-copy-btn {
   border: 1px solid var(--c-border);
   text-decoration: none;
   color: inherit;
+  height: 100%;
   transition:
     border-color 0.2s,
     box-shadow 0.2s,
@@ -633,6 +643,7 @@ pre:hover .code-copy-btn {
   padding: 20px;
   border-radius: 14px;
   border: 1px solid var(--c-border);
+  height: 100%;
   transition:
     border-color 0.2s,
     box-shadow 0.2s;

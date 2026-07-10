@@ -1,3 +1,4 @@
+import { AnimatePresence, motion } from 'motion/react';
 import { useCallback, useDeferredValue, useEffect, useMemo, useRef, useState } from 'react';
 import { useNavigate } from 'react-router';
 import { loadContent } from '../data/content';
@@ -155,15 +156,23 @@ export default function GlobalSearch({ onClose }: { onClose: () => void }) {
   );
 
   return (
-    <div
+    <motion.div
       className="search-overlay"
+      initial={{ opacity: 0 }}
+      animate={{ opacity: 1 }}
+      exit={{ opacity: 0 }}
+      transition={{ duration: 0.2 }}
       onClick={onClose}
       onKeyDown={(e) => {
         if (e.key === 'Escape') onClose();
       }}
     >
-      <div
+      <motion.div
         className="search-modal"
+        initial={{ opacity: 0, scale: 0.95, y: -10 }}
+        animate={{ opacity: 1, scale: 1, y: 0 }}
+        exit={{ opacity: 0, scale: 0.95, y: -10 }}
+        transition={{ duration: 0.2, ease: 'easeOut' }}
         onClick={(e) => e.stopPropagation()}
         onKeyDown={(e) => e.stopPropagation()}
       >
@@ -180,32 +189,39 @@ export default function GlobalSearch({ onClose }: { onClose: () => void }) {
           onKeyDown={handleKeyDown}
         />
         <div className="search-results">
-          {results.map((item, i) => (
-            <div
-              key={`${item.link}-${i}`}
-              className={`search-result-item ${i === activeIndex ? 'active' : ''}`}
-              onClick={() => select(item)}
-              onKeyDown={(e) => {
-                if (e.key === 'Enter' || e.key === ' ') {
-                  e.preventDefault();
-                  select(item);
-                }
-              }}
-              onMouseEnter={() => setActiveIndex(i)}
-            >
-              <div className="search-result-title">
-                {item.pageTitle}
-                {item.heading && <span className="search-result-heading"> › {item.heading}</span>}
-              </div>
-              <div className="search-result-text">{item.pageText}</div>
-            </div>
-          ))}
+          <AnimatePresence mode="popLayout">
+            {results.map((item, i) => (
+              <motion.div
+                key={`${item.link}-${i}`}
+                layout
+                initial={{ opacity: 0, x: -8 }}
+                animate={{ opacity: 1, x: 0 }}
+                exit={{ opacity: 0, x: -8 }}
+                transition={{ duration: 0.15 }}
+                className={`search-result-item ${i === activeIndex ? 'active' : ''}`}
+                onClick={() => select(item)}
+                onKeyDown={(e) => {
+                  if (e.key === 'Enter' || e.key === ' ') {
+                    e.preventDefault();
+                    select(item);
+                  }
+                }}
+                onMouseEnter={() => setActiveIndex(i)}
+              >
+                <div className="search-result-title">
+                  {item.pageTitle}
+                  {item.heading && <span className="search-result-heading"> › {item.heading}</span>}
+                </div>
+                <div className="search-result-text">{item.pageText}</div>
+              </motion.div>
+            ))}
+          </AnimatePresence>
           {!ready && <div className="search-status">加载索引中…</div>}
           {ready && query.trim() && results.length === 0 && (
             <div className="search-empty">未找到匹配的内容</div>
           )}
         </div>
-      </div>
-    </div>
+      </motion.div>
+    </motion.div>
   );
 }

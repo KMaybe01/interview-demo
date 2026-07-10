@@ -1,4 +1,5 @@
-import { useEffect, useMemo, useState } from 'react';
+import { motion } from 'motion/react';
+import { useEffect, useMemo, useRef, useState } from 'react';
 import { Link, useLocation } from 'react-router';
 import { loadContent } from '../data/content';
 import { splitMarkdown } from '../utils/split-markdown';
@@ -54,10 +55,15 @@ export default function DocPage() {
   if (loading) {
     return (
       <div className="doc-page">
-        <div className="doc-loading">
+        <motion.div
+          className="doc-loading"
+          initial={{ opacity: 0 }}
+          animate={{ opacity: 1 }}
+          transition={{ duration: 0.3 }}
+        >
           <div className="spinner" />
           <div className="loading-text">加载中...</div>
-        </div>
+        </motion.div>
       </div>
     );
   }
@@ -65,23 +71,34 @@ export default function DocPage() {
   if (notFound) {
     return (
       <div className="doc-page">
-        <div className="doc-error">
+        <motion.div
+          className="doc-error"
+          initial={{ opacity: 0, y: 20 }}
+          animate={{ opacity: 1, y: 0 }}
+          transition={{ duration: 0.4 }}
+        >
           <h1>404</h1>
           <p>页面未找到</p>
           <Link to="/" className="doc-error-link">
             返回首页
           </Link>
-        </div>
+        </motion.div>
       </div>
     );
   }
 
   return (
-    <div className="doc-page">
+    <motion.div
+      className="doc-page"
+      key={location.pathname}
+      initial={{ opacity: 0, y: 12 }}
+      animate={{ opacity: 1, y: 0 }}
+      transition={{ duration: 0.35, ease: 'easeOut' }}
+    >
       <div className="doc-content">
         <DocVirtualScroll content={content!} />
       </div>
       {headings.length > 0 && <Outline headings={headings} />}
-    </div>
+    </motion.div>
   );
 }

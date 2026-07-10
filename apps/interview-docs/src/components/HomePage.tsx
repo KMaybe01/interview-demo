@@ -1,3 +1,5 @@
+import { motion, useInView } from 'motion/react';
+import { useRef } from 'react';
 import { Link } from 'react-router';
 import HeroCanvas from './HeroCanvas';
 
@@ -40,15 +42,68 @@ const features = [
   },
 ];
 
+function FeatureCard({ f, i }: { f: (typeof features)[number]; i: number }) {
+  const ref = useRef(null);
+  const inView = useInView(ref, { once: true, margin: '-48px' });
+
+  return (
+    <motion.div
+      ref={ref}
+      initial={{ opacity: 0, y: 30 }}
+      animate={inView ? { opacity: 1, y: 0 } : { opacity: 0, y: 30 }}
+      transition={{ duration: 0.45, delay: i * 0.08, ease: 'easeOut' }}
+    >
+      <Link to={f.link} className="feature-card">
+        <span className="feature-icon">{f.icon}</span>
+        <div className="feature-body">
+          <strong className="feature-title">{f.title}</strong>
+          <p className="feature-details">{f.details}</p>
+        </div>
+      </Link>
+    </motion.div>
+  );
+}
+
+function MottoCard({ children, delay }: { children: React.ReactNode; delay: number }) {
+  const ref = useRef(null);
+  const inView = useInView(ref, { once: true, margin: '-32px' });
+
+  return (
+    <motion.div
+      ref={ref}
+      initial={{ opacity: 0, y: 24 }}
+      animate={inView ? { opacity: 1, y: 0 } : { opacity: 0, y: 24 }}
+      transition={{ duration: 0.4, delay, ease: 'easeOut' }}
+    >
+      {children}
+    </motion.div>
+  );
+}
+
 export default function HomePage() {
   return (
-    <div className="home">
+    <motion.div
+      className="home"
+      initial={{ opacity: 0 }}
+      animate={{ opacity: 1 }}
+      transition={{ duration: 0.4 }}
+    >
       <section className="hero">
         <HeroCanvas />
         <div className="hero-bg" />
-        <div className="hero-content">
+        <motion.div
+          className="hero-content"
+          initial={{ opacity: 0, y: 40 }}
+          animate={{ opacity: 1, y: 0 }}
+          transition={{ duration: 0.6, ease: 'easeOut' }}
+        >
           <h1 className="hero-title">前端知识体系</h1>
-          <div className="hero-actions">
+          <motion.div
+            className="hero-actions"
+            initial={{ opacity: 0, y: 20 }}
+            animate={{ opacity: 1, y: 0 }}
+            transition={{ duration: 0.5, delay: 0.25, ease: 'easeOut' }}
+          >
             <Link to="/S1-基础夯实/" className="hero-btn hero-btn-primary">
               开始学习
             </Link>
@@ -60,52 +115,63 @@ export default function HomePage() {
             >
               在 GitHub 查看
             </a>
-          </div>
-        </div>
+          </motion.div>
+        </motion.div>
       </section>
 
-      <section className="features">
+      <motion.section
+        className="features"
+        initial={{ opacity: 0 }}
+        whileInView={{ opacity: 1 }}
+        viewport={{ once: true, margin: '-48px' }}
+        transition={{ duration: 0.3 }}
+      >
         <div className="features-grid">
           {features.map((f, i) => (
-            <Link key={i} to={f.link} className="feature-card">
-              <span className="feature-icon">{f.icon}</span>
-              <div className="feature-body">
-                <strong className="feature-title">{f.title}</strong>
-                <p className="feature-details">{f.details}</p>
-              </div>
-            </Link>
+            <FeatureCard key={i} f={f} i={i} />
           ))}
         </div>
-      </section>
+      </motion.section>
 
       <section className="home-motto">
-        <blockquote>
+        <motion.blockquote
+          initial={{ opacity: 0, x: -20 }}
+          whileInView={{ opacity: 1, x: 0 }}
+          viewport={{ once: true, margin: '-48px' }}
+          transition={{ duration: 0.4, ease: 'easeOut' }}
+        >
           <strong>最佳跳槽时机 = 你不需要跳槽的时候</strong>
-        </blockquote>
+        </motion.blockquote>
         <div className="motto-cards">
-          <div className="motto-card">
-            <span className="motto-icon">🔋</span>
-            <div className="motto-body">
-              <strong>保持可被雇佣</strong>
-              <p>每季度更新一次简历，让市场随时为你定价</p>
+          <MottoCard delay={0.1}>
+            <div className="motto-card">
+              <span className="motto-icon">🔋</span>
+              <div className="motto-body">
+                <strong>保持可被雇佣</strong>
+                <p>每季度更新一次简历，让市场随时为你定价</p>
+              </div>
             </div>
-          </div>
-          <div className="motto-card">
-            <span className="motto-icon">🎯</span>
-            <div className="motto-body">
-              <strong>离职者心态打工</strong>
-              <p>今天做的事，能写进下一份简历吗？</p>
+          </MottoCard>
+          <MottoCard delay={0.2}>
+            <div className="motto-card">
+              <span className="motto-icon">🎯</span>
+              <div className="motto-body">
+                <strong>离职者心态打工</strong>
+                <p>今天做的事，能写进下一份简历吗？</p>
+              </div>
             </div>
-          </div>
-          <div className="motto-card">
-            <span className="motto-icon">🛤️</span>
-            <div className="motto-body">
-              <strong>入职第一天就布局未来</strong>
-              <p>积累「资本」而非「年谈资」，别让自己无处可去</p>
+          </MottoCard>
+          <MottoCard delay={0.3}>
+            <div className="motto-card">
+              <span className="motto-icon">🛤️</span>
+              <div className="motto-body">
+                <strong>入职第一天就布局未来</strong>
+                <p>积累「资本」而非「年谈资」，别让自己无处可去</p>
+              </div>
             </div>
-          </div>
+          </MottoCard>
         </div>
       </section>
-    </div>
+    </motion.div>
   );
 }
