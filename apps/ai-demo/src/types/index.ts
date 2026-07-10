@@ -39,6 +39,96 @@ export interface StreamChunk {
   done: boolean;
 }
 
+export interface ChatStreamRequest {
+  content: string;
+  knowledgeBaseId?: string;
+  useAgent?: boolean;
+  agentType?: string;
+  agentId?: string;
+  model?: string;
+}
+
+export type ChunkStrategyType = 'fixed' | 'recursive' | 'semantic';
+
+export interface ChunkStrategy {
+  type: ChunkStrategyType;
+  chunkSize: number;
+  overlap: number;
+}
+
+export interface EmbeddingConfig {
+  model: string;
+  dimension: number;
+}
+
+export interface ToolDefinition {
+  id: string;
+  name: string;
+  description: string;
+  parameters: Array<{ name: string; type: string; required: boolean; description: string }>;
+  enabled: boolean;
+}
+
+export interface MemoryEntry {
+  id: string;
+  type: 'short-term' | 'long-term' | 'episodic';
+  content: string;
+  timestamp: Date;
+  metadata: Record<string, unknown>;
+}
+
+export interface MemoryConfig {
+  maxShortTerm: number;
+  maxLongTerm: number;
+  summarizationInterval: number;
+}
+
+export interface MCPTool {
+  name: string;
+  description: string;
+  inputSchema: Record<string, unknown>;
+}
+
+export interface MCPServer {
+  id: string;
+  name: string;
+  endpoint: string;
+  protocol: 'mcp' | 'a2a';
+  tools: MCPTool[];
+  status: 'online' | 'offline' | 'error';
+  lastSeen: string;
+}
+
+export interface ModelRouterConfig {
+  defaultModel: string;
+  fallbackModel: string;
+  routingRules: Array<{
+    id: string;
+    name: string;
+    condition: string;
+    model: string;
+    priority: number;
+  }>;
+  enableFallback: boolean;
+  enableCache: boolean;
+}
+
+export interface TelemetrySnapshot {
+  totalRequests: number;
+  totalErrors: number;
+  avgLatency: number;
+  p95Latency: number;
+  eventsByType: Record<string, number>;
+  cacheHitRate: number;
+}
+
+export interface VectorSearchResult {
+  id: string;
+  content: string;
+  score: number;
+  metadata: Record<string, unknown>;
+}
+
 export interface KnowledgeBase {
   id: string;
   name: string;
@@ -162,4 +252,11 @@ export interface PluginParameter {
   description: string;
 }
 
-export type MenuKey = 'dashboard' | 'chat' | 'knowledge' | 'models' | 'agents' | 'plugins';
+export type MenuKey =
+  | 'dashboard'
+  | 'chat'
+  | 'knowledge'
+  | 'models'
+  | 'agents'
+  | 'plugins'
+  | 'playground';

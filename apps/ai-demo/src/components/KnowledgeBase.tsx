@@ -8,6 +8,7 @@ import {
   PlusOutlined,
   ReloadOutlined,
   SearchOutlined,
+  SettingOutlined,
 } from '@ant-design/icons';
 import {
   Button,
@@ -18,7 +19,11 @@ import {
   Modal,
   Popconfirm,
   Progress,
+  Radio,
+  Select,
+  Slider,
   Space,
+  Switch,
   Table,
   Tabs,
   Tag,
@@ -29,7 +34,14 @@ import {
 import { useCallback, useEffect, useRef, useState } from 'react';
 import { useMessageApi } from '../AIDemo.tsx';
 import { knowledgeAPI } from '../services/api.ts';
-import type { Document, KnowledgeBase, KnowledgeSearchResult } from '../types/index.ts';
+import type {
+  ChunkStrategy,
+  ChunkStrategyType,
+  Document,
+  EmbeddingConfig,
+  KnowledgeBase,
+  KnowledgeSearchResult,
+} from '../types/index.ts';
 
 const { Text } = Typography;
 const { TextArea } = Input;
@@ -61,6 +73,17 @@ function KnowledgeBasePage() {
   const [docModalVisible, setDocModalVisible] = useState(false);
   const [selectedKBDocs, setSelectedKBDocs] = useState<Document[]>([]);
   const [loadingDocs, setLoadingDocs] = useState(false);
+
+  const [chunkStrategy, setChunkStrategy] = useState<ChunkStrategy>({
+    type: 'recursive',
+    chunkSize: 500,
+    overlap: 50,
+  });
+  const [embeddingConfig, setEmbeddingConfig] = useState<EmbeddingConfig>({
+    model: 'text-embedding-ada-002',
+    dimension: 1536,
+  });
+  const [hybridSearch, setHybridSearch] = useState(false);
 
   const [createForm] = Form.useForm();
 
@@ -316,17 +339,31 @@ function KnowledgeBasePage() {
             ),
             children: (
               <Card>
-                <Space.Compact style={{ width: '100%', marginBottom: 16 }}>
-                  <Input
-                    placeholder="输入搜索内容..."
-                    value={searchQuery}
-                    onChange={(e) => setSearchQuery(e.target.value)}
-                    onPressEnter={handleSearch}
-                  />
-                  <Button type="primary" icon={<SearchOutlined />} onClick={handleSearch}>
-                    搜索
-                  </Button>
-                </Space.Compact>
+                <div style={{ marginBottom: 12, display: 'flex', alignItems: 'center', gap: 12 }}>
+                  <Space.Compact style={{ flex: 1 }}>
+                    <Input
+                      placeholder="输入搜索内容..."
+                      value={searchQuery}
+                      onChange={(e) => setSearchQuery(e.target.value)}
+                      onPressEnter={handleSearch}
+                    />
+                    <Button type="primary" icon={<SearchOutlined />} onClick={handleSearch}>
+                      搜索
+                    </Button>
+                  </Space.Compact>
+                  <Tooltip title="结合关键词和向量搜索">
+                    <Select
+                      value={hybridSearch ? 'hybrid' : 'vector'}
+                      onChange={(v) => setHybridSearch(v === 'hybrid')}
+                      size="small"
+                      style={{ width: 100 }}
+                      options={[
+                        { value: 'vector', label: '向量搜索' },
+                        { value: 'hybrid', label: '混合搜索' },
+                      ]}
+                    />
+                  </Tooltip>
+                </div>
 
                 <List
                   dataSource={searchResults}
@@ -351,6 +388,103 @@ function KnowledgeBasePage() {
                   locale={{ emptyText: '暂无搜索结果' }}
                 />
               </Card>
+            ),
+          },
+          {
+            key: 'config',
+            label: (
+              <span>
+                <SettingOutlined /> 配置
+              </span>
+            ),
+            children: (
+              <div style={{ maxWidth: 600 }}>
+                <Card title="分块策略" style={{ marginBottom: 16 }}>
+                  <div style={{ marginBottom: 16 }}>
+                    <Text strong>分块方式</Text>
+                    <div style={{ marginTop: 8 }}>
+                      <Radio.Group
+                        value={chunkStrategy.type}
+                        onChange={(e) =>
+                          setChunkStrategy((prev) => ({
+                            ...prev,
+                            type: e.target.value as ChunkStrategyType,
+                          }))
+                        }
+                        options={[
+                          { value: 'fixed', label: '固定大小' },
+                          { value: 'recursive', label: '递归分割' },
+                          { value: 'semantic', label: '语义分割' },
+                        ]}
+                      />
+                    </div>
+                  </div>
+                  <div style={{ marginBottom: 16 }}>
+                    <Text strong>分块大小: {chunkStrategy.chunkSize} 字符</Text>
+                    <Slider
+                      min={100}
+                      max={2000}
+                      step={50}
+                      value={chunkStrategy.chunkSize}
+                      onChange={(v) => setChunkStrategy((prev) => ({ ...prev, chunkSize: v }))}
+                    />
+                  </div>
+                  <div style={{ marginBottom: 8 }}>
+                    <Text strong>重叠长度: {chunkStrategy.overlap} 字符</Text>
+                    <Slider
+                      min={0}
+                      max={200}
+                      step={10}
+                      value={chunkStrategy.overlap}
+                      onChange={(v) => setChunkStrategy((prev) => ({ ...prev, overlap: v }))}
+                    />
+                  </div>
+                </Card>
+
+                <Card title="向量化配置" style={{ marginBottom: 16 }}>
+                  <div style={{ marginBottom: 16 }}>
+                    <Text strong>Embedding 模型</Text>
+                    <div style={{ marginTop: 8 }}>
+                      <Select
+                        value={embeddingConfig.model}
+                        onChange={(v) => setEmbeddingConfig((prev) => ({ ...prev, model: v }))}
+                        style={{ width: '100%' }}
+                        options={[
+                          { value: 'text-embedding-ada-002', label: 'OpenAI Ada-002 (1536维)' },
+                          {
+                            value: 'text-embedding-3-small',
+                            label: 'OpenAI text-embedding-3-small (512维)',
+                          },
+                          {
+                            value: 'text-embedding-3-large',
+                            label: 'OpenAI text-embedding-3-large (3072维)',
+                          },
+                          { value: 'bge-large-zh', label: 'BGE Large ZH (1024维)' },
+                          { value: 'm3e-large', label: 'M3E Large (1024维)' },
+                        ]}
+                      />
+                    </div>
+                  </div>
+                </Card>
+
+                <Card title="检索设置">
+                  <div
+                    style={{
+                      display: 'flex',
+                      justifyContent: 'space-between',
+                      alignItems: 'center',
+                    }}
+                  >
+                    <Space direction="vertical" style={{ gap: 0 }}>
+                      <Text strong>混合检索</Text>
+                      <Text type="secondary" style={{ fontSize: 12 }}>
+                        同时使用关键词和向量搜索，提高召回率
+                      </Text>
+                    </Space>
+                    <Switch checked={hybridSearch} onChange={setHybridSearch} />
+                  </div>
+                </Card>
+              </div>
             ),
           },
         ]}

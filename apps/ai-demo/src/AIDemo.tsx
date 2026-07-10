@@ -1,4 +1,5 @@
 import {
+  ApiOutlined,
   AppstoreOutlined,
   BookOutlined,
   DashboardOutlined,
@@ -26,6 +27,7 @@ import Dashboard from './components/Dashboard.tsx';
 import { ErrorBoundary } from './components/ErrorBoundary.tsx';
 import KnowledgeBase from './components/KnowledgeBase.tsx';
 import Models from './components/Models.tsx';
+import Playground from './components/Playground.tsx';
 import Plugins from './components/Plugins.tsx';
 import { useThemeStore } from './stores/themeStore.ts';
 
@@ -44,7 +46,7 @@ const defaultMessageApi: MessageApi = {
 export const MessageApiContext = createContext<MessageApi>(defaultMessageApi);
 export const useMessageApi = () => useContext(MessageApiContext);
 
-type TabKey = 'dashboard' | 'chat' | 'knowledge' | 'models' | 'agents' | 'plugins';
+type TabKey = 'dashboard' | 'chat' | 'knowledge' | 'models' | 'agents' | 'plugins' | 'playground';
 
 interface TabConfig {
   key: TabKey;
@@ -109,6 +111,12 @@ export default function AIDemo() {
         icon: <RobotOutlined />,
         label: '智能体',
         component: <Agents />,
+      },
+      {
+        key: 'playground',
+        icon: <ApiOutlined />,
+        label: 'Playground',
+        component: <Playground />,
       },
       {
         key: 'plugins',

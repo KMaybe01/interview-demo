@@ -5,10 +5,13 @@ import {
   CloseOutlined,
   DeleteOutlined,
   EditOutlined,
+  EyeInvisibleOutlined,
+  EyeOutlined,
   MenuFoldOutlined,
   MenuUnfoldOutlined,
   MessageOutlined,
   PlusOutlined,
+  ReloadOutlined,
   RobotOutlined,
   SendOutlined,
   StopOutlined,
@@ -22,6 +25,9 @@ import { useMessageApi } from '../AIDemo.tsx';
 import { agentAPI, chatAPI, knowledgeAPI, modelAPI } from '../services/api.ts';
 import { useChatStore } from '../stores/chatStore.ts';
 import type { Agent, KnowledgeBase, Model } from '../types/index.ts';
+import { calculateContextUsage } from '../utils/context-manager.ts';
+import { maskPII } from '../utils/data-masker.ts';
+import { formatTokenCount } from '../utils/token-estimator.ts';
 
 const { Text } = Typography;
 
@@ -40,10 +46,14 @@ function Chat() {
   const [editTitle, setEditTitle] = useState('');
   const [selectedModel, setSelectedModel] = useState('openai-gpt4');
   const [sidebarCollapsed, setSidebarCollapsed] = useState(false);
+  const [streamingContent, setStreamingContent] = useState('');
+  const [maskPIIEnabled, setMaskPIIEnabled] = useState(false);
 
   const messagesEndRef = useRef<HTMLDivElement>(null);
   const inputRef = useRef<TextAreaRef>(null);
   const abortControllerRef = useRef<AbortController | null>(null);
+  const lastQueryRef = useRef('');
+  const accumulatedContentRef = useRef('');
 
   const {
     messages,
@@ -99,41 +109,63 @@ function Chat() {
     }
   };
 
-  const handleSend = async () => {
-    if (!inputValue.trim() || isLoading) return;
+  const handleSend = async (retryContent?: string) => {
+    const content = retryContent ?? inputValue.trim();
+    if (!content || isLoading) return;
 
-    const content = inputValue.trim();
-    setInputValue('');
+    lastQueryRef.current = content;
+    if (!retryContent) setInputValue('');
 
     addMessage({ role: 'user', content });
     setLoading(true);
     setError(null);
+    setStreamingContent('');
 
     const controller = new AbortController();
     abortControllerRef.current = controller;
 
+    accumulatedContentRef.current = '';
     try {
-      const response = await chatAPI.chatEnhanced({
+      await chatAPI.chatStream(
         content,
-        knowledgeBaseId: selectedKnowledgeBase ?? undefined,
-        useAgent,
-        agentType,
-        model: selectedModel,
-        agentId: selectedAgentId,
-      });
-
-      if (!controller.signal.aborted) {
-        addMessage({ role: 'assistant', content: response.response });
-      }
+        controller.signal,
+        (chunk: string) => {
+          if (!controller.signal.aborted) {
+            accumulatedContentRef.current += chunk;
+            setStreamingContent(accumulatedContentRef.current);
+          }
+        },
+        () => {
+          if (!controller.signal.aborted) {
+            const finalContent = accumulatedContentRef.current;
+            if (finalContent) {
+              addMessage({ role: 'assistant', content: finalContent });
+            }
+            setStreamingContent('');
+            setLoading(false);
+          }
+        },
+        (errMsg: string) => {
+          if (!controller.signal.aborted) {
+            const partialContent = accumulatedContentRef.current;
+            if (partialContent) {
+              addMessage({ role: 'assistant', content: partialContent });
+            }
+            setError(errMsg);
+            setLoading(false);
+            setStreamingContent('');
+          }
+        },
+      );
     } catch (err) {
       if (!controller.signal.aborted) {
         setError(err instanceof Error ? err.message : '发送消息失败');
+        setLoading(false);
       }
     } finally {
       if (!controller.signal.aborted) {
-        setLoading(false);
+        abortControllerRef.current = null;
       }
-      abortControllerRef.current = null;
     }
   };
 
@@ -428,74 +460,80 @@ function Chat() {
             </div>
           ) : (
             <div style={{ maxWidth: 800, margin: '0 auto' }}>
-              {messages.map((msg) => (
-                <div
-                  key={msg.id ?? `${msg.role}-${msg.content.substring(0, 20)}`}
-                  style={{
-                    display: 'flex',
-                    justifyContent: msg.role === 'user' ? 'flex-end' : 'flex-start',
-                    marginBottom: 24,
-                  }}
-                >
-                  {msg.role === 'assistant' && (
-                    <div
-                      style={{
-                        width: 36,
-                        height: 36,
-                        borderRadius: '50%',
-                        background: 'linear-gradient(135deg, #667eea 0%, #764ba2 100%)',
-                        display: 'flex',
-                        alignItems: 'center',
-                        justifyContent: 'center',
-                        marginRight: 12,
-                        flexShrink: 0,
-                      }}
-                    >
-                      <RobotOutlined style={{ color: '#fff', fontSize: 16 }} />
-                    </div>
-                  )}
-
+              {messages.map((msg) => {
+                const displayContent =
+                  maskPIIEnabled && msg.role === 'assistant'
+                    ? maskPII(msg.content).masked
+                    : msg.content;
+                return (
                   <div
+                    key={msg.id ?? `${msg.role}-${msg.content.substring(0, 20)}`}
                     style={{
-                      maxWidth: '70%',
-                      padding: '12px 16px',
-                      borderRadius:
-                        msg.role === 'user' ? '16px 16px 4px 16px' : '16px 16px 16px 4px',
-                      background:
-                        msg.role === 'user'
-                          ? 'linear-gradient(135deg, #667eea 0%, #764ba2 100%)'
-                          : token.colorFillAlter,
-                      color: msg.role === 'user' ? '#fff' : token.colorText,
-                      fontSize: 14,
-                      lineHeight: 1.6,
-                      whiteSpace: 'pre-wrap',
-                      wordBreak: 'break-word',
+                      display: 'flex',
+                      justifyContent: msg.role === 'user' ? 'flex-end' : 'flex-start',
+                      marginBottom: 24,
                     }}
                   >
-                    {msg.content}
-                  </div>
+                    {msg.role === 'assistant' && (
+                      <div
+                        style={{
+                          width: 36,
+                          height: 36,
+                          borderRadius: '50%',
+                          background: 'linear-gradient(135deg, #667eea 0%, #764ba2 100%)',
+                          display: 'flex',
+                          alignItems: 'center',
+                          justifyContent: 'center',
+                          marginRight: 12,
+                          flexShrink: 0,
+                        }}
+                      >
+                        <RobotOutlined style={{ color: '#fff', fontSize: 16 }} />
+                      </div>
+                    )}
 
-                  {msg.role === 'user' && (
                     <div
                       style={{
-                        width: 36,
-                        height: 36,
-                        borderRadius: '50%',
-                        background: token.colorPrimaryBg,
-                        display: 'flex',
-                        alignItems: 'center',
-                        justifyContent: 'center',
-                        marginLeft: 12,
-                        flexShrink: 0,
+                        maxWidth: '70%',
+                        padding: '12px 16px',
+                        borderRadius:
+                          msg.role === 'user' ? '16px 16px 4px 16px' : '16px 16px 16px 4px',
+                        background:
+                          msg.role === 'user'
+                            ? 'linear-gradient(135deg, #667eea 0%, #764ba2 100%)'
+                            : token.colorFillAlter,
+                        color: msg.role === 'user' ? '#fff' : token.colorText,
+                        fontSize: 14,
+                        lineHeight: 1.6,
+                        whiteSpace: 'pre-wrap',
+                        wordBreak: 'break-word',
                       }}
                     >
-                      <UserOutlined style={{ color: token.colorPrimary, fontSize: 16 }} />
+                      {displayContent}
                     </div>
-                  )}
-                </div>
-              ))}
 
-              {isLoading && (
+                    {msg.role === 'user' && (
+                      <div
+                        style={{
+                          width: 36,
+                          height: 36,
+                          borderRadius: '50%',
+                          background: token.colorPrimaryBg,
+                          display: 'flex',
+                          alignItems: 'center',
+                          justifyContent: 'center',
+                          marginLeft: 12,
+                          flexShrink: 0,
+                        }}
+                      >
+                        <UserOutlined style={{ color: token.colorPrimary, fontSize: 16 }} />
+                      </div>
+                    )}
+                  </div>
+                );
+              })}
+
+              {(isLoading || streamingContent) && (
                 <div
                   style={{
                     display: 'flex',
@@ -524,10 +562,18 @@ function Chat() {
                       background: token.colorFillAlter,
                     }}
                   >
-                    <Spin size="small" />
-                    <Text type="secondary" style={{ marginLeft: 8, fontSize: 13 }}>
-                      思考中...
-                    </Text>
+                    {streamingContent ? (
+                      <Text style={{ fontSize: 14, lineHeight: 1.6, whiteSpace: 'pre-wrap' }}>
+                        {maskPIIEnabled ? maskPII(streamingContent).masked : streamingContent}
+                      </Text>
+                    ) : (
+                      <>
+                        <Spin size="small" />
+                        <Text type="secondary" style={{ marginLeft: 8, fontSize: 13 }}>
+                          思考中...
+                        </Text>
+                      </>
+                    )}
                   </div>
                 </div>
               )}
@@ -545,15 +591,24 @@ function Chat() {
               borderTop: `1px solid ${token.colorErrorBorder}`,
               color: token.colorError,
               fontSize: 13,
+              display: 'flex',
+              alignItems: 'center',
+              gap: 8,
             }}
           >
-            {error}
+            <span style={{ flex: 1 }}>{error}</span>
             <Button
               type="link"
               size="small"
-              onClick={() => setError(null)}
-              style={{ marginLeft: 8 }}
+              icon={<ReloadOutlined />}
+              onClick={() => {
+                setError(null);
+                handleSend(lastQueryRef.current);
+              }}
             >
+              重试
+            </Button>
+            <Button type="link" size="small" onClick={() => setError(null)}>
               关闭
             </Button>
           </div>
@@ -575,6 +630,18 @@ function Chat() {
               alignItems: 'center',
             }}
           >
+            <Tooltip title={maskPIIEnabled ? '显示原始内容' : '脱敏显示'}>
+              <Button
+                size="small"
+                icon={maskPIIEnabled ? <EyeInvisibleOutlined /> : <EyeOutlined />}
+                onClick={() => setMaskPIIEnabled((prev) => !prev)}
+                style={{ borderRadius: 16, fontSize: 12 }}
+                type={maskPIIEnabled ? 'primary' : 'default'}
+              >
+                {maskPIIEnabled ? '已脱敏' : '脱敏'}
+              </Button>
+            </Tooltip>
+
             {knowledgeBases.length > 0 && (
               <Tooltip title="根据知识库内容回答">
                 <Button
@@ -873,7 +940,7 @@ function Chat() {
                 <Button
                   type="primary"
                   icon={<SendOutlined />}
-                  onClick={handleSend}
+                  onClick={() => handleSend()}
                   disabled={!inputValue.trim()}
                   style={{
                     width: 36,
@@ -889,17 +956,59 @@ function Chat() {
             </div>
           </div>
 
-          <div
-            style={{
-              display: 'flex',
-              justifyContent: 'space-between',
-              marginTop: 8,
-            }}
-          >
-            <Text type="secondary" style={{ fontSize: 11, color: token.colorTextQuaternary }}>
-              AI 可能会犯错，请核实重要信息
-            </Text>
-          </div>
+          {(messages.length > 1 || streamingContent) && (
+            <div
+              style={{
+                display: 'flex',
+                justifyContent: 'space-between',
+                marginTop: 8,
+                alignItems: 'center',
+              }}
+            >
+              <Text type="secondary" style={{ fontSize: 11, color: token.colorTextQuaternary }}>
+                AI 可能会犯错，请核实重要信息
+              </Text>
+              <div style={{ display: 'flex', gap: 12, alignItems: 'center' }}>
+                <Tag
+                  style={{ fontSize: 11, marginRight: 0 }}
+                  color={(() => {
+                    const info = calculateContextUsage(
+                      messages.filter((m) => m.role !== 'system'),
+                      'You are a helpful assistant.',
+                    );
+                    if (info.usagePercent > 90) return 'red';
+                    if (info.usagePercent > 70) return 'orange';
+                    return 'default';
+                  })()}
+                >
+                  上下文: {(() => {
+                    const info = calculateContextUsage(
+                      messages.filter((m) => m.role !== 'system'),
+                      'You are a helpful assistant.',
+                    );
+                    return `${info.usagePercent}% (${formatTokenCount(info.totalTokens)}/${formatTokenCount(info.availableTokens)})`;
+                  })()}
+                </Tag>
+                <Tag style={{ fontSize: 11, marginRight: 0 }}>
+                  消息:{' '}
+                  {messages.length > 0 ? messages.filter((m) => m.role !== 'system').length : 1}
+                </Tag>
+              </div>
+            </div>
+          )}
+          {messages.length <= 1 && !streamingContent && (
+            <div
+              style={{
+                display: 'flex',
+                justifyContent: 'space-between',
+                marginTop: 8,
+              }}
+            >
+              <Text type="secondary" style={{ fontSize: 11, color: token.colorTextQuaternary }}>
+                AI 可能会犯错，请核实重要信息
+              </Text>
+            </div>
+          )}
         </div>
       </div>
     </div>

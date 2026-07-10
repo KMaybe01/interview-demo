@@ -42,7 +42,7 @@ Monorepo (Bun workspaces + Turborepo) 全栈项目，包含：
 | 12 | 大文件断点续传 | SHA-256 分片哈希 + 并发滑动窗口上传 + 完整性校验 + 暂停/恢复/停止 + 刷新持久化 + 代际锁防并发竞态 + 下载已上传文件 |
 | 13 | 页面性能监控 (Dashboard) | web-vitals 5 采集 CLS/FCP/INP/LCP/TTFB → PageTracker 自动上报路径+渲染耗时 → 后端存储 → 页面访问明细表 + ECharts 排行，所有 vitals 端点无需认证 |
 | 14 | UniPay 统一支付中台 | 支付状态机 (7 状态 × 6 驱动) + Idempotency-Key 幂等性防重复扣款 + 指数退避重试 (1s/2s/4s) + T+1 对账 (groupMap 去重 + 自动退款) + 安全检测 (回调伪造 RSA 验签 + 金额篡改二次验价) |
-| 15 | AI Demo | LLM 聊天 (流式)、知识库管理 (RAG)、模型管理 (OpenAI/DeepSeek/Ollama)、智能体管理 (ReAct/Function Calling/Multi-Agent)、插件中心、AI Dashboard |
+| 15 | AI Demo | 7 选项卡：AI 聊天（流式 SSE + Token 统计 + 上下文管理 + PII 脱敏 + 错误重试）、知识库管理（分块策略/Embedding/混合搜索）、模型管理、智能体（工具注册表/记忆管理/执行轨迹/HITL 审核）、Playground（MCP/A2A 协议 + 模型路由 + 遥测监控）、插件中心、AI Dashboard |
 
 ## 快速启动
 
