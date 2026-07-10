@@ -14,9 +14,11 @@
     "typecheck": "tsc -b --noEmit"
   },
   "dependencies": {
+    "@a2ui/react": "^0.10.1",
+    "@a2ui/web_core": "^0.10.4",
     "@ant-design/cssinjs": "^2.1.2",
     "@ant-design/icons": "^6.2.5",
-    "antd": "^6.4.5",
+    "antd": "6.4.5",
     "is-mobile": "^5",
     "react": "^19.2.7",
     "react-dom": "^19.2.7",

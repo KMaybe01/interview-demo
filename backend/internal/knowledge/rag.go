@@ -129,6 +129,10 @@ func (s *RAGService) DeleteDocument(kbID, docID string) bool {
 }
 
 func (s *RAGService) Search(query string, kbID string, topK int) model.SearchResponse {
+	return s.HybridSearch(query, kbID, topK, false)
+}
+
+func (s *RAGService) HybridSearch(query string, kbID string, topK int, useHybrid bool) model.SearchResponse {
 	s.mu.RLock()
 	defer s.mu.RUnlock()
 
@@ -160,6 +164,10 @@ func (s *RAGService) Search(query string, kbID string, topK int) model.SearchRes
 		chunk model.DocumentChunk
 		score float64
 		docID string
+	}
+
+	if useHybrid && len(allChunks) > 0 {
+		return s.rrfSearch(query, allChunks, chunkToDoc, topK)
 	}
 
 	var scored []scoredChunk
@@ -201,6 +209,135 @@ func (s *RAGService) Search(query string, kbID string, topK int) model.SearchRes
 
 	return model.SearchResponse{Results: results}
 }
+
+func (s *RAGService) rrfSearch(query string, chunks []model.DocumentChunk, chunkToDoc map[string]string, topK int) model.SearchResponse {
+	queryTokens := tokenizeForEmbedding(query)
+	queryVec := s.generateSimpleEmbedding(query)
+
+	keywordResults := make([]struct {
+		chunk model.DocumentChunk
+		score float64
+	}, 0, len(chunks))
+
+	vectorResults := make([]struct {
+		chunk model.DocumentChunk
+		score float64
+	}, 0, len(chunks))
+
+	for _, chunk := range chunks {
+		kwScore := s.keywordScore(queryTokens, chunk.Content)
+		if kwScore > 0 {
+			keywordResults = append(keywordResults, struct {
+				chunk model.DocumentChunk
+				score float64
+			}{chunk, kwScore})
+		}
+
+		chunkEmbed := chunk.Embedding
+		if chunkEmbed == nil {
+			chunkEmbed = s.generateSimpleEmbedding(chunk.Content)
+		}
+		vecScore := cosineSimilarity(queryVec, chunkEmbed)
+		if vecScore > 0.1 {
+			vectorResults = append(vectorResults, struct {
+				chunk model.DocumentChunk
+				score float64
+			}{chunk, vecScore})
+		}
+	}
+
+	sort.Slice(keywordResults, func(i, j int) bool {
+		return keywordResults[i].score > keywordResults[j].score
+	})
+	sort.Slice(vectorResults, func(i, j int) bool {
+		return vectorResults[i].score > vectorResults[j].score
+	})
+
+	rrfK := 60.0
+	chunkID := func(c model.DocumentChunk) string { return c.ID }
+
+	keywordRanks := make(map[string]int)
+	for i, r := range keywordResults {
+		keywordRanks[chunkID(r.chunk)] = i + 1
+	}
+	vectorRanks := make(map[string]int)
+	for i, r := range vectorResults {
+		vectorRanks[chunkID(r.chunk)] = i + 1
+	}
+
+	seen := make(map[string]bool)
+	type rrfItem struct {
+		chunk model.DocumentChunk
+		score float64
+	}
+
+	var fused []rrfItem
+	for _, r := range keywordResults {
+		cid := chunkID(r.chunk)
+		if seen[cid] {
+			continue
+		}
+		seen[cid] = true
+		rrfScore := 1.0 / (rrfK + float64(keywordRanks[cid]))
+		if vr, ok := vectorRanks[cid]; ok {
+			rrfScore += 1.0 / (rrfK + float64(vr))
+		}
+		fused = append(fused, rrfItem{r.chunk, rrfScore})
+	}
+	for _, r := range vectorResults {
+		cid := chunkID(r.chunk)
+		if seen[cid] {
+			continue
+		}
+		seen[cid] = true
+		rrfScore := 1.0 / (rrfK + float64(vectorRanks[cid]))
+		fused = append(fused, rrfItem{r.chunk, rrfScore})
+	}
+
+	sort.Slice(fused, func(i, j int) bool {
+		return fused[i].score > fused[j].score
+	})
+
+	if topK > len(fused) {
+		topK = len(fused)
+	}
+
+	var results []model.SearchResult
+	for i := 0; i < topK; i++ {
+		docTitle := ""
+		docSource := ""
+		if doc, exists := s.findDocument(fused[i].chunk.DocumentID); exists {
+			docTitle = doc.Title
+			docSource = doc.Source
+		}
+
+		results = append(results, model.SearchResult{
+			Chunk:     fused[i].chunk,
+			Score:     fused[i].score,
+			DocTitle:  docTitle,
+			DocSource: docSource,
+		})
+	}
+
+	return model.SearchResponse{Results: results}
+}
+
+func (s *RAGService) keywordScore(queryTokens []string, content string) float64 {
+	contentLower := strings.ToLower(content)
+	matched := 0
+	for _, token := range queryTokens {
+		if strings.Contains(contentLower, strings.ToLower(token)) {
+			matched++
+		}
+	}
+	if len(queryTokens) == 0 {
+		return 0
+	}
+	tf := float64(matched) / float64(len(queryTokens))
+	return tf
+}
+
+
 
 func (s *RAGService) chunkDocument(doc model.Document) []model.DocumentChunk {
 	var chunks []model.DocumentChunk

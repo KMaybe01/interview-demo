@@ -89,6 +89,45 @@ export interface MCPTool {
   inputSchema: Record<string, unknown>;
 }
 
+export interface MCPToolDTO {
+  name: string;
+  description: string;
+  version: string;
+  endpoint: string;
+}
+
+export interface A2AToolDTO {
+  name: string;
+  description: string;
+  agentType: string;
+  capabilities: string[];
+}
+
+export interface MCPListResponse {
+  mcp_tools: MCPToolDTO[];
+  a2a_tools: A2AToolDTO[];
+  count: number;
+}
+
+export interface TelemetryReportData {
+  requests: number;
+  errors: number;
+  avgLatency: number;
+  cacheHitRate: number;
+}
+
+export interface AgentStreamEvent {
+  type: string;
+  step?: number;
+  thought?: string;
+  action?: string;
+  action_input?: string;
+  observation?: string;
+  content?: string;
+  done?: boolean;
+  error?: string;
+}
+
 export interface MCPServer {
   id: string;
   name: string;

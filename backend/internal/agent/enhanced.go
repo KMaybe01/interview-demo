@@ -191,6 +191,190 @@ func (a *Agent) ExecutionLog() []Step {
 	return a.State.Steps
 }
 
+type StepEvent struct {
+	Type        string `json:"type"`
+	Step        int    `json:"step,omitempty"`
+	Thought     string `json:"thought,omitempty"`
+	Action      string `json:"action,omitempty"`
+	ActionInput string `json:"action_input,omitempty"`
+	Observation string `json:"observation,omitempty"`
+	Content     string `json:"content,omitempty"`
+	Done        bool   `json:"done,omitempty"`
+	Error       string `json:"error,omitempty"`
+}
+
+func (a *Agent) ExecuteStream(ctx context.Context, input string, events chan<- StepEvent) {
+	defer close(events)
+
+	a.mu.Lock()
+	a.State.Messages = append(a.State.Messages, model.Message{
+		ID:        uuid.New().String(),
+		Role:      "user",
+		Content:   input,
+		CreatedAt: time.Now(),
+	})
+	a.mu.Unlock()
+
+	if a.Type == TypeReAct {
+		a.executeReActStream(ctx, input, events)
+		return
+	}
+
+	a.executeFunctionCallingStream(ctx, input, events)
+}
+
+func (a *Agent) executeReActStream(ctx context.Context, input string, events chan<- StepEvent) {
+	a.mu.Lock()
+	state := a.State
+	a.mu.Unlock()
+
+	for step := 0; step < state.MaxSteps; step++ {
+		select {
+		case <-ctx.Done():
+			events <- StepEvent{Type: "error", Error: "context cancelled"}
+			return
+		default:
+		}
+
+		thought := a.generateThought(input, state)
+
+		events <- StepEvent{
+			Type:    "thought",
+			Step:    step,
+			Thought: thought,
+		}
+
+		action, actionInput := a.selectTool(thought, input)
+
+		events <- StepEvent{
+			Type:        "action",
+			Step:        step,
+			Action:      action,
+			ActionInput: actionInput,
+		}
+
+		if action == "Final Answer" {
+			a.mu.Lock()
+			state.FinalAnswer = actionInput
+			state.Steps = append(state.Steps, Step{
+				Thought:     thought,
+				Action:      action,
+				ActionInput: actionInput,
+			})
+			a.mu.Unlock()
+
+			events <- StepEvent{
+				Type:    "result",
+				Content: actionInput,
+				Done:    true,
+			}
+
+			a.mu.Lock()
+			a.State.Messages = append(a.State.Messages, model.Message{
+				ID:        uuid.New().String(),
+				Role:      "assistant",
+				Content:   state.FinalAnswer,
+				CreatedAt: time.Now(),
+			})
+			a.mu.Unlock()
+			return
+		}
+
+		observation, err := a.executeTool(ctx, action, actionInput)
+		if err != nil {
+			observation = fmt.Sprintf("工具执行错误: %v", err)
+		}
+
+		events <- StepEvent{
+			Type:        "observation",
+			Step:        step,
+			Observation: observation,
+		}
+
+		a.mu.Lock()
+		state.Steps = append(state.Steps, Step{
+			Thought:     thought,
+			Action:      action,
+			ActionInput: actionInput,
+			Observation: observation,
+		})
+		if step == state.MaxSteps-1 {
+			state.FinalAnswer = "达到最大步数，无法完成任务"
+		}
+		a.mu.Unlock()
+	}
+
+	a.mu.Lock()
+	if state.FinalAnswer == "" {
+		state.FinalAnswer = "无法生成最终答案"
+	}
+	a.State.Messages = append(a.State.Messages, model.Message{
+		ID:        uuid.New().String(),
+		Role:      "assistant",
+		Content:   state.FinalAnswer,
+		CreatedAt: time.Now(),
+	})
+	finalAnswer := state.FinalAnswer
+	a.mu.Unlock()
+
+	events <- StepEvent{
+		Type:    "result",
+		Content: finalAnswer,
+		Done:    true,
+	}
+}
+
+func (a *Agent) executeFunctionCallingStream(ctx context.Context, input string, events chan<- StepEvent) {
+	for _, tool := range a.Tools {
+		events <- StepEvent{
+			Type:    "thought",
+			Step:    0,
+			Thought: fmt.Sprintf("尝试使用工具: %s", tool.Name),
+		}
+
+		events <- StepEvent{
+			Type:        "action",
+			Step:        0,
+			Action:      tool.Name,
+			ActionInput: input,
+		}
+
+		result, err := tool.Function(ctx, input)
+		if err != nil {
+			events <- StepEvent{
+				Type:        "observation",
+				Step:        0,
+				Observation: fmt.Sprintf("工具执行错误: %v", err),
+			}
+			events <- StepEvent{
+				Type:    "result",
+				Content: fmt.Sprintf("工具执行失败: %v", err),
+				Done:    true,
+			}
+			return
+		}
+
+		events <- StepEvent{
+			Type:        "observation",
+			Step:        0,
+			Observation: result,
+		}
+
+		events <- StepEvent{
+			Type:    "result",
+			Content: result,
+			Done:    true,
+		}
+		return
+	}
+
+	events <- StepEvent{
+		Type:    "result",
+		Content: "我可以帮你处理这个请求。请提供更多信息。",
+		Done:    true,
+	}
+}
+
 func (a *Agent) ClearState() {
 	a.mu.Lock()
 	defer a.mu.Unlock()

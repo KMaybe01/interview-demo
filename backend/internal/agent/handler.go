@@ -2,6 +2,9 @@ package agent
 
 import (
 	"context"
+	"encoding/json"
+	"fmt"
+	"io"
 	"net/http"
 	"sync"
 	"time"
@@ -153,6 +156,63 @@ func (h *Handler) ExecuteAgent(c *gin.Context) {
 		"response":  response,
 		"steps":     log,
 		"timestamp": time.Now(),
+	})
+}
+
+// ExecuteAgentStream  godoc
+// @Summary     流式执行智能体 (SSE)
+// @Description 通过 SSE 流式返回智能体执行过程（thought/action/observation）
+// @Tags        智能体
+// @Accept      json
+// @Produce     text/event-stream
+// @Param       id   path string                   true "智能体 ID"
+// @Param       body body  object{input=string} true "执行请求"
+// @Success     200
+// @Failure     400 {object} map[string]interface{}
+// @Failure     404 {object} map[string]interface{}
+// @Router      /agents/{id}/stream [post]
+func (h *Handler) ExecuteAgentStream(c *gin.Context) {
+	agentID := c.Param("id")
+
+	h.mu.RLock()
+	agent, exists := h.agents[agentID]
+	h.mu.RUnlock()
+	if !exists {
+		c.JSON(http.StatusNotFound, gin.H{"error": "智能体不存在"})
+		return
+	}
+
+	var req struct {
+		Input string `json:"input" binding:"required"`
+	}
+
+	if err := c.ShouldBindJSON(&req); err != nil {
+		c.JSON(http.StatusBadRequest, gin.H{"error": "请求参数错误"})
+		return
+	}
+
+	c.Header("Content-Type", "text/event-stream")
+	c.Header("Cache-Control", "no-cache")
+	c.Header("Connection", "keep-alive")
+
+	ctx := c.Request.Context()
+	events := make(chan StepEvent, 10)
+
+	go agent.ExecuteStream(ctx, req.Input, events)
+
+	c.Stream(func(w io.Writer) bool {
+		event, ok := <-events
+		if !ok {
+			return false
+		}
+
+		data, err := json.Marshal(event)
+		if err != nil {
+			return false
+		}
+
+		fmt.Fprintf(w, "data: %s\n\n", data)
+		return !event.Done && event.Type != "error"
 	})
 }
 

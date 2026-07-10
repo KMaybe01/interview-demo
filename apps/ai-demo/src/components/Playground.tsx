@@ -22,94 +22,18 @@ import {
   Table,
   Tabs,
   Tag,
+  theme,
   Tooltip,
   Typography,
-  theme,
 } from 'antd';
-import { useCallback, useEffect, useState } from 'react';
-import { useMessageApi } from '../AIDemo.tsx';
-import type { MCPServer, MCPTool, ModelRouterConfig } from '../types/index.ts';
-import { responseCache } from '../utils/response-cache.ts';
-import { telemetry } from '../utils/telemetry.ts';
+import {useCallback, useEffect, useState} from 'react';
+import {useMessageApi} from '../AIDemo.tsx';
+import {mcpAPI, telemetryAPI} from '../services/api.ts';
+import type {A2AToolDTO, MCPServer, MCPTool, MCPToolDTO, ModelRouterConfig,} from '../types/index.ts';
+import {responseCache} from '../utils/response-cache.ts';
+import {telemetry} from '../utils/telemetry.ts';
 
 const { Text } = Typography;
-
-const DEMO_SERVERS: MCPServer[] = [
-  {
-    id: 'mcp-calc',
-    name: 'MCP 计算器服务',
-    endpoint: 'http://localhost:3100/mcp',
-    protocol: 'mcp',
-    status: 'online',
-    lastSeen: new Date().toISOString(),
-    tools: [
-      {
-        name: 'add',
-        description: '加法运算',
-        inputSchema: {
-          type: 'object',
-          properties: { a: { type: 'number' }, b: { type: 'number' } },
-        },
-      },
-      {
-        name: 'multiply',
-        description: '乘法运算',
-        inputSchema: {
-          type: 'object',
-          properties: { a: { type: 'number' }, b: { type: 'number' } },
-        },
-      },
-    ],
-  },
-  {
-    id: 'mcp-search',
-    name: 'A2A 搜索服务',
-    endpoint: 'http://localhost:3101/a2a',
-    protocol: 'a2a',
-    status: 'online',
-    lastSeen: new Date().toISOString(),
-    tools: [
-      {
-        name: 'search',
-        description: '网页搜索',
-        inputSchema: { type: 'object', properties: { query: { type: 'string' } } },
-      },
-    ],
-  },
-  {
-    id: 'mcp-db',
-    name: 'MCP 数据库服务',
-    endpoint: 'http://localhost:3102/mcp',
-    protocol: 'mcp',
-    status: 'offline',
-    lastSeen: new Date(Date.now() - 3600000).toISOString(),
-    tools: [
-      {
-        name: 'query',
-        description: 'SQL 查询',
-        inputSchema: { type: 'object', properties: { sql: { type: 'string' } } },
-      },
-    ],
-  },
-  {
-    id: 'a2a-translate',
-    name: 'A2A 翻译服务',
-    endpoint: 'http://localhost:3103/a2a',
-    protocol: 'a2a',
-    status: 'error',
-    lastSeen: new Date(Date.now() - 7200000).toISOString(),
-    tools: [
-      {
-        name: 'translate',
-        description: '文本翻译',
-        inputSchema: {
-          type: 'object',
-          properties: { text: { type: 'string' }, target: { type: 'string' } },
-        },
-      },
-    ],
-  },
-];
 
 const DEFAULT_ROUTER: ModelRouterConfig = {
   defaultModel: 'openai-gpt4',
@@ -144,24 +68,79 @@ const DEFAULT_ROUTER: ModelRouterConfig = {
 function Playground() {
   const message = useMessageApi();
   const { token } = theme.useToken();
-  const [servers, setServers] = useState<MCPServer[]>(DEMO_SERVERS);
+  const [servers, setServers] = useState<MCPServer[]>([]);
   const [router, setRouter] = useState<ModelRouterConfig>(DEFAULT_ROUTER);
   const [cacheStats, setCacheStats] = useState(responseCache.stats());
   const [telemetrySummary, setTelemetrySummary] = useState(telemetry.getSummary());
   const [addServerModalVisible, setAddServerModalVisible] = useState(false);
   const [selectedServer, setSelectedServer] = useState<MCPServer | null>(null);
+  const [serversLoading, setServersLoading] = useState(false);
 
   const [addForm] = Form.useForm();
+
+  const loadServers = useCallback(async () => {
+    setServersLoading(true);
+    try {
+      const res = await mcpAPI.listTools();
+      const mapped: MCPServer[] = [];
+      if (res.mcp_tools.length > 0) {
+        mapped.push({
+          id: 'mcp-registry',
+          name: 'MCP 工具注册表',
+          endpoint: '/api/mcp/tools',
+          protocol: 'mcp',
+          status: 'online',
+          lastSeen: new Date().toISOString(),
+          tools: res.mcp_tools.map((t: MCPToolDTO) => ({
+            name: t.name,
+            description: t.description,
+            inputSchema: {},
+          })),
+        });
+      }
+      if (res.a2a_tools.length > 0) {
+        mapped.push({
+          id: 'a2a-registry',
+          name: 'A2A 智能体注册表',
+          endpoint: '/api/mcp/tools',
+          protocol: 'a2a',
+          status: 'online',
+          lastSeen: new Date().toISOString(),
+          tools: res.a2a_tools.map((t: A2AToolDTO) => ({
+            name: t.name,
+            description: t.description,
+            inputSchema: {},
+          })),
+        });
+      }
+      if (mapped.length > 0) setServers(mapped);
+    } catch {
+      // fallback to empty list - API not available
+    } finally {
+      setServersLoading(false);
+    }
+  }, []);
 
   const refreshStats = useCallback(() => {
     setCacheStats(responseCache.stats());
     setTelemetrySummary(telemetry.getSummary());
-  }, []);
+
+    const summary = telemetry.getSummary();
+    telemetryAPI
+      .report({
+        requests: summary.totalRequests,
+        errors: summary.totalErrors,
+        avgLatency: summary.avgLatency,
+        cacheHitRate: cacheStats.totalHits > 0 ? 1 : 0,
+      })
+      .catch(() => {});
+  }, [cacheStats]);
 
   useEffect(() => {
+    loadServers();
     const interval = setInterval(refreshStats, 3000);
     return () => clearInterval(interval);
-  }, [refreshStats]);
+  }, [loadServers, refreshStats]);
 
   const handleAddServer = (values: { name: string; endpoint: string; protocol: 'mcp' | 'a2a' }) => {
     const newServer: MCPServer = {
@@ -300,7 +279,14 @@ function Playground() {
                       注册服务
                     </Button>
                     <Tooltip title="刷新">
-                      <Button icon={<ReloadOutlined />} onClick={refreshStats} />
+                      <Button
+                        icon={<ReloadOutlined />}
+                        loading={serversLoading}
+                        onClick={() => {
+                          loadServers();
+                          refreshStats();
+                        }}
+                      />
                     </Tooltip>
                   </Space>
                 </div>

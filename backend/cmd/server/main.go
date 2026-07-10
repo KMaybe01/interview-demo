@@ -107,6 +107,7 @@ func main() {
 	docLoader := knowledge.NewDocLoader(ragService, chunkerManager, embeddingService, vectorDB)
 
 	api := r.Group("/api")
+	api.Use(middleware.ResponseCacher())
 	{
 		api.POST("/auth/login", authService.Login)
 		api.POST("/auth/refresh", authService.RefreshToken)
@@ -118,10 +119,14 @@ func main() {
 
 		api.GET("/health", health.HealthCheck)
 
-		api.POST("/chat", chatHandler.Chat)
-		api.POST("/chat/stream", chatHandler.ChatStream)
-		api.GET("/chat/history/:conversationId", chatHandler.History)
-		api.DELETE("/chat/history/:conversationId", chatHandler.ClearHistory)
+		chatRoutes := api.Group("")
+		chatRoutes.Use(middleware.PromptGuard())
+		{
+			chatRoutes.POST("/chat", chatHandler.Chat)
+			chatRoutes.POST("/chat/stream", chatHandler.ChatStream)
+			chatRoutes.GET("/chat/history/:conversationId", chatHandler.History)
+			chatRoutes.DELETE("/chat/history/:conversationId", chatHandler.ClearHistory)
+		}
 
 		api.POST("/knowledge-base", knowledgeHandler.CreateKnowledgeBase)
 		api.GET("/knowledge-base", knowledgeHandler.ListKnowledgeBases)
@@ -172,7 +177,14 @@ func main() {
 		api.GET("/agents", agentHandler.ListAgents)
 		api.POST("/agents", agentHandler.CreateAgent)
 		api.POST("/agents/:id/execute", agentHandler.ExecuteAgent)
+		api.POST("/agents/:id/stream", agentHandler.ExecuteAgentStream)
 		api.DELETE("/agents/:id", agentHandler.DeleteAgent)
+
+		api.GET("/mcp/tools", agent.ListMCPTools)
+
+		api.POST("/telemetry/report", vitals.ReportTelemetry)
+		api.GET("/telemetry/history", vitals.GetTelemetryHistory)
+		api.GET("/telemetry/summary", vitals.GetTelemetrySummary)
 
 		protected := api.Group("")
 		protected.Use(authService.AuthMiddleware())

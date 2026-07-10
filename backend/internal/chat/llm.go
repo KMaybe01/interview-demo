@@ -5,6 +5,7 @@ import (
 	"encoding/json"
 	"fmt"
 	"io"
+	"time"
 
 	openai "github.com/sashabaranov/go-openai"
 	"interview-demo/backend/internal/model"
@@ -123,6 +124,33 @@ func ReadStream(stream *openai.ChatCompletionStream, ch chan<- model.StreamChunk
 			}
 		}
 	}
+}
+
+func MockChatStream(ctx context.Context, input string, ch chan<- model.StreamChunk) {
+	defer close(ch)
+
+	mockResponses := []string{
+		"你好！我是 AI 助手。",
+		"我已经收到你的消息: ",
+		input,
+		"\n\n这是一个模拟的流式响应。由于没有配置 OPENAI_API_KEY，",
+		"系统使用本地模拟模式生成回复。",
+		"\n\n你可以设置 OPENAI_API_KEY 环境变量来启用真实的 AI 对话。",
+	}
+
+	for _, text := range mockResponses {
+		for _, r := range []rune(text) {
+			select {
+			case <-ctx.Done():
+				ch <- model.StreamChunk{Done: true}
+				return
+			case ch <- model.StreamChunk{Content: string(r), Done: false}:
+			}
+			time.Sleep(30 * time.Millisecond)
+		}
+	}
+
+	ch <- model.StreamChunk{Done: true}
 }
 
 type ResponseWithTools struct {

@@ -2,6 +2,7 @@ import type {
   AddDocumentRequest,
   AgentExecuteResponse,
   AgentListResponse,
+  AgentStreamEvent,
   BatchAddDocumentsResponse,
   ChatEnhancedRequest,
   ChatEnhancedResponse,
@@ -12,8 +13,10 @@ import type {
   KnowledgeBaseListResponse,
   KnowledgeSearchRequest,
   KnowledgeSearchResponse,
+  MCPListResponse,
   ModelListResponse,
   StreamChunk,
+  TelemetryReportData,
 } from '../types/index.ts';
 
 const API_BASE = '/api';
@@ -255,6 +258,80 @@ export const agentAPI = {
     return request<AgentExecuteResponse>(`/agents/${id}/execute`, {
       method: 'POST',
       body: JSON.stringify({ input }),
+    });
+  },
+
+  async executeStream(
+    id: string,
+    input: string,
+    signal: AbortSignal | undefined,
+    onEvent: (event: AgentStreamEvent) => void,
+    onDone: () => void,
+    onError: (error: string) => void,
+  ): Promise<void> {
+    try {
+      const response = await fetch(`${API_BASE}/agents/${id}/stream`, {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ input }),
+        signal,
+      });
+
+      if (!response.ok) {
+        const errData = await response.json().catch(() => ({}));
+        throw new Error(errData.error || '请求失败');
+      }
+
+      const reader = response.body?.getReader();
+      if (!reader) throw new Error('无法读取响应流');
+
+      const decoder = new TextDecoder();
+      while (true) {
+        const { done, value } = await reader.read();
+        if (done) break;
+
+        const chunk = decoder.decode(value);
+        const lines = chunk.split('\n');
+
+        for (const line of lines) {
+          if (line.startsWith('data: ')) {
+            const data = line.slice(6);
+            if (data === '[DONE]') {
+              onDone();
+              return;
+            }
+            try {
+              const parsed: AgentStreamEvent = JSON.parse(data);
+              onEvent(parsed);
+            } catch {
+              // skip unparseable data
+            }
+          }
+        }
+      }
+
+      onDone();
+    } catch (error) {
+      if ((error as Error).name === 'AbortError') {
+        onDone();
+        return;
+      }
+      onError(error instanceof Error ? error.message : '流式响应失败');
+    }
+  },
+};
+
+export const mcpAPI = {
+  async listTools(): Promise<MCPListResponse> {
+    return request<MCPListResponse>('/mcp/tools');
+  },
+};
+
+export const telemetryAPI = {
+  async report(data: TelemetryReportData): Promise<void> {
+    return requestVoid('/telemetry/report', {
+      method: 'POST',
+      body: JSON.stringify(data),
     });
   },
 };

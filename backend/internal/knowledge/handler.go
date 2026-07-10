@@ -347,11 +347,11 @@ func (h *Handler) BatchAddDocuments(c *gin.Context) {
 
 // Search  godoc
 // @Summary     搜索知识库
-// @Description 在知识库中搜索相关文档（语义搜索）
+// @Description 在知识库中搜索相关文档（支持语义搜索 / 混合搜索）
 // @Tags        知识库
 // @Accept      json
 // @Produce     json
-// @Param       body body     object{query=string,knowledgeBaseId=string,topK=int} true "搜索请求"
+// @Param       body body     object{query=string,knowledgeBaseId=string,topK=int,hybrid=bool} true "搜索请求"
 // @Success     200  {object} map[string]interface{}
 // @Failure     400  {object} map[string]interface{}
 // @Router      /knowledge-base/search [post]
@@ -360,6 +360,7 @@ func (h *Handler) Search(c *gin.Context) {
 		Query           string `json:"query" binding:"required"`
 		KnowledgeBaseID string `json:"knowledgeBaseId"`
 		TopK            int    `json:"topK"`
+		Hybrid          bool   `json:"hybrid"`
 	}
 
 	if err := c.ShouldBindJSON(&req); err != nil {
@@ -371,7 +372,12 @@ func (h *Handler) Search(c *gin.Context) {
 		req.TopK = 5
 	}
 
-	response := h.ragService.Search(req.Query, req.KnowledgeBaseID, req.TopK)
+	var response model.SearchResponse
+	if req.Hybrid {
+		response = h.ragService.HybridSearch(req.Query, req.KnowledgeBaseID, req.TopK, true)
+	} else {
+		response = h.ragService.Search(req.Query, req.KnowledgeBaseID, req.TopK)
+	}
 
 	c.JSON(http.StatusOK, gin.H{
 		"query":   req.Query,

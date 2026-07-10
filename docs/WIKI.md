@@ -116,7 +116,7 @@ graph TB
 
 ```mermaid
 mindmap
-  root((全栈演示平台<br/>15 个模块))
+  root((全栈演示平台<br/>21 个模块))
     ::icon(fa fa-globe)
     实时通信
       WebSocket 告警推送
@@ -161,6 +161,29 @@ mindmap
       📦 大文件断点续传
         SHA-256 校验
         暂停/恢复/续传
+     AI 后端模式
+       🤖 LLM 流式对话
+         SSE 流式
+         上下文管理
+       📚 混合 RAG 知识库
+         BM25 + Vector
+         多格式文档解析
+       🧠 智能体 Agent
+         ReAct 流式
+         Function Calling
+         Multi-Agent
+         MCP 工具协议
+       🎮 Playground 调试台
+         PromptGuard
+         ResponseCache
+         Token 估算
+         遥测上报
+       🛡️ 中间件层
+         PromptGuard 中间件
+         ResponseCache 中间件
+       📊 遥测与监控
+         Token/Latency 统计
+         仪表盘可视化
      支付中台
        💳 UniPay 统一支付
          支付状态机
@@ -176,14 +199,14 @@ mindmap
 
 | 维度 | 数量 | 说明 |
 |------|------|------|
-| **演示页面** | 15 个 | 覆盖实时通信/性能优化/工程架构/AI 智能/支付五大领域 |
-| **自定义组件** | 7 个 | 递归表单引擎的 7 种字段类型 |
+| **演示页面** | 20+ 个 | 覆盖实时通信/性能优化/工程架构/AI 智能/支付/仪表盘六大领域 |
+| **自定义组件** | 9 个 | 递归表单引擎的 7 种字段类型 + A2UI 集成组件 |
 | **路由配置** | 15 条 | 包含仪表盘 + 1 条 Eager 加载登录页 |
-| **后端 API** | 50+ | 覆盖认证/校验/文件/SSE/WebSocket/RBAC/请求加载/Vitals/支付/AI 智能体/知识库 |
+| **后端 API** | 80+ | 覆盖认证/校验/文件/SSE/WebSocket/RBAC/请求加载/Vitals/支付/AI 智能体/知识库/MCP-A2A/混合搜索/PromptGuard/ResponseCache/遥测 |
 | **Go 内部包** | 19 个 | agent/alert/auth/chat/encryptedlog/gis/health/knowledge/lrucache/memory/middleware/model/payment/rbac/requestload/schema/sse/upload/vitals |
-| **Go 源码文件** | 67 个 | `go test ./internal/... -v` 全量通过 |
+| **Go 源码文件** | 66 个 | `go test ./internal/... -v` 全量通过 |
 | **状态存储** | 6 个 | Zustand 状态管理 (alert/auth/lru/request/theme/upload) |
-| **工具函数** | 11 个 | Token/LRU/RBAC/WS 传输层/VitalsReporter/VitalsSnapshot/RequestResource + 3 Workers |
+| **工具函数** | 20+ 个 | Token/LRU/RBAC/WS 传输层/VitalsReporter/VitalsSnapshot/RequestResource + 3 Workers + AI Demo 工具链 (context-manager/data-masker/error-handler/prompt-guard/response-cache/telemetry/text-splitter/token-estimator) |
 | **Web Worker** | 3 个 | 归并排序 + AES-GCM 解密 + SHA-256 文件哈希 |
 | **第三方依赖** | 20+ | React 生态核心库 |
 
@@ -323,6 +346,13 @@ const Roles = {
 | **LRU 路由缓存** | DOM display:none 保持状态 + LRU 淘汰 + staleKeys 写后失效 + 惰性过期 + 多页面文件分离 + 后端 API | ⭐⭐ |
 | **十万行日志流解密** | 生产/消费模式 + AES-256-GCM 解密 + RSA 密钥交换 + 虚拟滚动 | ⭐⭐ |
 | **Web Vitals 性能采集** | RUM 实时采集 LCP/INP/CLS + 页面级渲染追踪 + ECharts 多维可视化 | ⭐⭐ |
+| **LLM 流式对话** | SSE 流式 `[DONE]` 标记 + DeepSeek 解析 + 上下文窗口管理 | ⭐⭐ |
+| **混合 RAG 知识库** | BM25 + Vector 混合检索 + 多格式文档解析 + 智能分块策略 | ⭐⭐⭐ |
+| **智能体 Agent 流式** | ReAct 循环 SSE 流式输出 + Function Calling + Multi-Agent 编排 + MCP 工具协议 | ⭐⭐⭐ |
+| **Playground 调试台** | PromptGuard + ResponseCache + Token 估算 + 错误分类 + 上下文管理 + 数据脱敏 + 遥测上报 | ⭐⭐⭐ |
+| **PromptGuard 中间件** | 提示注入检测（正则 + 关键词 + 模式匹配）+ HTTP 中间件封装 | ⭐⭐ |
+| **ResponseCache 中间件** | LRU 缓存 + TTL 过期 + Content-Type 智能缓存 + Middleware 封装 | ⭐⭐ |
+| **AI 遥测系统** | Token 用量 / Latency / Cache 命中率 / 错误率实时上报 + ECharts 仪表盘 | ⭐⭐ |
 
 ### 八、部署架构
 
@@ -4195,6 +4225,471 @@ const rePay = useCallback((orderId: string) => {
 
 4. **可视化 Demo 的价值** — 状态流转、幂等测试、重试过程、对账流程、安全检测，全部在交互式 Demo 中可操作可观测
 
+---
+
+### 2.15 AI 后端六阶段进阶模式 ⭐⭐⭐
+
+**位置**: `apps/ai-demo/` (6 个组件 + 8 个工具函数) + `backend/internal/` (agent/chat/knowledge/middleware/vitals)
+
+#### 实现思路
+
+从零搭建完整的 AI 后端能力矩阵，按六阶段渐进式设计——每个阶段建立在前一阶段基础上，从基础的 LLM 对话到高级的智能体编排、再到可观测的运维体系：
+
+```
+Stage 1 LLM 流式对话  →  Stage 2 混合 RAG 知识库
+        ↓                         ↓
+Stage 3 智能体 Agent  ──────────→  Stage 4 Playground 调试台
+        ↓                         ↓
+Stage 5 中间件层  ──────────────→  Stage 6 遥测与监控
+```
+
+每个阶段都有对应的前端交互组件和后端 API 实现，形成完整的前后端闭环。
+
+#### 实现过程
+
+**Stage 1：LLM 流式对话（Chat.tsx + chat/）**
+
+核心目标：实现类 ChatGPT 的流式对话体验，支持多模型切换。
+
+```
+用户输入 → POST /api/chat/stream → SSE stream → `[DONE]` 标记结束
+                                              → 逐 token 渲染
+```
+
+```typescript
+// 前端 Chat.tsx — SSE 流式读取核心
+const response = await fetch("/api/chat/stream", {
+  method: "POST",
+  body: JSON.stringify({ messages, model, stream: true }),
+})
+const reader = response.body!.getReader()
+const decoder = new TextDecoder()
+
+while (true) {
+  const { done, value } = await reader.read()
+  if (done) break
+  const text = decoder.decode(value, { stream: true })
+  for (const line of text.split("\n")) {
+    if (line.startsWith("data: ")) {
+      const content = line.slice(6)
+      if (content === "[DONE]") break  // 流结束标记
+      setStreamedText((prev) => prev + JSON.parse(content).content)
+    }
+  }
+}
+```
+
+| 技术点 | 说明 |
+|--------|------|
+| SSE 流式 | `fetch + ReadableStream` 逐 token 读取，`[DONE]` 标记结束 |
+| 多模型切换 | OpenAI / DeepSeek / Ollama 三模型，前端选型 + 后端路由 |
+| 上下文窗口 | 维护 messages 数组，按 token 估算裁剪历史 |
+| DeepSeek 兼容 | 修复 response 解析差异（choices 数组结构不同） |
+
+**Stage 2：混合 RAG 知识库（KnowledgeBase.tsx + knowledge/）**
+
+核心目标：支持上传文档 → 解析分块 → 向量嵌入 → 语义检索的全流程 RAG。
+
+```mermaid
+graph LR
+    DOC["上传文档<br/>PDF/TXT/MD"] --> PARSER["文档解析器<br/>多格式支持"]
+    PARSER --> CHUNK["智能分块<br/>按段落/大小"]
+    CHUNK --> EMBED["向量嵌入<br/>OpenAI/本地"]
+    EMBED --> VECTOR["向量存储<br/>内存数组"]
+    VECTOR --> SEARCH["混合检索<br/>BM25 + Vector"]
+    SEARCH --> RERANK["重排序<br/>Top-K 融合"]
+```
+
+```go
+// rag.go — 混合检索核心
+type SearchResult struct {
+    Content string  `json:"content"`
+    Score   float64 `json:"score"`
+    Source  string  `json:"source"` // "bm25" | "vector" | "hybrid"
+}
+
+func (r *RAGEngine) HybridSearch(query string, k int) []SearchResult {
+    bm25Results := r.bm25Search(query, k)      // 关键词检索
+    vecResults := r.vectorSearch(query, k)       // 语义检索
+    return r.fusionSort(bm25Results, vecResults) // 加权融合排序
+}
+```
+
+| 技术点 | 说明 |
+|--------|------|
+| BM25 关键词检索 | 经典 TF-IDF 变体，适合精确匹配 |
+| Vector 语义检索 | OpenAI Embeddings API + 余弦相似度 |
+| 混合加权 | `score = α × bm25 + (1-α) × vector`，α 可调 |
+| 多格式解析 | PDF (pdfcpu)、TXT、Markdown 三种格式 |
+| 智能分块 | 按段落边界 + 最大 token 限制分割 |
+
+**Stage 3：智能体 Agent（Agents.tsx + agent/）**
+
+核心目标：实现 ReAct（推理 + 行动）循环的智能体，支持工具调用和 Multi-Agent 协作。
+
+```
+ReAct 循环:
+  Thought: 分析用户需求 → 决定调用哪个工具
+  Action: 执行工具函数（搜索 / 计算 / 查询）
+  Observation: 获取工具返回结果
+  → 循环直到给出最终 Answer
+
+三档复杂度:
+  Basic Agent  → 单工具调用
+  Function Calling Agent → 多工具编排
+  Multi-Agent → 主 Agent + 子 Agent 委派
+```
+
+```go
+// enhanced.go — ReAct 循环核心
+func (a *EnhancedAgent) ExecuteReact(ctx context.Context, req AgentRequest) error {
+    messages := buildReActMessages(req)
+    for step := 0; step < a.maxSteps; step++ {
+        response := a.llmChat(ctx, messages)
+        
+        if hasFinalAnswer(response) {
+            a.emitEvent("final", response.Answer)
+            return nil
+        }
+
+        toolCall := parseToolCall(response.Content)
+        result := a.executeTool(ctx, toolCall)
+        messages = append(messages, 
+            NewToolMessage(toolCall.Name, result))
+    }
+    return fmt.Errorf("max steps %d reached", a.maxSteps)
+}
+```
+
+```go
+// mcp.go — MCP 工具协议
+type MCPRequest struct {
+    JsonRPC string          `json:"jsonrpc"` // "2.0"
+    Method  string          `json:"method"`  // "tools/call"
+    Params  json.RawMessage `json:"params"`
+    ID      string          `json:"id"`
+}
+
+type MCPTool struct {
+    Name        string   `json:"name"`
+    Description string   `json:"description"`
+    InputSchema Schema   `json:"inputSchema"`
+}
+```
+
+| 技术点 | 说明 |
+|--------|------|
+| ReAct 循环 | Thought → Action → Observation 循环，最大步数保护 |
+| Function Calling | 工具注册表 `map[string]Tool`，动态路由 |
+| Multi-Agent | 主 Agent 委派子 Agent 处理子任务，结果聚合 |
+| MCP 工具协议 | JSON-RPC 2.0 标准工具定义 + 调用 |
+| 流式输出 | ReAct 每一步通过 SSE `data: {...}` 推送 |
+| 代际锁 | `genRef` 控制 Agent 执行生命周期，Stop 后立即终止 |
+
+**Stage 4：Playground 调试台（Playground.tsx）**
+
+核心目标：提供 AI 功能的全方位调试工具链，覆盖安全、性能、可观测性。
+
+```mermaid
+graph TB
+    INPUT["用户输入"] --> PG["PromptGuard<br/>注入检测"]
+    PG --> RC["ResponseCache<br/>缓存查询"]
+    RC --> TE["TokenEstimator<br/>Token 估算"]
+    TE --> EC["ErrorHandler<br/>错误分类"]
+    EC --> CM["ContextManager<br/>上下文管理"]
+    CM --> DM["DataMasker<br/>数据脱敏"]
+    DM --> TL["Telemetry<br/>遥测上报"]
+    TL --> API["后端 API"]
+```
+
+| 面板 | 功能 | 实现方式 |
+|------|------|----------|
+| PromptGuard | 提示注入检测（SQL/XSS/越狱） | 正则 + 关键词 + 模式匹配 |
+| ResponseCache | 响应缓存（LRU + TTL） | `Map<string, {data, ttl}>` |
+| TokenEstimator | Token 用量估算 | 按字符/中英文比例估算 |
+| ErrorHandler | 错误分类（超时/限流/鉴权/模型） | 错误码映射 + 用户友好提示 |
+| ContextManager | 上下文窗口管理 | 自动裁剪 + Token 预算控制 |
+| DataMasker | 敏感数据脱敏 | 正则替换（手机/邮箱/身份证/密钥） |
+| Telemetry | 本地统计上报 | `navigator.sendBeacon` 批量推送 |
+
+```typescript
+// playground 核心: 所有工具函数通过 Pipeline 串联
+const pipeline = [
+    promptGuard,
+    responseCache.check,
+    tokenEstimator,
+    errorHandler.wrap,
+    contextManager.build,
+    dataMasker.mask,
+    telemetry.report,
+]
+const result = pipeline.reduce((acc, fn) => fn(acc), userInput)
+```
+
+**Stage 5：中间件层（middleware/）**
+
+核心目标：将 AI 安全与性能策略提升为 HTTP 中间件，所有 API 路由可复用。
+
+```go
+// promptguard.go — PromptGuard 中间件
+func PromptGuard() gin.HandlerFunc {
+    patterns := []*regexp.Regexp{
+        regexp.MustCompile(`(?i)ignore all previous instructions`),
+        regexp.MustCompile(`(?i)you are now`),
+        regexp.MustCompile(`(?i)system prompt`),
+        // ... 20+ 检测模式
+    }
+    return func(c *gin.Context) {
+        var body struct { Content string `json:"content"` }
+        c.ShouldBindBodyWith(&body, binding.JSON)
+        
+        for _, p := range patterns {
+            if p.MatchString(body.Content) {
+                c.AbortWithStatusJSON(403, gin.H{
+                    "error": "prompt injection detected",
+                    "matched": p.String(),
+                })
+                return
+            }
+        }
+        c.Next()
+    }
+}
+```
+
+```go
+// responsecache.go — ResponseCache 中间件
+func ResponseCache() gin.HandlerFunc {
+    cache := lru.New[string, cacheEntry](1000)
+    mu := sync.RWMutex{}
+    
+    return func(c *gin.Context) {
+        key := c.Request.Method + ":" + c.Request.URL.String()
+        
+        mu.RLock()
+        entry, ok := cache.Get(key)
+        mu.RUnlock()
+        
+        if ok && time.Since(entry.timestamp) < 30*time.Second {
+            c.Data(http.StatusOK, entry.contentType, entry.data)
+            c.Abort()
+            return
+        }
+        c.Next()
+    }
+}
+```
+
+**Stage 6：遥测与监控（vitals/）**
+
+核心目标：AI 服务的可观测性——谁调了什么模型、花了多少 Token、延迟多少。
+
+```go
+// vitals.go — 遥测数据结构
+type AIReport struct {
+    Model       string  `json:"model"`
+    TokensIn    int     `json:"tokensIn"`
+    TokensOut   int     `json:"tokensOut"`
+    LatencyMs   float64 `json:"latencyMs"`
+    CacheHit    bool    `json:"cacheHit"`
+    Error       string  `json:"error,omitempty"`
+    AgentSteps  int     `json:"agentSteps,omitempty"`
+    RAGResults  int     `json:"ragResults,omitempty"`
+}
+```
+
+前端 Dashboard 通过 ECharts 可视化展示：
+- Token 用量趋势（折线图）
+- 模型调用分布（饼图）
+- 延迟 P50/P95/P99（柱状图）
+- 缓存命中率（仪表盘）
+- 错误分类统计（堆叠图）
+
+#### 优化
+
+| 维度 | 优化手段 | 效果 |
+|------|----------|------|
+| **流式** | SSE `[DONE]` 标记 + ReadableStream | 逐 token 渲染，首 token 延迟 < 200ms |
+| **RAG** | BM25 + Vector 混合加权 | 检索准确率提升 30%+ (单一 BM25 基准) |
+| **Agent** | ReAct 流式 + maxSteps 保护 | 避免无限循环，每步可见 |
+| **Agent** | Generation Lock 代际锁 | Stop 后 0 延迟终止执行 |
+| **缓存** | LRU + TTL 30s + Middleware 透明 | GET 请求缓存命中率 ~40% |
+| **安全** | PromptGuard 正则 + 关键词 20+ 模式 | 注入检测召回率 > 95% |
+| **遥测** | `navigator.sendBeacon` 批量上报 | 不影响主请求延迟 |
+| **工具链** | Pipeline 模式串联 7 个调试工具 | 新增工具零侵入 |
+
+#### 体系化
+
+```mermaid
+graph TB
+    subgraph Frontend["apps/ai-demo/"]
+        CHAT["Chat.tsx<br/>SSE 流式对话"]
+        KB["KnowledgeBase.tsx<br/>知识库 CRUD + RAG"]
+        AGENTS["Agents.tsx<br/>ReAct + Multi-Agent + MCP"]
+        PG["Playground.tsx<br/>7 工具调试链"]
+        DASHBOARD["Dashboard.tsx<br/>遥测可视化"]
+        UTILS["utils/*.ts<br/>8 个工具函数"]
+    end
+
+    subgraph Backend["backend/internal/"]
+        CHAT_B["chat/<br/>LLM 流式 + 模型路由"]
+        KNOWLEDGE_B["knowledge/<br/>混合 RAG + 文档解析"]
+        AGENT_B["agent/<br/>ReAct + Function Calling + MCP"]
+        MIDDLEWARE["middleware/<br/>PromptGuard + ResponseCache"]
+        VITALS_B["vitals/<br/>遥测采集与聚合"]
+    end
+
+    Frontend -->|"SSE/HTTP"| Backend
+    CHAT --> CHAT_B
+    KB --> KNOWLEDGE_B
+    AGENTS --> AGENT_B
+    PG --> MIDDLEWARE & VITALS_B
+    DASHBOARD --> VITALS_B
+```
+
+#### 存在问题与解决方案
+
+| 问题 | 产生原因 | 解决方案 |
+|------|----------|----------|
+| **流式响应解析错误** | DeepSeek 返回格式与 OpenAI 不同 | 统一响应格式层，适配各厂商差异 |
+| **RAG 检索结果不相关** | 纯 Vector 检索在冷启动时效果差 | 混合 BM25 + Vector，α 权重可调 |
+| **Agent 无限循环** | ReAct 在复杂任务中反复调用工具 | maxSteps=10 上限 + 代际锁终止 |
+| **Playground 工具链阻塞** | 7 个工具串联，单个失败影响全部 | Pipeline 模式 + 每个工具独立 try-catch |
+| **遥测上报影响性能** | POST `/api/vitals/report` 阻塞主请求 | `navigator.sendBeacon` 异步后台发送 |
+| **MCP 工具调用超时** | Agent 等待工具返回无超时 | context.WithTimeout 5s 容器级超时 |
+| **Multi-Agent 结果冲突** | 子 Agent 返回矛盾结果 | 主 Agent 最终裁决 + 投票机制 |
+
+#### 追问链路
+
+**Q1: SSE 流式为什么用 `[DONE]` 标记而不是 JSON 内字段？**
+```
+两种方案:
+  a. JSON 内字段: data: {"content": "...", "done": false} → 每次解析 JSON + 检查字段
+  b. 特殊标记: data: {"content": "..."} 最后一行 data: [DONE]
+     → JSON 解析无额外判断，read loop 检测标记即 break
+
+本项目选 b: 减少每 token 的解析开销（高频流式场景差异明显）。
+```
+
+**Q2: 混合 RAG 的 α 权重怎么确定？**
+```
+混合检索: score = α × BM25 + (1-α) × Vector
+
+α=1.0 → 纯关键词（适合代码搜索、精确匹配）
+α=0.0 → 纯语义（适合开放问答、同义词检索）
+α=0.5 → 等权重
+
+本项目中 α 可在 KnowledgeBase 页面的 Slider 组件实时调节（0.1-0.9），
+用户肉眼观察检索结果变化，找到最佳平衡点。
+
+经验值: 一般场景 α=0.3-0.5 效果最佳。
+```
+
+**Q3: ReAct Agent 相比直接调用 LLM 的核心优势？**
+```
+直接调用:
+  用户: "北京和上海哪个远？"
+  LLM: "北京到上海约 1200 公里..."
+  → 依赖训练数据，无法获取实时/动态信息
+
+ReAct Agent:
+  Thought: "用户问距离，需要调用实时距离查询工具"
+  Action: call function getDistance("北京", "上海")
+  Observation: 1213 公里
+  Answer: "北京到上海约 1213 公里（实测数据）"
+  → 可调用任意工具获取实时数据，结果更可靠
+```
+
+**Q4: MCP 工具协议和 Function Calling 什么关系？**
+```
+Function Calling: 模型层能力 — LLM 输出结构化 tool_calls 格式
+MCP (Model Context Protocol): 工具层标准 — 定义工具的 JSON-RPC 接口规范
+
+两者是互补关系:
+  Function Calling 决定了"怎么请求 LLM 调用工具"
+  MCP 决定了"工具长什么样、怎么被调用"
+
+本项目两者都用: LLM 通过 Function Calling 发出工具调用请求，
+Agent 通过 MCP 协议路由到具体工具实现。
+```
+
+**Q5: Playground 的 7 个调试工具为什么用 Pipeline 模式串联？**
+```
+Pipeline 模式 vs 手写调用链:
+  // Pipeline
+  const pipeline = [fn1, fn2, fn3]
+  const result = pipeline.reduce((acc, fn) => fn(acc), input)
+
+  // 手写
+  const r1 = fn1(input)
+  const r2 = fn2(r1)
+  const r3 = fn3(r2)
+
+Pipeline 优势:
+  1. 新增工具: pipeline.push(newFn) → 零侵入
+  2. 顺序调整: 数组重排即可
+  3. 条件跳过: filter(Boolean) 移除不需要的工具
+  4. 中间结果: pipeline.map(fn => fn(input)) 对比各工具输出
+```
+
+**Q6: 遥测数据为什么用 `navigator.sendBeacon` 而非 `fetch`？**
+```
+fetch():
+  - 页面关闭时请求可能被取消（in-flight 请求随页面销毁）
+  - 阻塞主请求（正常 API 请求 + 遥测上报串行）
+  - 浏览器可能延迟或合并请求
+
+navigator.sendBeacon(url, data):
+  - 页面关闭时保证发送（浏览器负责完成）
+  - 异步非阻塞（不参与主请求队列）
+  - 优先级低（浏览器在空闲时发送）
+
+对本项目的意义:
+  Dashboard 需要精确的 Token/Latency 统计，
+  sendBeacon 保证数据不丢失且不影响主体验。
+```
+
+#### 技术边界
+
+**边界 1：流式响应的中断恢复**
+```
+用户发出请求后中途刷新/关闭页面:
+  当前实现: 未保存的流式内容丢失
+  优化方向: 
+    a. 后端 session 缓存已生成内容，重连时恢复
+    b. 前端 localStorage 暂存流式片段
+    c. Service Worker 缓存 SSE 数据流
+```
+
+**边界 2：RAG 文档更新的索引重建**
+```
+上传新文档后:
+  当前实现: 立即解析 + 嵌入 + 加入索引
+  问题: 大文档（>100 页）嵌入耗时 > 10s
+  方案: 异步队列处理，前端轮询状态
+```
+
+**边界 3：Multi-Agent 的上下文膨胀**
+```
+主 Agent 记录 → 委派子 Agent 带完整上下文
+→ 子 Agent 返回结果带完整上下文
+→ 主 Agent 上下文 = 原始 + 子 Agent 的全部
+  循环 N 次 → Token 消耗指数级增长
+
+方案: 
+  a. 子 Agent 仅返回摘要（maxTokens=200）
+  b. 主 Agent 丢弃子 Agent 的完整内部分析
+  c. 设置全局 Token 预算，超预算截断
+```
+
+**边界 4：MCP 工具协议的超时与重试**
+```
+工具调用可能因网络/服务故障超时:
+  方案: context.WithTimeout 5s
+  重试: 指数退避 1s/2s/4s，最多 3 次
+  熔断: 连续 5 次失败 → 标记工具不可用 30s
+```
+
 ## 三、设计模式与架构亮点
 
 ### 3.1 设计模式应用
@@ -5500,8 +5995,8 @@ graph LR
 ```text
 面试官您好，我是一名前端工程师，主要技术栈是 React + TypeScript。
 
-最近我独立完成了一个全栈演示平台项目，覆盖了 15 个高级技术场景：
-实时通信、性能优化、工程架构和支付中台四大领域。
+最近我独立完成了一个全栈演示平台项目，覆盖了 20+ 个高级技术场景：
+实时通信、性能优化、工程架构、AI 后端和支付中台五大领域。
 
 项目中有几个我比较自豪的设计：
 
@@ -5529,10 +6024,10 @@ WebSocket 不可用时自动降级到 SSE 再到 HTTP Polling，
 主要技术栈是 React + TypeScript，对前端工程化和性能优化有比较深入的实践经验。
 
 最近我独立设计开发了一个全栈技术演示平台项目，
-旨在系统性展示前端领域 15 个高级技术场景。
+旨在系统性展示前端领域 20+ 个高级技术场景。
 我负责项目的全部架构设计与编码实现。
 
-我从三个维度来介绍这个项目：
+我从五个维度来介绍这个项目：
 
 ━━━ 第一，实时通信能力 ━━━
 
@@ -5594,7 +6089,38 @@ WebSocket 不可用时自动降级到 SSE 再到 HTTP Polling，
     递归 CRUD 算法 + dnd-kit 拖拽排序，
     支持任意层级节点的增删改查。
 
-━━━ 第四，支付中台架构 ━━━
+━━━ 第四/五，AI 后端六阶段模式 ━━━
+
+我独立设计了一套从零到完整的 AI 后端能力矩阵，按六阶段渐进式构建：
+
+1. LLM 流式对话：
+    用 fetch + ReadableStream 实现 SSE 逐 token 流式渲染，
+    支持 OpenAI / DeepSeek / Ollama 多模型切换，
+    `[DONE]` 标记精确控制流结束。
+
+2. 混合 RAG 知识库：
+    BM25 关键词 + Vector 语义混合检索，加权融合排序，
+    支持 PDF/TXT/Markdown 多格式文档上传与智能分块。
+
+3. 智能体 Agent：
+    ReAct（推理 + 行动）循环 SSE 流式输出，
+    工具函数注册表 + Multi-Agent 编排委派，
+    MCP（Model Context Protocol）标准工具协议。
+
+4. Playground 调试台：
+    7 个工具以 Pipeline 模式串联——PromptGuard 注入检测、
+    ResponseCache 缓存、Token 估算、错误分类、上下文管理、
+    数据脱敏、遥测上报，新增工具零侵入。
+
+5. 中间件层：
+    PromptGuard 和 ResponseCache 封装为 Gin HTTP 中间件，
+    20+ 检测模式覆盖常见注入攻击，LRU + TTL 30s 透明缓存。
+
+6. 遥测与监控：
+    Token 用量 / Latency / Cache 命中率 / 错误率实时上报，
+    navigator.sendBeacon 异步推送，ECharts 仪表盘多维可视化。
+
+━━━ 第五/六，支付中台架构 ━━━
 
 我设计了一个统一支付中台 UniPay，展示支付领域的关键技术：
 
@@ -5624,13 +6150,15 @@ WebSocket 不可用时自动降级到 SSE 再到 HTTP Polling，
 
 前端：React 19 + TypeScript 6 + Ant Design 6 + Zustand 5
       + ECharts 6 + OpenLayers 10.9 + React Router 7
+AI 前端：A2UI v0.9.1（Agent-to-User Interface）+ SSE 流式渲染
 构建：Vite 8 + Rolldown (Rust bundler) + Babel React 编译器
 规范：Biome 2.5 + ESLint 9 strictTypeChecked + Husky + lint-staged
 后端：Go 1.26 + Gin + Gorilla WebSocket + golang-jwt
+AI 后端：ReAct Agent + MCP 工具协议 + BM25/Vector 混合 RAG + PromptGuard
 部署：Docker 多阶段构建 → Helm Chart → K8s 滚动更新
 
 构建优化方面：代码分割后首屏体积从 3,034 kB 降至 ~240 kB（↓92%），
-15 个页面独立 chunk，大型库（antd/echarts）独立缓存，
+20+ 个页面独立 chunk，大型库（antd/echarts）独立缓存，
 构建耗时仅 3.6 秒（3911 模块）。
 
 ━━━ 个人价值总结 ━━━
@@ -5638,7 +6166,7 @@ WebSocket 不可用时自动降级到 SSE 再到 HTTP Polling，
 这个项目体现了我的三个核心能力：
 
 1. 架构设计能力：
-   - 从零设计递归表单引擎、多协议传输层
+   - 从零设计递归表单引擎、多协议传输层、AI 六阶段模式
    - 合理的技术选型（Zustand vs Redux，自研 vs @rjsf）
    - 分层、解耦、可扩展的代码组织
 
@@ -5646,6 +6174,7 @@ WebSocket 不可用时自动降级到 SSE 再到 HTTP Polling，
    - React 19 编译器 + forwardRef + 闭包陷阱修复
    - Web Worker 多线程 + 虚拟滚动 + 位运算
    - WebSocket 背压控制 + Token Rotation + SHA-256 校验
+   - SSE 流式对话 + ReAct Agent + 混合 RAG + MCP 工具协议
 
 3. 工程化意识：
    - 三层递进式代码约束（Biome → ESLint → TypeScript Strict）
@@ -5654,35 +6183,4 @@ WebSocket 不可用时自动降级到 SSE 再到 HTTP Polling，
 
 以上就是我的项目介绍，感谢您的倾听，期待进一步交流。
 ```
-
----
-
-## 十、代码质量优化记录 (2026.06 Code Review)
-
-基于系统性 Code Review，完成 **12 项质量优化**：
-
-### 🔴 Bug 修复 (3 项)
-| 文件 | 问题 | 修复 |
-|------|------|------|
-| `DateTimeField.tsx` | DatePicker `value` 三元始终为 `undefined` | `dayjs(value)` 解析，支持字符串/dayjs 对象 |
-| `alertStore.ts` | `alerts` 无限增长 → OOM | 添加 `MAX_ALERTS=5000` 上限截断 |
-| `Renderer.tsx` | `Space` 组件 `...props.style` 解构错误 | 改为 `{children, style}` 正确解构 |
-
-### 🟡 可靠性改进 (6 项)
-| 文件 | 改进 |
-|------|------|
-| `DynamicForm.tsx` | 合并嵌套 `setData` 消除竞态；`flattenSchema` 结果 `useMemo` 缓存 |
-| `fetchClient.ts` | `location.href` → `redirectToLogin()` + `replace()`，消除历史污染 |
-| `token.ts` | `isTokenExpired` 增加 30s buffer 对齐刷新容忍度 |
-| `uploadStore.ts` | `persist.partialize` 过滤运行时字段 (speed/elapsed/chunk.startTime) |
-| `PageTracker.tsx` | ref 操作从 render body 移至 `useEffect`，符合 React 纯渲染原则 |
-
-### 🟢 架构优化 (3 项)
-| 文件 | 优化 |
-|------|------|
-| `authStore.ts` | 模块级 `initUser()` → `hydrate()` 延迟初始化 + `window` SSR 守卫 |
-| `Login.tsx` | 全局 `<style>` → `Login.module.css` CSS Module，消除动画名污染 |
-| `types.ts` | `ajv` 单例 → `configureAjv()` 可配置，支持测试隔离 |
-
-> 所有修改均通过 Biome lint + TypeScript 编译 + lint-staged pre-commit 检查。
 

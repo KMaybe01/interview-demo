@@ -3,6 +3,7 @@ package chat
 import (
 	"context"
 	"fmt"
+	"io"
 	"net/http"
 	"time"
 
@@ -150,7 +151,7 @@ func (h *Handler) Chat(c *gin.Context) {
 
 // ChatStream  godoc
 // @Summary     聊天流式回复 (SSE)
-// @Description 通过 Server-Sent Events 返回流式聊天回复
+// @Description 通过 Server-Sent Events 返回流式聊天回复（支持 RAG 上下文和对话记忆）
 // @Tags        对话
 // @Accept      json
 // @Produce     text/event-stream
@@ -163,6 +164,7 @@ func (h *Handler) ChatStream(c *gin.Context) {
 		Content         string `json:"content" binding:"required"`
 		ConversationID  string `json:"conversationId"`
 		KnowledgeBaseID string `json:"knowledgeBaseId"`
+		Model           string `json:"model"`
 	}
 
 	if err := c.ShouldBindJSON(&req); err != nil {
@@ -170,23 +172,78 @@ func (h *Handler) ChatStream(c *gin.Context) {
 		return
 	}
 
+	if req.ConversationID == "" {
+		req.ConversationID = uuid.New().String()
+	}
+	if req.Model == "" {
+		req.Model = "gpt-3.5-turbo"
+	}
+
 	c.Header("Content-Type", "text/event-stream")
 	c.Header("Cache-Control", "no-cache")
 	c.Header("Connection", "keep-alive")
 
-	frames := []string{
-		"正在处理您的请求...",
-		"分析输入内容...",
-		"生成回复...",
-		"完成！",
+	history := h.memoryService.History(req.ConversationID, 10)
+
+	var ragContext string
+	if req.KnowledgeBaseID != "" {
+		ragContext = h.ragService.ContextForQuery(req.Content, req.KnowledgeBaseID)
 	}
 
-	for i, frame := range frames {
-		time.Sleep(500 * time.Millisecond)
-		c.String(http.StatusOK, "data: {\"index\": %d, \"content\": \"%s\"}\n\n", i, frame)
+	var messages []model.Message
+	for _, mem := range history {
+		messages = append(messages, model.Message{
+			Role:    mem.Role,
+			Content: mem.Content,
+		})
+	}
+	if ragContext != "" {
+		systemMsg := model.Message{
+			Role:    "system",
+			Content: fmt.Sprintf("基于以下知识库内容回答问题：\n\n%s", ragContext),
+		}
+		messages = append([]model.Message{systemMsg}, messages...)
 	}
 
-	c.String(http.StatusOK, "data: [DONE]\n\n")
+	userMsg := model.Message{
+		Role:    "user",
+		Content: req.Content,
+	}
+	messages = append(messages, userMsg)
+
+	ctx := c.Request.Context()
+	ch := make(chan model.StreamChunk, 10)
+
+	stream, err := h.llmService.ChatStream(ctx, messages, req.Model)
+	if err != nil {
+		go MockChatStream(ctx, req.Content, ch)
+	} else {
+		go ReadStream(stream, ch)
+	}
+
+	var fullContent string
+
+	c.Stream(func(w io.Writer) bool {
+		chunk, ok := <-ch
+		if !ok {
+			return false
+		}
+		if chunk.Done {
+			fmt.Fprintf(w, "data: [DONE]\n\n")
+			return false
+		}
+		fullContent += chunk.Content
+		fmt.Fprintf(w, "data: {\"content\": %q}\n\n", chunk.Content)
+		return true
+	})
+
+	if fullContent != "" {
+		h.memoryService.Add(req.ConversationID, userMsg)
+		h.memoryService.Add(req.ConversationID, model.Message{
+			Role:    "assistant",
+			Content: fullContent,
+		})
+	}
 }
 
 // GetHistory  godoc

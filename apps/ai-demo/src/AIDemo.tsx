@@ -3,33 +3,27 @@ import {
   AppstoreOutlined,
   BookOutlined,
   DashboardOutlined,
+  DeploymentUnitOutlined,
   MenuFoldOutlined,
   MenuUnfoldOutlined,
   MessageOutlined,
   RobotOutlined,
   SettingOutlined,
 } from '@ant-design/icons';
-import { App as AntApp, theme } from 'antd';
-import type { ReactNode } from 'react';
-import {
-  createContext,
-  useCallback,
-  useContext,
-  useEffect,
-  useMemo,
-  useRef,
-  useState,
-} from 'react';
+import {App as AntApp, theme} from 'antd';
+import type {ReactNode} from 'react';
+import {createContext, useCallback, useContext, useEffect, useMemo, useRef, useState,} from 'react';
 import styles from './AIDemo.module.css';
+import A2UI from './components/A2UI.tsx';
 import Agents from './components/Agents.tsx';
 import Chat from './components/Chat.tsx';
 import Dashboard from './components/Dashboard.tsx';
-import { ErrorBoundary } from './components/ErrorBoundary.tsx';
+import {ErrorBoundary} from './components/ErrorBoundary.tsx';
 import KnowledgeBase from './components/KnowledgeBase.tsx';
 import Models from './components/Models.tsx';
 import Playground from './components/Playground.tsx';
 import Plugins from './components/Plugins.tsx';
-import { useThemeStore } from './stores/themeStore.ts';
+import {useThemeStore} from './stores/themeStore.ts';
 
 interface MessageApi {
   success: (msg: string) => void;
@@ -46,7 +40,15 @@ const defaultMessageApi: MessageApi = {
 export const MessageApiContext = createContext<MessageApi>(defaultMessageApi);
 export const useMessageApi = () => useContext(MessageApiContext);
 
-type TabKey = 'dashboard' | 'chat' | 'knowledge' | 'models' | 'agents' | 'plugins' | 'playground';
+type TabKey =
+  | 'dashboard'
+  | 'chat'
+  | 'knowledge'
+  | 'models'
+  | 'agents'
+  | 'plugins'
+  | 'playground'
+  | 'a2ui';
 
 interface TabConfig {
   key: TabKey;
@@ -117,6 +119,12 @@ export default function AIDemo() {
         icon: <ApiOutlined />,
         label: 'Playground',
         component: <Playground />,
+      },
+      {
+        key: 'a2ui',
+        icon: <DeploymentUnitOutlined />,
+        label: 'A2UI',
+        component: <A2UI />,
       },
       {
         key: 'plugins',

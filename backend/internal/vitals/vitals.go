@@ -169,6 +169,105 @@ func VitalsHistory(c *gin.Context) {
 	c.JSON(http.StatusOK, grouped)
 }
 
+type TelemetryReport struct {
+	Requests      int     `json:"requests"`
+	Errors        int     `json:"errors"`
+	AvgLatency    float64 `json:"avgLatency"`
+	CacheHitRate  float64 `json:"cacheHitRate"`
+	Timestamp     int64   `json:"timestamp"`
+}
+
+var (
+	telemetryMu    sync.RWMutex
+	telemetryStore []TelemetryReport
+	telemetryMax   = 500
+)
+
+// ReportTelemetry  godoc
+// @Summary     上报遥测数据
+// @Description 上报前端 AI Demo 遥测数据（请求数、错误数、延迟、缓存命中率）
+// @Tags        演示
+// @Accept      json
+// @Produce     json
+// @Success     200 {object} map[string]interface{}
+// @Router      /telemetry/report [post]
+func ReportTelemetry(c *gin.Context) {
+	var report TelemetryReport
+	if err := c.ShouldBindJSON(&report); err != nil {
+		c.JSON(http.StatusBadRequest, gin.H{"error": "参数错误"})
+		return
+	}
+
+	report.Timestamp = time.Now().UnixMilli()
+	telemetryMu.Lock()
+	telemetryStore = append(telemetryStore, report)
+	if len(telemetryStore) > telemetryMax {
+		telemetryStore = telemetryStore[len(telemetryStore)-telemetryMax:]
+	}
+	telemetryMu.Unlock()
+
+	c.JSON(http.StatusOK, gin.H{"ok": true})
+}
+
+// GetTelemetryHistory  godoc
+// @Summary     获取遥测历史
+// @Description 返回所有遥测记录的历史数据
+// @Tags        演示
+// @Produce     json
+// @Success     200 {array}  TelemetryReport
+// @Router      /telemetry/history [get]
+func GetTelemetryHistory(c *gin.Context) {
+	telemetryMu.RLock()
+	defer telemetryMu.RUnlock()
+
+	result := make([]TelemetryReport, len(telemetryStore))
+	copy(result, telemetryStore)
+	c.JSON(http.StatusOK, result)
+}
+
+// GetTelemetrySummary  godoc
+// @Summary     获取遥测汇总
+// @Description 返回遥测数据的汇总统计
+// @Tags        演示
+// @Produce     json
+// @Success     200 {object} map[string]interface{}
+// @Router      /telemetry/summary [get]
+func GetTelemetrySummary(c *gin.Context) {
+	telemetryMu.RLock()
+	defer telemetryMu.RUnlock()
+
+	if len(telemetryStore) == 0 {
+		c.JSON(http.StatusOK, gin.H{
+			"totalRequests": 0,
+			"totalErrors":   0,
+			"avgLatency":    0,
+			"cacheHitRate":  0,
+			"count":         0,
+		})
+		return
+	}
+
+	var totalReq, totalErr int
+	var totalLatency, totalCache float64
+	for _, r := range telemetryStore {
+		totalReq += r.Requests
+		totalErr += r.Errors
+		totalLatency += r.AvgLatency
+		totalCache += r.CacheHitRate
+	}
+	n := float64(len(telemetryStore))
+	last := telemetryStore[len(telemetryStore)-1]
+
+	c.JSON(http.StatusOK, gin.H{
+		"totalRequests": totalReq,
+		"totalErrors":   totalErr,
+		"avgLatency":    math.Round(totalLatency/n*100) / 100,
+		"cacheHitRate":  math.Round(totalCache/n*100) / 100,
+		"latest":        last,
+		"count":         len(telemetryStore),
+	})
+}
+
 func sortedKeys(m map[string]VitalsRecord) []string {
 	keys := make([]string, 0, len(m))
 	for k := range m {

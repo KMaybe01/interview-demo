@@ -5,6 +5,7 @@ import {
   CheckCircleOutlined,
   ClearOutlined,
   CloseCircleOutlined,
+  LoadingOutlined,
   PlayCircleOutlined,
   PlusOutlined,
   ReloadOutlined,
@@ -31,24 +32,25 @@ import {
   Table,
   Tabs,
   Tag,
+  theme,
   Timeline,
   Tooltip,
   Tree,
   Typography,
-  theme,
 } from 'antd';
-import type { DataNode } from 'antd/es/tree';
-import { useCallback, useEffect, useState } from 'react';
-import { useMessageApi } from '../AIDemo.tsx';
-import { agentAPI } from '../services/api.ts';
+import type {DataNode} from 'antd/es/tree';
+import {useCallback, useEffect, useRef, useState} from 'react';
+import {useMessageApi} from '../AIDemo.tsx';
+import {agentAPI} from '../services/api.ts';
 import type {
   Agent,
   AgentExecuteResponse,
   AgentStep,
+  AgentStreamEvent,
   MemoryEntry,
   ToolDefinition,
 } from '../types/index.ts';
-import { estimateTokens } from '../utils/token-estimator.ts';
+import {estimateTokens} from '../utils/token-estimator.ts';
 
 const { Text } = Typography;
 const { Panel } = Collapse;
@@ -132,6 +134,12 @@ function Agents() {
   const [hitlInput, setHitlInput] = useState('');
   const [hitlHistory, setHitlHistory] = useState<Array<{ role: string; content: string }>>([]);
   const [executingStepIndex, setExecutingStepIndex] = useState<number | null>(null);
+  const [streamingStep, setStreamingStep] = useState<{
+    thought?: string;
+    action?: string;
+    observation?: string;
+  } | null>(null);
+  const abortRef = useRef<AbortController | null>(null);
 
   const [createForm] = Form.useForm();
   const [executeForm] = Form.useForm();
@@ -178,16 +186,64 @@ function Agents() {
     if (!selectedAgent) return;
     setExecuteLoading(true);
     setExecuteResult(null);
-    try {
-      const response = await agentAPI.execute(selectedAgent.id, values.input);
-      setExecuteResult(response);
-      const stepCount = response.steps?.length ?? 0;
-      message.success(`执行完成，共 ${stepCount} 步`);
-    } catch {
-      message.error('执行失败');
-    } finally {
-      setExecuteLoading(false);
-    }
+    setExecutingStepIndex(null);
+    setStreamingStep(null);
+
+    const controller = new AbortController();
+    abortRef.current = controller;
+
+    const steps: AgentStep[] = [];
+    let finalResponse = '';
+
+    await agentAPI.executeStream(
+      selectedAgent.id,
+      values.input,
+      controller.signal,
+      (event: AgentStreamEvent) => {
+        if (event.type === 'thought') {
+          const step: AgentStep = { thought: event.thought };
+          steps.push(step);
+          setStreamingStep({ thought: event.thought });
+          setExecuteResult({ response: '', steps: [...steps] });
+        } else if (event.type === 'action') {
+          const lastStep = steps[steps.length - 1];
+          if (lastStep) {
+            lastStep.action = event.action;
+            setStreamingStep((prev) => ({ ...prev, action: event.action }));
+            setExecuteResult({ response: '', steps: [...steps] });
+          }
+        } else if (event.type === 'observation') {
+          const lastStep = steps[steps.length - 1];
+          if (lastStep) {
+            lastStep.observation = event.observation;
+            setStreamingStep(null);
+            setExecuteResult({ response: '', steps: [...steps] });
+          }
+        } else if (event.type === 'result') {
+          finalResponse = event.content ?? '';
+          setStreamingStep(null);
+          setExecuteResult({ response: finalResponse, steps: [...steps] });
+        } else if (event.type === 'error') {
+          message.error(event.error ?? '执行出错');
+        }
+      },
+      () => {
+        setExecuteLoading(false);
+        abortRef.current = null;
+        setStreamingStep(null);
+        const stepCount = steps.length;
+        message.success(`执行完成，共 ${stepCount} 步`);
+      },
+      (errMsg: string) => {
+        setExecuteLoading(false);
+        abortRef.current = null;
+        setStreamingStep(null);
+        if (steps.length > 0 || finalResponse) {
+          setExecuteResult({ response: finalResponse || '(部分结果)', steps: [...steps] });
+        }
+        message.error(errMsg);
+      },
+    );
   };
 
   const handleSimulateStep = () => {
@@ -690,7 +746,10 @@ function Agents() {
       <Modal
         title={`执行智能体: ${selectedAgent?.name || ''}`}
         open={executeModalVisible}
-        onCancel={() => setExecuteModalVisible(false)}
+        onCancel={() => {
+          abortRef.current?.abort();
+          setExecuteModalVisible(false);
+        }}
         footer={null}
         width={800}
       >
@@ -703,16 +762,55 @@ function Agents() {
             <Input.TextArea rows={4} placeholder="输入要处理的内容..." />
           </Form.Item>
           <Form.Item>
-            <Button
-              type="primary"
-              htmlType="submit"
-              icon={<PlayCircleOutlined />}
-              loading={executeLoading}
-            >
-              执行
-            </Button>
+            <Space>
+              <Button
+                type="primary"
+                htmlType="submit"
+                icon={executeLoading ? <LoadingOutlined /> : <PlayCircleOutlined />}
+                loading={executeLoading}
+              >
+                {executeLoading ? '执行中...' : '执行'}
+              </Button>
+              {executeLoading && (
+                <Button
+                  danger
+                  icon={<CloseCircleOutlined />}
+                  onClick={() => {
+                    abortRef.current?.abort();
+                    setExecuteLoading(false);
+                    setStreamingStep(null);
+                  }}
+                >
+                  停止
+                </Button>
+              )}
+            </Space>
           </Form.Item>
         </Form>
+
+        {streamingStep && (
+          <Card
+            size="small"
+            title={
+              <Space>
+                <LoadingOutlined />
+                正在执行...
+              </Space>
+            }
+            style={{ marginTop: 16, marginBottom: 16 }}
+          >
+            {streamingStep.thought && (
+              <div style={{ marginBottom: 8 }}>
+                <Text type="secondary">思考: {streamingStep.thought}</Text>
+              </div>
+            )}
+            {streamingStep.action && (
+              <div>
+                <Tag color="blue">{streamingStep.action}</Tag>
+              </div>
+            )}
+          </Card>
+        )}
 
         {executeResult && (
           <div style={{ marginTop: 16 }}>

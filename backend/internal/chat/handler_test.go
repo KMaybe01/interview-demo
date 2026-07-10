@@ -147,12 +147,25 @@ func TestHandlerClearHistory(t *testing.T) {
 	}
 }
 
+type closeNotifyRecorder struct {
+	*httptest.ResponseRecorder
+	closeNotify chan bool
+}
+
+func (r *closeNotifyRecorder) CloseNotify() <-chan bool {
+	return r.closeNotify
+}
+
 func TestHandlerChatStream(t *testing.T) {
 	gin.SetMode(gin.TestMode)
 
 	h := newTestHandler()
 
-	w := httptest.NewRecorder()
+	base := httptest.NewRecorder()
+	w := &closeNotifyRecorder{
+		ResponseRecorder: base,
+		closeNotify:      make(chan bool),
+	}
 	c, _ := gin.CreateTestContext(w)
 	body := `{"content": "hello"}`
 	c.Request = httptest.NewRequest(http.MethodPost, "/api/chat/stream", strings.NewReader(body))
