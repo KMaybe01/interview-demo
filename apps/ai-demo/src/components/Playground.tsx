@@ -22,9 +22,9 @@ import {
   Table,
   Tabs,
   Tag,
-  theme,
   Tooltip,
   Typography,
+  theme,
 } from 'antd';
 import { useCallback, useEffect, useState } from 'react';
 import { useMessageApi } from '../AIDemo.tsx';

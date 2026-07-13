@@ -9,7 +9,7 @@ import {
   ShoppingCartOutlined,
   TableOutlined,
 } from '@ant-design/icons';
-import { Button, Card, Space, theme, Typography } from 'antd';
+import { Button, Card, Space, Typography, theme } from 'antd';
 import { useCallback, useRef, useState } from 'react';
 import { useMessageApi } from '../AIDemo.tsx';
 

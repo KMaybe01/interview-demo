@@ -1,3 +1,11 @@
+## [](https://github.com/KMaybe01/interview-demo/compare/v3.0.0...v) (2026-07-13)
+
+### Features
+
+* **ai-demo:** implement all 6-stage AI backend patterns with streaming, RAG, agents, playground ([46b5cea](https://github.com/KMaybe01/interview-demo/commit/46b5cea58cb90851e7975aaa6939637d39d1c7ba))
+* **backend:** implement AI agent streaming, hybrid RAG, MCP/A2A, telemetry, middleware ([a108eb3](https://github.com/KMaybe01/interview-demo/commit/a108eb36f474bf812bf804ac11d603cac93c7126))
+* **interview-docs:** add motion.dev animations and theme reveal with directional clip-path ([00bb2c4](https://github.com/KMaybe01/interview-demo/commit/00bb2c439754a1fda162a8eb299c149b6ee6bea7))
+
 ## [](https://gitlab.com/KMaybe-01/interview-demo/compare/v2.0.0...v) (2026-07-09)
 
 ### Features
