@@ -38,10 +38,10 @@ import {
   Tree,
   Typography,
 } from 'antd';
-import type {DataNode} from 'antd/es/tree';
-import {useCallback, useEffect, useRef, useState} from 'react';
-import {useMessageApi} from '../AIDemo.tsx';
-import {agentAPI} from '../services/api.ts';
+import type { DataNode } from 'antd/es/tree';
+import { useCallback, useEffect, useRef, useState } from 'react';
+import { useMessageApi } from '../AIDemo.tsx';
+import { agentAPI } from '../services/api.ts';
 import type {
   Agent,
   AgentExecuteResponse,
@@ -50,7 +50,7 @@ import type {
   MemoryEntry,
   ToolDefinition,
 } from '../types/index.ts';
-import {estimateTokens} from '../utils/token-estimator.ts';
+import { estimateTokens } from '../utils/token-estimator.ts';
 
 const { Text } = Typography;
 const { Panel } = Collapse;

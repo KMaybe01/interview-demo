@@ -26,12 +26,18 @@ import {
   Tooltip,
   Typography,
 } from 'antd';
-import {useCallback, useEffect, useState} from 'react';
-import {useMessageApi} from '../AIDemo.tsx';
-import {mcpAPI, telemetryAPI} from '../services/api.ts';
-import type {A2AToolDTO, MCPServer, MCPTool, MCPToolDTO, ModelRouterConfig,} from '../types/index.ts';
-import {responseCache} from '../utils/response-cache.ts';
-import {telemetry} from '../utils/telemetry.ts';
+import { useCallback, useEffect, useState } from 'react';
+import { useMessageApi } from '../AIDemo.tsx';
+import { mcpAPI, telemetryAPI } from '../services/api.ts';
+import type {
+  A2AToolDTO,
+  MCPServer,
+  MCPTool,
+  MCPToolDTO,
+  ModelRouterConfig,
+} from '../types/index.ts';
+import { responseCache } from '../utils/response-cache.ts';
+import { telemetry } from '../utils/telemetry.ts';
 
 const { Text } = Typography;
 

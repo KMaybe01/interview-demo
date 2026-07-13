@@ -1,11 +1,17 @@
-import type {ReactComponentImplementation} from '@a2ui/react/v0_9';
-import {A2uiSurface, basicCatalog, MarkdownContext} from '@a2ui/react/v0_9';
-import type {A2uiMessage, SurfaceModel} from '@a2ui/web_core/v0_9';
-import {injectBasicCatalogStyles, MessageProcessor} from '@a2ui/web_core/v0_9';
-import {ApiOutlined, BookOutlined, ClearOutlined, ShoppingCartOutlined, TableOutlined,} from '@ant-design/icons';
-import {Button, Card, Space, theme, Typography} from 'antd';
-import {useCallback, useRef, useState} from 'react';
-import {useMessageApi} from '../AIDemo.tsx';
+import type { ReactComponentImplementation } from '@a2ui/react/v0_9';
+import { A2uiSurface, basicCatalog, MarkdownContext } from '@a2ui/react/v0_9';
+import type { A2uiMessage, SurfaceModel } from '@a2ui/web_core/v0_9';
+import { injectBasicCatalogStyles, MessageProcessor } from '@a2ui/web_core/v0_9';
+import {
+  ApiOutlined,
+  BookOutlined,
+  ClearOutlined,
+  ShoppingCartOutlined,
+  TableOutlined,
+} from '@ant-design/icons';
+import { Button, Card, Space, theme, Typography } from 'antd';
+import { useCallback, useRef, useState } from 'react';
+import { useMessageApi } from '../AIDemo.tsx';
 
 const { Text } = Typography;
 
