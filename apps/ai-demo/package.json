@@ -14,11 +14,14 @@
     "typecheck": "tsc -b --noEmit"
   },
   "dependencies": {
+    "@a2ui/markdown-it": "^0.1.0",
     "@a2ui/react": "^0.10.1",
     "@a2ui/web_core": "^0.10.4",
     "@ant-design/cssinjs": "^2.1.2",
     "@ant-design/icons": "^6.2.5",
     "@ant-design/x": "^2.7.0",
+    "@ant-design/x-card": "^2.8.0",
+    "@ant-design/x-markdown": "^2.8.0",
     "@ant-design/x-sdk": "^2.7.0",
     "@rc-component/cascader": "^1.21.0",
     "antd": "6.4.5",

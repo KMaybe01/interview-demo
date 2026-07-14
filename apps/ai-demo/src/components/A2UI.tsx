@@ -1,3 +1,4 @@
+import { renderMarkdown } from '@a2ui/markdown-it';
 import type { ReactComponentImplementation } from '@a2ui/react/v0_9';
 import { A2uiSurface, basicCatalog, MarkdownContext } from '@a2ui/react/v0_9';
 import type { A2uiMessage, SurfaceModel } from '@a2ui/web_core/v0_9';
@@ -6,16 +7,104 @@ import {
   ApiOutlined,
   BookOutlined,
   ClearOutlined,
+  CodeOutlined,
   ShoppingCartOutlined,
   TableOutlined,
 } from '@ant-design/icons';
+import { Box, registerCatalog, version as xCardVersion } from '@ant-design/x-card';
 import { Button, Card, Space, Typography, theme } from 'antd';
 import { useCallback, useRef, useState } from 'react';
 import { useMessageApi } from '../AIDemo.tsx';
 
 const { Text } = Typography;
 
+// biome-ignore lint/suspicious/noExplicitAny: A2UI component props are dynamic
+const XCARD_COMPONENTS: Record<string, React.ComponentType<any>> = {
+  Column: ({ children }: { children?: React.ReactNode }) => (
+    <div style={{ display: 'flex', flexDirection: 'column', gap: 8 }}>{children}</div>
+  ),
+  Card: ({
+    child,
+    variant,
+    children,
+  }: {
+    child?: React.ReactNode;
+    variant?: string;
+    children?: React.ReactNode;
+  }) => (
+    <Card
+      size="small"
+      variant={variant === 'elevated' ? 'outlined' : undefined}
+      style={{ width: '100%' }}
+    >
+      {children ?? child}
+    </Card>
+  ),
+  Text: ({ text, variant }: { text?: string; variant?: string }) => (
+    <Typography.Text
+      style={{
+        fontSize: variant === 'h2' ? 18 : variant === 'caption' ? 12 : 14,
+        fontWeight: variant === 'h2' ? 600 : undefined,
+      }}
+    >
+      {text}
+    </Typography.Text>
+  ),
+  Button: ({ child, variant }: { child?: React.ReactNode; variant?: string }) => (
+    <Button type={variant === 'primary' ? 'primary' : 'default'} size="small">
+      {child}
+    </Button>
+  ),
+  Row: ({ children }: { children?: React.ReactNode }) => (
+    <div style={{ display: 'flex', gap: 12, flexWrap: 'wrap' }}>{children}</div>
+  ),
+};
+
 injectBasicCatalogStyles();
+
+registerCatalog({
+  catalogId: 'xcard-catalog',
+  title: 'XCard Demo Catalog',
+  description: 'Local catalog for XCard Box demo',
+  components: {
+    Row: {
+      type: 'object',
+      properties: {
+        children: { type: 'array' },
+        distribution: { type: 'string' },
+        alignment: { type: 'string' },
+      },
+    },
+    Column: {
+      type: 'object',
+      properties: {
+        children: { type: 'array' },
+        distribution: { type: 'string' },
+        alignment: { type: 'string' },
+      },
+    },
+    Card: {
+      type: 'object',
+      properties: {
+        child: { type: 'string' },
+        variant: { type: 'string' },
+        children: { type: 'array' },
+      },
+    },
+    Text: {
+      type: 'object',
+      properties: { text: { type: 'string' }, variant: { type: 'string' } },
+    },
+    Button: {
+      type: 'object',
+      properties: {
+        child: { type: 'string' },
+        variant: { type: 'string' },
+        action: { type: 'object' },
+      },
+    },
+  },
+});
 
 const SAMPLE_SCENARIOS = [
   {
@@ -287,6 +376,111 @@ const SAMPLE_SCENARIOS = [
   },
 ];
 
+const XCARD_SCENARIO = {
+  key: 'xcard-box',
+  label: 'XCard Box',
+  icon: <CodeOutlined />,
+  commands: [
+    {
+      version: 'v0.9' as const,
+      createSurface: { surfaceId: 'main', catalogId: 'xcard-catalog' },
+    },
+    {
+      version: 'v0.9' as const,
+      updateComponents: {
+        surfaceId: 'main',
+        components: [
+          { id: 'root', component: 'Column', children: ['header', 'cards-row'] },
+          { id: 'header', component: 'Text', text: '# @ant-design/x-card Demo', variant: 'h2' },
+          {
+            id: 'cards-row',
+            component: 'Row',
+            children: ['card-1', 'card-2', 'card-3'],
+          },
+          {
+            id: 'card-1',
+            component: 'Card',
+            variant: 'elevated',
+            child: 'c1-content',
+          },
+          {
+            id: 'c1-content',
+            component: 'Column',
+            children: ['c1-title', 'c1-desc', 'c1-btn'],
+          },
+          { id: 'c1-title', component: 'Text', text: '🚀 快速集成', variant: 'body' },
+          {
+            id: 'c1-desc',
+            component: 'Text',
+            text: '一行命令即可集成 A2UI 支持',
+            variant: 'caption',
+          },
+          {
+            id: 'c1-btn',
+            component: 'Button',
+            child: 'c1-btn-text',
+            variant: 'primary',
+            action: { event: { name: 'integrate' } },
+          },
+          { id: 'c1-btn-text', component: 'Text', text: '开始集成' },
+          {
+            id: 'card-2',
+            component: 'Card',
+            variant: 'elevated',
+            child: 'c2-content',
+          },
+          {
+            id: 'c2-content',
+            component: 'Column',
+            children: ['c2-title', 'c2-desc', 'c2-btn'],
+          },
+          { id: 'c2-title', component: 'Text', text: '🎨 自定义主题', variant: 'body' },
+          {
+            id: 'c2-desc',
+            component: 'Text',
+            text: '完全自定义组件样式，适配任何设计系统',
+            variant: 'caption',
+          },
+          {
+            id: 'c2-btn',
+            component: 'Button',
+            child: 'c2-btn-text',
+            variant: 'primary',
+            action: { event: { name: 'customize' } },
+          },
+          { id: 'c2-btn-text', component: 'Text', text: '查看主题' },
+          {
+            id: 'card-3',
+            component: 'Card',
+            variant: 'elevated',
+            child: 'c3-content',
+          },
+          {
+            id: 'c3-content',
+            component: 'Column',
+            children: ['c3-title', 'c3-desc', 'c3-btn'],
+          },
+          { id: 'c3-title', component: 'Text', text: '⚡ 流式渲染', variant: 'body' },
+          {
+            id: 'c3-desc',
+            component: 'Text',
+            text: '支持流式 Markdown 渲染，实时展示 AI 输出',
+            variant: 'caption',
+          },
+          {
+            id: 'c3-btn',
+            component: 'Button',
+            child: 'c3-btn-text',
+            variant: 'primary',
+            action: { event: { name: 'stream' } },
+          },
+          { id: 'c3-btn-text', component: 'Text', text: '了解更多' },
+        ],
+      },
+    },
+  ],
+};
+
 function A2UI() {
   const message = useMessageApi();
   const { token } = theme.useToken();
@@ -324,6 +518,11 @@ function A2UI() {
     [message],
   );
 
+  const loadXCardScenario = useCallback(() => {
+    setActiveScenario('xcard-box');
+    setSurfaces([]);
+  }, []);
+
   const handleClear = useCallback(() => {
     setActiveScenario(null);
     setSurfaces([]);
@@ -335,14 +534,19 @@ function A2UI() {
     }
   }, []);
 
+  const isXCardActive = activeScenario === 'xcard-box';
+
   return (
-    <MarkdownContext.Provider value={undefined}>
+    <MarkdownContext.Provider value={renderMarkdown}>
       <div>
         <Card
           title={
             <Space>
               <ApiOutlined />
               <Text strong>A2UI Protocol (v0.9.1)</Text>
+              <Text type="secondary" style={{ fontSize: 11 }}>
+                XCard v{xCardVersion}
+              </Text>
             </Space>
           }
           style={{ marginBottom: 16 }}
@@ -365,6 +569,13 @@ function A2UI() {
               {scenario.label}
             </Button>
           ))}
+          <Button
+            icon={XCARD_SCENARIO.icon}
+            type={isXCardActive ? 'primary' : 'default'}
+            onClick={loadXCardScenario}
+          >
+            {XCARD_SCENARIO.label}
+          </Button>
           <Button icon={<ClearOutlined />} danger onClick={handleClear}>
             清除
           </Button>
@@ -386,6 +597,12 @@ function A2UI() {
             <A2uiSurface surface={surface} />
           </div>
         ))}
+
+        {isXCardActive && (
+          <Card title={<Text strong>@ant-design/x-card · Box 渲染</Text>} size="small">
+            <Box commands={XCARD_SCENARIO.commands} components={XCARD_COMPONENTS} />
+          </Card>
+        )}
       </div>
     </MarkdownContext.Provider>
   );

@@ -12,6 +12,7 @@ import {
 } from '@ant-design/icons';
 import type { BubbleItemType } from '@ant-design/x';
 import { Bubble, Conversations, Prompts, Sender, Welcome } from '@ant-design/x';
+import { XMarkdown } from '@ant-design/x-markdown';
 import { Avatar, Button, Input, Modal, Tag, Tooltip, Typography, theme } from 'antd';
 import { useCallback, useEffect, useMemo, useRef, useState } from 'react';
 import { useMessageApi } from '../AIDemo.tsx';
@@ -210,6 +211,8 @@ export default function Chat() {
       role: msg.role === 'user' ? 'user' : 'ai',
       content:
         maskPIIEnabled && msg.role === 'assistant' ? maskPII(msg.content).masked : msg.content,
+      contentRender:
+        msg.role === 'assistant' ? (content: string) => <XMarkdown content={content} /> : undefined,
     }));
     if (isLoading && streamingContent) {
       items.push({
@@ -217,6 +220,12 @@ export default function Chat() {
         role: 'ai',
         content: maskPIIEnabled ? maskPII(streamingContent).masked : streamingContent,
         streaming: true,
+        contentRender: (content: string) => (
+          <XMarkdown
+            content={content}
+            streaming={{ hasNextChunk: true, enableAnimation: true, tail: true }}
+          />
+        ),
       });
     } else if (isLoading) {
       items.push({

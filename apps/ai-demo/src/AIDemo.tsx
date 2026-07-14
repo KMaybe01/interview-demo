@@ -4,8 +4,6 @@ import {
   BookOutlined,
   DashboardOutlined,
   DeploymentUnitOutlined,
-  MenuFoldOutlined,
-  MenuUnfoldOutlined,
   MessageOutlined,
   RobotOutlined,
   SettingOutlined,
@@ -212,7 +210,9 @@ export default function AIDemo() {
               onClick={toggleCollapsed}
               aria-label={collapsed ? '展开侧边栏' : '折叠侧边栏'}
             >
-              {collapsed ? <MenuUnfoldOutlined /> : <MenuFoldOutlined />}
+              <span style={{ fontSize: 18, fontWeight: 700, lineHeight: 1 }}>
+                {collapsed ? '>' : '<'}
+              </span>
             </button>
           </div>
           <div className={styles.content}>

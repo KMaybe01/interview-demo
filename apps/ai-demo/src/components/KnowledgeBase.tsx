@@ -475,7 +475,7 @@ function KnowledgeBasePage() {
                       alignItems: 'center',
                     }}
                   >
-                    <Space direction="vertical" style={{ gap: 0 }}>
+                    <Space orientation="vertical" style={{ gap: 0 }}>
                       <Text strong>混合检索</Text>
                       <Text type="secondary" style={{ fontSize: 12 }}>
                         同时使用关键词和向量搜索，提高召回率

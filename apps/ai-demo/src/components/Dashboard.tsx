@@ -7,7 +7,9 @@ import {
   RobotOutlined,
   ThunderboltOutlined,
 } from '@ant-design/icons';
-import { Button, Card, Col, List, Row, Space, Statistic, Typography, theme } from 'antd';
+import { version as xCardVersion } from '@ant-design/x-card';
+import { version as xMarkdownVersion } from '@ant-design/x-markdown';
+import { Button, Card, Col, Row, Space, Statistic, Typography, theme } from 'antd';
 import { useCallback, useEffect, useState } from 'react';
 import { agentAPI, knowledgeAPI, modelAPI } from '../services/api.ts';
 
@@ -156,25 +158,24 @@ function Dashboard({ onNavigate }: DashboardProps) {
 
         <Col xs={24} lg={8}>
           <Card title="快速操作" style={{ height: '100%' }}>
-            <List
-              dataSource={quickActions}
-              renderItem={(item) => (
-                <List.Item
-                  actions={[
-                    <Button
-                      key="goto"
-                      type="link"
-                      icon={item.icon}
-                      onClick={() => onNavigate(item.key)}
-                    >
-                      前往
-                    </Button>,
-                  ]}
+            <Space orientation="vertical" style={{ width: '100%' }}>
+              {quickActions.map((item) => (
+                <div
+                  key={item.key}
+                  style={{
+                    display: 'flex',
+                    justifyContent: 'space-between',
+                    alignItems: 'center',
+                    padding: '12px 0',
+                  }}
                 >
-                  <List.Item.Meta title={item.label} />
-                </List.Item>
-              )}
-            />
+                  <span>{item.label}</span>
+                  <Button type="link" icon={item.icon} onClick={() => onNavigate(item.key)}>
+                    前往
+                  </Button>
+                </div>
+              ))}
+            </Space>
           </Card>
         </Col>
       </Row>
@@ -197,6 +198,18 @@ function Dashboard({ onNavigate }: DashboardProps) {
             <Space>
               <ThunderboltOutlined style={{ color: '#faad14' }} />
               <Text>版本: v1.0.0</Text>
+            </Space>
+          </Col>
+          <Col xs={24} sm={8}>
+            <Space>
+              <ThunderboltOutlined style={{ color: '#722ed1' }} />
+              <Text>X-Markdown v{xMarkdownVersion}</Text>
+            </Space>
+          </Col>
+          <Col xs={24} sm={8}>
+            <Space>
+              <ThunderboltOutlined style={{ color: '#13c2c2' }} />
+              <Text>X-Card v{xCardVersion}</Text>
             </Space>
           </Col>
         </Row>
