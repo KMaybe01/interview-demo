@@ -268,6 +268,118 @@ func GetTelemetrySummary(c *gin.Context) {
 	})
 }
 
+// --- Monitor (前端监控埋点/错误/API/性能/降级) ---
+
+type MonitorItem map[string]interface{}
+
+var (
+	monitorMu    sync.RWMutex
+	monitorStore []MonitorItem
+	monitorMax   = 2000
+)
+
+// ReportMonitor  godoc
+// @Summary     上报前端监控数据
+// @Description 上报前端监控数据（埋点/错误/API/性能/降级），支持单条或批量
+// @Tags        演示
+// @Accept      json
+// @Produce     json
+// @Success     200 {object} map[string]interface{}
+// @Router      /monitor/report [post]
+func ReportMonitor(c *gin.Context) {
+	var body interface{}
+	if err := c.ShouldBindJSON(&body); err != nil {
+		c.JSON(http.StatusBadRequest, gin.H{"error": "参数错误"})
+		return
+	}
+
+	now := time.Now()
+	items := make([]MonitorItem, 0)
+
+	switch v := body.(type) {
+	case []interface{}:
+		for _, item := range v {
+			if m, ok := item.(map[string]interface{}); ok {
+				m["timestamp"] = now.UnixMilli()
+				items = append(items, m)
+			}
+		}
+	case map[string]interface{}:
+		v["timestamp"] = now.UnixMilli()
+		items = append(items, v)
+	}
+
+	monitorMu.Lock()
+	monitorStore = append(monitorStore, items...)
+	if len(monitorStore) > monitorMax {
+		monitorStore = monitorStore[len(monitorStore)-monitorMax:]
+	}
+	monitorMu.Unlock()
+
+	c.JSON(http.StatusOK, gin.H{"ok": true, "count": len(items)})
+}
+
+// GetMonitorHistory  godoc
+// @Summary     获取前端监控历史
+// @Description 返回所有前端监控记录
+// @Tags        演示
+// @Produce     json
+// @Success     200 {array}  MonitorItem
+// @Router      /monitor/history [get]
+func GetMonitorHistory(c *gin.Context) {
+	monitorMu.RLock()
+	defer monitorMu.RUnlock()
+
+	result := make([]MonitorItem, len(monitorStore))
+	copy(result, monitorStore)
+	c.JSON(http.StatusOK, result)
+}
+
+// GetMonitorSummary  godoc
+// @Summary     获取前端监控汇总
+// @Description 返回前端监控数据的统计汇总（按类型、分类计数）
+// @Tags        演示
+// @Produce     json
+// @Success     200 {object} map[string]interface{}
+// @Router      /monitor/summary [get]
+func GetMonitorSummary(c *gin.Context) {
+	monitorMu.RLock()
+	defer monitorMu.RUnlock()
+
+	byType := make(map[string]int)
+	byCategory := make(map[string]int)
+	var errors, apis, perfs int
+
+		for _, item := range monitorStore {
+			if t, ok := item["type"].(string); ok {
+				byType[t]++
+				switch t {
+				case "error", "js_error", "promise_error", "resource_error", "business_error":
+					errors++
+				case "api", "api_error", "slow_api":
+					if t == "api_error" {
+						errors++
+					}
+					apis++
+				case "performance":
+					perfs++
+				}
+			}
+		if cat, ok := item["category"].(string); ok && cat != "" {
+			byCategory[cat]++
+		}
+	}
+
+	c.JSON(http.StatusOK, gin.H{
+		"total":      len(monitorStore),
+		"byType":     byType,
+		"byCategory": byCategory,
+		"errors":     errors,
+		"apis":       apis,
+		"perfs":      perfs,
+	})
+}
+
 func sortedKeys(m map[string]VitalsRecord) []string {
 	keys := make([]string, 0, len(m))
 	for k := range m {

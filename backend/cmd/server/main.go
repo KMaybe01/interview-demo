@@ -186,6 +186,10 @@ func main() {
 		api.GET("/telemetry/history", vitals.GetTelemetryHistory)
 		api.GET("/telemetry/summary", vitals.GetTelemetrySummary)
 
+		api.POST("/monitor/report", vitals.ReportMonitor)
+		api.GET("/monitor/history", vitals.GetMonitorHistory)
+		api.GET("/monitor/summary", vitals.GetMonitorSummary)
+
 		protected := api.Group("")
 		protected.Use(authService.AuthMiddleware())
 		{
