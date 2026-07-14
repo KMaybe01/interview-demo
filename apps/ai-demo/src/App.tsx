@@ -1,6 +1,6 @@
 import { StyleProvider } from '@ant-design/cssinjs';
-import { MoonOutlined, SunOutlined } from '@ant-design/icons';
-import { App as AntApp, ConfigProvider, Switch, theme } from 'antd';
+import { ThemeToggle, useThemeTransition } from '@interview-demo/shared-theme';
+import { App as AntApp, ConfigProvider, theme } from 'antd';
 import zhCN from 'antd/locale/zh_CN';
 import AIDemo from './AIDemo.tsx';
 import { useThemeStore } from './stores/themeStore.ts';
@@ -29,6 +29,10 @@ function ThemedLayout() {
   const { token } = theme.useToken();
   const mode = useThemeStore((s) => s.mode);
   const toggleTheme = useThemeStore((s) => s.toggle);
+  const { handleToggleTheme, transitionOverlay } = useThemeTransition(mode, toggleTheme, {
+    darkBg: '#141414',
+    lightBg: '#ffffff',
+  });
 
   return (
     <div
@@ -50,16 +54,12 @@ function ThemedLayout() {
         }}
       >
         <h2 style={{ margin: 0, color: token.colorText }}>AI Demo</h2>
-        <Switch
-          checked={mode === 'dark'}
-          onChange={toggleTheme}
-          checkedChildren={<MoonOutlined />}
-          unCheckedChildren={<SunOutlined />}
-        />
+        <ThemeToggle mode={mode} onToggle={handleToggleTheme} />
       </header>
       <main style={{ flex: 1, overflow: 'hidden' }}>
         <AIDemo />
       </main>
+      {transitionOverlay}
     </div>
   );
 }

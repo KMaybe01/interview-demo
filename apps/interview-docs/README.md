@@ -6,6 +6,7 @@ React 19 文档站点，使用 Vite 8 构建，部署在 GitHub Pages。
 
 - **框架**: React 19 + TypeScript (strict)
 - **构建**: Vite 8 + rolldown
+- **主题**: @interview-demo/shared-theme（共享主题包，useSyncExternalStore 方案）
 - **路由**: React Router 8.1 (HashRouter)
 - **内容**: Markdown (Vite raw glob import)
 - **渲染**: react-markdown + remark-gfm + highlight.js
@@ -40,7 +41,7 @@ src/
 │   ├── Outline.tsx           # 文档目录/大纲
 │   ├── UpdateNotification.tsx # 版本更新提示
 │   └── ErrorBoundary.tsx     # 错误边界
-├── hooks/useTheme.ts         # 主题切换（useSyncExternalStore）
+├── hooks/useTheme.ts         # 主题切换（useSyncExternalStore，基于 @interview-demo/shared-theme hook）
 ├── data/
 │   ├── content.ts            # 内容加载（import.meta.glob）
 │   └── navigation.ts         # 导航配置

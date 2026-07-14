@@ -1,28 +1,9 @@
-import { create } from 'zustand';
+import { configureTheme, useThemeStore } from '@interview-demo/shared-theme';
 
-type ThemeMode = 'light' | 'dark';
+configureTheme({
+  storageKey: 'theme-mode',
+  domStrategy: 'attribute',
+  domTarget: 'data-theme',
+});
 
-interface ThemeState {
-  mode: ThemeMode;
-  toggle: () => void;
-}
-
-function getInitialMode(): ThemeMode {
-  try {
-    const stored = localStorage.getItem('theme-mode');
-    return stored === 'dark' ? 'dark' : 'light';
-  } catch {
-    return 'light';
-  }
-}
-
-export const useThemeStore = create<ThemeState>((set) => ({
-  mode: getInitialMode(),
-  toggle: () => {
-    set((s) => {
-      const next = s.mode === 'light' ? 'dark' : 'light';
-      localStorage.setItem('theme-mode', next);
-      return { mode: next };
-    });
-  },
-}));
+export { useThemeStore };

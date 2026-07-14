@@ -30,7 +30,6 @@ import KnowledgeBase from './components/KnowledgeBase.tsx';
 import Models from './components/Models.tsx';
 import Playground from './components/Playground.tsx';
 import Plugins from './components/Plugins.tsx';
-import { useThemeStore } from './stores/themeStore.ts';
 
 interface MessageApi {
   success: (msg: string) => void;
@@ -67,7 +66,6 @@ interface TabConfig {
 export default function AIDemo() {
   const { message } = AntApp.useApp();
   const { token } = theme.useToken();
-  const mode = useThemeStore((s) => s.mode);
   const [activeTab, setActiveTab] = useState<TabKey>('dashboard');
   const [collapsed, setCollapsed] = useState(() => window.innerWidth < 768);
   const userToggledRef = useRef(false);
@@ -80,10 +78,6 @@ export default function AIDemo() {
     window.addEventListener('resize', onResize);
     return () => window.removeEventListener('resize', onResize);
   }, []);
-
-  useEffect(() => {
-    document.documentElement.setAttribute('data-theme', mode);
-  }, [mode]);
 
   const navigateToTab = useCallback((key: string) => {
     setActiveTab(key as TabKey);

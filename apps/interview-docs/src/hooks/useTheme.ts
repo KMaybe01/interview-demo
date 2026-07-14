@@ -1,25 +1,9 @@
-import { useCallback, useSyncExternalStore } from 'react';
+import { configureThemeHook, useTheme } from '@interview-demo/shared-theme';
 
-const THEME_KEY = 'theme';
+configureThemeHook({
+  storageKey: 'theme',
+  domStrategy: 'class',
+  domTarget: 'dark',
+});
 
-function getSnapshot(): string {
-  return document.documentElement.classList.contains('dark') ? 'dark' : 'light';
-}
-
-function subscribe(callback: () => void): () => void {
-  const observer = new MutationObserver(() => callback());
-  observer.observe(document.documentElement, { attributes: true, attributeFilter: ['class'] });
-  return () => observer.disconnect();
-}
-
-export function useTheme() {
-  const theme = useSyncExternalStore(subscribe, getSnapshot);
-
-  const toggleTheme = useCallback(() => {
-    const next = theme === 'dark' ? 'light' : 'dark';
-    document.documentElement.classList.toggle('dark', next === 'dark');
-    localStorage.setItem(THEME_KEY, next);
-  }, [theme]);
-
-  return { theme, toggleTheme };
-}
+export { useTheme };

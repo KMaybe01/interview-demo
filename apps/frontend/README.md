@@ -11,6 +11,7 @@ React 19 + TypeScript 6 + Vite 8 前端 SPA，为 **15 个技术场景**（含�
 | Vite 8 + Rolldown | 构建工具（Rust bundler） |
 | Ant Design 6 | UI 组件库 |
 | Zustand 5 | 状态管理（persist 中间件） |
+| @interview-demo/shared-theme | 共享主题包（Zustand store） |
 | React Router 7 | 路由（懒加载） |
 | ECharts 6 | 图表可视化 |
 | OpenLayers 10 | GIS 地图渲染 |
@@ -71,7 +72,7 @@ src/
 │   ├── alertStore.ts           # WebSocket 告警（MAX_ALERTS=5000）
 │   ├── lruRouteStore.ts        # LRU 路由缓存状态
 │   ├── requestLoadingStore.ts  # 请求加载追踪
-│   ├── themeStore.ts           # 主题切换 (light/dark)
+│   ├── themeStore.ts           # 主题切换 (re-export from @interview-demo/shared-theme)
 │   └── uploadStore.ts          # 分片上传状态（persist localStorage）
 ├── utils/
 │   ├── fetchClient.ts          # 统一 HTTP 客户端（自动注入 Bearer Token + 401 无感刷新）
@@ -155,7 +156,7 @@ src/
 - **alertStore** — WebSocket 告警，`MAX_ALERTS=5000` 防止 OOM
 - **lruRouteStore** — LRU 路由缓存
 - **requestLoadingStore** — 请求加载追踪
-- **themeStore** — 亮色/暗色主题
+- **themeStore** — 亮色/暗色主题（基于 `@interview-demo/shared-theme` 的 Zustand store）
 - **uploadStore** — 分片上传（persist + partialize）
 
 ## Web Workers

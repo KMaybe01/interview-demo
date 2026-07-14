@@ -23,6 +23,7 @@
     ]
   },
   "dependencies": {
+    "@interview-demo/shared-theme": "workspace:*",
     "@ant-design/cssinjs": "^2.1.2",
     "@ant-design/icons": "^6.2.5",
     "@types/react-window": "^2.0.0",

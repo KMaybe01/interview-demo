@@ -70,6 +70,7 @@ go test ./internal/... -v
 - **后端**: Go 1.26 + Gin — 全内存存储，无外部数据库，19 个内部包，67 个 .go 文件
 - **前端知识库**: `apps/interview-docs/` — React 19 文档站点，Markdown 内容，GitHub Pages 部署
 - **AI Demo**: `apps/ai-demo/` — 独立项目，6 选项卡 AI 演示（聊天/知识库/模型/智能体/插件/控制台）
+- **共享主题包**: `packages/shared-theme/` — 统一管理 dark/light 主题切换，提供 Zustand store（`useThemeStore`）和 React hook（`useTheme`）两种接口，支持 `class`/`attribute` 两种 DOM 策略
 
 ## 代码规范
 
@@ -90,7 +91,7 @@ go test ./internal/... -v
 - 持久化：Zustand `persist` 中间件 (仅 uploadStore)
 - 新增 store 必须在 `apps/frontend/src/stores/index.ts` 中添加导出
 
-6 个 Store：`alertStore`(告警消息)、`authStore`(认证)、`lruRouteStore`(路由缓存)、`requestLoadingStore`(请求追踪)、`themeStore`(主题切换)、`uploadStore`(上传持久化)
+6 个 Store：`alertStore`(告警消息)、`authStore`(认证)、`lruRouteStore`(路由缓存)、`requestLoadingStore`(请求追踪)、`themeStore`(主题切换，re-export from `@interview-demo/shared-theme`)、`uploadStore`(上传持久化)
 
 ## AI Demo 架构
 
@@ -109,7 +110,7 @@ go test ./internal/... -v
 | `components/ErrorBoundary.tsx` | 错误边界 |
 | `services/api.ts` | AI 相关 API 封装 |
 | `stores/chatStore.ts` | 聊天状态管理 |
-| `stores/themeStore.ts` | 主题状态管理（light/dark） |
+| `stores/themeStore.ts` | 主题状态管理（light/dark，re-export from `@interview-demo/shared-theme`） |
 | `types/index.ts` | AI Demo 类型定义 |
 
 ### Ant Design X 集成说明
@@ -259,11 +260,39 @@ PageTracker (App.tsx 中包裹每个路由)
 - 更新 `README.md` 的"演示功能"表时同步更新 `routes/index.tsx`
 - 新增/修改 `Wiki.md` 的难点章节时，同步更新 `README.md` 的对应描述
 
+## 共享主题包
+
+路径：`packages/shared-theme/`
+
+统一管理各 app 的 dark/light 主题切换逻辑，消除重复代码。
+
+| 文件 | 职责 |
+|------|------|
+| `src/types.ts` | `ThemeMode`、`ThemeConfig` 类型定义 |
+| `src/dom.ts` | DOM 工具函数 — `applyTheme`、`getInitialTheme`、`getDOMSnapshot`、`subscribeToDOM` |
+| `src/store.ts` | Zustand store — `useThemeStore` + `configureTheme()` |
+| `src/hook.ts` | React hook — `useTheme`（`useSyncExternalStore`）+ `configureThemeHook()` |
+
+各 app 通过本地 wrapper 文件调用 `configureTheme()` / `configureThemeHook()` 注入配置，再 re-export：
+
+```typescript
+// apps/frontend/src/stores/themeStore.ts
+import { configureTheme, useThemeStore } from '@interview-demo/shared-theme';
+configureTheme({ storageKey: 'theme-mode', domStrategy: 'class', domTarget: 'dark' });
+export { useThemeStore };
+```
+
+| App | 接口 | storageKey | DOM 策略 |
+|-----|------|-----------|----------|
+| frontend | `useThemeStore` (Zustand) | `'theme-mode'` | `.dark` class |
+| ai-demo | `useThemeStore` (Zustand) | `'theme-mode'` | `data-theme` attribute |
+| interview-docs | `useTheme` (hook) | `'theme'` | `.dark` class |
+
 ## 注意事项
 
 - commitlint 配置在根 `commitlint.config.cjs`，作为全局 devDependencies 管理
 - `backend/Makefile` **不存在**于仓库中
-- **Monorepo**: 使用 Bun workspaces + Turborepo 管理，根 `package.json` 定义 `apps/*` 工作区，`turbo.json` 配置编排管道
+- **Monorepo**: 使用 Bun workspaces + Turborepo 管理，根 `package.json` 定义 `apps/*`、`packages/*` 工作区，`turbo.json` 配置编排管道
 - `package.json` 必须包含 `"packageManager": "bun@1.3.14"` 字段（Turborepo 2+ 要求）
 - 使用 `--filter` 参数限定 turbo 只作用于特定 workspace，如 `bun run build --filter=@interview-demo/frontend`
 - Vite 配置中 `form` 代码分割组包含 ajv 但**未使用** @rjsf

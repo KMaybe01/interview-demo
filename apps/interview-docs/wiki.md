@@ -24,7 +24,7 @@ A **React 19** static documentation site serving as a structured frontend knowle
 - **Vite 8** build with rolldown and code splitting
 - **Lazy loaded** Mermaid diagrams (60KB+ saved on initial load)
 - **Global search** with deferred filtering across all content
-- **Dark/light theme** with `useSyncExternalStore`
+- **Dark/light theme** with `@interview-demo/shared-theme` (hook via `useSyncExternalStore`)
 - **Image lightbox** with zoom and pan
 - **Version update notifications** with polling
 
@@ -61,6 +61,7 @@ graph LR
 | Diagrams | Mermaid 11 (lazy loaded) |
 | Quality | Biome, TypeScript strict |
 | Package | Bun |
+| Theme | @interview-demo/shared-theme (useSyncExternalStore) |
 | Deploy | GitHub Pages |
 
 ---
@@ -168,7 +169,7 @@ There is no global state library. State is managed through:
 | Pattern | Usage |
 |---------|-------|
 | `useState` | Local component state (search query, theme toggle, modals) |
-| `useSyncExternalStore` | Theme subscription to `<html>` class mutations |
+| `useSyncExternalStore` (via `@interview-demo/shared-theme`) | Theme subscription to `<html>` class mutations |
 | `useMemo` | Derived data (headings from content, search results) |
 | `useRef` | Transient values (drag state, timers, mermaid init) |
 | `useDeferredValue` | Search query filtering to keep input responsive |
@@ -452,7 +453,7 @@ The `navConfig` array is the complete site navigation. Each link must match a UR
 ## Theme State
 
 ```
-useTheme() hook
+useTheme() hook (from @interview-demo/shared-theme)
   │
   ▼
 useSyncExternalStore(
@@ -464,7 +465,7 @@ useSyncExternalStore(
 toggleTheme() → toggle class + localStorage
 ```
 
-The theme is persisted to `localStorage` and applied as a class on `<html>` via an inline script in `index.html` (before React hydrates, to prevent flash).
+The theme is persisted to `localStorage` (key: `'theme'`) and applied as a class on `<html>` via an inline script in `index.html` (before React hydrates, to prevent flash). Uses shared theme package at `packages/shared-theme/`.
 
 ## Version Update Flow
 

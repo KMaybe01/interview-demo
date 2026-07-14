@@ -13,6 +13,7 @@
     "test:watch": "vitest"
   },
   "dependencies": {
+    "@interview-demo/shared-theme": "workspace:*",
     "highlight.js": "^11.11.1",
     "mermaid": "^11.6.0",
     "motion": "^12.42.2",

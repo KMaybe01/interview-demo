@@ -49,6 +49,7 @@ bun run --cwd apps/ai-demo lint      # Biome 代码检查
 | UI | Ant Design 6 + @ant-design/icons + @ant-design/x |
 | AI SDK | @ant-design/x-sdk |
 | 状态 | Zustand 5 |
+| 主题 | @interview-demo/shared-theme（Zustand store via data-theme attribute） |
 | 测试 | Vitest 4 + @testing-library/react 16 |
 | 格式/Lint | Biome（单引号、分号、尾逗号、行宽 100） |
 | 文档 | docs/S5-AI/实战篇/（9 篇 Markdown） |
@@ -71,7 +72,7 @@ src/
 ├── services/api.ts         # API 客户端，含 SSE 流式读取
 ├── stores/
 │   ├── chatStore.ts        # 对话历史 Zustand store
-│   └── themeStore.ts       # 主题切换 store
+│   └── themeStore.ts       # 主题切换 (re-export from @interview-demo/shared-theme, data-theme DOM 策略)
 ├── types/index.ts          # 类型定义
 └── utils/                  # 8 个工具模块
 ```

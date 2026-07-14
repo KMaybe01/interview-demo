@@ -1,6 +1,7 @@
 import { AnimatePresence, motion } from 'motion/react';
 import { useCallback, useRef, useState } from 'react';
 import { Link, useLocation } from 'react-router';
+import { ThemeToggle, useThemeTransition } from '@interview-demo/shared-theme';
 import { type NavItem, navConfig } from '../data/navigation';
 import { useTheme } from '../hooks/useTheme';
 import GlobalSearch from './GlobalSearch';
@@ -68,27 +69,15 @@ function NavDropdown({
 export default function Header() {
   const [menuOpen, setMenuOpen] = useState(false);
   const [searchOpen, setSearchOpen] = useState(false);
-  const [themeTransition, setThemeTransition] = useState(false);
-  const [overlayBg, setOverlayBg] = useState('');
-  const [clipOrigin, setClipOrigin] = useState('100% 0%');
   const { theme, toggleTheme } = useTheme();
+  const { handleToggleTheme, transitionOverlay } = useThemeTransition(
+    theme === 'dark' ? 'dark' : 'light',
+    toggleTheme,
+    { darkBg: '#1a1a2e', lightBg: '#f5f5f0' },
+  );
   const timeoutRef = useRef<number>(undefined);
   const location = useLocation();
   const currentPath = location.pathname;
-
-  const handleToggleTheme = useCallback(() => {
-    const goingDark = theme === 'light';
-    const origin = goingDark ? '100% 0%' : '0% 100%';
-    const oldBg = getComputedStyle(document.documentElement).getPropertyValue('--c-bg').trim();
-    setOverlayBg(oldBg || (theme === 'dark' ? '#1a1a2e' : '#f5f5f0'));
-    setClipOrigin(origin);
-    setThemeTransition(true);
-    requestAnimationFrame(() => {
-      requestAnimationFrame(() => {
-        toggleTheme();
-      });
-    });
-  }, [toggleTheme, theme]);
 
   return (
     <>
@@ -156,57 +145,7 @@ export default function Header() {
               </svg>
             </button>
 
-            <motion.label
-              className="theme-switch"
-              title={theme === 'dark' ? '切换到亮色模式' : '切换到暗色模式'}
-              whileTap={{ scale: 0.88 }}
-              whileHover={{ scale: 1.05 }}
-              transition={{ duration: 0.15, ease: 'easeOut' }}
-            >
-              <input type="checkbox" checked={theme === 'dark'} onChange={handleToggleTheme} />
-              <span className="theme-switch-track">
-                <motion.span
-                  className="theme-switch-thumb"
-                  animate={{ rotate: theme === 'dark' ? 360 : 0 }}
-                  transition={{ duration: 0.4, ease: 'easeInOut' }}
-                >
-                  <motion.svg
-                    key={`sun-${theme}`}
-                    className="theme-switch-sun"
-                    width="12"
-                    height="12"
-                    viewBox="0 0 24 24"
-                    fill="none"
-                    stroke="currentColor"
-                    strokeWidth="2"
-                    initial={{ rotate: 0, scale: 1 }}
-                    animate={{ rotate: theme === 'dark' ? 90 : 0, scale: theme === 'dark' ? 0 : 1 }}
-                    transition={{ duration: 0.2 }}
-                  >
-                    <circle cx="12" cy="12" r="5" />
-                    <path d="M12 1v2M12 21v2M4.22 4.22l1.42 1.42M18.36 18.36l1.42 1.42M1 12h2M21 12h2M4.22 19.78l1.42-1.42M18.36 5.64l1.42-1.42" />
-                  </motion.svg>
-                  <motion.svg
-                    key={`moon-${theme}`}
-                    className="theme-switch-moon"
-                    width="12"
-                    height="12"
-                    viewBox="0 0 24 24"
-                    fill="none"
-                    stroke="currentColor"
-                    strokeWidth="2"
-                    initial={{ rotate: -90, scale: 0 }}
-                    animate={{
-                      rotate: theme === 'dark' ? 0 : -90,
-                      scale: theme === 'dark' ? 1 : 0,
-                    }}
-                    transition={{ duration: 0.2 }}
-                  >
-                    <path d="M21 12.79A9 9 0 1111.21 3 7 7 0 0021 12.79z" />
-                  </motion.svg>
-                </motion.span>
-              </span>
-            </motion.label>
+            <ThemeToggle mode={theme === 'dark' ? 'dark' : 'light'} onToggle={handleToggleTheme} />
             <a
               href="https://gitlab.com/KMaybe-01/interview-demo"
               target="_blank"
@@ -222,19 +161,7 @@ export default function Header() {
         </div>
       </header>
 
-      <AnimatePresence>
-        {themeTransition && (
-          <motion.div
-            className="theme-reveal-overlay"
-            style={{ backgroundColor: overlayBg }}
-            initial={{ clipPath: `circle(150% at ${clipOrigin})` }}
-            animate={{ clipPath: `circle(0% at ${clipOrigin})` }}
-            exit={{ clipPath: `circle(0% at ${clipOrigin})` }}
-            transition={{ duration: 0.55, ease: [0.4, 0, 0.2, 1] }}
-            onAnimationComplete={() => setThemeTransition(false)}
-          />
-        )}
-      </AnimatePresence>
+      {transitionOverlay}
 
       <AnimatePresence>
         {searchOpen && <GlobalSearch onClose={() => setSearchOpen(false)} />}
