@@ -1,6 +1,6 @@
-import { render, screen } from '@testing-library/react';
+import {render, screen} from '@testing-library/react';
 import userEvent from '@testing-library/user-event';
-import { describe, expect, it } from 'vitest';
+import {describe, expect, it} from 'vitest';
 import WebWorkerMerge from '../WebWorkerMerge.tsx';
 
 describe('WebWorkerMerge', () => {
@@ -27,7 +27,8 @@ describe('WebWorkerMerge', () => {
   it('allows changing data size', async () => {
     const user = userEvent.setup();
     render(<WebWorkerMerge />);
-    const select = document.querySelector('.ant-select')!;
+    const select = document.querySelector('.ant-select');
+    if (!select) throw new Error('select not found');
     await user.click(select);
     const option = await screen.findByText('10万');
     await user.click(option);

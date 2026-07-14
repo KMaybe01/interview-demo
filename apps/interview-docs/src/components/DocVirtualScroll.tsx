@@ -1,6 +1,6 @@
-import { useCallback, useEffect, useLayoutEffect, useMemo, useRef, useState } from 'react';
-import { useLocation } from 'react-router';
-import { type SectionBlock, splitMarkdown } from '../utils/split-markdown';
+import {useCallback, useEffect, useMemo, useRef, useState} from 'react';
+import {useLocation} from 'react-router';
+import {type SectionBlock, splitMarkdown} from '../utils/split-markdown';
 import MarkdownRenderer from './MarkdownRenderer';
 
 const OVERSCAN = 3;

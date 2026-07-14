@@ -1,9 +1,9 @@
-import { AnimatePresence, motion } from 'motion/react';
-import { useCallback, useRef, useState } from 'react';
-import { Link, useLocation } from 'react-router';
-import { ThemeToggle, useThemeTransition } from '@interview-demo/shared-theme';
-import { type NavItem, navConfig } from '../data/navigation';
-import { useTheme } from '../hooks/useTheme';
+import {ThemeToggle, useThemeTransition} from '@interview-demo/shared-theme';
+import {AnimatePresence, motion} from 'motion/react';
+import {useRef, useState} from 'react';
+import {Link, useLocation} from 'react-router';
+import {navConfig, type NavItem} from '../data/navigation';
+import {useTheme} from '../hooks/useTheme';
 import GlobalSearch from './GlobalSearch';
 
 function NavDropdown({

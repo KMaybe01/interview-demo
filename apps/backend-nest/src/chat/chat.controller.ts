@@ -1,9 +1,9 @@
-import { Body, Controller, Delete, Get, Param, Post, Res } from '@nestjs/common';
-import { ApiOperation, ApiTags } from '@nestjs/swagger';
-import type { Response } from 'express';
-import type { MemoryService } from '../memory/memory.service';
-import type { LlmService } from './llm.service';
-import type { ModelManager } from './model-manager.service';
+import {Body, Controller, Delete, Get, Param, Post, Res} from '@nestjs/common';
+import {ApiOperation, ApiTags} from '@nestjs/swagger';
+import type {Response} from 'express';
+import {MemoryService} from '../memory/memory.service';
+import {LlmService} from './llm.service';
+import {ModelManager} from './model-manager.service';
 
 @ApiTags('聊天')
 @Controller('api/chat')

@@ -1,6 +1,6 @@
-import { Body, Controller, Get, Post } from '@nestjs/common';
-import { ApiOperation, ApiTags } from '@nestjs/swagger';
-import type { VitalsService } from './vitals.service';
+import {Body, Controller, Get, Post} from '@nestjs/common';
+import {ApiOperation, ApiTags} from '@nestjs/swagger';
+import {VitalsService} from './vitals.service';
 
 @ApiTags('演示')
 @Controller('api')

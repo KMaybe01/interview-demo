@@ -59,11 +59,11 @@ export const navConfig: NavItem[] = [
     items: [
       { text: '阶段概览', icon: '📖', link: '/S3-进阶提升/' },
       { text: '算法题解', icon: '💡', link: '/S3-进阶提升/04-算法题解' },
-      { text: '计算机网络', icon: '🌐', link: '/S3-进阶提升/05-计算机网络' },
       { text: '前端工程化', icon: '🏗️', link: '/S3-进阶提升/03-前端工程化' },
+      { text: '计算机网络', icon: '🌐', link: '/S3-进阶提升/05-计算机网络' },
       { text: '性能优化', icon: '🚀', link: '/S3-进阶提升/02-性能优化' },
-      { text: '浏览器原理', icon: '🌍', link: '/S3-进阶提升/01-浏览器原理' },
       { text: '前端监控与埋点', icon: '📊', link: '/S3-进阶提升/06-前端监控与埋点' },
+      { text: '浏览器原理', icon: '🌍', link: '/S3-进阶提升/01-浏览器原理' },
       { text: 'Node.js与服务端', icon: '📦', link: '/S3-进阶提升/07-Node.js与服务端' },
     ],
   },

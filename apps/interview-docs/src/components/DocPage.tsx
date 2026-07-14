@@ -1,8 +1,8 @@
-import { motion } from 'motion/react';
-import { useEffect, useMemo, useRef, useState } from 'react';
-import { Link, useLocation } from 'react-router';
-import { loadContent } from '../data/content';
-import { splitMarkdown } from '../utils/split-markdown';
+import {motion} from 'motion/react';
+import {useEffect, useMemo, useState} from 'react';
+import {Link, useLocation} from 'react-router';
+import {loadContent} from '../data/content';
+import {splitMarkdown} from '../utils/split-markdown';
 import DocVirtualScroll from './DocVirtualScroll';
 import Outline from './Outline';
 

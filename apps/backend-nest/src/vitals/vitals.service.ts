@@ -1,4 +1,4 @@
-import { Injectable } from '@nestjs/common';
+import {Injectable} from '@nestjs/common';
 
 export interface VitalsRecord {
   metric: string;
@@ -79,7 +79,8 @@ export class VitalsService {
 
     const summary: VitalsSummary[] = [];
     for (const [metric, rec] of latest) {
-      const a = agg.get(metric)!;
+      const a = agg.get(metric);
+      if (!a) continue;
       summary.push({
         metric,
         value: rec.value,
@@ -222,7 +223,8 @@ export class VitalsService {
     }
 
     return order.map((path) => {
-      const a = agg.get(path)!;
+      const a = agg.get(path);
+      if (!a) return null;
       return {
         path,
         pageName: a.name,

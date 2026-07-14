@@ -1,13 +1,13 @@
+import type {AxiosResponse} from 'axios';
 import axios from 'axios';
-import { beforeEach, describe, expect, it, vi } from 'vitest';
-import { getErrorMessage } from '../fetchClient.ts';
+import {getErrorMessage} from '../fetchClient.ts';
 
 describe('getErrorMessage', () => {
   it('returns error message from response data.error', () => {
     const err = new axios.AxiosError('msg', 'ERR_BAD_REQUEST', undefined, undefined, {
       status: 400,
       data: { error: 'custom error message' },
-    } as any);
+    } as unknown as AxiosResponse);
     expect(getErrorMessage(err)).toBe('custom error message');
   });
 
@@ -15,7 +15,7 @@ describe('getErrorMessage', () => {
     const err = new axios.AxiosError('msg', 'ERR_BAD_REQUEST', undefined, undefined, {
       status: 400,
       data: { message: 'custom message' },
-    } as any);
+    } as unknown as AxiosResponse);
     expect(getErrorMessage(err)).toBe('custom message');
   });
 
@@ -23,19 +23,19 @@ describe('getErrorMessage', () => {
     const err403 = new axios.AxiosError('msg', 'ERR_BAD_REQUEST', undefined, undefined, {
       status: 403,
       data: {},
-    } as any);
+    } as unknown as AxiosResponse);
     expect(getErrorMessage(err403)).toBe('没有权限访问该资源');
 
     const err404 = new axios.AxiosError('msg', 'ERR_BAD_REQUEST', undefined, undefined, {
       status: 404,
       data: {},
-    } as any);
+    } as unknown as AxiosResponse);
     expect(getErrorMessage(err404)).toBe('请求的资源不存在');
 
     const err500 = new axios.AxiosError('msg', 'ERR_BAD_REQUEST', undefined, undefined, {
       status: 500,
       data: {},
-    } as any);
+    } as unknown as AxiosResponse);
     expect(getErrorMessage(err500)).toBe('服务器内部错误');
   });
 
@@ -48,7 +48,7 @@ describe('getErrorMessage', () => {
     const err = new axios.AxiosError('msg', 'ERR_BAD_REQUEST', undefined, undefined, {
       status: 418,
       data: {},
-    } as any);
+    } as unknown as AxiosResponse);
     expect(getErrorMessage(err)).toBe('请求失败 (418)');
   });
 

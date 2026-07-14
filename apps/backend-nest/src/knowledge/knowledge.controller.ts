@@ -1,6 +1,6 @@
-import { Body, Controller, Delete, Get, Param, Post } from '@nestjs/common';
-import { ApiOperation, ApiTags } from '@nestjs/swagger';
-import type { KnowledgeService } from './knowledge.service';
+import {Body, Controller, Delete, Get, Param, Post} from '@nestjs/common';
+import {ApiOperation, ApiTags} from '@nestjs/swagger';
+import {KnowledgeService} from './knowledge.service';
 
 @ApiTags('知识库')
 @Controller('api/knowledge-base')

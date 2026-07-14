@@ -9,7 +9,7 @@
     "start:prod": "node dist/main",
     "lint": "bunx biome check --write src/",
     "format": "bunx biome format --write src/",
-    "test": "vitest run",
+    "test": "vitest run --passWithNoTests",
     "test:watch": "vitest",
     "typecheck": "tsc -b --noEmit"
   },

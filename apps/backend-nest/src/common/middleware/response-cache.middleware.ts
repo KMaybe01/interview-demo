@@ -1,6 +1,6 @@
 import * as crypto from 'node:crypto';
-import { Injectable, type NestMiddleware } from '@nestjs/common';
-import type { NextFunction, Request, Response } from 'express';
+import {Injectable, type NestMiddleware} from '@nestjs/common';
+import type {NextFunction, Request, Response} from 'express';
 
 interface CachedResponse {
   data: string;
@@ -49,7 +49,8 @@ export class ResponseCacheMiddleware implements NestMiddleware {
         });
         this.keys.push(key);
         if (this.keys.length > this.maxSize) {
-          this.cache.delete(this.keys.shift()!);
+          const key = this.keys.shift();
+          if (key) this.cache.delete(key);
         }
       }
       return originalJson(body);

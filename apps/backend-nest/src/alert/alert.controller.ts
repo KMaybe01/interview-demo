@@ -1,7 +1,7 @@
-import { Controller, Get, Query, Req, Res } from '@nestjs/common';
-import { ApiOperation, ApiTags } from '@nestjs/swagger';
-import type { Request, Response } from 'express';
-import type { AlertService } from './alert.service';
+import {Controller, Get, Query, Req, Res} from '@nestjs/common';
+import {ApiOperation, ApiTags} from '@nestjs/swagger';
+import type {Request, Response} from 'express';
+import {AlertService} from './alert.service';
 
 @ApiTags('演示')
 @Controller()

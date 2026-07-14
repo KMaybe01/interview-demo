@@ -1,12 +1,4 @@
-import { beforeEach, describe, expect, it, vi } from 'vitest';
-import {
-  clearTokens,
-  getAccessToken,
-  getRefreshToken,
-  isTokenExpired,
-  parseToken,
-  setTokens,
-} from '../token.ts';
+import {clearTokens, getAccessToken, getRefreshToken, isTokenExpired, parseToken, setTokens,} from '../token.ts';
 
 beforeEach(() => {
   localStorage.clear();

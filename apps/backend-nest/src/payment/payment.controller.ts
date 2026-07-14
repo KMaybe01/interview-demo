@@ -1,7 +1,7 @@
-import { Body, Controller, Get, Param, Post, UseGuards } from '@nestjs/common';
-import { ApiOperation, ApiSecurity, ApiTags } from '@nestjs/swagger';
-import { JwtAuthGuard } from '../common/guards/jwt-auth.guard';
-import type { PaymentService } from './payment.service';
+import {Body, Controller, Get, Param, Post, UseGuards} from '@nestjs/common';
+import {ApiOperation, ApiSecurity, ApiTags} from '@nestjs/swagger';
+import {JwtAuthGuard} from '../common/guards/jwt-auth.guard';
+import {PaymentService} from './payment.service';
 
 @ApiTags('支付')
 @ApiSecurity('Bearer')

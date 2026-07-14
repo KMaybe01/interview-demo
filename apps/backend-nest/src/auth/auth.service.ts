@@ -1,4 +1,4 @@
-import { ConflictException, Injectable, UnauthorizedException } from '@nestjs/common';
+import {ConflictException, Injectable, UnauthorizedException} from '@nestjs/common';
 import * as jwt from 'jsonwebtoken';
 
 @Injectable()
@@ -94,8 +94,8 @@ export class AuthService {
     if (this.tokenStore.size > this.tokenStoreLimit) {
       const keys = [...this.tokenStore.keys()];
       for (let i = 0; i < keys.length && this.tokenStore.size > this.tokenStoreLimit / 2; i++) {
-        const k = keys[i]!;
-        if (Date.now() - (this.tokenStore.get(k) || 0) > 600000) {
+        const k = keys[i];
+        if (k && Date.now() - (this.tokenStore.get(k) || 0) > 600000) {
           this.tokenStore.delete(k);
         }
       }

@@ -1,7 +1,7 @@
-import { render, screen } from '@testing-library/react';
+import {render, screen} from '@testing-library/react';
 import userEvent from '@testing-library/user-event';
-import { App as AntApp } from 'antd';
-import { describe, expect, it, vi } from 'vitest';
+import {App as AntApp} from 'antd';
+import {describe, expect, it, vi} from 'vitest';
 import RbacPermission from '../RbacPermission.tsx';
 
 vi.mock('../../utils/fetchClient.ts', () => ({
@@ -50,7 +50,8 @@ describe('RbacPermission', () => {
     renderPage();
     const menuHeader = screen.getByText(/Menu Layer/);
     expect(menuHeader).toBeInTheDocument();
-    const collapseIcon = menuHeader.closest('button')!;
+    const collapseIcon = menuHeader.closest('button');
+    if (!collapseIcon) throw new Error('collapse button not found');
     await user.click(collapseIcon);
   });
 
@@ -62,7 +63,8 @@ describe('RbacPermission', () => {
   it('changes role via select and shows role tag', async () => {
     const user = userEvent.setup();
     renderPage();
-    const select = document.querySelector('.ant-select')!;
+    const select = document.querySelector('.ant-select');
+    if (!select) throw new Error('select not found');
     await user.click(select);
     const superOption = await screen.findByText('SUPER');
     await user.click(superOption);
