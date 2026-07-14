@@ -3,10 +3,10 @@
 ## 项目概述
 
 Monorepo (Bun workspaces + Turborepo) 全栈项目，包含：
-- **interview-demo**: React 19 + Go 1.26 全栈演示项目，涵盖 **21 个技术场景**（含仪表盘首页 + 14 个核心演示 + 6 个 AI 后端进阶模式），聚焦前端工程化、性能优化、架构设计与 AI 工程化。
+- **interview-demo**: React 19 + Go 1.26 全栈演示项目，涵盖 **22 个技术场景**（含仪表盘首页 + 15 个核心演示 + 6 个 AI 后端进阶模式），聚焦前端工程化、性能优化、架构设计与 AI 工程化。
 - **前端知识库**: React 19 文档站点，Markdown 内容，GitHub Pages 部署，覆盖前端面试五阶段 + Go 后端知识体系。
 
-**Keywords:** 无感刷新 · Token Rotation · 递归表单引擎 · 双重校验 · 实时 JSON 编辑 · WebSocket 心跳 · LRU 路由缓存 · Web Worker 分治 · OpenLayers 聚类 · RBAC 位编码 · SSE 流式日志 · 请求加载 Signal · 树形数据引擎 · 大文件断点续传 · 页面性能监控 · 统一支付中台 · AI Agent 流式执行 · MCP/A2A 协议 · 混合检索 RRF
+**Keywords:** 无感刷新 · Token Rotation · 递归表单引擎 · 双重校验 · 实时 JSON 编辑 · WebSocket 心跳 · LRU 路由缓存 · Web Worker 分治 · OpenLayers 聚类 · RBAC 位编码 · SSE 流式日志 · 请求加载 Signal · 树形数据引擎 · 大文件断点续传 · 页面性能监控 · 统一支付中台 · AI Agent 流式执行 · MCP/A2A 协议 · 混合检索 RRF · 声明式埋点 · 优先级上报队列 · 多级去重 · 柔性降级
 
 ## 技术栈
 
@@ -43,6 +43,7 @@ Monorepo (Bun workspaces + Turborepo) 全栈项目，包含：
 | 13 | 页面性能监控 (Dashboard) | web-vitals 5 采集 CLS/FCP/INP/LCP/TTFB → PageTracker 自动上报路径+渲染耗时 → 后端存储 → 页面访问明细表 + ECharts 排行，所有 vitals 端点无需认证 |
 | 14 | UniPay 统一支付中台 | 支付状态机 (7 状态 × 6 驱动) + Idempotency-Key 幂等性防重复扣款 + 指数退避重试 (1s/2s/4s) + T+1 对账 (groupMap 去重 + 自动退款) + 安全检测 (回调伪造 RSA 验签 + 金额篡改二次验价) |
 | 15 | AI Demo | 7 选项卡：AI 聊天（流式 SSE + Token 统计 + 上下文管理 + PII 脱敏 + 错误重试 + PromptGuard 注入防护）、知识库管理（4 种分块策略/Embedding/混合搜索 BM25+Vector RRF）、模型管理、智能体（工具注册表/记忆管理/流式执行轨迹 SSE/HITL 审核 + 多步骤 thought/action/observation）、Playground（MCP/A2A 协议 + 模型路由 + 遥测监控）、插件中心、AI Dashboard；后端: MockStream 回退 / 响应缓存 / Telemetry 采集 / 智能体 StepEvent |
+| 16 | 前端监控与埋点系统 | 声明式 data-stat 埋点 + 优先级上报队列 (sendBeacon/RIC/64KB 分片) + 异常全捕获 (onerror/unhandledrejection/资源错误/API 监控) + 性能采集 (Navigation/Resource Timing) + 5s 内存+sessionStorage 二级去重 + 采样降级 + 柔性降级 withDegradation + Zustand 监控大盘 |
 
 ## 快速启动
 

@@ -116,7 +116,7 @@ graph TB
 
 ```mermaid
 mindmap
-  root((全栈演示平台<br/>21 个模块))
+  root((全栈演示平台<br/>22 个模块))
     ::icon(fa fa-globe)
     实时通信
       WebSocket 告警推送
@@ -185,12 +185,29 @@ mindmap
          Token/Latency 统计
          仪表盘可视化
      支付中台
-       💳 UniPay 统一支付
-         支付状态机
-         幂等性防护
-         指数退避重试
-         T+1 对账脚本
-         安全检测
+        💳 UniPay 统一支付
+          支付状态机
+          幂等性防护
+          指数退避重试
+          T+1 对账脚本
+          安全检测
+     前端监控
+        📊 声明式埋点 SDK
+          data-stat 属性
+          优先级上报队列
+        🚨 异常监控
+          onerror + unhandledrejection
+          资源加载失败
+          二级去重
+        📡 API 监控
+          慢查询追踪
+          Axios 拦截器
+        ⚡ 性能采集
+          Navigation Timing
+          Resource Timing
+        🛡️ 柔性降级
+          withDegradation
+          超时/重试/业务容错
 ```
 
 > **负责模块**: 全部独立架构设计与实现
@@ -199,15 +216,16 @@ mindmap
 
 | 维度 | 数量 | 说明 |
 |------|------|------|
-| **演示页面** | 20+ 个 | 覆盖实时通信/性能优化/工程架构/AI 智能/支付/仪表盘六大领域 |
+| **演示页面** | 21+ 个 | 覆盖实时通信/性能优化/工程架构/AI 智能/支付/仪表盘/前端监控七大领域 |
 | **自定义组件** | 9 个 | 递归表单引擎的 7 种字段类型 + A2UI 集成组件 |
 | **路由配置** | 15 条 | 包含仪表盘 + 1 条 Eager 加载登录页 |
 | **后端 API** | 80+ | 覆盖认证/校验/文件/SSE/WebSocket/RBAC/请求加载/Vitals/支付/AI 智能体/知识库/MCP-A2A/混合搜索/PromptGuard/ResponseCache/遥测 |
 | **Go 内部包** | 19 个 | agent/alert/auth/chat/encryptedlog/gis/health/knowledge/lrucache/memory/middleware/model/payment/rbac/requestload/schema/sse/upload/vitals |
 | **Go 源码文件** | 66 个 | `go test ./internal/... -v` 全量通过 |
-| **状态存储** | 6 个 | Zustand 状态管理 (alert/auth/lru/request/theme/upload) |
-| **工具函数** | 20+ 个 | Token/LRU/RBAC/WS 传输层/VitalsReporter/VitalsSnapshot/RequestResource + 3 Workers + AI Demo 工具链 (context-manager/data-masker/error-handler/prompt-guard/response-cache/telemetry/text-splitter/token-estimator) |
+| **状态存储** | 7 个 | Zustand 状态管理 (alert/auth/lru/monitor/request/theme/upload) |
+| **工具函数** | 25+ 个 | Token/LRU/RBAC/WS 传输层/VitalsReporter/VitalsSnapshot/RequestResource/Degradation + 监控 SDK (StatSDK/ErrorMonitor/APIMonitor/PerformanceMonitor/ReportManager) + 3 Workers + AI Demo 工具链 (context-manager/data-masker/error-handler/prompt-guard/response-cache/telemetry/text-splitter/token-estimator) |
 | **Web Worker** | 3 个 | 归并排序 + AES-GCM 解密 + SHA-256 文件哈希 |
+| **监控模块** | 7 文件 | 类型定义/ReportManager/StatSDK/ErrorMonitor/APIMonitor/PerformanceMonitor + barrel init + Zustand monitorStore + Degradation 降级工具 |
 | **第三方依赖** | 20+ | React 生态核心库 |
 
 ### 六、核心数据结构
@@ -353,6 +371,7 @@ const Roles = {
 | **PromptGuard 中间件** | 提示注入检测（正则 + 关键词 + 模式匹配）+ HTTP 中间件封装 | ⭐⭐ |
 | **ResponseCache 中间件** | LRU 缓存 + TTL 过期 + Content-Type 智能缓存 + Middleware 封装 | ⭐⭐ |
 | **AI 遥测系统** | Token 用量 / Latency / Cache 命中率 / 错误率实时上报 + ECharts 仪表盘 | ⭐⭐ |
+| **前端监控与埋点系统** | 声明式 data-stat 埋点 + 优先级上报队列 (sendBeacon/RIC/64KB 分片) + 异常全捕获 + 性能采集 + 内存+sessionStorage 二级去重 + 采样降级 + 柔性降级 + Zustand 监控大盘 | ⭐⭐⭐ |
 
 ### 八、部署架构
 
@@ -4685,10 +4704,248 @@ navigator.sendBeacon(url, data):
 **边界 4：MCP 工具协议的超时与重试**
 ```
 工具调用可能因网络/服务故障超时:
-  方案: context.WithTimeout 5s
-  重试: 指数退避 1s/2s/4s，最多 3 次
-  熔断: 连续 5 次失败 → 标记工具不可用 30s
+   方案: context.WithTimeout 5s
+   重试: 指数退避 1s/2s/4s，最多 3 次
+   熔断: 连续 5 次失败 → 标记工具不可用 30s
 ```
+
+---
+
+### 2.16 前端监控与埋点系统 ⭐⭐⭐
+
+**位置**: `src/monitor/` (6 文件 + barrel init) + `src/stores/monitorStore.ts` + `src/utils/degradation.ts`
+
+#### 实现思路
+
+前端监控体系覆盖三个核心层次：**数据监控**（埋点）、**异常监控**（错误&API）、**性能监控**（Web Vitals + Performance API），并通过统一的上报队列（ReportManager）实现优先级分级、批量上报、空闲调度。
+
+**架构决策**：
+- **声明式埋点**优先：`data-stat` 属性声明 + 事件委托，低侵入与业务解耦
+- **Axios 拦截器**注入 API 监控：复用已有 `fetchClient` 的 Axios 实例，零额外请求开销
+- **多级去重**：内存 Map（5s 窗口）+ sessionStorage（跨页面刷新持久化），防止重复上报风暴
+- **sendBeacon + RIC 降级链**：优先 sendBeacon 保证页面卸载数据送达，64KB 超限自动分片
+
+#### 实现过程
+
+**第一步：定义监控类型系统（types.ts）**
+
+```typescript
+// 5 种核心上报数据结构 + 优先级枚举
+TrackEvent   // 声明式/代码埋点事件
+ErrorReport  // 5 种错误类型（js/promise/resource/api/business）
+APIReport    // 慢查询 + API 异常
+PerformanceReport  // Web Vitals + Navigation/Resource Timing
+DegradationReport  // 柔性降级事件
+ReportPriority     // HIGH 即时 / NORMAL 空闲批量 / LOW 延迟批量
+```
+
+**第二步：构建 ReportManager — 优先级上报引擎**
+
+```
+add(item)
+  ├── HIGH → immediateReport() → sendBeacon → 64KB 分片 → fetch keepalive
+  ├── NORMAL/LOW → buffer.push() → scheduleFlush()
+                        ├── requestIdleCallback({ timeout: 3000 })
+                        └── setTimeout(2000) fallback
+
+flush()
+  ├── splice(0, 50) 批量取出
+  ├── generateFingerprint() 去重检查
+  ├── sendBeacon → 超 64KB 分片 32KB/片
+  └── buffer 还有剩余 → 继续 scheduleFlush()
+
+去重: 内存 Map (5s 窗口, 500 条目上限) + sessionStorage 持久化
+```
+
+**第三步：StatSDK — 声明式埋点**
+
+```html
+<button data-stat='{ "event": "click", "page": "home", "module": "banner" }'>
+  立即参与
+</button>
+```
+
+```typescript
+// 事件委托 → closest('[data-stat]') → JSON.parse → enqueue → RIC flush
+document.addEventListener('click', (e) => {
+  const target = (e.target as HTMLElement).closest('[data-stat]')
+  const raw = target.getAttribute('data-stat')
+  const event = JSON.parse(raw)  // try/catch 容错
+  statSDK.track(event)
+})
+```
+
+**安全设计**：
+- `try/catch` 包裹 `JSON.parse`，格式错误静默跳过，不影响业务交互
+- 埋点 SDK 全部逻辑在 try/catch 中，不抛出未捕获异常
+
+**第四步：ErrorMonitor — 异常全捕获**
+
+| 捕获方式 | 覆盖范围 | 采样率 |
+|----------|----------|--------|
+| `window.onerror` | JS 运行时错误 (ReferenceError/TypeError/SyntaxError) | 10% (高频降采样) |
+| `unhandledrejection` | 未 catch 的 Promise rejection | 100% |
+| 捕获阶段 `error` | 资源加载失败 (Script/Link/Img) | 100% |
+
+**去重策略 — 二级持久化**：
+```
+生成指纹: error.type + error.message + stack 前 3 行 + source URL
+  → 内存 Map (5s 窗口, 500 上限, LRU 淘汰)
+  → 写入 sessionStorage (100 条目上限, key='__monitor_dedup')
+  → 页面刷新从 sessionStorage 恢复去重状态
+```
+
+**第五步：APIMonitor — Axios 拦截器注入**
+
+```typescript
+http.interceptors.request.use((config) => {
+  (config as any).__monitorStart = { startTime: performance.now() }
+  return config
+})
+
+http.interceptors.response.use(
+  (response) => {
+    const duration = performance.now() - startTime
+    if (duration > 1000)  // 慢查询阈值 1s
+      reportManager.add({ priority: NORMAL, data: { type: 'slow_api', ... } })
+  },
+  (error) => {
+    // API 异常 → HIGH 优先级即时上报
+    reportManager.add({ priority: HIGH, data: { type: 'api_error', ... } })
+  }
+)
+```
+
+**第六步：PerformanceMonitor — 性能采集**
+
+| 数据来源 | 采集项 | 触发策略 |
+|----------|--------|----------|
+| Navigation Timing | DNS/TCP/TLS/TTFB/DOMInteractive/DOMComplete | 初始化时一次 |
+| Resource Timing | 资源总大小/总数/失败数 | 初始化 + 每 60s 定时 |
+
+与已有的 `vitalsReporter.ts`（Web Vitals LCP/INP/CLS/TTFB/FCP）互补，前者关注用户体验指标，后者关注底层加载时序。
+
+**第七步：柔性降级 withDegradation**
+
+```typescript
+const data = await withDegradation(
+  () => fetch('/api/user').then(r => r.json()),
+  { name: '未知用户' },  // fallback 默认值
+  { timeout: 2000, retryCount: 1, module: 'user' }
+)
+```
+
+**降级事件上报**：每次降级触发一条 `{ type: 'degradation', module, reason, fallback }` 上报，让监控大盘感知真实影响面而非只看 API 成功率。
+
+**业务错误 vs 网络错误区分**：
+```typescript
+// fetcher 内检查业务码
+const res = await fetcher()
+if (res.code !== 0) throw new BusinessError(res.message, res.code)
+// catch 中区分 BusinessError → 业务降级 vs 其他 → 网络重试
+```
+
+#### 优化
+
+| 维度 | 优化手段 | 效果 |
+|------|----------|------|
+| **网络** | 优先级队列 (HIGH/NORMAL/LOW) | 错误即时上报，埋点延迟批量 |
+| **网络** | sendBeacon 优先 → fetch keepalive → XHR sync | 页面卸载 100% 送达 |
+| **网络** | 64KB 超限 TextEncoder 分片 32KB/片 | 绕过 sendBeacon Blob 大小限制 |
+| **网络** | requestIdleCallback + setTimeout 降级 | 主线程空闲时上报不阻塞交互 |
+| **去重** | 内存 Map 5s + sessionStorage 持久化 | 高频错误降采样 90%，跨页面不重复 |
+| **去重** | LRU 淘汰 (500 条目上限) | 防止内存泄漏 |
+| **数据** | 批量上报 max 50 条/次 | 减少 HTTP 请求数 |
+| **异常** | JS Error 10% 采样 | 减少 90% 错误上报量 |
+| **异常** | source-map fingerprint (message + stack 3 lines + URL) | 服务端按指纹聚合 |
+| **降级** | withDegradation 区分业务/网络 | 准确感知降级影响面 |
+
+#### 体系化
+
+```mermaid
+graph TB
+    subgraph SDK["监控 SDK 层 src/monitor/"]
+        STAT["StatSDK<br/>声明式埋点"]
+        ERR["ErrorMonitor<br/>异常全捕获"]
+        API["APIMonitor<br/>Axios 拦截器"]
+        PERF["PerformanceMonitor<br/>性能采集"]
+    end
+
+    subgraph REPORT["上报引擎"]
+        RM["ReportManager<br/>优先级队列"]
+        RM -->|HIGH| IMM["Immediate: sendBeacon"]
+        RM -->|NORMAL/LOW| BATCH["Batch: RIC + setTimeout"]
+        RM -->|去重| DEDUP["内存 Map + sessionStorage"]
+    end
+
+    subgraph STORE["状态层"]
+        MS["monitorStore.ts<br/>Zustand 监控大盘"]
+    end
+
+    subgraph UTIL["工具层"]
+        DEGRADE["degradation.ts<br/>柔性降级"]
+    end
+
+    subgraph EXISTING["已有设施"]
+        VR["vitalsReporter.ts<br/>Web Vitals"]
+        PT["PageTracker.tsx<br/>页面渲染追踪"]
+        FC["fetchClient.ts<br/>Axios 实例"]
+    end
+
+    STAT --> RM
+    ERR --> RM
+    API --> FC
+    PERF --> RM
+    RM --> STORE
+    DEGRADE --> RM
+    VR -.->|互补| PERF
+    PT -.->|互补| PERF
+```
+
+> 7 个新文件 + 1 个 store + 1 个工具函数，与已有的 vitalsReporter/PageTracker 互补，覆盖完整的前端监控三层体系。
+
+#### 存在问题与解决方案
+
+| 问题 | 产生原因 | 解决方案 |
+|------|----------|----------|
+| **sendBeacon 64KB 静默失败** | Blob 超过 64KB 时 sendBeacon 返回 false 但无异常 | TextEncoder 分片 + 32KB/片逐块发送 |
+| **RIC 在后台标签页不触发** | 浏览器节流后台页面 RIC | visibilitychange 事件兜底，页面隐藏时立即 flush |
+| **跨域脚本 Script error** | 浏览器安全策略不暴露跨域堆栈 | 配置 crossorigin="anonymous" + CORS 头部 |
+| **API 监控误报 401** | Token 刷新时的 401 被拦截器捕获为 API 异常 | 401 且 _retry 标记的不上报 |
+| **dedupCache 内存泄漏** | 长时间不刷新页面，Map 无限增长 | 500 条目 LRU 淘汰 |
+| **sessionStorage 满写入失败** | 第三方脚本污染或其他原因导致 sessionStorage 满 | try/catch 包裹，写入失败静默降级 |
+| **StatSDK JSON.parse 错误阻断交互** | data-stat 属性格式错误 | try/catch + 静默跳过，不 rethrow |
+
+#### 追问链路
+
+**Q1: 四种埋点方案（代码/可视化/无埋点/声明式）能否并存？**
+```
+可以。数据模型加 source 字段标识来源。
+去重推荐客户端 SDK 内部处理：按 event+page+module+target+timestamp 生成指纹。
+服务端保留原始数据用于校验客户端是否漏报。
+```
+
+**Q2: 跨域脚本报错 Script error. 怎么解决？**
+```
+添加 crossorigin="anonymous" 属性 + 服务端 Access-Control-Allow-Origin 头部。
+仍无法捕获的异常：Web Worker 内错误（需 Worker 内自监听）、
+跨域 iframe 错误、WASM 崩溃（宿主机层异常）。
+```
+
+**Q3: sendBeacon 和 fetch keepalive 的区别？降级顺序？**
+```
+sendBeacon: 只能 POST, Blob 超 64KB 静默失败, 页面卸载最可靠
+fetch keepalive: 可 GET/POST, 无 size 限制, Safari 部分版本不兼容
+降级顺序: sendBeacon → fetch keepalive → XHR sync (仅关键错误) → 丢弃(低优先级)
+```
+
+**Q4: 灰度发布如何与监控系统联动？**
+```
+灰度组和对照组按用户 ID 哈希分流。
+同比对比（灰度上线数据 vs 老版本同时段基线），避免时间偏差。
+监控看板按版本维度展示，设置阈值自动门禁。
+```
+
 
 ## 三、设计模式与架构亮点
 
