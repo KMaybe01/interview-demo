@@ -43,6 +43,12 @@ export class VitalsController {
     return this.vitalsService.pageHistory();
   }
 
+  @Post('monitor/report')
+  @ApiOperation({ summary: '上报前端监控数据（埋点/错误/API/性能/降级）' })
+  reportMonitor(@Body() body: any) {
+    return this.vitalsService.reportMonitor(body);
+  }
+
   @Post('telemetry/report')
   @ApiOperation({ summary: '上报遥测数据' })
   reportTelemetry(@Body() body: any) {

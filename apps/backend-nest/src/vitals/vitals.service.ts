@@ -42,9 +42,11 @@ export class VitalsService {
   private vitalsStore: VitalsRecord[] = [];
   private telemetryStore: TelemetryReport[] = [];
   private pageStore: PageRecord[] = [];
+  private monitorStore: Record<string, unknown>[] = [];
   private readonly vitalsMax = 2000;
   private readonly telemetryMax = 500;
   private readonly pageMax = 1000;
+  private readonly monitorMax = 2000;
 
   reportVitals(reports: any[]) {
     const now = Date.now();
@@ -102,6 +104,21 @@ export class VitalsService {
       grouped[key].push({ t: rec.timestamp, v: rec.value, rating: rec.rating });
     }
     return grouped;
+  }
+
+  reportMonitor(reports: unknown) {
+    const now = Date.now();
+    const items = Array.isArray(reports) ? reports : [reports];
+    for (const item of items) {
+      this.monitorStore.push({
+        ...(item as Record<string, unknown>),
+        timestamp: now,
+      });
+    }
+    if (this.monitorStore.length > this.monitorMax) {
+      this.monitorStore = this.monitorStore.slice(-this.monitorMax);
+    }
+    return { ok: true, count: items.length };
   }
 
   reportTelemetry(report: TelemetryReport) {
