@@ -5,63 +5,28 @@
   align-items: center;
   justify-content: center;
   overflow: hidden;
-  background: linear-gradient(135deg, #f5f7fa 0%, #e4e9f2 100%);
 }
 
-.rippleLayer {
+.gradientBg {
   position: absolute;
   inset: 0;
-  overflow: hidden;
-  pointer-events: none;
-  z-index: 0;
 }
 
 .ripple {
   position: absolute;
   border-radius: 50%;
   border: 2px solid rgba(102, 126, 234, 0.15);
-  animation: loginRipple ease-out infinite;
-}
-
-.rippleExtra {
-  position: absolute;
-  bottom: 15%;
-  right: 25%;
-  width: 180px;
-  height: 180px;
-  border-radius: 50%;
-  border: 2px solid rgba(118, 75, 162, 0.12);
-  animation: loginRipple 5s ease-out infinite;
-  animation-delay: 0.6s;
-}
-
-.blob1 {
-  position: absolute;
-  width: 500px;
-  height: 500px;
-  border-radius: 50%;
-  background: radial-gradient(circle, rgba(102, 126, 234, 0.08) 0%, transparent 70%);
-  top: -15%;
-  right: -8%;
-  animation: loginDrift 12s ease-in-out infinite;
   pointer-events: none;
 }
 
-.blob2 {
+.blob {
   position: absolute;
-  width: 400px;
-  height: 400px;
-  border-radius: 50%;
-  background: radial-gradient(circle, rgba(118, 75, 162, 0.06) 0%, transparent 70%);
-  bottom: -10%;
-  left: -5%;
-  animation: loginDrift2 15s ease-in-out infinite;
   pointer-events: none;
 }
 
 .card {
   position: relative;
-  z-index: 1;
+  z-index: 2;
   width: 420px;
   border-radius: 16px;
   background: #fff;
@@ -94,47 +59,4 @@
 
 .githubLink:hover {
   color: #667eea;
-}
-
-@keyframes loginDrift {
-  0%,
-  100% {
-    transform: translate(0, 0);
-  }
-  25% {
-    transform: translate(30px, -20px);
-  }
-  50% {
-    transform: translate(-20px, 10px);
-  }
-  75% {
-    transform: translate(10px, -30px);
-  }
-}
-
-@keyframes loginDrift2 {
-  0%,
-  100% {
-    transform: translate(0, 0);
-  }
-  25% {
-    transform: translate(-25px, 15px);
-  }
-  50% {
-    transform: translate(20px, -10px);
-  }
-  75% {
-    transform: translate(-10px, 25px);
-  }
-}
-
-@keyframes loginRipple {
-  0% {
-    transform: scale(1);
-    opacity: 0.5;
-  }
-  100% {
-    transform: scale(3);
-    opacity: 0;
-  }
 }

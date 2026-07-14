@@ -1,8 +1,9 @@
-import { App as AntApp, ConfigProvider, Spin, theme } from 'antd';
-import { Suspense } from 'react';
-import { Route, Routes } from 'react-router-dom';
+import { App as AntApp, ConfigProvider, theme } from 'antd';
+import { AnimatePresence } from 'motion/react';
+import { Route, Routes, useLocation } from 'react-router-dom';
 import AuthGuard from './components/AuthGuard.tsx';
 import PageTracker from './components/PageTracker.tsx';
+import PageTransition from './components/PageTransition.tsx';
 import MainLayout from './layouts/MainLayout.tsx';
 import Login from './pages/Login.tsx';
 import { routes } from './routes';
@@ -10,6 +11,7 @@ import { useThemeStore } from './stores';
 
 export default function App() {
   const mode = useThemeStore((s) => s.mode);
+  const location = useLocation();
 
   return (
     <ConfigProvider
@@ -22,13 +24,15 @@ export default function App() {
       }}
     >
       <AntApp>
-        <Suspense fallback={<Spin style={{ position: 'fixed', top: '50%', left: '50%' }} />}>
-          <Routes>
+        <AnimatePresence mode="wait">
+          <Routes location={location} key={location.pathname}>
             <Route
               path="/login"
               element={
                 <PageTracker>
-                  <Login />
+                  <PageTransition>
+                    <Login />
+                  </PageTransition>
                 </PageTracker>
               }
             />
@@ -40,7 +44,9 @@ export default function App() {
                     path={r.path}
                     element={
                       <PageTracker>
-                        <r.element />
+                        <PageTransition>
+                          <r.element />
+                        </PageTransition>
                       </PageTracker>
                     }
                   />
@@ -48,7 +54,7 @@ export default function App() {
               </Route>
             </Route>
           </Routes>
-        </Suspense>
+        </AnimatePresence>
       </AntApp>
     </ConfigProvider>
   );

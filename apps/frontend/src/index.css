@@ -1,0 +1,41 @@
+:root {
+  --c-bg: #ffffff;
+  --c-bg-soft: #f6f6f7;
+  --c-bg-mute: #f2f2f2;
+  --c-text-1: #1a1a2e;
+  --c-text-2: #4a4a5a;
+  --c-text-3: #888888;
+  --c-brand: #1677ff;
+  --c-border: #e2e2e3;
+  --c-border-light: #f0f0f0;
+}
+
+.dark {
+  --c-bg: #141414;
+  --c-bg-soft: #1f1f1f;
+  --c-bg-mute: #262626;
+  --c-text-1: #d4d4d4;
+  --c-text-2: #9a9aaa;
+  --c-text-3: #666666;
+  --c-brand: #569cd6;
+  --c-border: #333355;
+  --c-border-light: #2a2a2a;
+}
+
+body {
+  margin: 0;
+  background: var(--c-bg);
+  color: var(--c-text-1);
+  transition:
+    background 0.3s,
+    color 0.3s;
+}
+
+/* Theme reveal overlay for toggle animation */
+.theme-reveal-overlay {
+  position: fixed;
+  inset: 0;
+  z-index: 9999;
+  pointer-events: none;
+  will-change: clip-path;
+}

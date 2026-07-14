@@ -4,7 +4,17 @@
     <meta charset="UTF-8" />
     <meta name="viewport" content="width=device-width, initial-scale=1.0" />
     <link rel="icon" type="image/svg+xml" href="/react.svg" />
+    <meta name="theme-color" content="#1677ff" />
     <title>Interview Demo - 技术演示平台</title>
+    <script>
+      (() => {
+        var saved = localStorage.getItem('theme-mode');
+        var prefersDark = window.matchMedia('(prefers-color-scheme: dark)').matches;
+        if (saved === 'dark' || (!saved && prefersDark)) {
+          document.documentElement.classList.add('dark');
+        }
+      })();
+    </script>
   </head>
   <body style="margin:0">
     <div id="root" style="height:100vh"></div>

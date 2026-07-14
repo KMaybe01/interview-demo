@@ -1,10 +1,12 @@
 package middleware
 
 import (
+	"bytes"
 	"crypto/md5"
 	"encoding/hex"
 	"encoding/json"
 	"fmt"
+	"io"
 	"net/http"
 	"strings"
 	"sync"
@@ -46,10 +48,10 @@ func NewResponseCache(maxSize int, ttl time.Duration) *ResponseCache {
 func cacheKey(c *gin.Context) string {
 	body := ""
 	if c.Request.Body != nil {
-		buf := make([]byte, 1024)
-		n, _ := c.Request.Body.Read(buf)
-		body = string(buf[:n])
+		bodyBytes, _ := io.ReadAll(c.Request.Body)
 		_ = c.Request.Body.Close()
+		c.Request.Body = io.NopCloser(bytes.NewBuffer(bodyBytes))
+		body = string(bodyBytes)
 	}
 	raw := fmt.Sprintf("%s:%s:%s", c.Request.Method, c.Request.URL.Path, body)
 	hash := md5.Sum([]byte(raw))

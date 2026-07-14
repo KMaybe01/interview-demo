@@ -130,7 +130,8 @@ export default function Dashboard() {
     <div>
       <Card>
         <Title level={5} style={{ marginTop: 0, marginBottom: 8 }}>
-          React 19 + Ant Design 6 + TypeScript + Zustand + React Router 7 + Bun + Go 1.26 + Gin 1.12
+          React 19 + Ant Design 6 + TypeScript 7 + Zustand 5 + React Router 7 + Bun 1.3 + Go 1.26 +
+          Gin 1.12
         </Title>
         <Row gutter={[16, 16]}>
           {routes
