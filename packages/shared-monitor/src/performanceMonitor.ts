@@ -8,7 +8,6 @@ export class PerformanceMonitor {
   init(): void {
     if (this.initialized) return;
     this.initialized = true;
-
     this.collectResourceTiming();
     this.intervalTimer = setInterval(() => {
       this.collectResourceTiming();

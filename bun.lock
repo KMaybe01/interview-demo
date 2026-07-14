@@ -83,6 +83,7 @@
       "dependencies": {
         "@ant-design/cssinjs": "^2.1.2",
         "@ant-design/icons": "^6.2.5",
+        "@interview-demo/shared-monitor": "workspace:*",
         "@interview-demo/shared-theme": "workspace:*",
         "@types/react-window": "^2.0.0",
         "ajv": "^8.20.0",
@@ -145,6 +146,17 @@
         "typescript": "^7.0.2",
         "vite": "^8.1.0",
         "vitest": "^4.1.9",
+      },
+    },
+    "packages/shared-monitor": {
+      "name": "@interview-demo/shared-monitor",
+      "version": "1.0.0",
+      "dependencies": {
+        "react": "^19.2.7",
+        "zustand": "^5.0.14",
+      },
+      "devDependencies": {
+        "@types/react": "^19.2.17",
       },
     },
     "packages/shared-theme": {
@@ -371,6 +383,8 @@
     "@interview-demo/backend-nest": ["@interview-demo/backend-nest@workspace:apps/backend-nest"],
 
     "@interview-demo/frontend": ["@interview-demo/frontend@workspace:apps/frontend"],
+
+    "@interview-demo/shared-monitor": ["@interview-demo/shared-monitor@workspace:packages/shared-monitor"],
 
     "@interview-demo/shared-theme": ["@interview-demo/shared-theme@workspace:packages/shared-theme"],
 

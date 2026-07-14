@@ -49,7 +49,6 @@ export class ErrorMonitor {
       (event: ErrorEvent | Event) => {
         const target = event.target as HTMLElement | null;
         if (!target) return;
-
         const tagName = target.tagName?.toUpperCase();
         if (tagName === 'SCRIPT' || tagName === 'LINK' || tagName === 'IMG') {
           const elSrc =
@@ -57,7 +56,6 @@ export class ErrorMonitor {
             (target as HTMLLinkElement).href ??
             (target as HTMLImageElement).src ??
             '';
-
           this.report({
             type: 'resource_error',
             message: `Resource load failed: ${tagName}`,
@@ -75,18 +73,14 @@ export class ErrorMonitor {
     if (report.type === 'js_error' && Math.random() > JS_ERROR_SAMPLE_RATE) {
       return;
     }
-
     const fingerprint = this.generateFingerprint(report);
     if (this.isDuplicate(fingerprint)) return;
-
     report.fingerprint = fingerprint;
-
     reportManager.add({
       priority: ReportPriority.HIGH,
       data: report,
       timestamp: Date.now(),
     });
-
     this.storeToSession(fingerprint);
   }
 
@@ -98,20 +92,15 @@ export class ErrorMonitor {
   private isDuplicate(fingerprint: string): boolean {
     const now = Date.now();
     const last = this.dedupCache.get(fingerprint);
-
     if (last && now - last < DEDUP_WINDOW_MS) return true;
-
     const stored = this.loadFromSession(fingerprint);
     if (stored && now - stored < DEDUP_WINDOW_MS) return true;
-
     this.dedupCache.set(fingerprint, now);
     this.dedupOrder.push(fingerprint);
-
     if (this.dedupOrder.length > DEDUP_CACHE_MAX) {
       const oldest = this.dedupOrder.shift();
       if (oldest) this.dedupCache.delete(oldest);
     }
-
     return false;
   }
 

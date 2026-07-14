@@ -11,10 +11,8 @@ export class StatSDK {
     document.addEventListener('click', (e: MouseEvent) => {
       const target = (e.target as HTMLElement).closest('[data-stat]');
       if (!target) return;
-
       const raw = target.getAttribute('data-stat');
       if (!raw) return;
-
       try {
         const partial = JSON.parse(raw) as Omit<TrackEvent, 'timestamp' | 'source'>;
         const event: TrackEvent = {

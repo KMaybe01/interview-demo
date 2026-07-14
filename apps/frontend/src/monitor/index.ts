@@ -1,13 +1,12 @@
-import { apiMonitor } from './apiMonitor.ts';
-import { errorMonitor } from './errorMonitor.ts';
-import { performanceMonitor } from './performanceMonitor.ts';
-import { statSDK } from './statSDK.ts';
+import {
+  apiMonitor,
+  errorMonitor,
+  performanceMonitor,
+  setAxiosInstance,
+  statSDK,
+} from '@interview-demo/shared-monitor';
+import { http } from '../utils/fetchClient.ts';
 
-export { apiMonitor } from './apiMonitor.ts';
-export { errorMonitor } from './errorMonitor.ts';
-export { performanceMonitor } from './performanceMonitor.ts';
-export { reportManager } from './reportManager.ts';
-export { statSDK } from './statSDK.ts';
 export type {
   APIReport,
   DegradationReport,
@@ -15,10 +14,18 @@ export type {
   MonitorState,
   PerformanceReport,
   TrackEvent,
-} from './types.ts';
-export { ReportPriority } from './types.ts';
+} from '@interview-demo/shared-monitor';
+export {
+  apiMonitor,
+  errorMonitor,
+  performanceMonitor,
+  ReportPriority,
+  reportManager,
+  statSDK,
+} from '@interview-demo/shared-monitor';
 
 export function initMonitor(): void {
+  setAxiosInstance(http);
   statSDK.init();
   errorMonitor.init();
   apiMonitor.init();

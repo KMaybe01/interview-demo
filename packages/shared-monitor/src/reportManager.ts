@@ -6,6 +6,12 @@ const SEND_BEACON_SIZE_LIMIT = 65536;
 const DEDUP_WINDOW_MS = 5000;
 const DEDUP_CACHE_MAX = 500;
 
+let reportEndpoint = '/api/monitor/report';
+
+export function setReportEndpoint(url: string): void {
+  reportEndpoint = url;
+}
+
 function generateFingerprint(data: unknown): string {
   const obj = data as Record<string, unknown>;
   const type = String(obj.type ?? '');
@@ -26,7 +32,6 @@ export class ReportManager {
       this.immediateReport(item.data);
       return;
     }
-
     this.buffer.push(item);
     this.scheduleFlush();
   }
@@ -36,14 +41,12 @@ export class ReportManager {
       this.fetchFallback(data);
       return;
     }
-
     const payload = JSON.stringify(data);
     if (new Blob([payload]).size > SEND_BEACON_SIZE_LIMIT) {
       this.chunkedSend(data);
       return;
     }
-
-    const sent = navigator.sendBeacon('/api/monitor/report', payload);
+    const sent = navigator.sendBeacon(reportEndpoint, payload);
     if (!sent) {
       this.fetchFallback(data);
     }
@@ -54,16 +57,15 @@ export class ReportManager {
     const encoder = new TextEncoder();
     const bytes = encoder.encode(payload);
     const chunkSize = 32768;
-
     for (let i = 0; i < bytes.length; i += chunkSize) {
       const chunk = bytes.slice(i, i + chunkSize);
       const blob = new Blob([chunk], { type: 'application/octet-stream' });
-      navigator.sendBeacon('/api/monitor/report', blob);
+      navigator.sendBeacon(reportEndpoint, blob);
     }
   }
 
   private fetchFallback(data: unknown): void {
-    fetch('/api/monitor/report', {
+    fetch(reportEndpoint, {
       method: 'POST',
       body: JSON.stringify(data),
       headers: { 'Content-Type': 'application/json' },
@@ -73,7 +75,6 @@ export class ReportManager {
 
   private scheduleFlush(): void {
     if (this.isFlushing) return;
-
     if ('requestIdleCallback' in window) {
       requestIdleCallback(() => this.flush(), { timeout: FLUSH_INTERVAL_MS });
     } else {
@@ -91,28 +92,23 @@ export class ReportManager {
       this.isFlushing = false;
       return;
     }
-
     const deduped = items.filter((item) => {
       const fingerprint = generateFingerprint(item.data);
       return !this.isDuplicate(fingerprint);
     });
-
     if (deduped.length > 0) {
       const payload = JSON.stringify(deduped.map((i) => i.data));
-
       if (navigator.sendBeacon) {
         if (new Blob([payload]).size > SEND_BEACON_SIZE_LIMIT) {
           this.chunkedSend(deduped.map((i) => i.data));
         } else {
-          navigator.sendBeacon('/api/monitor/report', payload);
+          navigator.sendBeacon(reportEndpoint, payload);
         }
       } else {
         this.fetchFallback(deduped.map((i) => i.data));
       }
     }
-
     this.isFlushing = false;
-
     if (this.buffer.length > 0) {
       this.scheduleFlush();
     }
@@ -121,21 +117,17 @@ export class ReportManager {
   private isDuplicate(fingerprint: string): boolean {
     const now = Date.now();
     const last = this.dedupCache.get(fingerprint);
-
     if (last && now - last < DEDUP_WINDOW_MS) {
       return true;
     }
-
     this.dedupCache.set(fingerprint, now);
     this.dedupOrder.push(fingerprint);
-
     if (this.dedupOrder.length > DEDUP_CACHE_MAX) {
       const oldest = this.dedupOrder.shift();
       if (oldest) {
         this.dedupCache.delete(oldest);
       }
     }
-
     return false;
   }
 
