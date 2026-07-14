@@ -49,6 +49,18 @@ export class VitalsController {
     return this.vitalsService.reportMonitor(body);
   }
 
+  @Get('monitor/history')
+  @ApiOperation({ summary: '获取前端监控历史' })
+  monitorHistory() {
+    return this.vitalsService.getMonitorHistory();
+  }
+
+  @Get('monitor/summary')
+  @ApiOperation({ summary: '获取前端监控汇总' })
+  monitorSummary() {
+    return this.vitalsService.getMonitorSummary();
+  }
+
   @Post('telemetry/report')
   @ApiOperation({ summary: '上报遥测数据' })
   reportTelemetry(@Body() body: any) {

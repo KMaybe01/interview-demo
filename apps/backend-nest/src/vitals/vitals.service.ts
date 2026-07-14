@@ -121,6 +121,35 @@ export class VitalsService {
     return { ok: true, count: items.length };
   }
 
+  getMonitorHistory() {
+    return [...this.monitorStore];
+  }
+
+  getMonitorSummary() {
+    const types = new Map<string, number>();
+    const categories = new Map<string, number>();
+    let errors = 0;
+    let apis = 0;
+    let perfs = 0;
+    for (const item of this.monitorStore) {
+      const type = item.type as string;
+      types.set(type, (types.get(type) || 0) + 1);
+      const cat = item.category as string;
+      if (cat) categories.set(cat, (categories.get(cat) || 0) + 1);
+      if (type === 'error') errors++;
+      if (type === 'api' || type === 'api_error' || type === 'slow_api') apis++;
+      if (type === 'performance') perfs++;
+    }
+    return {
+      total: this.monitorStore.length,
+      byType: Object.fromEntries(types),
+      byCategory: Object.fromEntries(categories),
+      errors,
+      apis,
+      perfs,
+    };
+  }
+
   reportTelemetry(report: TelemetryReport) {
     report.timestamp = Date.now();
     this.telemetryStore.push(report);

@@ -7,6 +7,7 @@ import {
   EnvironmentOutlined,
   FileTextOutlined,
   FormOutlined,
+  FundOutlined,
   KeyOutlined,
   NodeIndexOutlined,
   PartitionOutlined,
@@ -29,6 +30,12 @@ export const routes: RouteConfig[] = [
     name: 'Dashboard',
     icon: DashboardOutlined,
     element: lazy(() => import('../pages/Dashboard.tsx')),
+  },
+  {
+    path: '/monitor',
+    name: '监控面板',
+    icon: FundOutlined,
+    element: lazy(() => import('../pages/MonitorDashboard.tsx')),
   },
   {
     path: '/alert-websocket',
