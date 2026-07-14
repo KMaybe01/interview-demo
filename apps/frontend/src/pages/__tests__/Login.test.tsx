@@ -1,7 +1,7 @@
-import {render, screen} from '@testing-library/react';
+import { render, screen } from '@testing-library/react';
 import userEvent from '@testing-library/user-event';
-import {App as AntApp} from 'antd';
-import {MemoryRouter} from 'react-router-dom';
+import { App as AntApp } from 'antd';
+import { MemoryRouter } from 'react-router-dom';
 import Login from '../Login.tsx';
 
 function renderLogin() {

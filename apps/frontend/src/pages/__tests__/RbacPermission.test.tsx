@@ -1,7 +1,7 @@
-import {render, screen} from '@testing-library/react';
+import { render, screen } from '@testing-library/react';
 import userEvent from '@testing-library/user-event';
-import {App as AntApp} from 'antd';
-import {describe, expect, it, vi} from 'vitest';
+import { App as AntApp } from 'antd';
+import { describe, expect, it, vi } from 'vitest';
 import RbacPermission from '../RbacPermission.tsx';
 
 vi.mock('../../utils/fetchClient.ts', () => ({

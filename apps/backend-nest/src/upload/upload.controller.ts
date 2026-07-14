@@ -1,9 +1,19 @@
-import {Body, Controller, Get, Param, Post, Res, UploadedFile, UseGuards, UseInterceptors,} from '@nestjs/common';
-import {FileInterceptor} from '@nestjs/platform-express';
-import {ApiConsumes, ApiOperation, ApiSecurity, ApiTags} from '@nestjs/swagger';
-import type {Response} from 'express';
-import {JwtAuthGuard} from '../common/guards/jwt-auth.guard';
-import {UploadService} from './upload.service';
+import {
+  Body,
+  Controller,
+  Get,
+  Param,
+  Post,
+  Res,
+  UploadedFile,
+  UseGuards,
+  UseInterceptors,
+} from '@nestjs/common';
+import { FileInterceptor } from '@nestjs/platform-express';
+import { ApiConsumes, ApiOperation, ApiSecurity, ApiTags } from '@nestjs/swagger';
+import type { Response } from 'express';
+import { JwtAuthGuard } from '../common/guards/jwt-auth.guard';
+import { UploadService } from './upload.service';
 
 @ApiTags('演示')
 @Controller('api/upload')

@@ -1,7 +1,7 @@
-import {Body, Controller, Get, Post, UseGuards} from '@nestjs/common';
-import {ApiOperation, ApiSecurity, ApiTags} from '@nestjs/swagger';
-import {JwtAuthGuard} from '../common/guards/jwt-auth.guard';
-import {SchemaService} from './schema.service';
+import { Body, Controller, Get, Post, UseGuards } from '@nestjs/common';
+import { ApiOperation, ApiSecurity, ApiTags } from '@nestjs/swagger';
+import { JwtAuthGuard } from '../common/guards/jwt-auth.guard';
+import { SchemaService } from './schema.service';
 
 @ApiTags('演示')
 @Controller('api/schema')

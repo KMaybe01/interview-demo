@@ -1,6 +1,6 @@
 import * as crypto from 'node:crypto';
-import {Injectable, type NestMiddleware} from '@nestjs/common';
-import type {NextFunction, Request, Response} from 'express';
+import { Injectable, type NestMiddleware } from '@nestjs/common';
+import type { NextFunction, Request, Response } from 'express';
 
 interface CachedResponse {
   data: string;

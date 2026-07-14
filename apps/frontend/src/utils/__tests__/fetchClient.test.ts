@@ -1,6 +1,6 @@
-import type {AxiosResponse} from 'axios';
+import type { AxiosResponse } from 'axios';
 import axios from 'axios';
-import {getErrorMessage} from '../fetchClient.ts';
+import { getErrorMessage } from '../fetchClient.ts';
 
 describe('getErrorMessage', () => {
   it('returns error message from response data.error', () => {

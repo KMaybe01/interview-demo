@@ -1,4 +1,4 @@
-import {ConflictException, Injectable, UnauthorizedException} from '@nestjs/common';
+import { ConflictException, Injectable, UnauthorizedException } from '@nestjs/common';
 import * as jwt from 'jsonwebtoken';
 
 @Injectable()
