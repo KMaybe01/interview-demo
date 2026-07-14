@@ -46,7 +46,8 @@ bun run --cwd apps/ai-demo lint      # Biome 代码检查
 |------|------|
 | 框架 | React 19, TypeScript 7 |
 | 构建 | Vite 8 + Rolldown |
-| UI | Ant Design 6 + @ant-design/icons |
+| UI | Ant Design 6 + @ant-design/icons + @ant-design/x |
+| AI SDK | @ant-design/x-sdk |
 | 状态 | Zustand 5 |
 | 测试 | Vitest 4 + @testing-library/react 16 |
 | 格式/Lint | Biome（单引号、分号、尾逗号、行宽 100） |
@@ -56,10 +57,10 @@ bun run --cwd apps/ai-demo lint      # Biome 代码检查
 
 ```
 src/
-├── AIDemo.tsx              # 主应用壳，侧边栏 7 选项卡
+├── AIDemo.tsx              # 主应用壳，XProvider + 侧边栏 8 选项卡
 ├── App.tsx                 # 根组件，ConfigProvider + 主题切换
 ├── components/
-│   ├── Chat.tsx            # AI 聊天（流式 SSE + Token 统计）
+│   ├── Chat.tsx            # AI 聊天（Bubble.List + Sender + Conversations + Welcome + Prompts）
 │   ├── KnowledgeBase.tsx   # 知识库管理（RAG）
 │   ├── Models.tsx          # 模型管理
 │   ├── Agents.tsx          # 智能体（工具/记忆/轨迹/HITL）

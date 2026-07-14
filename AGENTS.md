@@ -99,8 +99,8 @@ go test ./internal/... -v
 | 文件 | 职责 |
 |------|------|
 | `App.tsx` | 根组件，ConfigProvider + 主题切换 + 布局 |
-| `AIDemo.tsx` | 主页面，6 选项卡布局（Chat / KnowledgeBase / Models / Agents / Plugins / Dashboard） |
-| `components/Chat.tsx` | LLM 聊天（流式对话） |
+| `AIDemo.tsx` | 主页面，XProvider 包裹 + 8 选项卡布局（Chat / KnowledgeBase / Models / Agents / Plugins / Dashboard / Playground / A2UI） |
+| `components/Chat.tsx` | LLM 聊天 — 使用 `@ant-design/x` 组件（Bubble.List + Sender + Conversations + Welcome + Prompts），配套 `@ant-design/x-sdk` 数据流 |
 | `components/KnowledgeBase.tsx` | 知识库管理（CRUD + 文档添加） |
 | `components/Models.tsx` | 模型管理与选择 |
 | `components/Agents.tsx` | 智能体管理（ReAct / Function Calling / Multi-Agent） |
@@ -111,6 +111,18 @@ go test ./internal/... -v
 | `stores/chatStore.ts` | 聊天状态管理 |
 | `stores/themeStore.ts` | 主题状态管理（light/dark） |
 | `types/index.ts` | AI Demo 类型定义 |
+
+### Ant Design X 集成说明
+
+使用 `@ant-design/x` 提供的原子化 AI 组件重构 Chat 界面：
+
+- **Bubble.List** — 替代自定义消息气泡渲染，支持 role 预设（user/ai）+ typing/fade-in 动画 + 流式标记
+- **Sender** — 替代 Input.TextArea，支持 loading 态/取消/快捷键（Enter 发送，Shift+Enter 换行）
+- **Conversations** — 替代自定义对话历史侧边栏，支持创建/切换/重命名/删除 + 右键菜单
+- **Welcome** — 空状态欢迎卡片
+- **Prompts** — 快捷提示词按钮
+
+全局通过 `XProvider`（AIDemo.tsx 内）配置 ant-design/x 主题与 locale。保留原 Zustand + 自定义 API 服务层不变。
 
 ## 关键模式
 

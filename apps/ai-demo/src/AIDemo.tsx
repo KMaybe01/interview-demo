@@ -10,6 +10,7 @@ import {
   RobotOutlined,
   SettingOutlined,
 } from '@ant-design/icons';
+import { XProvider } from '@ant-design/x';
 import { App as AntApp, theme } from 'antd';
 import type { ReactNode } from 'react';
 import {
@@ -156,67 +157,69 @@ export default function AIDemo() {
 
   return (
     <MessageApiContext.Provider value={message}>
-      <div
-        className={styles.container}
-        style={
-          {
-            '--scrollbar-track-bg': token.colorFillQuaternary,
-            '--scrollbar-thumb-bg': token.colorFill,
-            '--scrollbar-thumb-hover': token.colorFillSecondary,
-            '--chat-hover-bg': token.colorFillTertiary,
-            '--chat-active-bg': token.colorPrimaryBg,
-            '--chat-active-border': token.colorPrimaryBorder,
-            '--modal-item-border': token.colorBorderSecondary,
-            '--modal-item-hover-bg': token.colorFillTertiary,
-            '--modal-item-selected-bg': token.colorPrimaryBg,
-            '--modal-item-selected-border': token.colorPrimaryBorder,
-            '--upload-zone-border': token.colorBorder,
-            '--upload-zone-bg': token.colorFillAlter,
-            '--upload-zone-hover-border': token.colorPrimary,
-            '--sidebar-bg': token.colorBgElevated,
-            '--border-color': token.colorBorderSecondary,
-            '--item-hover-bg': token.colorFillTertiary,
-            '--item-active-bg': token.colorPrimaryBg,
-            '--color-primary': token.colorPrimary,
-            '--header-bg': token.colorBgContainer,
-            '--text-primary': token.colorText,
-            '--text-secondary': token.colorTextSecondary,
-          } as React.CSSProperties
-        }
-      >
+      <XProvider>
         <div
-          className={`${styles.sidebar} ${collapsed ? styles['sidebar--collapsed'] : styles['sidebar--expanded']}`}
+          className={styles.container}
+          style={
+            {
+              '--scrollbar-track-bg': token.colorFillQuaternary,
+              '--scrollbar-thumb-bg': token.colorFill,
+              '--scrollbar-thumb-hover': token.colorFillSecondary,
+              '--chat-hover-bg': token.colorFillTertiary,
+              '--chat-active-bg': token.colorPrimaryBg,
+              '--chat-active-border': token.colorPrimaryBorder,
+              '--modal-item-border': token.colorBorderSecondary,
+              '--modal-item-hover-bg': token.colorFillTertiary,
+              '--modal-item-selected-bg': token.colorPrimaryBg,
+              '--modal-item-selected-border': token.colorPrimaryBorder,
+              '--upload-zone-border': token.colorBorder,
+              '--upload-zone-bg': token.colorFillAlter,
+              '--upload-zone-hover-border': token.colorPrimary,
+              '--sidebar-bg': token.colorBgElevated,
+              '--border-color': token.colorBorderSecondary,
+              '--item-hover-bg': token.colorFillTertiary,
+              '--item-active-bg': token.colorPrimaryBg,
+              '--color-primary': token.colorPrimary,
+              '--header-bg': token.colorBgContainer,
+              '--text-primary': token.colorText,
+              '--text-secondary': token.colorTextSecondary,
+            } as React.CSSProperties
+          }
         >
-          <nav className={styles.navList}>
-            {tabs.map((tab) => (
-              <button
-                key={tab.key}
-                type="button"
-                className={`${styles.navItem} ${activeTab === tab.key ? styles['navItem--active'] : ''}`}
-                onClick={() => setActiveTab(tab.key)}
-              >
-                <span className={styles.navIcon}>{tab.icon}</span>
-                <span
-                  className={`${styles.navLabel} ${collapsed ? styles['navLabel--hidden'] : ''}`}
-                >
-                  {tab.label}
-                </span>
-              </button>
-            ))}
-          </nav>
-          <button
-            type="button"
-            className={styles.toggleBtn}
-            onClick={toggleCollapsed}
-            aria-label={collapsed ? '展开侧边栏' : '折叠侧边栏'}
+          <div
+            className={`${styles.sidebar} ${collapsed ? styles['sidebar--collapsed'] : styles['sidebar--expanded']}`}
           >
-            {collapsed ? <MenuUnfoldOutlined /> : <MenuFoldOutlined />}
-          </button>
+            <nav className={styles.navList}>
+              {tabs.map((tab) => (
+                <button
+                  key={tab.key}
+                  type="button"
+                  className={`${styles.navItem} ${activeTab === tab.key ? styles['navItem--active'] : ''}`}
+                  onClick={() => setActiveTab(tab.key)}
+                >
+                  <span className={styles.navIcon}>{tab.icon}</span>
+                  <span
+                    className={`${styles.navLabel} ${collapsed ? styles['navLabel--hidden'] : ''}`}
+                  >
+                    {tab.label}
+                  </span>
+                </button>
+              ))}
+            </nav>
+            <button
+              type="button"
+              className={styles.toggleBtn}
+              onClick={toggleCollapsed}
+              aria-label={collapsed ? '展开侧边栏' : '折叠侧边栏'}
+            >
+              {collapsed ? <MenuUnfoldOutlined /> : <MenuFoldOutlined />}
+            </button>
+          </div>
+          <div className={styles.content}>
+            <ErrorBoundary key={activeTab}>{activeComponent}</ErrorBoundary>
+          </div>
         </div>
-        <div className={styles.content}>
-          <ErrorBoundary key={activeTab}>{activeComponent}</ErrorBoundary>
-        </div>
-      </div>
+      </XProvider>
     </MessageApiContext.Provider>
   );
 }
