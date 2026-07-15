@@ -47,29 +47,29 @@
 
 | 功能 | 说明 |
 |------|------|
-| **分页** | 支持前端/后端/不分页三种模式 |
-| **排序** | 支持前端/后端排序无缝切换，支持初始排序状态 |
-| **选择** | 单选/多选/复选框模式，支持行禁用与取消选择 |
-| **树形展示** | 递归渲染，支持同步/异步树 |
+| **分页** | 支持前端/后端/不分页三种模式，BehaviorSubject + debounce 防抖 |
+| **排序** | 前端排序通过 `computed` 声明式实现，后端排序写入 `AxyomPage` |
+| **选择** | 单选/多选/复选框模式，支持行禁用，`computed` 自动推导全选/半选状态 |
+| **树形展示** | 递归渲染，支持同步/异步树，Set 信号管理展开/加载状态 |
 | **虚拟滚动** | 万级数据无卡顿 |
 
 #### 模块2：交互功能模块
 
 | 功能 | 说明 |
 |------|------|
-| **列拖拽调整** | 鼠标拖拽调整列宽 |
+| **列拖拽调整** | 鼠标拖拽调整列宽，信号化管理宽度，触发 computed 重新推导 |
 | **右键菜单** | 自定义菜单项，支持条件显隐与嵌套子菜单 |
-| **列显隐切换** | 用户可自定义显示/隐藏列 |
-| **TemplateRef插槽** | 声明式自定义单元格渲染 |
+| **列显隐切换** | 信号化管理隐藏列，可持久化到 localStorage |
+| **TemplateRef插槽** | 声明式自定义单元格渲染，注册表模式 |
 
 #### 模块3：扩展功能模块
 
 | 功能 | 说明 |
 |------|------|
-| **CSV导出** | 一键导出表格数据，支持BOM与日期格式化 |
-| **localStorage缓存** | 列显隐状态持久化 |
-| **跨时区处理** | 日期列自动追加时区信息 |
-| **全局配置** | provideAxyomTableConfig()工厂函数 |
+| **CSV导出** | FileSaveService 一键导出，支持 BOM、日期格式化和时区 |
+| **localStorage缓存** | 列显隐状态持久化，cachePrefix 支持命名空间隔离 |
+| **跨时区处理** | 日期列自动追加时区信息（如 `(UTC+8)`） |
+| **全局配置** | `provideAxyomTableConfig()` 工厂函数 |
 
 ### 四、技术架构
 
@@ -89,7 +89,7 @@
 │  FileSaveService │ DragColumnDirective           │
 ├─────────────────────────────────────────────────┤
 │              Model Layer (模型层)                 │
-│  AxyomColumn │ AxyomPage │ AxyomRow │ AxyomMenu  │
+│  AxyomColumn │ AxyomPage │ AxyomMenu             │
 │  AxyomTableConfig                                │
 ├─────────────────────────────────────────────────┤
 │              Foundation (基础设施)                 │
@@ -104,7 +104,6 @@
 projects/table/
 ├── ng-package.json          # Library 构建配置
 ├── package.json             # Library 版本及依赖声明
-├── eslint.config.js         # ESLint 规则配置
 └── src/
     ├── public-api.ts        # 公开 API 入口
     └── lib/
@@ -115,7 +114,8 @@ projects/table/
         │   ├── content-header/
         │   └── content-body/
         │       └── menu-item/
-        ├── table-spec/      # 组件单元测试（12个文件）
+        ├── table-spec/      # 组件单元测试（11个文件）
+        ├── tool.spec.ts     # 工具函数测试
         └── tool.ts          # 工具函数
 ```
 
@@ -123,15 +123,15 @@ projects/table/
 
 | 维度 | 数量 | 说明 |
 |------|------|------|
-| **Library核心代码** | ~1,200行 | TypeScript（不含测试） |
+| **Library核心代码** | ~1,200行 | TypeScript + HTML + CSS |
 | **组件数** | 5个 | Table/Cell/ContentHeader/ContentBody/MenuItem |
 | **指令数** | 2个 | AxyomRow/DragColumn |
 | **服务数** | 3个 | DragColumn/FileSave/AxyomRowSource |
-| **模型数** | 5个 | Column/Config/Page/Row/Menu |
-| **单元测试文件** | 16个 | spec文件，42个describe测试套件 |
-| **演示页面** | 26个 | 覆盖全功能使用场景 |
+| **模型数** | 4个 | Column/Config/Page/Menu |
+| **单元测试文件** | 16个 | spec文件，42个describe测试套件，109个it测试用例 |
+| **演示页面** | 21个 | 覆盖全功能使用场景 |
 | **Angular版本** | 21.2 | 最新 |
-| **Library版本** | 21.1.0 | @axyom-ui/table |
+| **Library版本** | 21.1.1 | @axyom-ui/table |
 
 ### 六、核心数据结构
 
@@ -149,6 +149,11 @@ export interface AxyomColumn<T = any> {
     render?: string;        // 自定义渲染模板key
     compare?: ((x: T, y: T) => 1 | -1) | boolean;  // 比较函数
     format?: ((row: T) => string) | null;  // 格式化函数
+    headerClass?: string;   // 列头样式类
+    align?: 'left' | 'right' | 'center' | null;  // 对齐方式
+    cellClass?: string;     // 单元格样式类
+    ellipsis?: boolean;     // 是否文字溢出省略
+    param?: string;         // 管道参数（如日期格式字符串）
 }
 ```
 
@@ -179,12 +184,15 @@ export class AxyomPage {
 |------|----------|------|
 | **全面拥抱Signals** | 响应式状态管理，精准更新 | ⭐⭐⭐ |
 | **三态分页设计** | 前端/后端/不分页无缝切换 | ⭐⭐⭐ |
-| **TemplateRef插槽** | 声明式自定义单元格渲染 | ⭐⭐⭐ |
+| **声明式前端排序** | `computed` 信号自动排序，无需手动 update | ⭐⭐⭐ |
+| **信号化列管理** | 列宽/显隐通过 Signals 管理，不可变数据流 | ⭐⭐⭐ |
+| **TemplateRef插槽** | 注册表模式实现声明式自定义单元格渲染 | ⭐⭐⭐ |
 | **列拖拽调整** | RxJS事件流 + BehaviorSubject状态总线 | ⭐⭐ |
 | **渐进增强API** | 最简只需cols+rows，逐步添加功能 | ⭐⭐ |
-| **Set信号管理** | row展开/加载状态精准控制 | ⭐⭐ |
+| **Set信号管理** | row展开/加载状态O(1)精准控制 | ⭐⭐ |
 | **初始排序状态** | 列配置即指定排序，避免闪烁 | ⭐⭐ |
 | **跨时区处理** | 日期列自动追加时区信息 | ⭐ |
+| **分页防抖** | BehaviorSubject + debounceTime(10) 避免频繁更新 | ⭐ |
 
 ### 八、部署架构
 
@@ -222,7 +230,7 @@ export class AxyomPage {
 本项目具有以下面试讲述价值：
 
 1. **架构设计能力**：分层架构、依赖注入、组件/服务分离
-2. **Angular新特性**：全面拥抱Signals API，computed/model等新特性
+2. **Angular新特性**：全面拥抱Signals API，computed/model/effect等新特性
 3. **复杂状态管理**：分页/排序/选中的多态组合
 4. **性能优化意识**：虚拟滚动、OnPush、trackBy、Signal精准更新
 5. **API设计能力**：声明式配置、渐进增强、默认值策略
@@ -246,9 +254,9 @@ readonly isSortByFront = computed(() => {
 ```
 
 **面试话术：**
-> "分页和排序的组合本质上是策略模式。我用一个 `computed` 属性作为策略选择器，根据分页模式和配置自动切换排序策略。前端排序直接操作 `data` 信号，后端排序则将参数写入 `AxyomPage` 对象传递给父组件。这样消费者完全不需要关心底层是前端还是后端排序。"
+> "分页和排序的组合本质上是策略模式。我用一个 `computed` 属性作为策略选择器，根据分页模式和配置自动切换排序策略。前端排序通过 `activeSorts` 信号触发 `data` computed 重新排序；后端排序则将参数写入 `AxyomPage` 对象传递给父组件。消费者完全不需要关心底层是前端还是后端排序。"
 
-### 1.2 观察者模式（Observer Pattern）—— 状态总线
+### 1.2 观察者模式（Observer Pattern）—— 状态总线 + 分页防抖
 
 ```typescript
 // DragColumnService 作为列状态的中央广播站
@@ -258,20 +266,38 @@ export class DragColumnService {
     columnWidths$ = new BehaviorSubject<(number | null)[]>([]); // 列宽变更
 }
 
-// TableComponent 订阅列宽变化
+// TableComponent 订阅列宽变化 → 更新 columnWidths 信号
 this.thResizeService.columnWidths$
     .pipe(takeUntilDestroyed(this.destroyRef))
     .subscribe((columnWidth) => {
+        const widthsObj: Record<number, string> = {};
         columnWidth.forEach((width, index) => {
             if (width) {
-                this._cols()[index].width = width + 'px';
+                widthsObj[index] = width + 'px';
             }
         });
+        this.columnWidths.set(widthsObj);
     });
+
+// page$ BehaviorSubject + debounceTime(10) 防抖
+private readonly page$ = new BehaviorSubject<Partial<AxyomPage>>({});
+
+ngOnInit(): void {
+    this.page$.pipe(
+        debounceTime(10),
+        takeUntilDestroyed(this.destroyRef),
+    ).subscribe((page) => {
+        this.page.update((x) => new AxyomPage({ ...x, ...page }));
+    });
+}
+
+emitPage(data: Partial<AxyomPage>) {
+    this.page$.next({ ...this.page(), ...data });
+}
 ```
 
 **面试话术：**
-> "列拖拽调整宽度涉及到 Directive 和 Component 之间的通信。我设计了 `DragColumnService` 作为状态总线，用 `BehaviorSubject` 广播列宽变化。Directive 负责产生事件，Component 负责消费事件。`takeUntilDestroyed` 确保组件销毁时自动取消订阅，避免内存泄漏。"
+> "列拖拽调整宽度涉及到 Directive 和 Component 之间的通信。我设计了 `DragColumnService` 作为状态总线，用 `BehaviorSubject` 广播列宽变化，Component 订阅后更新 `columnWidths` 信号，`_cols` computed 自动推导合并后的列宽。分页更新同时用了 `page$` BehaviorSubject + `debounceTime(10)` 防抖，避免频繁分页操作。`takeUntilDestroyed` 确保组件销毁时自动取消订阅。"
 
 ### 1.3 注册表模式（Registry Pattern）—— TemplateRef 管理
 
@@ -292,7 +318,7 @@ export class AxyomRowSource {
 ```
 
 **面试话术：**
-> "自定义单元格渲染用了注册表模式。`AxyomRowSource` 作为中央注册表，`AxyomRowDirective` 负责注册，`CellComponent` 负责查询。每个 TableComponent 实例通过 `host: true` 拥有独立的注册表，避免不同表格的模板冲突。重复 key 检查提供了编译时错误提示。"
+> "自定义单元格渲染用了注册表模式。`AxyomRowSource` 作为中央注册表，`AxyomRowDirective` 负责注册，`CellComponent` 负责查询。每个 TableComponent 实例通过 `{ host: true }` 拥有独立的注册表，避免不同表格的模板冲突。重复 key 检查提供了编译时错误提示。"
 
 ### 1.4 工厂模式（Factory Pattern）—— 配置创建
 
@@ -313,6 +339,43 @@ export function provideAxyomTableConfig(config: Partial<AxyomTableConfig>): any 
 **面试话术：**
 > "配置系统采用了 Angular 官方推荐的 `provideXxx()` 工厂函数模式，类似 `provideHttpClient()`、`provideRouter()`。消费者在 `app.config.ts` 中声明配置，工厂函数创建实例并合并默认值。这种模式支持 tree-shaking，也便于测试时 mock 配置。"
 
+### 1.5 信号驱动架构（Signal-driven Architecture）—— 列宽/显隐状态
+
+```typescript
+// 信号化列宽和显隐管理，替代直接修改 _cols 数组
+readonly hiddenColumns = signal<Set<string>>(new Set());
+readonly columnWidths = signal<Record<number, string>>({});
+
+// _cols computed 信号自动合并宽度和隐藏状态
+readonly _cols = computed(() => {
+    const baseCols = this.cols().map((col) =>
+        toRequiredAxyomColumn(col, this.config.timeZone, this.isSortByFront()),
+    );
+    const widths = this.columnWidths();
+    const hidden = this.hiddenColumns();
+
+    let visibleIndex = 0;
+    return baseCols.map((col) => {
+        const isHidden = hidden.has(col.name) || col.hide;
+        let overrideWidth: string | undefined;
+
+        if (!isHidden) {
+            overrideWidth = widths[visibleIndex];
+            visibleIndex++;
+        }
+
+        return {
+            ...col,
+            ...(overrideWidth ? { width: overrideWidth } : {}),
+            hide: isHidden,
+        };
+    });
+});
+```
+
+**面试话术：**
+> "列宽和列显隐管理从直接修改 `_cols` 数组重构为信号驱动。`hiddenColumns` 和 `columnWidths` 信号作为单一数据源，`_cols` computed 自动合并两者。拖拽调整列宽时，组件不直接修改列配置，而是更新 `columnWidths` 信号，触发 computed 重算。这种不可变数据流避免了脏数据，也提高了可测试性。"
+
 ---
 
 ## 二、技术难点深度剖析
@@ -329,36 +392,77 @@ export function provideAxyomTableConfig(config: Partial<AxyomTableConfig>): any 
 
 ```typescript
 // 纯 Signals 响应式状态管理
-readonly data = signal<AxyomRows>([]);
-readonly allChecked = signal<boolean>(false);
-readonly indeterminate = signal<boolean>(false);
-readonly menuSelect = signal<any>(undefined);
+readonly data = computed(() => {
+    // 前端排序逻辑内嵌在 computed 中，声明式
+    const rawRows = this.rows();
+    const sorts = this.activeSorts();
+
+    if (this.isSortByFront() && sorts.length > 0) {
+        return [...rawRows].sort((a, b) => {
+            for (const sort of sorts) {
+                const [prop, order] = sort.split(',');
+                const col = this._cols().find((c) => c.prop === prop);
+                if (col && typeof col.compare === 'function') {
+                    const comparisonResult = col.compare(a, b);
+                    return order === 'desc' ? -comparisonResult : comparisonResult;
+                }
+            }
+            return 0;
+        });
+    }
+    return rawRows;
+});
+
+readonly validData = computed(() => {
+    const currentData = this.data();
+    const isDisabledFn = this.isDisabled();
+    return isDisabledFn ? currentData.filter((x) => !isDisabledFn(x)) : currentData;
+});
+
+readonly allChecked = computed(() => {
+    const data = this.validData();
+    const checked = this.rowChecked();
+    const keyFn = this.key();
+    return data.length > 0 && data.every((value) => checked.has(keyFn(value)));
+});
+
+readonly indeterminate = computed(() => {
+    const data = this.validData();
+    const checked = this.rowChecked();
+    const keyFn = this.key();
+    const allChecked = this.allChecked();
+    const allUnChecked = data.every((value) => !checked.has(keyFn(value)));
+    return !allChecked && !allUnChecked;
+});
+
+readonly rowChecked = computed(() => new Set(this.selected().map((row) => this.key()(row))));
+
+// 信号化列宽和显隐
+readonly hiddenColumns = signal<Set<string>>(new Set());
+readonly columnWidths = signal<Record<number, string>>({});
+
+// 前端排序状态
+readonly activeSorts = signal<string[]>([]);
+
+// Set 信号管理展开/加载状态
 readonly rowExpand = signal<Set<string | number>>(new Set());
 readonly rowLoading = signal<Set<string | number>>(new Set());
 
-// computed 派生状态 - 自动追踪依赖，无需订阅
-readonly _showPagination = computed(() => this.page().pageSize != 0);
-readonly isSortByFront = computed(() => {
-    if (!this.frontPagination() && this._showPagination()) {
-        return !this.backendSort();
-    }
-    return this.config.enableSort;
-});
-readonly pageIndex = computed(() => this.page().pageIndex + 1);
-readonly total = computed(() => {
-    if (!this.frontPagination()) return this.page().total;
-    return this.data().length;
-});
-readonly rowChecked = computed(() => new Set(this.selected().map((row) => this.key()(row))));
-
 // model 双向绑定 - 子组件可修改父组件状态
-readonly selected = model<AxyomRows>([]);
+readonly selected = model<T[]>([]);
 readonly page = model<AxyomPage>(new AxyomPage({ pageSize: 0 }));
 ```
 
+**关键变化：**
+1. **`data` 从 `signal` 变为 `computed`**：内嵌前端排序逻辑，无需手动 `data.update()`
+2. **去掉了 `refreshStatus()`**：`allChecked`/`indeterminate` 通过 computed 自动推导
+3. **新增 `validData` computed**：统一处理禁用行过滤
+4. **列宽/显隐信号化**：通过 `columnWidths` + `hiddenColumns` 信号驱动，不再直接修改 `_cols`
+
 **面试回答要点：**
-- **Signal vs Observable：** Signal 是同步的、基于推送的，适合 UI 状态；Observable 是异步的、基于拉取的，适合数据流
+- **Signal vs Observable：** Signal 是同步的、基于推送的，适合 UI 状态；Observable 是异步的、基于流的，适合事件流
 - **computed 自动追踪：** 依赖图自动维护，无需手动 subscribe/unsubscribe
+- **声明式排序：** 前端排序从命令式（`data.update`）升级为声明式（`computed`），数据变换清晰可预测
 - **model 双向绑定：** 父子组件可双向同步分页和选中状态
 - **Set信号管理：** 用 `Set` + `signal` 管理展开行/加载行状态，支持 O(1) 查找
 
@@ -407,12 +511,20 @@ readonly _cols = computed(() =>
 );
 ```
 
+**新增字段说明：**
+- `headerClass`：列头自定义样式类
+- `align`：列对齐方式（left/right/center）
+- `cellClass`：单元格自定义样式类
+- `ellipsis`：文字溢出省略（默认 true）
+- `param`：管道参数，如日期格式字符串
+
 **设计亮点：**
 1. **纯函数抽取**：`toRequiredAxyomColumn` 可独立测试
 2. **`lodash-es` 的 `get`** 支持点号路径访问嵌套属性
 3. **compare 函数自动生成**，无需用户手写
 4. **日期类型自动处理时区**，保证跨时区一致性
 5. **初始排序状态保留**：用户可在列配置中指定 `sortOrder`，组件自动初始化排序
+6. **`isSortByFront` 参数**：排序默认值根据分页模式自适应
 
 ### 2.3 多模式分页架构（三态分页设计）
 
@@ -451,6 +563,13 @@ readonly total = computed(() => {
     return this.data().length;
 });
 
+// 分页更新使用 BehaviorSubject + debounce 防抖
+private readonly page$ = new BehaviorSubject<Partial<AxyomPage>>({});
+
+emitPage(data: Partial<AxyomPage>) {
+    this.page$.next({ ...this.page(), ...data });
+}
+
 // 排序变更处理
 sortChange() {
     const params = this._cols().filter(x => x.sortable && x.sortOrder != null);
@@ -459,15 +578,11 @@ sortChange() {
         : [];
 
     if (this.isSortByFront()) {
-        this.applyFrontendSorting(sorts);
+        this.activeSorts.set(sorts); // 前端排序 → 触发 data computed 重算
     } else {
-        this.page.update((x) => {
-            const hasExistingSort = x.sorts && x.sorts.length > 0;
-            return new AxyomPage({
-                ...this.page(),
-                pageIndex: hasExistingSort ? x.pageIndex : 0,
-                sorts,
-            });
+        this.page$.next({   // 后端排序 → 通过 page$ 走 debounce 路径
+            ...this.page(),
+            sorts,
         });
     }
 }
@@ -475,9 +590,10 @@ sortChange() {
 
 **面试回答要点：**
 - 分页、排序、数据三者的状态流转需要清晰的设计
-- 后端排序时，切换排序列**不重置页码**（已有排序），首次设置排序才重置为第 0 页
-- `applyFrontendSorting` 方法使用 `data.update` 排序本地数据，支持多列排序
-- `page$ BehaviorSubject` + `debounceTime(10)` 防抖，避免频繁分页更新
+- **前端排序升级为 declarative**：设置 `activeSorts` 信号，`data` computed 自动重算排序结果
+- **后端排序 debounce**：通过 `page$` BehaviorSubject + `debounceTime(10)` 避免频繁请求
+- 后端排序时，切换排序列不重置页码（已有排序），首次设置排序才重置为第 0 页
+- `emitPage` 使用 `page$.next` 统一走 debounce 路径，避免直接操作 page 信号
 
 ### 2.4 基于 TemplateRef 的自定义单元格渲染
 
@@ -531,13 +647,13 @@ export class AxyomRowDirective implements OnInit {
 - `AxyomRowSource` 作为中央注册表，通过 `host: true` 确保在正确的组件注入器中
 - 增加了重复 key 的防御性检查，编译时即报错
 
-### 2.5 列拖拽调整宽度 + RxJS 事件流
+### 2.5 列拖拽调整宽度 + RxJS 事件流 ＋ 信号化宽度管理
 
 **位置**: `service/drag-column.directive.ts`
 
 #### 难点分析
 
-需要实现 `mousedown` → `mousemove` → `mouseup` 事件链的精确生命周期管理。
+需要实现 `mousedown` → `mousemove` → `mouseup` 事件链的精确生命周期管理，并将宽度变化同步到信号系统。
 
 #### 设计方案
 
@@ -575,15 +691,35 @@ this.thResizeService.columnChange$.subscribe((cols) => {
 
                     fromEvent(document.body, 'mouseup')
                         .pipe(take(1))
+                        .pipe(filter(ev => ev instanceof MouseEvent))
                         .subscribe(() => {
                             mousemoveHandler.unsubscribe();
                             document.body.classList.remove('table-resizing');
                         });
                 });
         });
-    }, 100);  // 延迟100ms确保 DOM 渲染完成
+    }, 100);
 });
+
+// TableComponent 中信号化消费宽度变化
+ngOnInit(): void {
+    this.thResizeService.columnWidths$
+        .pipe(takeUntilDestroyed(this.destroyRef))
+        .subscribe((columnWidth) => {
+            const widthsObj: Record<number, string> = {};
+            columnWidth.forEach((width, index) => {
+                if (width) {
+                    widthsObj[index] = width + 'px';
+                }
+            });
+            this.columnWidths.set(widthsObj);
+        });
+}
 ```
+
+**架构演进：**
+- **旧方案**：拖拽时直接修改 `_cols()[index].width`，直接操作会污染 computed
+- **新方案**：拖拽更新 `columnWidths` 信号，`_cols` computed 自动合并宽度，保持不可变数据流
 
 **技术要点：**
 - `fromEvent` + `take(1)` 优雅管理事件生命周期
@@ -591,6 +727,7 @@ this.thResizeService.columnChange$.subscribe((cols) => {
 - 动态创建 `<i>` 元素作为拖拽手柄，使用 CSS `position: absolute` 定位
 - `setTimeout` 延迟确保 ng-zorro 渲染完成后再绑定事件
 - CSS `user-select: none` 防止拖拽时文字选中
+- `no-resize` class 标记（展开列、复选框列）拦截拖拽
 
 ### 2.6 行模板递归渲染（树形表格）
 
@@ -605,7 +742,8 @@ this.thResizeService.columnChange$.subscribe((cols) => {
 ```html
 <!-- 递归渲染模板 - 支持同步/异步树 -->
 <ng-template #rowTemplate let-level="level" let-row>
-    <tr [ngClass]="getSelectedCss(row)" (click)="rowSelect(row)">
+    <tr [ngClass]="getSelectedCss(row)" (click)="rowSelect(row)"
+        (contextmenu)="bodyContextMenu($event, menu, row)">
         <ng-container *ngTemplateOutlet="cellTemplate; context: { $implicit: row, level: level }"/>
     </tr>
     <!-- 展开行 -->
@@ -627,12 +765,13 @@ this.thResizeService.columnChange$.subscribe((cols) => {
 - 使用 `Set` 信号管理展开状态，`rowExpand().has(key()(row))` 高效查询
 - 支持异步树（`asyncTree`）：异步加载时显示 loading 状态
 - `treeCollapse` output 输出展开/折叠事件给父组件
+- **effect 自动校验展开状态**：`rows` 变更时，自动折叠子节点已不存在的展开行
 
-### 2.7 选中行的精确状态管理
+### 2.7 选中行的精确状态管理（computed 推演）
 
 ```typescript
 // 选中行比对 - 基于 key 函数
-_isEqual(row: AxyomRow, row2: AxyomRow): boolean {
+_isEqual(row: T, row2: T | undefined): boolean {
     if (row == null || row2 == null) {
         return row === row2;
     }
@@ -640,62 +779,88 @@ _isEqual(row: AxyomRow, row2: AxyomRow): boolean {
     return key(row) === key(row2);
 }
 
+// computed 自动推导全选/半选/已选状态
+readonly rowChecked = computed(() => new Set(this.selected().map((row) => this.key()(row))));
+
+readonly allChecked = computed(() => {
+    const data = this.validData();
+    const checked = this.rowChecked();
+    const keyFn = this.key();
+    return data.length > 0 && data.every((value) => checked.has(keyFn(value)));
+});
+
+readonly indeterminate = computed(() => {
+    const data = this.validData();
+    const checked = this.rowChecked();
+    const keyFn = this.key();
+    const allChecked = this.allChecked();
+    const allUnChecked = data.every((value) => !checked.has(keyFn(value)));
+    return !allChecked && !allUnChecked;
+});
+
 // 单选/多选逻辑
-rowSelect(row: AxyomRow) {
-    if (row._disabled) return;
+rowSelect(row: T) {
+    if (this.isDisabled()?.(row)) return;
+    this.menuSelect.set(undefined);
+    const selectionType = this.selectionType();
     const key = this.key()(row);
 
-    if (selectionType == 'single') {
+    if (selectionType === 'single') {
         const isSelected = this.rowChecked().has(key);
         if (isSelected && this.selectCancellable()) {
             this.selected.set([]);
         } else {
             this.selected.set([row]);
         }
-    } else if (selectionType == 'checkbox') {
+    } else if (selectionType === 'checkbox') {
         const isSelected = this.rowChecked().has(key);
         if (isSelected) {
             this.selected.update(list => list.filter(x => this.key()(x) !== key));
         } else {
             this.selected.update(list => [...list, row]);
         }
-        this.refreshStatus();
     }
 }
 ```
+
+**架构演进：**
+- **旧方案**：`refreshStatus()` 手动计算全选/半选 → 命令式，需在每次选中变化后手动调用
+- **新方案**：`allChecked`/`indeterminate` 作为 `computed` → 自动追踪 `selected`/`validData`/`key` 依赖，无需手动调用
 
 **设计决策：**
 - 使用 `rowChecked` computed 生成 `Set<string | number>`，O(1) 查重
 - 支持 `selectCancellable`（单选模式下再次点击取消选中）
 - `key()` 函数支持字符串或函数，灵活标识行唯一性
 - `getSelectedCss` 方法同时处理选中行和右键菜单选中行的样式
+- `validData` 用于过滤禁用行，全选/半选计算时排除不可选行
 
-### 2.8 列显隐状态持久化（localStorage Cache）
+### 2.8 列显隐状态持久化（信号化 localStorage）
 
 ```typescript
-// 列显隐状态初始化
+// 列显隐状态初始化 → 写入 hiddenColumns 信号
 private initHideStatus() {
-    if (this.cache() != '') {
+    if (this.cache() !== '') {
         const cache = localStorage.getItem(this.cachePrefixString() + this.cache());
         if (cache) {
-            const cols: string[] = JSON.parse(cache);
-            this._cols().forEach((c) => {
-                cols.forEach((element) => {
-                    if (element === c.name) c.hide = true;
-                });
-            });
+            const hiddenNames: string[] = JSON.parse(cache);
+            this.hiddenColumns.set(new Set(hiddenNames));
         }
     }
 }
 
 // 保存列显隐状态
 toggleHeaderColumns(cols: AxyomColumn[]) {
-    if (this.cache() != '') {
+    const hiddenNames = this._cols()
+        .filter((c) => c.hide)
+        .map((d) => d.name);
+
+    if (this.cache() !== '') {
         localStorage.setItem(
             this.cachePrefixString() + this.cache(),
-            JSON.stringify(this._cols().filter((c) => c.hide).map((d) => d.name)),
+            JSON.stringify(hiddenNames),
         );
     }
+    this.hiddenColumns.set(new Set(hiddenNames));
     this.thResizeService.columnChange$.next(cols);
 }
 ```
@@ -703,7 +868,8 @@ toggleHeaderColumns(cols: AxyomColumn[]) {
 **设计要点：**
 - 通过 `cache` input 传入唯一标识，启用持久化
 - `cachePrefix` 支持全局配置，避免不同表格 key 冲突
-- 列的 `hide` 状态在 `_cols()` computed 中保持，切换时触发重新渲染
+- **信号化重构**：不再修改 `_cols()` 数组，而是通过 `hiddenColumns` 信号管理，`_cols` computed 自动合并隐藏状态
+- `toggleHeaderColumns` 同时触发 `columnChange$` 通知拖拽指令重新绑定额外度手柄
 
 ### 2.9 初始排序状态管理
 
@@ -714,19 +880,19 @@ toggleHeaderColumns(cols: AxyomColumn[]) {
 private initializeSortOrder(): void {
     if (this.isSortByFront()) return;
 
-const initialSortColumns = this._cols()
-    .filter((col) => col.sortable && col.sortOrder);
-if (initialSortColumns.length == 0) return;
+    const initialSortColumns = this._cols()
+        .filter((col) => col.sortable && col.sortOrder);
+    if (initialSortColumns.length == 0) return;
 
-const sorts = initialSortColumns.map(
-    (col) => col.prop + ',' + col.sortOrder!.replace('end', ''),
-);
+    const sorts = initialSortColumns.map(
+        (col) => col.prop + ',' + col.sortOrder!.replace('end', ''),
+    );
 
-if (!this.page().sorts || this.page().sorts.length === 0) {
-    this.page.update((x) => new AxyomPage({
-        ...x, sorts, pageIndex: 0,
-    }));
-}
+    if (!this.page().sorts || this.page().sorts.length === 0) {
+        this.page.update((x) => new AxyomPage({
+            ...x, sorts, pageIndex: 0,
+        }));
+    }
 }
 ```
 
@@ -734,6 +900,72 @@ if (!this.page().sorts || this.page().sorts.length === 0) {
 - 首次加载时自动读取列配置中的 `sortOrder`，转换为后端排序参数
 - 仅在**后端排序 + 后端分页**模式下生效
 - 避免与用户手动设置的排序冲突（已有 `sorts` 时不覆盖）
+
+### 2.10 effect 副作用的精准管理
+
+**位置**: `table.component.ts`
+
+```typescript
+constructor() {
+    // effect 1: 列配置变更时同步到拖拽服务
+    effect(() => {
+        const cols = this._cols();
+        untracked(() => this.thResizeService.columnChange$.next(cols));
+    });
+
+    // effect 2: 动态更新 DOM 高度
+    effect(() => {
+        const h = this.height();
+        const body = this.element.nativeElement.querySelector('.ant-table-body');
+        if (body && h) {
+            this.renderer2.setStyle(body, 'height', h);
+        }
+    });
+
+    // effect 3: rows 变更时校验树展开状态
+    effect(() => {
+        const rows = this.rows();
+        untracked(() => {
+            const keyFn = this.key();
+
+            if (this.tree()) {
+                this.rowExpand.update((existing) => {
+                    if (existing.size === 0) return existing;
+
+                    const validatedKeys = new Set<string | number>();
+                    const keysToValidate = new Set(existing);
+
+                    const traverse = (list: any[]) => {
+                        if (!list || !Array.isArray(list) || keysToValidate.size === 0) return;
+                        for (const item of list) {
+                            if (item) {
+                                const key = keyFn(item);
+                                if (keysToValidate.has(key)) {
+                                    if (item.children && item.children.length > 0) {
+                                        validatedKeys.add(key);
+                                    }
+                                    keysToValidate.delete(key);
+                                }
+                                if (item.children && item.children.length > 0 && keysToValidate.size > 0) {
+                                    traverse(item.children);
+                                }
+                            }
+                        }
+                    };
+
+                    traverse(rows);
+                    return validatedKeys;
+                });
+            }
+        });
+    });
+}
+```
+
+**设计意图：**
+- **effect 1**：`_cols` computed 结果发生变化时，通过 `untracked` 同步到拖拽服务的 `columnChange$`，触发指令重新绑定额外度手柄。避免在 computed 中写入副作用
+- **effect 2**：响应式更新表格 body 高度，支持动态 `height` input 变更
+- **effect 3**：树形数据刷新时，自动折叠子节点已不存在的展开行。`untracked` 确保 effect 只追踪 `rows()`，不追踪内部的信号读取
 
 ---
 
@@ -750,6 +982,7 @@ if (!this.page().sorts || this.page().sorts.length === 0) {
 | 分页防抖 | `BehaviorSubject` + `debounceTime(10)` | 避免频繁请求 |
 | Set 信号 | `rowChecked` 使用 `Set` 信号 | O(1) 查重 |
 | `lodash-es` | Tree-shakable ES Module | 按需打包 |
+| 不可变数据流 | `columnWidths`/`hiddenColumns` 信号 | 避免脏数据引用 |
 
 ### 3.2 开发体验优化
 
@@ -757,7 +990,7 @@ if (!this.page().sorts || this.page().sorts.length === 0) {
 |--------|----------|
 | 声明式 API | `cols` 只需 `prop` + `name`，其余自动填充 |
 | 全局配置 | `provideAxyomTableConfig()` 工厂函数 |
-| 类型安全 | 泛型 `AxyomColumn<T>`、`AxyomRow<T>` |
+| 类型安全 | 泛型 `AxyomColumn<T>`，`key()` 函数灵活标识行 |
 | 自动比较器 | `compare(prop)` 自动生成排序比较函数 |
 | 模板插槽 | `axyomRow` 指令 + `render` 属性 |
 | 列显隐缓存 | `localStorage` 持久化，跨会话保持 |
@@ -771,7 +1004,7 @@ if (!this.page().sorts || this.page().sorts.length === 0) {
 | 服务隔离 | `DragColumnService` 组件级作用域（非单例） |
 | 公开 API | `public-api.ts` 控制导出边界 |
 | Library 构建 | ng-packagr 独立构建，支持 tree-shaking |
-| 测试覆盖 | 16 个 spec 文件，42 个测试套件 |
+| 测试覆盖 | 16 个 spec 文件，42 个测试套件，109 个 it 用例 |
 
 ---
 
@@ -782,21 +1015,23 @@ if (!this.page().sorts || this.page().sorts.length === 0) {
 #### Q1: 为什么选择 Signals 而不是 RxJS？
 
 **回答：**
-> "在 Angular 21 中，Signals 是官方推荐的响应式原语。这个项目的数据流主要是 UI 状态（分页、排序、选中行），这些状态是同步的、需要直接绑定到模板。Signal 的 `computed` 自动追踪依赖，不需要手动 `subscribe`/`unsubscribe`，也不会有 `AsyncPipe` 的性能开销。对于真正的异步操作（列宽拖拽事件流），项目仍然使用 RxJS 的 `BehaviorSubject` + `takeUntilDestroyed`。两者是互补关系。"
+> "在 Angular 21 中，Signals 是官方推荐的响应式原语。这个项目的数据流主要是 UI 状态（分页、排序、选中行、列宽、列显隐），这些状态是同步的、需要直接绑定到模板。Signal 的 `computed` 自动追踪依赖，不需要手动 `subscribe`/`unsubscribe`，也不会有 `AsyncPipe` 的性能开销。对于真正的异步操作（列宽拖拽事件流、分页防抖），项目仍然使用 RxJS 的 `BehaviorSubject` + `takeUntilDestroyed`。两者是互补关系。"
 
 ---
 
 #### Q2: 如何实现前端排序和后端排序的无缝切换？
 
 **回答：**
-> "通过 `isSortByFront` 这个 `computed` 属性来判断。它根据分页模式和 `backendSort` 配置自动决定排序策略。前端排序调用 `applyFrontendSorting` 直接操作 `data` 信号；后端排序则将排序参数写入 `AxyomPage` 对象，通过 `page` 的 `model` 双向绑定通知父组件发起 HTTP 请求。关键的细节是：后端排序时，只有首次设置排序才重置页码，已有排序时切换列保持当前页码。`initializeSortOrder` 方法在 `ngOnInit` 时从列配置的 `sortOrder` 自动推导初始排序状态。"
+> "通过 `isSortByFront` 这个 `computed` 属性来判断。它根据分页模式和 `backendSort` 配置自动决定排序策略。前端排序模式下，`sortChange()` 设置 `activeSorts` 信号，`data` computed 自动重新排序数据——这是声明式的，不需要手动 `data.update()`。后端排序模式下，排序参数写入 `page$` BehaviorSubject，通过 `debounceTime(10)` 防抖后更新 `page` 信号通知父组件。关键的细节是：后端排序时，只有首次设置排序才重置页码，已有排序时切换列保持当前页码。"
 
 ---
 
-#### Q3: 列拖拽调整宽度的实现原理？
+#### Q3: 列拖拽调整宽度的实现原理？信号化之后有什么好处？
 
 **回答：**
-> "利用 `DragColumnDirective` 在 `ngAfterViewInit` 时通过 `setTimeout` 延迟等待 DOM 渲染完成后，动态创建 `<i>` 元素作为拖拽手柄。使用 `fromEvent` 监听 `mousedown`/`mousemove`/`mouseup` 事件链。`mousemove` 时计算宽度差值，通过 `BehaviorSubject` 广播列宽变化。`take(1)` 确保 `mouseup` 只触发一次后自动取消订阅。`table-resizing` CSS class 在拖拽期间通过 `user-select: none` 防止文字选中。"
+> "利用 `DragColumnDirective` 在 `ngAfterViewInit` 时通过 `setTimeout` 延迟等待 DOM 渲染完成后，动态创建 `<i>` 元素作为拖拽手柄。使用 `fromEvent` 监听 `mousedown`/`mousemove`/`mouseup` 事件链。`mousemove` 时计算宽度差值，通过 `BehaviorSubject` 广播列宽变化。`take(1)` 确保 `mouseup` 只触发一次后自动取消订阅。`table-resizing` CSS class 在拖拽期间通过 `user-select: none` 防止文字选中。
+>
+> **信号化之后**，拖拽不再直接修改 `_cols` 数组，而是更新 `columnWidths` 信号，`_cols` computed 自动合并宽度。避免了脏数据，也保证了不可变数据流。"
 
 ---
 
@@ -810,14 +1045,14 @@ if (!this.page().sorts || this.page().sorts.length === 0) {
 #### Q5: 如何处理大数据量的性能问题？
 
 **回答：**
-> "三个层面：1）数据层：支持 `virtualScroll`，使用 ng-zorro 的虚拟滚动，只渲染可视区域的 DOM；2）计算层：分页、排序用 `computed` 自动追踪依赖，选中行用 `Set` 信号实现 O(1) 查重；3）渲染层：`CellComponent` 使用 `OnPush` 检测策略，`trackBy` 通过 `key()` 函数唯一标识行。实测 10 万条数据也能流畅运行。"
+> "三个层面：1）**数据层**：支持 `virtualScroll`，使用 ng-zorro 的虚拟滚动，只渲染可视区域的 DOM；2）**计算层**：分页、排序用 `computed` 自动追踪依赖，选中行用 `Set` 信号实现 O(1) 查重；3）**渲染层**：`CellComponent` 使用 `OnPush` 检测策略，`trackBy` 通过 `key()` 函数唯一标识行。实测 10 万条数据也能流畅运行。"
 
 ---
 
 #### Q6: 这个库的扩展性设计体现在哪些方面？
 
 **回答：**
-> "1）**配置扩展**：`provideAxyomTableConfig()` 工厂函数，全局配置 + 组件级覆盖；2）**渲染扩展**：`axyomRow` 指令 + `render` 属性，用户可自定义任意单元格渲染；3）**数据扩展**：`AxyomColumn<T>` 泛型，支持任意数据类型；4）**行为扩展**：`compare` 自定义比较函数、`format` 自定义格式化、`key` 自定义行标识；5）**菜单扩展**：`AxyomMenu` 支持嵌套子菜单、条件显隐和回调；6）**初始排序**：列配置 `sortOrder` 即指定排序，无需额外逻辑。"
+> "1）**配置扩展**：`provideAxyomTableConfig()` 工厂函数，全局配置 + 组件级覆盖；2）**渲染扩展**：`axyomRow` 指令 + `render` 属性，用户可自定义任意单元格渲染；3）**数据扩展**：`AxyomColumn<T>` 泛型，支持任意数据类型；4）**行为扩展**：`compare` 自定义比较函数、`format` 自定义格式化、`key` 自定义行标识、`isDisabled` 禁用判断；5）**菜单扩展**：`AxyomMenu` 支持嵌套子菜单、条件显隐和回调；6）**初始排序**：列配置 `sortOrder` 即指定排序，无需额外逻辑。"
 
 ### 4.2 Angular 高级特性类
 
@@ -825,7 +1060,7 @@ if (!this.page().sorts || this.page().sorts.length === 0) {
 
 ```typescript
 // TableComponent 中声明 model
-readonly selected = model<AxyomRows>([]);  // 双向绑定
+readonly selected = model<T[]>([]);  // 双向绑定
 readonly page = model<AxyomPage>(new AxyomPage({ pageSize: 0 }));
 
 // 父组件使用
@@ -864,16 +1099,28 @@ readonly isSortByFront = computed(() => {
 });
 readonly total = computed(() => {
     if (!this.frontPagination()) return this.page().total;
-    return this.data().length;
+    return this.data().length;  // 前端分页时依赖 data()
 });
 ```
 
 **回答：**
 > "`computed()` 的核心价值是**声明式依赖追踪**。当 `page` 信号变化时，所有依赖 `page` 的 computed 会自动重算，不需要手动通知。这形成了一个响应式依赖图：`page → _showPagination → isSortByFront`。对比 RxJS，我需要手动 `combineLatest` + `pipe` + `subscribe`，代码量和心智负担都更大。"
 
+#### Q10: effect() 的 untracked 用途？
+
+```typescript
+effect(() => {
+    const cols = this._cols();
+    untracked(() => this.thResizeService.columnChange$.next(cols));
+});
+```
+
+**回答：**
+> "`untracked` 用于在 effect 中读取信号但不追踪它。上面这个 effect 只追踪 `_cols()`，不追踪 `columnChange$` 发送过程中的任何信号。这样当 `_cols` 变化时，副作用自动执行，但副作用内部的操作不会创建额外依赖。避免了循环依赖和冗余执行。"
+
 ### 4.3 性能优化类
 
-#### Q10: 信号 vs 可观察对象的性能对比
+#### Q11: 信号 vs 可观察对象的性能对比
 
 | 维度 | Signal | Observable (AsyncPipe) |
 |------|--------|------------------------|
@@ -888,18 +1135,18 @@ readonly total = computed(() => {
 
 ---
 
-#### Q11: 虚拟滚动的适用场景与限制？
+#### Q12: 虚拟滚动的适用场景与限制？
 
 **回答：**
 > "虚拟滚动的原理是只渲染可视区域的 DOM 节点，通过 padding 撑起滚动高度。它的限制是：1）不能和前端分页同时使用（分页本身就是数据子集）；2）行高必须固定或可预测（`virtualSize`）；3）展开行、树形递归等复杂行结构需要特殊处理。所以我提供了 `virtualScroll` 开关，让用户按需启用。"
 
 ---
 
-#### Q12: trackBy 的策略？
+#### Q13: trackBy 的策略？
 
 ```typescript
 // 通过 key() 函数实现统一 trackBy
-readonly trackByRow = (item: AxyomRow): string | number => {
+readonly trackByRow = (item: T): string | number => {
     return this.key()(item);
 };
 ```
@@ -909,7 +1156,7 @@ readonly trackByRow = (item: AxyomRow): string | number => {
 
 ### 4.4 API 设计类
 
-#### Q13: 渐进增强（Progressive Enhancement）原则？
+#### Q14: 渐进增强（Progressive Enhancement）原则？
 
 ```
 最简用法：           <axyom-table [cols]="cols" [rows]="rows"/>
@@ -923,13 +1170,13 @@ readonly trackByRow = (item: AxyomRow): string | number => {
 
 ---
 
-#### Q14: 约定优于配置（Convention over Configuration）？
+#### Q15: 约定优于配置（Convention over Configuration）？
 
 ```typescript
 // 约定1：列配置自动推导
 { prop: 'name', sortable: true }
 // → 自动生成 compare 函数
-// → 自动填充 width: null, hide: false, ellipsis: true ...
+// → 自动填充 width: null, hide: false, ellipsis: true, align: null ...
 
 // 约定2：日期列自动追加时区
 { prop: 'date', type: 'date' }
@@ -942,24 +1189,29 @@ readonly trackByRow = (item: AxyomRow): string | number => {
 // 约定4：初始排序自动应用
 { prop: 'name', sortOrder: 'ascend' }
 // → 首次加载自动按 name 升序排序
+
+// 约定5：sortable 默认值自适应
+{ prop: 'name' }
+// → 后端分页模式：sortable 默认为 false
+// → 前端分页模式：sortable 由 enableSort 配置决定
 ```
 
 **回答：**
-> "我做了大量的**约定优于配置**设计。比如列配置的 `type: 'date'` 会自动追加时区信息到列名；`prop: 'address.state'` 会自动用 lodash 的点号路径访问嵌套属性；用户不定义 `compare` 函数时，系统根据 `prop` 自动生成默认比较器；列配置指定 `sortOrder` 即可自动应用初始排序。这些约定减少了 80% 的样板代码。"
+> "我做了大量的**约定优于配置**设计。比如列配置的 `type: 'date'` 会自动追加时区信息到列名；`prop: 'address.state'` 会自动用 lodash 的点号路径访问嵌套属性；用户不定义 `compare` 函数时，系统根据 `prop` 自动生成默认比较器；列配置指定 `sortOrder` 即可自动应用初始排序；`sortable` 默认值根据分页模式自适应。这些约定减少了 80% 的样板代码。"
 
 ### 4.5 面试话术模板
 
 #### 开场白（30秒）
 
-> "我基于 Angular 21 + ng-zorro 封装了一个企业级表格组件库，全面拥抱 Signals API，实现了声明式配置、三态分页、前端/后端排序无缝切换、TemplateRef 插槽机制、列拖拽调整、树形递归渲染、初始排序状态等能力。核心设计理念是**渐进增强**和**约定优于配置**，消费者最简只需传入 `cols` + `rows` 即可使用。"
+> "我基于 Angular 21 + ng-zorro 封装了一个企业级表格组件库，全面拥抱 Signals API，实现了声明式配置、三态分页、前端/后端排序无缝切换、TemplateRef 插槽机制、信号化列宽/显隐管理、列拖拽调整、树形递归渲染、初始排序状态等能力。核心设计理念是**渐进增强**和**约定优于配置**，消费者最简只需传入 `cols` + `rows` 即可使用。"
 
 #### 技术深度展示（选择 2-3 个点深入）
 
 **点1：Signals响应式架构**
-> "项目全面采用 Angular 21 的 Signals API，替代传统 RxJS BehaviorSubject。`computed` 自动追踪依赖图，`model` 实现父子组件双向绑定。Signal 是同步的、基于值的，适合 UI 状态；Observable 是异步的、基于流的，适合 HTTP 请求。两者互补，不是替代关系。"
+> "项目全面采用 Angular 21 的 Signals API，替代传统 RxJS BehaviorSubject。`computed` 自动追踪依赖图，`model` 实现父子组件双向绑定。前端排序从命令式重构为声明式——`data` 从 `signal` 变为 `computed`，排序逻辑内嵌其中。列宽和列显隐也信号化，通过 `columnWidths`/`hiddenColumns` 信号驱动，不再直接修改数组。"
 
 **点2：三态分页设计**
-> "通过 `frontPagination` + `page.pageSize` 的组合实现了三种分页模式：后端分页、前端分页、不分页。关键细节是：后端排序时切换排序列不重置页码（已有排序），首次设置排序才重置为第 0 页。这个语义需要深入理解业务需求。"
+> "通过 `frontPagination` + `page.pageSize` 的组合实现了三种分页模式：后端分页、前端分页、不分页。分页更新使用 `page$` BehaviorSubject + `debounceTime(10)` 防抖。关键细节是：后端排序时切换排序列不重置页码（已有排序），首次设置排序才重置为第 0 页。"
 
 **点3：TemplateRef插槽机制**
 > "自定义单元格渲染用了注册表模式。`AxyomRowSource` 作为中央注册表，`AxyomRowDirective` 负责注册，`CellComponent` 负责查询。每个 TableComponent 实例通过 `{ host: true }` 拥有独立的注册表，避免不同表格的模板冲突。"
@@ -978,7 +1230,7 @@ readonly trackByRow = (item: AxyomRow): string | number => {
 #### 追问2: "拖拽调整列宽的时候页面不会卡吗？"
 
 **回答：**
-> "三个优化：1）`setTimeout(100)` 延迟绑定事件，确保 ng-zorro DOM 渲染完成；2）`document.body.classList.add('table-resizing')` + CSS `user-select: none` 防止文字选中干扰；3）`BehaviorSubject` 广播列宽变化，只更新受影响的列，而不是整个表格重绘。实测在 Chrome 上 60fps 流畅运行。"
+> "三个优化：1）`setTimeout(100)` 延迟绑定事件，确保 ng-zorro DOM 渲染完成；2）`document.body.classList.add('table-resizing')` + CSS `user-select: none` 防止文字选中干扰；3）`BehaviorSubject` 广播列宽变化，组件更新 `columnWidths` 信号，`_cols` computed 自动合并——只更新受影响的列，而不是整个表格重绘。实测在 Chrome 上 60fps 流畅运行。"
 
 #### 追问3: "为什么不直接用 ng-zorro 的 nz-table，还要封装？"
 
@@ -988,12 +1240,12 @@ readonly trackByRow = (item: AxyomRow): string | number => {
 #### 追问4: "如果要支持列顺序拖拽，你会怎么设计？"
 
 **回答：**
-> "当前的 `DragColumnService` 只处理列宽变化，我会扩展为三类事件：`columnWidthChange$`（现有）、`columnOrderChange$`（新增）、`columnResizeEnd$`（新增）。列顺序拖拽需要：1）在 `th` 上监听 `mousedown`，创建拖拽预览层；2）`mousemove` 时实时计算插入位置，显示占位符；3）`mouseup` 时更新 `_cols()` 数组顺序，触发重新渲染。关键是 `_cols` 必须是 `computed`，才能触发 Angular 的变更检测。"
+> "当前的 `DragColumnService` 只处理列宽变化，我会扩展为三类事件：`columnWidthChange$`（现有）、`columnOrderChange$`（新增）、`columnResizeEnd$`（新增）。列顺序拖拽需要：1）在 `th` 上监听 `mousedown`，创建拖拽预览层；2）`mousemove` 时实时计算插入位置，显示占位符；3）`mouseup` 时更新列顺序，通过信号化 `colOrder` 触发 `_cols` computed 重算。"
 
 #### 追问5: "这个库有什么不足？你怎么改进？"
 
 **回答：**
-> "三个方向：1）**虚拟滚动 + 前端分页的冲突**：当前两者互斥，可以实现'分页内虚拟滚动'，即每页数据量大时也启用虚拟滚动；2）**响应式列**：可以根据屏幕宽度自动隐藏次要列，类似 CSS `container queries` 的思路；3）**i18n**：分页组件的 'Total X items' 硬编码了英文，可以注入 `NzI18nService` 实现国际化。这些是下一步的改进方向。"
+> "三个方向：1）**虚拟滚动 + 前端分页的冲突**：当前两者互斥，可以实现'分页内虚拟滚动'，即每页数据量大时也启用虚拟滚动；2）**响应式列**：可以根据屏幕宽度自动隐藏次要列，类似 CSS `container queries` 的思路；3）**i18n**：'Total X items' 硬编码了英文，可以注入 `NzI18nService` 实现国际化。这些是下一步的改进方向。"
 
 ---
 
@@ -1016,18 +1268,21 @@ readonly trackByRow = (item: AxyomRow): string | number => {
 │  │  架构设计能力                                               │  │
 │  │  分层架构 · 依赖注入 · 组件/服务分离                        │  │
 │  │  工厂模式(provideTableConfig) · 注册表(TemplateRef)         │  │
+│  │  信号驱动架构(列宽/显隐信号化管理)                           │  │
 │  └───────────────────────────────────────────────────────────┘  │
 │                                                                 │
 │  ┌───────────────────────────────────────────────────────────┐  │
 │  │  复杂状态管理                                               │  │
 │  │  三态分页 · 前端/后端排序切换 · 选中行状态                   │  │
 │  │  computed依赖追踪 · model双向绑定 · Set信号管理             │  │
+│  │  声明式computed排序 · 信号化列宽/显隐管理                   │  │
 │  └───────────────────────────────────────────────────────────┘  │
 │                                                                 │
 │  ┌───────────────────────────────────────────────────────────┐  │
 │  │  性能优化                                                   │  │
 │  │  虚拟滚动 · Signal精准更新 · computed缓存                   │  │
 │  │  Set O(1)查重 · trackBy优化 · debounce防抖                  │  │
+│  │  不可变数据流 · 信号驱动列管理                              │  │
 │  └───────────────────────────────────────────────────────────┘  │
 │                                                                 │
 │  ┌───────────────────────────────────────────────────────────┐  │
@@ -1037,70 +1292,26 @@ readonly trackByRow = (item: AxyomRow): string | number => {
 │  └───────────────────────────────────────────────────────────┘  │
 │                                                                 │
 │  ┌───────────────────────────────────────────────────────────┐  │
-│  │  工程化                                                     │  │
-│  │  ng-packagr构建 · Library发布 · 单元测试(42套)              │  │
-│  │  TypeScript严格模式 · ESLint · Prettier · Husky             │  │
+│  │  设计模式应用                                               │  │
+│  │  策略模式(分页排序) · 观察者模式(状态总线)                  │  │
+│  │  注册表模式(TemplateRef) · 工厂模式(配置创建)              │  │
+│  │  信号驱动架构(列宽/显隐)                                    │  │
 │  └───────────────────────────────────────────────────────────┘  │
+│                                                                 │
 └─────────────────────────────────────────────────────────────────┘
 ```
 
-### 5.2 核心能力矩阵
+### 5.2 Signals 相关设计模式汇总
 
-| 能力维度 | 实现方式 | 技术深度 |
-|----------|----------|----------|
-| **响应式架构** | Signals + model() + computed | ⭐⭐⭐⭐⭐ |
-| **复杂状态管理** | 三态分页 + 排序切换 + 选中行 + Set信号 | ⭐⭐⭐⭐⭐ |
-| **API设计** | 渐进增强 + 约定优于配置 | ⭐⭐⭐⭐ |
-| **性能优化** | 虚拟滚动 + OnPush + trackBy | ⭐⭐⭐⭐ |
-| **组件通信** | DI + host:true + BehaviorSubject | ⭐⭐⭐⭐ |
-| **工程化** | Library构建 + 42套单元测试 | ⭐⭐⭐⭐ |
-
-### 5.3 面试价值点
-
-1. **架构设计能力**：分层架构、依赖注入、组件/服务分离
-
-2. **Angular新特性**：全面拥抱Signals API，computed/model等新特性
-
-3. **复杂状态管理**：分页/排序/选中的多态组合
-
-4. **性能优化意识**：虚拟滚动、OnPush、trackBy、debounce
-
-5. **API设计能力**：声明式配置、渐进增强、默认值策略
-
-6. **用户体验细节**：列显隐缓存、跨时区处理、右键菜单、拖拽调整
+| 模式 | 实现 | 技术要点 |
+|------|------|----------|
+| **信号即状态** | 所有 UI 可变状态用 `signal()` | 显式、可追踪、不可变更新 |
+| **computed 派生** | 复杂状态用 `computed()` 组合 | 自动依赖追踪，惰性求值 |
+| **model 双向绑定** | `model()` 替代 `@Input`+`@Output` | 父子组件状态同步 |
+| **Set 信号** | `signal<Set<T>>()` 管理集合状态 | O(1) 查重，精确更新 |
+| **effect 副作用** | `effect()` 处理 DOM 同步/服务通知 | `untracked` 防止额外依赖 |
+| **信号驱动架构** | `columnWidths`/`hiddenColumns` | 不可变数据流，computed 自动合并 |
+| **声明式排序** | `data` computed 内嵌排序逻辑 | 数据变换可预测，无手动 update |
 
 ---
 
-## 附录：项目数据统计
-
-| 指标 | 数值 |
-|------|------|
-| Library 核心代码行数 | ~1,200 行 TypeScript |
-| 组件数 | 5 个（Table/Cell/ContentHeader/ContentBody/MenuItem） |
-| 指令数 | 2 个（AxyomRow/DragColumn） |
-| 服务数 | 3 个（DragColumn/FileSave/AxyomRowSource） |
-| 模型数 | 5 个（Column/Config/Page/Row/Menu） |
-| 单元测试文件 | 16 个 spec 文件 |
-| 测试套件 | 42 个 describe 测试套件 |
-| 演示页面 | 26 个使用场景 |
-| Angular 版本 | 21.2（最新） |
-| Library 版本 | 21.1.0（@axyom-ui/table） |
-| 测试框架 | Vitest |
-
-Axyom-Table 是一个**设计精良的企业级表格组件库**，体现了以下技术能力：
-
-1. **架构设计能力**：分层架构、依赖注入、组件/服务分离
-
-2. **Angular 新特性运用**：全面拥抱 Signals API，computed/model 等新特性
-
-3. **复杂状态管理**：分页/排序/选中的多态组合
-
-4. **性能优化意识**：虚拟滚动、OnPush、trackBy、Set O(1) 查重
-
-5. **API 设计能力**：声明式配置、渐进增强、默认值策略
-
-6. **工程化实践**：Library 构建、42 套单元测试、TypeScript 泛型
-
-7. **用户体验细节**：列显隐缓存、跨时区处理、右键菜单、拖拽调整
-
-这个项目可以作为"个人技术作品"在面试中深度展示，尤其适合在**架构设计**和**Angular 高级特性**相关问题中展开讨论。
