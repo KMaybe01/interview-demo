@@ -1,6 +1,9 @@
 import babel from '@rolldown/plugin-babel'
 import {defineConfig} from 'vitest/config'
 import react, {reactCompilerPreset} from '@vitejs/plugin-react'
+import {visualizer} from 'rollup-plugin-visualizer'
+
+const isAnalyze = process.env.ANALYZE === 'true'
 
 export default defineConfig({
   plugins: [
@@ -9,6 +12,15 @@ export default defineConfig({
       presets: [reactCompilerPreset()],
       exclude: 'node_modules/**',
     }),
+    ...(isAnalyze
+      ? [
+          visualizer({
+            emitFile: true,
+            filename: 'stats.html',
+            open: true,
+          }),
+        ]
+      : []),
   ],
   server: {
     proxy: {

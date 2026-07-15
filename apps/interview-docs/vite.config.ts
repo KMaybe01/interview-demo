@@ -1,10 +1,23 @@
 import react from '@vitejs/plugin-react';
+import { visualizer } from 'rollup-plugin-visualizer';
 import { defineConfig } from 'vitest/config';
 
 const base = process.env.VITE_BASE_PATH || '/';
+const isAnalyze = process.env.ANALYZE === 'true';
 
 export default defineConfig({
-  plugins: [react()],
+  plugins: [
+    react(),
+    ...(isAnalyze
+      ? [
+          visualizer({
+            emitFile: true,
+            filename: 'stats.html',
+            open: true,
+          }),
+        ]
+      : []),
+  ],
   base,
   server: {
     port: 5000,

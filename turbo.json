@@ -1,6 +1,6 @@
 {
   "$schema": "https://v2-10-5.turborepo.dev/schema.json",
-  "globalEnv": ["NODE_ENV"],
+  "globalEnv": ["NODE_ENV", "ANALYZE"],
   "globalDependencies": [".env*"],
   "tasks": {
     "build": {
