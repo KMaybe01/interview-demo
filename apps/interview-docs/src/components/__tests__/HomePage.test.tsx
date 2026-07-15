@@ -72,7 +72,7 @@ describe('HomePage', () => {
       </MemoryRouter>,
     );
     const githubLink = screen.getByText('在 GitHub 查看').closest('a');
-    expect(githubLink).toHaveAttribute('href', 'https://gitlab.com/KMaybe-01/interview-demo');
+    expect(githubLink).toHaveAttribute('href', 'https://github.com/KMaybe01/interview-demo');
     expect(githubLink).toHaveAttribute('target', '_blank');
   });
 });

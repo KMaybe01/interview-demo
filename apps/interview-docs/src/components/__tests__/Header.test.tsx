@@ -107,7 +107,7 @@ describe('Header', () => {
       </MemoryRouter>,
     );
     const githubLink = screen.getByTitle('GitHub');
-    expect(githubLink).toHaveAttribute('href', 'https://gitlab.com/KMaybe-01/interview-demo');
+    expect(githubLink).toHaveAttribute('href', 'https://github.com/KMaybe01/interview-demo');
     expect(githubLink).toHaveAttribute('target', '_blank');
   });
 });

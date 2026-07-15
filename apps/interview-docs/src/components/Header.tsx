@@ -147,7 +147,7 @@ export default function Header() {
 
             <ThemeToggle mode={theme === 'dark' ? 'dark' : 'light'} onToggle={handleToggleTheme} />
             <a
-              href="https://gitlab.com/KMaybe-01/interview-demo"
+              href="https://github.com/KMaybe01/interview-demo"
               target="_blank"
               rel="noopener noreferrer"
               className="header-action-btn"
