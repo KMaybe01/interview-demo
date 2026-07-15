@@ -1,4 +1,4 @@
-import { useAnimationFrame, useMotionValue, useSpring } from 'motion/react';
+import { useMotionValue, useSpring } from 'motion/react';
 import { useCallback, useEffect, useRef } from 'react';
 
 interface Point {
@@ -13,6 +13,7 @@ export default function GridDistortion() {
   const pointsRef = useRef<Point[]>([]);
   const mouseX = useMotionValue(-9999);
   const mouseY = useMotionValue(-9999);
+  const rafRef = useRef(0);
 
   const smoothX = useSpring(mouseX, { stiffness: 60, damping: 20 });
   const smoothY = useSpring(mouseY, { stiffness: 60, damping: 20 });
@@ -69,45 +70,60 @@ export default function GridDistortion() {
     };
   }, [mouseX, mouseY]);
 
-  useAnimationFrame(() => {
+  useEffect(() => {
     const canvas = canvasRef.current;
-    const ctx = canvas?.getContext('2d');
-    if (!canvas || !ctx) return;
+    const c = canvas?.getContext('2d');
+    if (!canvas || !c) return;
 
-    const w = window.innerWidth;
-    const h = window.innerHeight;
-    const pts = pointsRef.current;
-    const mx = smoothX.get();
-    const my = smoothY.get();
-    const radius = 80;
-    const strength = 18;
+    let alive = true;
 
-    for (const p of pts) {
-      const dx = p.ox - mx;
-      const dy = p.oy - my;
-      const dist = Math.sqrt(dx * dx + dy * dy);
+    function tick(ctx: CanvasRenderingContext2D) {
+      if (!alive || typeof window === 'undefined') return;
 
-      let tx = p.ox;
-      let ty = p.oy;
-      if (dist < radius && dist > 0) {
-        const force = (1 - dist / radius) * strength;
-        tx += (dx / dist) * force;
-        ty += (dy / dist) * force;
+      const w = window.innerWidth;
+      const h = window.innerHeight;
+      const pts = pointsRef.current;
+      const mx = smoothX.get();
+      const my = smoothY.get();
+      const radius = 80;
+      const strength = 18;
+
+      for (const p of pts) {
+        const dx = p.ox - mx;
+        const dy = p.oy - my;
+        const dist = Math.sqrt(dx * dx + dy * dy);
+
+        let tx = p.ox;
+        let ty = p.oy;
+        if (dist < radius && dist > 0) {
+          const force = (1 - dist / radius) * strength;
+          tx += (dx / dist) * force;
+          ty += (dy / dist) * force;
+        }
+
+        p.x += (tx - p.x) * 0.15;
+        p.y += (ty - p.y) * 0.15;
       }
 
-      p.x += (tx - p.x) * 0.15;
-      p.y += (ty - p.y) * 0.15;
+      ctx.clearRect(0, 0, w, h);
+
+      for (const p of pts) {
+        ctx.beginPath();
+        ctx.arc(p.x, p.y, 1.2, 0, Math.PI * 2);
+        ctx.fillStyle = 'rgba(102,126,234,0.25)';
+        ctx.fill();
+      }
+
+      rafRef.current = requestAnimationFrame(() => tick(c!));
     }
 
-    ctx.clearRect(0, 0, w, h);
+    rafRef.current = requestAnimationFrame(() => tick(c!));
 
-    for (const p of pts) {
-      ctx.beginPath();
-      ctx.arc(p.x, p.y, 1.2, 0, Math.PI * 2);
-      ctx.fillStyle = 'rgba(102,126,234,0.25)';
-      ctx.fill();
-    }
-  });
+    return () => {
+      alive = false;
+      cancelAnimationFrame(rafRef.current);
+    };
+  }, [smoothX]);
 
   return (
     <canvas

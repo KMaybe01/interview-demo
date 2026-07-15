@@ -27,11 +27,11 @@ bun install          # 只能用 bun, 不能用 npm（从根目录安装所有 w
 | 命令 | 说明 |
 |------|------|
 | `bun run --cwd apps/frontend dev` | Vite 开发服务器 (port 5173, `/api` + `/ws` 代理到 `:8080`) |
-| `bun run --cwd apps/frontend build` | `tsc -b && vite build` (Rolldown Rust 打包) |
+| `bun run --cwd apps/frontend build` | `tsc -p tsconfig.app.json --noEmit && tsc -p tsconfig.node.json --noEmit && vite build` (Rolldown Rust 打包) |
 | `bun run --cwd apps/frontend test:watch` | `vitest` (监听模式) |
 | `bun run --cwd apps/frontend lint` | `bunx biome check --write src/` (Biome 是**唯一**的 linter/formatter) |
 | `bun run --cwd apps/frontend format` | `bunx biome format --write src/` |
-| `bun run --cwd apps/frontend typecheck` | `tsc -b --noEmit` — 类型检查 |
+| `bun run --cwd apps/frontend typecheck` | `tsc -p tsconfig.app.json --noEmit && tsc -p tsconfig.node.json --noEmit` — 类型检查 |
 
 也可直接 `cd apps/frontend` 后执行上述命令。
 
@@ -40,17 +40,17 @@ bun install          # 只能用 bun, 不能用 npm（从根目录安装所有 w
 | 命令 | 说明 |
 |------|------|
 | `bun run --cwd apps/ai-demo dev` | Vite 开发服务器 (port 5175, `/api` 代理到 `:8080`) |
-| `bun run --cwd apps/ai-demo build` | `tsc -b && vite build` |
+| `bun run --cwd apps/ai-demo build` | `tsc -p tsconfig.app.json --noEmit && tsc -p tsconfig.node.json --noEmit && vite build` |
 | `bun run --cwd apps/ai-demo test` | `vitest run` |
 | `bun run --cwd apps/ai-demo lint` | `bunx biome check --write src/` |
-| `bun run --cwd apps/ai-demo typecheck` | `tsc -b --noEmit` |
+| `bun run --cwd apps/ai-demo typecheck` | `tsc -p tsconfig.app.json --noEmit && tsc -p tsconfig.node.json --noEmit` |
 
 `apps/interview-docs/`（前端知识库文档站点）：
 
 | 命令 | 说明 |
 |------|------|
 | `cd apps/interview-docs && bun run dev` | Vite 开发服务器 (port 5000) |
-| `cd apps/interview-docs && bun run build` | `tsc -b && vite build && node gen-version.mjs` |
+| `cd apps/interview-docs && bun run build` | `tsc -p tsconfig.app.json --noEmit && tsc -p tsconfig.node.json --noEmit && vite build && node gen-version.mjs` |
 | `cd apps/interview-docs && bun run lint` | `bunx biome check --write .` |
 
 `apps/backend-nest/`（NestJS 11 后端 — 重构版，功能完整覆盖 Go backend）：

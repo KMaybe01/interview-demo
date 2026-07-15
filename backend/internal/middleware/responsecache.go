@@ -66,7 +66,8 @@ func ResponseCacher() gin.HandlerFunc {
 		}
 
 		if strings.HasPrefix(c.Request.URL.Path, "/api/chat") ||
-			strings.HasPrefix(c.Request.URL.Path, "/api/agents") {
+			strings.HasPrefix(c.Request.URL.Path, "/api/agents") ||
+			strings.HasPrefix(c.Request.URL.Path, "/api/sse/") {
 			c.Next()
 			return
 		}

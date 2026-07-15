@@ -6,10 +6,10 @@ React 19 静态文档站点，GitHub Pages 部署，内容为前端面试知识�
 
 ```bash
 bun dev           # dev server (port 5000)
-bun run build     # tsc -b → vite build → node gen-version.mjs
+bun run build     # tsc -p tsconfig.app.json --noEmit && tsc -p tsconfig.node.json --noEmit → vite build → node gen-version.mjs
 bun run preview   # serve dist/
 bun run lint      # bunx biome check --write . (auto-fix + format)
-bun run typecheck # tsc -b --noEmit
+bun run typecheck # tsc -p tsconfig.app.json --noEmit && tsc -p tsconfig.node.json --noEmit
 bun test          # vitest run
 bun run test:watch # vitest (watch mode)
 bun run changelog # conventional-changelog

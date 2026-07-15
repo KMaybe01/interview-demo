@@ -37,6 +37,7 @@ export function ThemeToggle({ mode, onToggle }: ThemeToggleProps) {
         }}
       >
         <motion.span
+          initial={false}
           style={{
             position: 'absolute',
             top: 2,

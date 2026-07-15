@@ -1,11 +1,11 @@
 {
-  "$schema": "https://v2-10-3.turborepo.dev/schema.json",
+  "$schema": "https://v2-10-5.turborepo.dev/schema.json",
   "globalEnv": ["NODE_ENV"],
   "globalDependencies": [".env*"],
   "tasks": {
     "build": {
       "dependsOn": ["^build"],
-      "outputs": ["dist/**", ".tsbuildinfo/**"],
+      "outputs": ["dist/**"],
       "inputs": ["$TURBO_DEFAULT$", "!dist/**"]
     },
     "dev": {
