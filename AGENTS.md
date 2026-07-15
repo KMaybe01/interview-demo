@@ -13,6 +13,7 @@ bun install          # 只能用 bun, 不能用 npm（从根目录安装所有 w
 | 命令 | 说明 |
 |------|------|
 | `bun run dev` | 并行启动所有 dev server（frontend :5173 + ai-demo :5175 + interview-docs :5000 + backend-nest :8080） |
+| `bun run preview` | `turbo run preview` — 预览所有已构建的 Vite 应用（依赖 build） |
 | `bun run build` | `turbo run build` — 构建所有 workspace（缓存加速） |
 | `bun run build --filter=@interview-demo/frontend` | 仅构建 frontend |
 | `bun run test` | `turbo run test` — 运行所有 workspace 测试 |
