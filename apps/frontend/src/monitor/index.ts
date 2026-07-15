@@ -1,5 +1,6 @@
 import {
   apiMonitor,
+  bundleMonitor,
   errorMonitor,
   performanceMonitor,
   setAxiosInstance,
@@ -9,6 +10,7 @@ import { http } from '../utils/fetchClient.ts';
 
 export type {
   APIReport,
+  BundleReportSummary,
   DegradationReport,
   ErrorReport,
   MonitorState,
@@ -17,6 +19,7 @@ export type {
 } from '@interview-demo/shared-monitor';
 export {
   apiMonitor,
+  bundleMonitor,
   errorMonitor,
   performanceMonitor,
   ReportPriority,
@@ -30,4 +33,5 @@ export function initMonitor(): void {
   errorMonitor.init();
   apiMonitor.init();
   performanceMonitor.init();
+  bundleMonitor.init();
 }

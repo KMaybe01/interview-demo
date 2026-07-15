@@ -40,6 +40,25 @@ export type PerformanceReport = {
   url: string;
 };
 
+export type BundleChunkEntry = {
+  name: string;
+  type: 'script' | 'style';
+  duration: number;
+  transferSize: number;
+  decodedSize: number;
+};
+
+export type BundleReportSummary = {
+  totalLoadTime: number;
+  totalTransferSize: number;
+  chunkCount: number;
+  jsCount: number;
+  cssCount: number;
+  largestChunk: { name: string; size: number; duration: number } | null;
+  chunks: BundleChunkEntry[];
+  timestamp: number;
+};
+
 export type DegradationReport = {
   type: 'degradation';
   module: string;
@@ -65,16 +84,19 @@ export interface MonitorState {
   apiReports: APIReport[];
   performanceReports: PerformanceReport[];
   degradationReports: DegradationReport[];
+  bundleReports: BundleReportSummary[];
   totalEvents: number;
   errorCount: number;
   apiSuccessCount: number;
   apiFailCount: number;
   slowApiCount: number;
   resourceFailCount: number;
+  slowBundleCount: number;
   addError: (report: ErrorReport) => void;
   addAPIReport: (report: APIReport) => void;
   addPerformanceReport: (report: PerformanceReport) => void;
   addDegradation: (report: DegradationReport) => void;
+  addBundleReport: (report: BundleReportSummary) => void;
   incrementEvents: () => void;
   clearAll: () => void;
 }

@@ -8,12 +8,14 @@ export const useMonitorStore = create<MonitorState>((set) => ({
   apiReports: [],
   performanceReports: [],
   degradationReports: [],
+  bundleReports: [],
   totalEvents: 0,
   errorCount: 0,
   apiSuccessCount: 0,
   apiFailCount: 0,
   slowApiCount: 0,
   resourceFailCount: 0,
+  slowBundleCount: 0,
 
   addError: (report) => {
     set((state) => ({
@@ -40,6 +42,13 @@ export const useMonitorStore = create<MonitorState>((set) => ({
     }));
   },
 
+  addBundleReport: (report) => {
+    set((state) => ({
+      bundleReports: [report, ...state.bundleReports].slice(0, MAX_STORED_ITEMS),
+      slowBundleCount: report.totalLoadTime > 3000 ? state.slowBundleCount + 1 : state.slowBundleCount,
+    }));
+  },
+
   addDegradation: (report) => {
     set((state) => ({
       degradationReports: [report, ...state.degradationReports].slice(0, MAX_STORED_ITEMS),
@@ -56,12 +65,14 @@ export const useMonitorStore = create<MonitorState>((set) => ({
       apiReports: [],
       performanceReports: [],
       degradationReports: [],
+      bundleReports: [],
       totalEvents: 0,
       errorCount: 0,
       apiSuccessCount: 0,
       apiFailCount: 0,
       slowApiCount: 0,
       resourceFailCount: 0,
+      slowBundleCount: 0,
     });
   },
 }));

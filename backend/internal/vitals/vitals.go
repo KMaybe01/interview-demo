@@ -350,6 +350,10 @@ func GetMonitorSummary(c *gin.Context) {
 	byCategory := make(map[string]int)
 	var errors, apis, perfs int
 
+	bundleMu.RLock()
+	bundleCount := len(bundleStore)
+	bundleMu.RUnlock()
+
 		for _, item := range monitorStore {
 			if t, ok := item["type"].(string); ok {
 				byType[t]++
@@ -371,13 +375,153 @@ func GetMonitorSummary(c *gin.Context) {
 	}
 
 	c.JSON(http.StatusOK, gin.H{
-		"total":      len(monitorStore),
-		"byType":     byType,
-		"byCategory": byCategory,
-		"errors":     errors,
-		"apis":       apis,
-		"perfs":      perfs,
+		"total":        len(monitorStore),
+		"byType":       byType,
+		"byCategory":   byCategory,
+		"errors":       errors,
+		"apis":         apis,
+		"perfs":        perfs,
+		"bundles":      bundleCount,
 	})
+}
+
+// --- Bundle (JS/CSS bundle 加载耗时统计) ---
+
+type BundleRecord struct {
+	TotalLoadTime    float64   `json:"totalLoadTime"`
+	TotalTransferSize float64  `json:"totalTransferSize"`
+	TotalDecodedSize  float64  `json:"totalDecodedSize"`
+	ChunkCount        int      `json:"chunkCount"`
+	JSCount           int      `json:"jsCount"`
+	CSSCount          int      `json:"cssCount"`
+	JSTotalSize       float64  `json:"jsTotalSize"`
+	CSSTotalSize      float64  `json:"cssTotalSize"`
+	LargestChunkName  string   `json:"largestChunkName,omitempty"`
+	LargestChunkSize  float64  `json:"largestChunkSize,omitempty"`
+	SlowChunkCount    int      `json:"slowChunkCount"`
+	URL               string   `json:"url"`
+	Timestamp         time.Time `json:"timestamp"`
+}
+
+type BundleSummary struct {
+	TotalLoadTime     float64  `json:"totalLoadTime"`
+	AvgLoadTime       float64  `json:"avgLoadTime"`
+	MinLoadTime       float64  `json:"minLoadTime"`
+	MaxLoadTime       float64  `json:"maxLoadTime"`
+	TotalTransferSize float64  `json:"totalTransferSize"`
+	AvgTransferSize   float64  `json:"avgTransferSize"`
+	TotalChunks       int      `json:"totalChunks"`
+	TotalJSChunks     int      `json:"totalJSChunks"`
+	TotalCSSChunks    int      `json:"totalCSSChunks"`
+	AvgChunkCount     float64  `json:"avgChunkCount"`
+	SlowBundleCount   int      `json:"slowBundleCount"`
+	ReportCount       int      `json:"reportCount"`
+}
+
+var (
+	bundleMu    sync.RWMutex
+	bundleStore []BundleRecord
+	bundleMax   = 500
+)
+
+// ReportBundle  godoc
+// @Summary     上报 bundle 加载数据
+// @Description 上报前端 JS/CSS bundle 加载耗时统计
+// @Tags        演示
+// @Accept      json
+// @Produce     json
+// @Success     200 {object} map[string]interface{}
+// @Router      /monitor/bundle/report [post]
+func ReportBundle(c *gin.Context) {
+	var record BundleRecord
+	if err := c.ShouldBindJSON(&record); err != nil {
+		c.JSON(http.StatusBadRequest, gin.H{"error": "参数错误"})
+		return
+	}
+
+	record.Timestamp = time.Now()
+	bundleMu.Lock()
+	bundleStore = append(bundleStore, record)
+	if len(bundleStore) > bundleMax {
+		bundleStore = bundleStore[len(bundleStore)-bundleMax:]
+	}
+	bundleMu.Unlock()
+
+	c.JSON(http.StatusOK, gin.H{"ok": true})
+}
+
+// GetBundleSummary  godoc
+// @Summary     bundle 加载汇总
+// @Description 返回 JS/CSS bundle 加载的汇总统计（总耗时、平均耗时、总大小、慢加载次数等）
+// @Tags        演示
+// @Produce     json
+// @Success     200 {object} BundleSummary
+// @Router      /monitor/bundle/summary [get]
+func GetBundleSummary(c *gin.Context) {
+	bundleMu.RLock()
+	defer bundleMu.RUnlock()
+
+	if len(bundleStore) == 0 {
+		c.JSON(http.StatusOK, BundleSummary{})
+		return
+	}
+
+	var sumLoadTime, sumTransferSize float64
+	var minLoadTime, maxLoadTime float64
+	var totalChunks, totalJSChunks, totalCSSChunks, slowCount int
+
+	minLoadTime = bundleStore[0].TotalLoadTime
+
+	for _, r := range bundleStore {
+		sumLoadTime += r.TotalLoadTime
+		sumTransferSize += r.TotalTransferSize
+		totalChunks += r.ChunkCount
+		totalJSChunks += r.JSCount
+		totalCSSChunks += r.CSSCount
+
+		if r.TotalLoadTime < minLoadTime {
+			minLoadTime = r.TotalLoadTime
+		}
+		if r.TotalLoadTime > maxLoadTime {
+			maxLoadTime = r.TotalLoadTime
+		}
+		if r.TotalLoadTime > 3000 {
+			slowCount++
+		}
+	}
+
+	n := float64(len(bundleStore))
+
+	c.JSON(http.StatusOK, BundleSummary{
+		TotalLoadTime:   math.Round(sumLoadTime*100) / 100,
+		AvgLoadTime:     math.Round(sumLoadTime/n*100) / 100,
+		MinLoadTime:     math.Round(minLoadTime*100) / 100,
+		MaxLoadTime:     math.Round(maxLoadTime*100) / 100,
+		TotalTransferSize: math.Round(sumTransferSize*100) / 100,
+		AvgTransferSize:   math.Round(sumTransferSize/n*100) / 100,
+		TotalChunks:     totalChunks,
+		TotalJSChunks:   totalJSChunks,
+		TotalCSSChunks:  totalCSSChunks,
+		AvgChunkCount:   math.Round(float64(totalChunks)/n*100) / 100,
+		SlowBundleCount: slowCount,
+		ReportCount:     len(bundleStore),
+	})
+}
+
+// GetBundleHistory  godoc
+// @Summary     bundle 加载历史
+// @Description 返回所有 bundle 加载记录的历史数据
+// @Tags        演示
+// @Produce     json
+// @Success     200 {array}  BundleRecord
+// @Router      /monitor/bundle/history [get]
+func GetBundleHistory(c *gin.Context) {
+	bundleMu.RLock()
+	defer bundleMu.RUnlock()
+
+	result := make([]BundleRecord, len(bundleStore))
+	copy(result, bundleStore)
+	c.JSON(http.StatusOK, result)
 }
 
 func sortedKeys(m map[string]VitalsRecord) []string {

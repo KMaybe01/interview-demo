@@ -19,7 +19,7 @@
     "analyze": "ANALYZE=true turbo run build",
     "analyze:frontend": "ANALYZE=true turbo run build --filter=@interview-demo/frontend",
     "analyze:ai-demo": "ANALYZE=true turbo run build --filter=@interview-demo/ai-demo",
-    "analyze:interview-docs": "ANALYZE=true turbo run build --filter=frontend-interview-notes"
+    "analyze:interview-docs": "ANALYZE=true turbo run build --filter=@interview-demo/interview-docs"
   },
   "devDependencies": {
     "@commitlint/cli": "^21.1.0",

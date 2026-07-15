@@ -189,6 +189,9 @@ func main() {
 		api.POST("/monitor/report", vitals.ReportMonitor)
 		api.GET("/monitor/history", vitals.GetMonitorHistory)
 		api.GET("/monitor/summary", vitals.GetMonitorSummary)
+		api.POST("/monitor/bundle/report", vitals.ReportBundle)
+		api.GET("/monitor/bundle/summary", vitals.GetBundleSummary)
+		api.GET("/monitor/bundle/history", vitals.GetBundleHistory)
 
 		protected := api.Group("")
 		protected.Use(authService.AuthMiddleware())
