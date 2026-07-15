@@ -3,10 +3,11 @@
 ## 项目概述
 
 Monorepo (Bun workspaces + Turborepo) 全栈项目，包含：
-- **interview-demo**: React 19 + Go 1.26 全栈演示项目，涵盖 **22 个技术场景**（含仪表盘首页 + 15 个核心演示 + 6 个 AI 后端进阶模式），聚焦前端工程化、性能优化、架构设计与 AI 工程化。
+- **interview-demo**: React 19 + Go 1.26 + NestJS 11 全栈演示项目，涵盖 **25 个技术场景**（含仪表盘首页 + 16 个核心演示 + 6 个 AI 后端进阶模式 + 2 个监控系统），聚焦前端工程化、性能优化、架构设计与 AI 工程化。
 - **前端知识库**: React 19 文档站点，Markdown 内容，GitHub Pages 部署，覆盖前端面试五阶段 + Go 后端知识体系。
+- **共享包**: `packages/shared-theme`（主题切换）+ `packages/shared-monitor`（前端监控 SDK），跨应用复用。
 
-**Keywords:** 无感刷新 · Token Rotation · 递归表单引擎 · 双重校验 · 实时 JSON 编辑 · WebSocket 心跳 · LRU 路由缓存 · Web Worker 分治 · OpenLayers 聚类 · RBAC 位编码 · SSE 流式日志 · 请求加载 Signal · 树形数据引擎 · 大文件断点续传 · 页面性能监控 · 统一支付中台 · AI Agent 流式执行 · MCP/A2A 协议 · 混合检索 RRF · 声明式埋点 · 优先级上报队列 · 多级去重 · 柔性降级
+**Keywords:** 无感刷新 · Token Rotation · 递归表单引擎 · 双重校验 · 实时 JSON 编辑 · WebSocket 心跳 · LRU 路由缓存 · Web Worker 分治 · OpenLayers 聚类 · RBAC 位编码 · SSE 流式日志 · 请求加载 Signal · 树形数据引擎 · 大文件断点续传 · 页面性能监控 · 统一支付中台 · AI Agent 流式执行 · MCP/A2A 协议 · 混合检索 RRF · 声明式埋点 · 优先级上报队列 · 多级去重 · 柔性降级 · 共享主题包 · 声明式监控 SDK · NestJS 重构版后端
 
 ## 技术栈
 
@@ -14,9 +15,12 @@ Monorepo (Bun workspaces + Turborepo) 全栈项目，包含：
 |------|------|
 | 前端 | React 19, TypeScript 6, Vite 8 + Rolldown, Ant Design 6, Zustand 5, React Router 7 |
 | 前端知识库 | React 19, TypeScript 5.7, Vite 8, React Router 8, react-markdown, Mermaid |
+| AI Demo | React 19, @ant-design/x (Bubble/Sender/Conversations), Ant Design X SDK |
+| 共享包 | `shared-theme` (Zustand + DOM 策略 + useSyncExternalStore), `shared-monitor` (声明式监控 SDK) |
 | 工具链 | Biome 2.5 (lint + format), Husky + commitlint (conventional commits), Vitest 4, Turborepo 2 (编排) |
-| 样式 | Ant Design tokens + CSS Modules (仅 Login.tsx) |
-| 后端 | Go 1.26, Gin 1.12, Gorilla WebSocket, golang-jwt (双 Token 无感刷新), go-openai |
+| 样式 | Ant Design tokens + CSS Modules (仅 Login.tsx) + BEM (interview-docs) |
+| 后端 (Go) | Go 1.26, Gin 1.12, Gorilla WebSocket, golang-jwt (双 Token 无感刷新), go-openai |
+| 后端 (NestJS) | NestJS 11, Express, @nestjs/swagger, 16 个功能模块, ~67 API 端点 |
 | GIS | OpenLayers 10.9 (Cluster + BBOX 视口裁剪) |
 | 表单 | 自定义递归渲染引擎 (非 @rjsf) |
 | 运行时 | Bun 1.3（前端依赖安装 + 脚本执行 + CI/CD, Monorepo + Turborepo 编排） |
@@ -27,10 +31,10 @@ Monorepo (Bun workspaces + Turborepo) 全栈项目，包含：
 ## 演示功能
 
 | # | 页面 | 核心实现 |
-|---|------|----------|
+|   |------|----------|
 | 1 | 告警 WebSocket | 多协议传输层 (WebSocket→SSE→Polling 降级) + 手动 Segmented 切换 + 直连后端 + 二进制协议 + 背压控制 + 消息合并 + 心跳保活 + 断线重连 + 消息去重 + RAF 节流 + ECharts 实时趋势 |
 | 2 | JSON Schema 动态表单 | 自定义递归渲染引擎: Schema/initialData 从后端 `GET /api/schema/config` 加载 + augmentSchema() 注入校验函数 + `fetchedRef` StrictMode 防重复请求 + 条件显隐 / 数组列表 / 自定义/异步校验 / 字段联动 / ajv / 循环检测 / 实时 JSON 编辑与双向同步 |
-| 3 | LRU 路由缓存 | 3 页 Tab 切换 + DOM display:none 保持状态 + LRU 淘汰 + staleKeys 写后失效 + activeRef 两阶段 useEffect + 惰性刷新 + 淘汰通知 |
+| 3 | LRU 路由缓存 | 3 页 Tab + Config + Logs + Monitor 子页 + DOM display:none 保持状态 + LRU 淘汰 + staleKeys 写后失效 + activeRef 两阶段 useEffect + 惰性刷新 + 淘汰通知 |
 | 4 | Web Worker 分治合并 | Worker Pool + 自适应分区 + 有序归并缓冲区 + 主线程 Array.sort 对比 |
 | 5 | GIS 十万级点位渲染 | OpenLayers Cluster 聚类 + BBOX 视口剪裁 + dataCache + moveend 惰性刷新 |
 | 6 | 十万行日志流解密 | 客户端 RSA 密钥对生成 + 服务端用客户端公钥加密 AES 密钥 + AES-256-GCM Worker 并行解密 + Seq 保序合并 + 虚拟滚动 |
@@ -42,17 +46,23 @@ Monorepo (Bun workspaces + Turborepo) 全栈项目，包含：
 | 12 | 大文件断点续传 | SHA-256 分片哈希 + 并发滑动窗口上传 + 完整性校验 + 暂停/恢复/停止 + 刷新持久化 + 代际锁防并发竞态 + 下载已上传文件 |
 | 13 | 页面性能监控 (Dashboard) | web-vitals 5 采集 CLS/FCP/INP/LCP/TTFB → PageTracker 自动上报路径+渲染耗时 → 后端存储 → 页面访问明细表 + ECharts 排行，所有 vitals 端点无需认证 |
 | 14 | UniPay 统一支付中台 | 支付状态机 (7 状态 × 6 驱动) + Idempotency-Key 幂等性防重复扣款 + 指数退避重试 (1s/2s/4s) + T+1 对账 (groupMap 去重 + 自动退款) + 安全检测 (回调伪造 RSA 验签 + 金额篡改二次验价) |
-| 15 | AI Demo | 7 选项卡：AI 聊天（流式 SSE + Token 统计 + 上下文管理 + PII 脱敏 + 错误重试 + PromptGuard 注入防护）、知识库管理（4 种分块策略/Embedding/混合搜索 BM25+Vector RRF）、模型管理、智能体（工具注册表/记忆管理/流式执行轨迹 SSE/HITL 审核 + 多步骤 thought/action/observation）、Playground（MCP/A2A 协议 + 模型路由 + 遥测监控）、插件中心、AI Dashboard；后端: MockStream 回退 / 响应缓存 / Telemetry 采集 / 智能体 StepEvent |
-| 16 | 前端监控与埋点系统 | 声明式 data-stat 埋点 + 优先级上报队列 (sendBeacon/RIC/64KB 分片) + 异常全捕获 (onerror/unhandledrejection/资源错误/API 监控) + 性能采集 (Navigation/Resource Timing) + 5s 内存+sessionStorage 二级去重 + 采样降级 + 柔性降级 withDegradation + Zustand 监控大盘 |
+| 15 | AI Demo | 8 选项卡：AI 聊天（流式 SSE + Token 统计 + 上下文管理 + PII 脱敏 + 错误重试 + PromptGuard 注入防护）、知识库管理（4 种分块策略/Embedding/混合搜索 BM25+Vector RRF）、模型管理、智能体（工具注册表/记忆管理/流式执行轨迹 SSE/HITL 审核 + 多步骤 thought/action/observation）、Playground（MCP/A2A 协议 + 模型路由 + 遥测监控）、A2UI 集成、插件中心、AI Dashboard；后端: MockStream 回退 / 响应缓存 / Telemetry 采集 / 智能体 StepEvent |
+| 16 | 前端监控与埋点系统 | `packages/shared-monitor` 共享包：声明式 data-stat 埋点 + 优先级上报队列 (sendBeacon/RIC/64KB 分片) + 异常全捕获 (onerror/unhandledrejection/资源错误/API 监控) + 性能采集 (Navigation/Resource Timing / Bundle Timing) + 5s 内存+sessionStorage 二级去重 + 采样降级 + 柔性降级 withDegradation + Zustand 监控大盘 |
+| 17 | 监控面板 (MonitorDashboard) | 前端监控数据可视化大盘 — 异常统计 / Bundle 体积趋势 / API 慢查询 / 资源加载瀑布 / 埋点事件热力图 + ECharts 多维度展示 |
+| 18 | 共享主题包 (shared-theme) | 跨应用 dark/light 主题切换统一管理 — 支持 `class`（`.dark`）和 `attribute`（`data-theme`）两种 DOM 策略 + Zustand store + `useSyncExternalStore` hook + 动画过渡 |
+| 19 | NestJS 后端重构版 | NestJS 11 完整覆盖 Go 19 个内部包功能：16 个功能模块 / ~67 API 端点 / Swagger UI (`/swagger`) / JWT Auth Guard / 全内存存储 / PromptGuard 中间件 / ResponseCache 中间件 / 流式 SSE 支持 / MCP 工具协议 |
 
 ## 快速启动
 
-### 本地开发 (Bun + Go + Turbo)
+### 本地开发 (Bun + Go + NestJS + Turbo)
 
 ```bash
-# 后端
-cd backend && go run ./cmd/server/
+# 后端（二选一）
+cd backend && go run ./cmd/server/                         # Go 版
 go test ./internal/... -v
+
+bun run --cwd apps/backend-nest dev                        # NestJS 11 版 (port 8080, Swagger: /swagger)
+bun run --cwd apps/backend-nest test
 
 # 前端（使用 Turborepo 并行启动所有 workspace dev server）
 bun run dev
@@ -61,7 +71,7 @@ bun run dev
 cd apps/frontend && bun run dev
 ```
 
-Swagger 文档启动后访问 http://localhost:8080/swagger/index.html。
+Swagger 文档：Go 后端访问 `http://localhost:8080/swagger/index.html`，NestJS 后端访问 `http://localhost:8080/swagger`。
 
 ### Docker Compose (完整环境)
 
@@ -89,6 +99,10 @@ bun run test
 # 单独构建前端
 cd apps/frontend && bun run build   # tsc -b + vite build (Rolldown Rust bundler)
 bun run lint                        # Biome check
+
+# 构建 NestJS 后端
+cd apps/backend-nest && bun run build   # nest build
+bun run start:prod                       # node dist/main
 ```
 
 
@@ -98,9 +112,10 @@ bun run lint                        # Biome check
 |-----|------|------|
 | lint-backend | `go vet ./...` | Go vet |
 | test-backend | `go test ./internal/...` | Go test |
-| lint-workspaces | `bun run lint`（turbo 三 workspace 并行） | Biome 2.5 |
+| lint-workspaces | `bun run lint`（turbo 四 workspace 并行） | Biome 2.5 |
 | test-workspaces | `bun run test`（turbo 并行缓存，不依赖 build） | Vitest 4 |
 | typecheck-workspaces | `bun run typecheck` | TypeScript 6 |
+| test-nestjs | `bun run --cwd apps/backend-nest test` | Vitest |
 
 ## CI/CD + K8s 部署
 
@@ -117,8 +132,10 @@ bun run lint                        # Biome check
 | `frontend-builder` | oven/bun:1.3 | `bun install && bun run build` → `apps/frontend/dist/`（turbo 缓存加速） |
 | `interview-docs-builder` | oven/bun:1.3 | `bun install && bun run build` → `apps/interview-docs/dist/` |
 | `backend-builder` | golang:1.26 | `CGO_ENABLED=0 go build` → 二进制 |
+| `ai-demo-builder` | oven/bun:1.3 | `bun install && bun run build` → `apps/ai-demo/dist/` |
 | `frontend` | nginx:alpine | `dist/` + `nginx.conf` → :80 |
 | `interview-docs` | nginx:alpine | `dist/` + `nginx.interview-docs.conf` → :80 (root `/`) |
+| `ai-demo` | nginx:alpine | `dist/` + `nginx.ai-demo.conf` → :80 |
 | `backend` | alpine:3.19 | 二进制 + ca-certificates → :8080 |
 
 ### Helm Chart
@@ -129,6 +146,7 @@ helm upgrade --install interview-demo ./helm \
   --set backend.image.repository=registry.example.com/backend \
   --set frontend.image.repository=registry.example.com/frontend \
   --set interviewDocs.image.repository=registry.example.com/interview-docs \
+  --set aiDemo.image.repository=registry.example.com/ai-demo \
   --wait --timeout 120s
 ```
 
@@ -138,16 +156,16 @@ helm upgrade --install interview-demo ./helm \
 | 指标 | 优化前 (估算) | 优化后 | 提升 |
 |------|--------------|--------|------|
 | 初始 JS (压缩) | ~180 KB | ~96 KB (frontend) / ~72 KB (ai-demo) | 47-60% ↓ |
-| CSS (压缩) | ~2 KB | ~2 KB (不变) | — |
+| CSS (压缩) | ~2 KB | ~2 KB (frontend) / ~4 KB (ai-demo) | — |
 | 导航体验 | 路由切换白屏 | Suspense + Spin 加载态 + 预渲染 | 即时反馈 |
 | 页面切换 | 所有 Tab 组件预加载 | React.lazy 按需加载 | 按需加载 |
 
 
 ### 性能预算达标情况
 
-| 资源 | 预算 | Frontend | Ai-demo | 状态 |
-|------|------|----------|---------|------|
-| 初始 JS (压缩) | < 300 KB | ~96 KB | ~72 KB | ✅ |
-| CSS (压缩) | < 100 KB | ~2 KB | ~4 KB | ✅ |
-| 字体 | < 100 KB | 系统字体，无额外加载 | 系统字体 | ✅ |
-| 第三方 | < 200 KB | 无 | 无 | ✅ |
+| 资源 | 预算 | Frontend | Ai-demo | Interview-docs | 状态 |
+|------|------|----------|---------|----------------|------|
+| 初始 JS (压缩) | < 300 KB | ~96 KB | ~72 KB | ~68 KB | ✅ |
+| CSS (压缩) | < 100 KB | ~2 KB | ~4 KB | ~3 KB | ✅ |
+| 字体 | < 100 KB | 系统字体，无额外加载 | 系统字体 | 系统字体 | ✅ |
+| 第三方 | < 200 KB | 无 | 无 | 无 | ✅ |

@@ -45,7 +45,8 @@ graph TB
 | **七** | [组件设计亮点](#七组件设计亮点) | 表单引擎组件 / Zustand Store / Web Worker |
 | **八** | [面试高频问题](#八面试高频问题深度版) | 8 个深度 Q&A（闭包 / 表单 / WS vs SSE / Zustand...） |
 | **九** | [面试追问模拟](#附面试追问模拟) | 5 个面试场景模拟 |
-| **十** | [面试自我介绍](#十一面试自我介绍) | 1 分钟 / 3 分钟 两个版本 |
+| **十** | [共享包与 NestJS](#217-共享主题包-shared-theme-) | shared-theme / shared-monitor / NestJS 重构版 |
+| **十一** | [面试自我介绍](#十一面试自我介绍) | 1 分钟 / 3 分钟 两个版本 |
 
 > 💡 **使用建议**: 面试前重点看「八、面试高频问题」和「附、面试追问模拟」；技术细节参考「二、技术难点深度剖析」
 
@@ -53,7 +54,7 @@ graph TB
 
 ### 一、项目背景
 
-在 React 19 + TypeScript 6 的技术浪潮下，前端工程化与性能优化已成为中高级前端工程师的核心竞争力。本项目旨在构建一个**覆盖 15 个高级技术场景的全栈演示平台**，系统性地展示实时通信、性能优化、工程架构、支付中台四大领域的关键技术方案。
+在 React 19 + TypeScript 6 的技术浪潮下，前端工程化与性能优化已成为中高级前端工程师的核心竞争力。本项目旨在构建一个**覆盖 17 个高级技术场景（含 2 个监控系统）的全栈演示平台**，系统性地展示实时通信、性能优化、工程架构、AI 智能、支付中台、监控体系六大领域的关键技术方案。
 
 ### 二、核心定位
 
@@ -63,7 +64,7 @@ graph TB
 | **项目类型** | 前端工程化与性能优化综合演示 |
 | **开发周期/人数** | 独立开发，持续迭代 |
 | **当前状态** | 本地开发运行，Docker/Helm 可部署 |
-| **一句话定位** | 覆盖 15 个高级技术场景的 React 19 + Go 全栈演示平台，聚焦前端工程化、性能优化与架构设计 |
+| **一句话定位** | 覆盖 17 个高级技术场景的 React 19 + Go 1.26 + NestJS 11 全栈演示平台，聚焦前端工程化、性能优化与架构设计 |
 | **部署环境** | Docker 多阶段构建 → Kubernetes Helm (滚动更新) |
 | **构建编排** | Bun workspaces + Turborepo 2 (缓存加速 + 并行编排) |
 | **CI/CD** | GitHub Actions + GitLab CI, Turbo 缓存复用 |
@@ -94,9 +95,15 @@ graph TB
     end
 
     subgraph Backend["🖥️ 后端层 Backend"]
-        Go["Go 1.26 + Gin"]
+        Go["Go 1.26 + Gin<br/>19 内部包"]
+        Nest["NestJS 11<br/>16 功能模块"]
         WS["Gorilla WebSocket"]
         JWT["golang-jwt"]
+    end
+
+    subgraph Shared["📦 共享包层 Shared"]
+        Theme["shared-theme<br/>Zustand + DOM"]
+        Monitor["shared-monitor<br/>声明式监控 SDK"]
     end
 
     subgraph Deploy["🚀 部署层 Deployment"]
@@ -106,7 +113,7 @@ graph TB
     end
 
     UI --> Runtime --> Build
-    UI --> Backend
+    UI --> Shared --> Backend
     Runtime --> Backend
     Build --> Deploy
     Backend --> Deploy
@@ -116,7 +123,7 @@ graph TB
 
 ```mermaid
 mindmap
-  root((全栈演示平台<br/>22 个模块))
+  root((全栈演示平台<br/>25 个模块))
     ::icon(fa fa-globe)
     实时通信
       WebSocket 告警推送
@@ -216,17 +223,20 @@ mindmap
 
 | 维度 | 数量 | 说明 |
 |------|------|------|
-| **演示页面** | 21+ 个 | 覆盖实时通信/性能优化/工程架构/AI 智能/支付/仪表盘/前端监控七大领域 |
-| **自定义组件** | 9 个 | 递归表单引擎的 7 种字段类型 + A2UI 集成组件 |
-| **路由配置** | 15 条 | 包含仪表盘 + 1 条 Eager 加载登录页 |
-| **后端 API** | 80+ | 覆盖认证/校验/文件/SSE/WebSocket/RBAC/请求加载/Vitals/支付/AI 智能体/知识库/MCP-A2A/混合搜索/PromptGuard/ResponseCache/遥测 |
+| **演示页面** | 19 个 | 覆盖实时通信/性能优化/工程架构/AI 智能/支付/仪表盘/监控七大领域 (16 路由页 + 3 LRU 子页) |
+| **自定义组件** | 9 个 | 递归表单引擎的 7 种字段类型 + A2UI 集成组件 + ErrorBoundary |
+| **路由配置** | 15 条 | 14 条懒加载路由 + 1 条 Eager 加载登录页 |
+| **后端 API (NestJS)** | ~67 个 | 16 个 Controller 覆盖认证/校验/文件/SSE/WebSocket/RBAC/Vitals/支付/AI 智能体/知识库/MCP-A2A/混合搜索/PromptGuard/ResponseCache/遥测/监控 |
+| **后端 API (Go)** | 80+ | 19 个 internal 包覆盖相同功能集 |
 | **Go 内部包** | 19 个 | agent/alert/auth/chat/encryptedlog/gis/health/knowledge/lrucache/memory/middleware/model/payment/rbac/requestload/schema/sse/upload/vitals |
 | **Go 源码文件** | 66 个 | `go test ./internal/... -v` 全量通过 |
-| **状态存储** | 7 个 | Zustand 状态管理 (alert/auth/lru/monitor/request/theme/upload) |
-| **工具函数** | 25+ 个 | Token/LRU/RBAC/WS 传输层/VitalsReporter/VitalsSnapshot/RequestResource/Degradation + 监控 SDK (StatSDK/ErrorMonitor/APIMonitor/PerformanceMonitor/ReportManager) + 3 Workers + AI Demo 工具链 (context-manager/data-masker/error-handler/prompt-guard/response-cache/telemetry/text-splitter/token-estimator) |
+| **NestJS TypeScript 文件** | 56 个 | 16 功能模块 + 全局中间件/守卫/过滤器/Swagger 文档 |
+| **前端状态存储** | 7 个 | Zustand 状态管理 (alert/auth/lru/monitor/request/theme/upload) |
+| **共享包** | 2 个 | `shared-theme` (7 文件), `shared-monitor` (10 文件) |
+| **工具函数** | 30+ 个 | Token/LRU/RBAC/WS 传输层/VitalsReporter/VitalsSnapshot/RequestResource + 共享监控 SDK (StatSDK/ErrorMonitor/APIMonitor/PerformanceMonitor/ReportManager/BundleMonitor) + 3 Workers + AI Demo 工具链 (context-manager/data-masker/error-handler/prompt-guard/response-cache/telemetry/text-splitter/token-estimator) |
 | **Web Worker** | 3 个 | 归并排序 + AES-GCM 解密 + SHA-256 文件哈希 |
-| **监控模块** | 7 文件 | 类型定义/ReportManager/StatSDK/ErrorMonitor/APIMonitor/PerformanceMonitor + barrel init + Zustand monitorStore + Degradation 降级工具 |
-| **第三方依赖** | 20+ | React 生态核心库 |
+| **共享监控模块** | 10 文件 | 类型定义/ReportManager/StatSDK/ErrorMonitor/APIMonitor/PerformanceMonitor/BundleMonitor + store + barrel + degradation 降级 |
+| **第三方依赖** | 20+ | React 生态核心库 + Ant Design X + NestJS + Go |
 
 ### 六、核心数据结构
 
@@ -371,7 +381,9 @@ const Roles = {
 | **PromptGuard 中间件** | 提示注入检测（正则 + 关键词 + 模式匹配）+ HTTP 中间件封装 | ⭐⭐ |
 | **ResponseCache 中间件** | LRU 缓存 + TTL 过期 + Content-Type 智能缓存 + Middleware 封装 | ⭐⭐ |
 | **AI 遥测系统** | Token 用量 / Latency / Cache 命中率 / 错误率实时上报 + ECharts 仪表盘 | ⭐⭐ |
-| **前端监控与埋点系统** | 声明式 data-stat 埋点 + 优先级上报队列 (sendBeacon/RIC/64KB 分片) + 异常全捕获 + 性能采集 + 内存+sessionStorage 二级去重 + 采样降级 + 柔性降级 + Zustand 监控大盘 | ⭐⭐⭐ |
+| **前端监控与埋点系统** | `shared-monitor` 共享包：声明式 data-stat 埋点 + 优先级上报队列 (sendBeacon/RIC/64KB 分片) + 异常全捕获 + 性能采集 (Navigation/Resource/Bundle Timing) + 内存+sessionStorage 二级去重 + 采样降级 + 柔性降级 withDegradation + Zustand 监控大盘 | ⭐⭐⭐ |
+| **共享主题包 (shared-theme)** | 跨应用 dark/light 主题切换统一管理：Zustand store + useSyncExternalStore hook + class/attribute 双 DOM 策略 + 带动画过渡切换 + 3 应用独立配置复用 | ⭐⭐ |
+| **NestJS 后端重构版** | NestJS 11 完整覆盖 Go 19 包功能：16 模块 / 56 TS 文件 / 67 API / Swagger UI / JWT Guard / PromptGuard 中间件 / ResponseCache 中间件 / 全内存存储 / AI 智能体流式 SSE | ⭐⭐⭐ |
 
 ### 八、部署架构
 
@@ -379,13 +391,18 @@ const Roles = {
 graph TB
     User["🌐 浏览器<br/>React SPA"] --> Ingress["🔀 Nginx Ingress<br/>路由转发"]
 
-    Ingress -->|"/api/*"| Backend["🖥️ backend-service:8080<br/>Gin REST API + WS Upgrade"]
+    Ingress -->|"/api/*"| Backend["🖥️ backend-service:8080<br/>Gin / NestJS REST API + WS Upgrade"]
     Ingress -->|"/*"| Frontend["📦 frontend-service:80<br/>nginx 静态资源<br/>gzip + 缓存控制"]
     Ingress -->|"/ws"| Backend
+    Ingress -->|"/swagger"| Backend
+    Ingress -->|"/interview-demo/*"| Docs["📚 interview-docs-service:80<br/>前端知识库文档"]
+    Ingress -->|"/ai-demo/*"| AIDemo["🤖 ai-demo-service:80<br/>AI 演示应用"]
 
     subgraph K8s["Kubernetes Cluster"]
         Frontend
         Backend
+        Docs
+        AIDemo
     end
 
     style K8s fill:#e1f5fe,stroke:#01579b
@@ -395,7 +412,9 @@ graph TB
 |----------|------|------|
 | `/api/*` | `backend-service:8080` | REST API + SSE |
 | `/ws` | `backend-service:8080` | WebSocket Upgrade (3600s timeout) |
+| `/swagger` | `backend-service:8080` | Swagger UI (NestJS) |
 | `/interview-demo/*` | `interview-docs-service:80` | 前端知识库文档站点 |
+| `/ai-demo/*` | `ai-demo-service:80` | AI 演示应用 |
 | `/*` | `frontend-service:80` | 主应用 SPA 静态资源 |
 
 ### 九、CI/CD 流水线
@@ -403,20 +422,23 @@ graph TB
 ```mermaid
 graph LR
     A["💻 代码提交"] --> B["GitLab CI 触发"]
-    B --> C1["lint-backend<br/>go vet"]
-    B --> C2["test-backend<br/>go test -race"]
-    B --> C3["lint-frontend<br/>turbo run lint<br/>biome"]
-    B --> C4["test-frontend<br/>turbo run test<br/>vitest"]
-    B --> C5["typecheck<br/>turbo run typecheck<br/>tsc -b"]
-    C1 & C2 & C3 & C4 & C5 --> D["build-backend<br/>go build"]
-    C3 & C4 & C5 --> E["build-frontend<br/>turbo --filter<br/>Vite + Rolldown"]
-    C3 & C4 & C5 --> F["build-ai-demo<br/>turbo --filter"]
-    C3 & C4 & C5 --> G["build-interview-docs<br/>turbo --filter"]
-    D & E & F & G --> H["🐳 Docker 多阶段构建"]
-    H --> I["📦 推送镜像仓库"]
-    I --> J["☸ Helm upgrade --install"]
-    J --> K["✅ --wait 滚动更新确认"]
-    K --> L["🚀 部署完成"]
+    B --> C1["lint-backend-go<br/>go vet"]
+    B --> C2["test-backend-go<br/>go test -race"]
+    B --> C3["lint-nestjs<br/>bunx biome"]
+    B --> C4["test-nestjs<br/>vitest run"]
+    B --> C5["lint-frontend<br/>turbo run lint<br/>biome"]
+    B --> C6["test-frontend<br/>turbo run test<br/>vitest"]
+    B --> C7["typecheck<br/>turbo run typecheck<br/>tsc -b"]
+    C1 & C2 & C3 & C4 & C5 & C6 & C7 --> D["build-backend-go<br/>go build"]
+    C3 & C4 --> E["build-nestjs<br/>nest build"]
+    C5 & C6 & C7 --> F["build-frontend<br/>turbo --filter<br/>Vite + Rolldown"]
+    C5 & C6 & C7 --> G["build-ai-demo<br/>turbo --filter"]
+    C5 & C6 & C7 --> H["build-interview-docs<br/>turbo --filter"]
+    D & E & F & G & H --> I["🐳 Docker 多阶段构建"]
+    I --> J["📦 推送镜像仓库"]
+    J --> K["☸ Helm upgrade --install"]
+    K --> L["✅ --wait 滚动更新确认"]
+    L --> M["🚀 部署完成"]
 ```
 
 ### 十、面试价值总结
@@ -457,6 +479,14 @@ graph TB
         ZU["uploadStore"]
         ZL["lruStore"]
         ZR["requestStore"]
+        MS["monitorStore<br/>(shared-monitor)"]
+        TS["themeStore<br/>(shared-theme)"]
+    end
+
+    subgraph Shared["📦 共享包层 Shared"]
+        TH["shared-theme<br/>Zustand + DOM 策略"]
+        MO["shared-monitor<br/>StatSDK / ErrorMonitor<br/>APIMonitor / ReportManager"]
+        DG["withDegradation<br/>柔性降级"]
     end
 
     subgraph Utils["🔧 工具层 Utilities"]
@@ -467,10 +497,17 @@ graph TB
         WK["utils/workers"]
     end
 
+    subgraph BackendLayer["🖥️ 后端服务层"]
+        GO["Go 1.26 / Gin<br/>19 内部包"]
+        NEST["NestJS 11<br/>16 模块 / 67 API"]
+    end
+
     Presentation --> Components
     Components --> State
+    State --> Shared
     State --> Utils
-    Utils --> BackendLayer["Go 后端服务"]
+    Utils --> BackendLayer
+    Shared --> BackendLayer
 ```
 
 ### 1.2 核心模块依赖关系
@@ -478,13 +515,14 @@ graph TB
 ```mermaid
 graph LR
     subgraph Routes["路由层"]
-        R["routes/index.tsx<br/>14 条路由"]
+        R["routes/index.tsx<br/>15 条路由<br/>14 lazy + 1 eager"]
     end
 
     subgraph Pages["页面层"]
         JSF["JsonSchemaForm"]
         AWS["AlertWebSocket"]
         CU["ChunkedUpload"]
+        MD["MonitorDashboard"]
         OTHER["... 更多页面"]
     end
 
@@ -499,14 +537,24 @@ graph LR
     subgraph Stores["状态层"]
         AS["alertStore<br/>Zustand"]
         US["uploadStore<br/>Zustand + persist"]
+        MS["monitorStore<br/>shared-monitor"]
+        TS["themeStore<br/>shared-theme"]
     end
 
-    R --> JSF & AWS & CU & OTHER
+    subgraph Shared["共享包"]
+        TH["shared-theme<br/>7 files"]
+        MO["shared-monitor<br/>10 files"]
+    end
+
+    R --> JSF & AWS & CU & MD & OTHER
     JSF --> DF --> REN --> REG
     DF --> TYPES
     REN --> FIELDS
     AWS --> AS
     CU --> US
+    MD --> MS
+    TS --> TH
+    MS --> MO
 ```
 
 ---
@@ -6243,6 +6291,146 @@ graph LR
 
 ---
 
+### 2.17 共享主题包 (shared-theme) ⭐⭐
+
+**位置**: `packages/shared-theme/` (7 文件)
+
+#### 设计目标
+
+消除 3 个应用（frontend / ai-demo / interview-docs）之间重复的主题切换代码，统一 dark/light 主题管理逻辑。
+
+#### 实现思路
+
+提供两种接口 + 两种 DOM 策略，各应用按需配置：
+
+| 接口 | 适用 | 实现方式 |
+|------|------|----------|
+| `useThemeStore` (Zustand) | frontend, ai-demo | Zustand store + `persist` 中间件 |
+| `useTheme` (React hook) | interview-docs | `useSyncExternalStore` (无外部状态库) |
+
+| DOM 策略 | 效果 | 应用 |
+|----------|------|------|
+| `class` | `<html class="dark">` | frontend, interview-docs |
+| `attribute` | `<html data-theme="dark">` | ai-demo |
+
+#### 核心文件
+
+| 文件 | 职责 |
+|------|------|
+| `store.ts` | Zustand store + `configureTheme()` 工厂函数注入配置 |
+| `hook.ts` | React hook + `configureThemeHook()` — 使用 `useSyncExternalStore` 订阅 DOM |
+| `dom.ts` | `applyTheme()` / `getInitialTheme()` / `getDOMSnapshot()` / `subscribeToDOM()` |
+| `types.ts` | `ThemeMode` / `ThemeConfig` 类型 |
+| `ThemeToggle.tsx` | 带动画过渡的主题切换开关（`motion` / `framer-motion`） |
+| `transition.tsx` | `useThemeTransition` hook — clip-path 圆形扩散动画 |
+
+#### 关键设计
+
+```typescript
+// 各应用通过本地 wrapper 调用 configure 注入配置：
+// apps/frontend/src/stores/themeStore.ts
+import { configureTheme, useThemeStore } from '@interview-demo/shared-theme';
+configureTheme({ storageKey: 'theme-mode', domStrategy: 'class', domTarget: 'dark' });
+export { useThemeStore };
+```
+
+### 2.18 共享监控 SDK (shared-monitor) ⭐⭐⭐
+
+**位置**: `packages/shared-monitor/` (10 文件)
+
+#### 设计目标
+
+构建一个轻量级、可插拔的前端监控 SDK，覆盖**声明式埋点、异常捕获、性能采集、API 监控、Bundle 分析、柔性降级**六大能力，通过 Zustand store 可视化展示。
+
+#### 实现架构
+
+```mermaid
+graph TB
+    subgraph SDK["shared-monitor SDK"]
+        STAT["StatSDK<br/>data-stat 声明式埋点"]
+        ERR["ErrorMonitor<br/>onerror + unhandledrejection"]
+        API["APIMonitor<br/>Axios 拦截器"]
+        PERF["PerformanceMonitor<br/>Resource Timing"]
+        BUNDLE["BundleMonitor<br/>JS/CSS 加载分析"]
+        RM["ReportManager<br/>优先级上报队列"]
+        DEG["withDegradation<br/>柔性降级"]
+    end
+
+    subgraph Store["状态层"]
+        MON["useMonitorStore<br/>Zustand (200 条/类)"]
+    end
+
+    STAT & ERR & API & PERF & BUNDLE --> RM --> MON
+    DEG -->|降级事件| RM
+    MON -->|Dashboard 可视化| UI["MonitorDashboard"]
+```
+
+#### 六大能力
+
+| 模块 | 实现方式 | 关键指标 |
+|------|----------|----------|
+| **StatSDK** | `data-stat` 属性声明式埋点 + `MutationObserver` 自动绑定 | 减少代码侵入 |
+| **ErrorMonitor** | `window.onerror` + `unhandledrejection` + 资源加载错误 | JS 采样率 10%，5s 二级去重 |
+| **APIMonitor** | Axios 响应拦截器，>1s 标记慢查询 | 请求 URL / 耗时 / 状态码 |
+| **PerformanceMonitor** | `performance.getEntriesByType('resource')` 60s 轮询 | DNS/TCP/TTFB/下载耗时 |
+| **BundleMonitor** | `performance.getEntriesByType('resource')` 过滤 JS/CSS | 加载耗时 + 体积推算 |
+| **withDegradation** | 高阶函数包裹：timeout + retry + fallback | 超时/重试耗尽/业务异常三级降级 |
+
+#### ReportManager 优先级队列
+
+```
+sendBeacon (优先) → requestIdleCallback (降级) → 64KB 分片 (大包)
++ 5s 内存级去重 + sessionStorage 二级去重
++ 采样率动态调节（满载时自动降采样）
+```
+
+### 2.19 NestJS 后端重构版 ⭐⭐⭐
+
+**位置**: `apps/backend-nest/` (56 TypeScript 文件)
+
+#### 设计目标
+
+用 NestJS 11 完整覆盖 Go 后端的 19 个内部包功能，提供 Swagger UI 文档 + 类型安全的 TypeScript 全栈体验。
+
+#### 架构全景
+
+| 模块 | 文件数 | 端点 | Controller 前缀 |
+|------|--------|------|----------------|
+| auth | 3 | 4 | `/api/auth` |
+| health | 2 | 2 | `/api/health`, `/healthz` |
+| vitals | 3 | 12 | `/api/vitals/*`, `/api/monitor/*`, `/api/telemetry/*` |
+| payment | 3 | 8 | `/api/payments` |
+| upload | 3 | 6 | `/api/upload` |
+| sse | 2 | 1 | `/api/sse` |
+| encrypted-log | 2 | 1 | `/api/sse` |
+| alert | 3 | 1 | `/ws/alerts`, `/api/alerts` |
+| gis | 2 | 1 | `/api/gis` |
+| rbac | 2 | 1 | `/api/rbac` |
+| request-load | 2 | 1 | `/api/request-loading` |
+| lru-cache | 2 | 3 | `/api/services/config/logs` |
+| schema | 3 | 2 | `/api/schema` |
+| chat | 4 | 4 | `/api/chat` |
+| agent | 3 | 6 | `/api/agents`, `/api/mcp` |
+| knowledge | 3 | 10 | `/api/knowledge-base` |
+| memory | 2 | — | 提供 `MemoryService` |
+
+**总计**: 16 模块 / ~67 API 端点 / Swagger UI (`/swagger`)
+
+#### 关键特性
+
+| 特性 | 实现 |
+|------|------|
+| **Swagger 文档** | `@nestjs/swagger` + `@ApiTags` / `@ApiBearerAuth` / `@ApiOperation` |
+| **JWT 认证** | `JwtAuthGuard` + Bearer Token 提取 + 全局 `AuthMiddleware` 可选 |
+| **全局异常过滤** | `GlobalExceptionFilter` — 统一错误响应格式 |
+| **CORS 中间件** | 白名单配置，允许跨域直连 |
+| **PromptGuard 中间件** | 正则 + 关键词 + 模式匹配检测提示注入，白名单豁免 |
+| **ResponseCache 中间件** | LRU 缓存 + TTL 30s 过期 + Content-Type 智能缓存 |
+| **流式 SSE** | `@Sse()` + RxJS `Subject` + `[DONE]` 标记 + AbortController |
+| **全内存存储** | `Map` / `sync.Map` 替代数据库，演示即用 |
+
+---
+
 ## 十一、面试自我介绍
 
 > 基于本项目总结的 3 分钟自我介绍，覆盖技术栈、项目亮点、个人价值三个维度。
@@ -6253,7 +6441,7 @@ graph LR
 面试官您好，我是一名前端工程师，主要技术栈是 React + TypeScript。
 
 最近我独立完成了一个全栈演示平台项目，覆盖了 20+ 个高级技术场景：
-实时通信、性能优化、工程架构、AI 后端和支付中台五大领域。
+实时通信、性能优化、工程架构、AI 后端、支付中台和前端监控六大领域。
 
 项目中有几个我比较自豪的设计：
 
@@ -6267,9 +6455,14 @@ WebSocket 不可用时自动降级到 SSE 再到 HTTP Polling，
 第三，**大文件断点续传**。用 SHA-256 分片校验 + Zustand 持久化，
 支持暂停恢复和刷新后续传，前后端 SHA-256 双重完整性验证。
 
+第四，我设计了两个跨应用共享包：**shared-theme**（统一 dark/light 主题切换管理）和
+**shared-monitor**（声明式埋点 + 异常/性能/API 监控 SDK），并在监控面板中可视化展示。
+同时用 **NestJS 11** 重构了 Go 后端的全部功能，提供 Swagger UI 文档和类型安全的全栈体验。
+
 技术栈方面：前端 React 19 + Ant Design 6 + Zustand 5，
-后端 Go 1.26 + Gin + WebSocket，
-构建用 Vite 8 + Rolldown，部署用 Docker + Helm + K8s。
+后端 Go 1.26 + Gin + WebSocket + NestJS 11 重构版，
+共享包 shared-theme（主题切换）+ shared-monitor（前端监控），
+构建用 Vite 8 + Rolldown + Turborepo，部署用 Docker + Helm + K8s。
 
 谢谢！
 ```
@@ -6407,11 +6600,13 @@ WebSocket 不可用时自动降级到 SSE 再到 HTTP Polling，
 
 前端：React 19 + TypeScript 6 + Ant Design 6 + Zustand 5
       + ECharts 6 + OpenLayers 10.9 + React Router 7
-AI 前端：A2UI v0.9.1（Agent-to-User Interface）+ SSE 流式渲染
+AI 前端：@ant-design/x (Bubble/Sender/Conversations) + SSE 流式渲染
 构建：Vite 8 + Rolldown (Rust bundler) + Babel React 编译器
 规范：Biome 2.5 + ESLint 9 strictTypeChecked + Husky + lint-staged
-后端：Go 1.26 + Gin + Gorilla WebSocket + golang-jwt
-AI 后端：ReAct Agent + MCP 工具协议 + BM25/Vector 混合 RAG + PromptGuard
+后端（Go）：Go 1.26 + Gin + Gorilla WebSocket + golang-jwt + go-openai
+后端（NestJS）：NestJS 11 + @nestjs/swagger + 16 功能模块 / 67 API
+AI 后端：ReAct Agent + MCP 工具协议 + BM25/Vector 混合 RAG + PromptGuard + ResponseCache
+共享包：shared-theme（跨应用主题切换）+ shared-monitor（声明式监控 SDK）
 部署：Docker 多阶段构建 → Helm Chart → K8s 滚动更新
 
 构建优化方面：代码分割后首屏体积从 3,034 kB 降至 ~240 kB（↓92%），
@@ -6424,6 +6619,8 @@ AI 后端：ReAct Agent + MCP 工具协议 + BM25/Vector 混合 RAG + PromptGuar
 
 1. 架构设计能力：
    - 从零设计递归表单引擎、多协议传输层、AI 六阶段模式
+   - 两个跨应用共享包（shared-theme、shared-monitor）
+   - NestJS 11 重构 Go 后端 19 个内部包
    - 合理的技术选型（Zustand vs Redux，自研 vs @rjsf）
    - 分层、解耦、可扩展的代码组织
 
@@ -6432,11 +6629,13 @@ AI 后端：ReAct Agent + MCP 工具协议 + BM25/Vector 混合 RAG + PromptGuar
    - Web Worker 多线程 + 虚拟滚动 + 位运算
    - WebSocket 背压控制 + Token Rotation + SHA-256 校验
    - SSE 流式对话 + ReAct Agent + 混合 RAG + MCP 工具协议
+   - 声明式监控 SDK：埋点/异常/性能/API/Bundle 六大能力
 
 3. 工程化意识：
    - 三层递进式代码约束（Biome → ESLint → TypeScript Strict）
    - CI/CD 流水线 + Docker/Helm 部署
    - Husky + lint-staged 自动化检查
+   - Turborepo 编排 4 个前端 workspace + 2 个共享包
 
 以上就是我的项目介绍，感谢您的倾听，期待进一步交流。
 ```
