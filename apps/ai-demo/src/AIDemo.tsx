@@ -9,10 +9,12 @@ import {
   SettingOutlined,
 } from '@ant-design/icons';
 import { XProvider } from '@ant-design/x';
-import { App as AntApp, theme } from 'antd';
+import { App as AntApp, Spin, theme } from 'antd';
 import type { ReactNode } from 'react';
 import {
   createContext,
+  lazy,
+  Suspense,
   useCallback,
   useContext,
   useEffect,
@@ -21,15 +23,26 @@ import {
   useState,
 } from 'react';
 import styles from './AIDemo.module.css';
-import A2UI from './components/A2UI.tsx';
-import Agents from './components/Agents.tsx';
-import Chat from './components/Chat.tsx';
-import Dashboard from './components/Dashboard.tsx';
 import { ErrorBoundary } from './components/ErrorBoundary.tsx';
-import KnowledgeBase from './components/KnowledgeBase.tsx';
-import Models from './components/Models.tsx';
-import Playground from './components/Playground.tsx';
-import Plugins from './components/Plugins.tsx';
+
+const A2UI = lazy(() => import('./components/A2UI.tsx'));
+const Agents = lazy(() => import('./components/Agents.tsx'));
+const Chat = lazy(() => import('./components/Chat.tsx'));
+const DashboardLazy = lazy(() => import('./components/Dashboard.tsx'));
+const KnowledgeBase = lazy(() => import('./components/KnowledgeBase.tsx'));
+const Models = lazy(() => import('./components/Models.tsx'));
+const Playground = lazy(() => import('./components/Playground.tsx'));
+const Plugins = lazy(() => import('./components/Plugins.tsx'));
+
+function TabFallback() {
+  return (
+    <div
+      style={{ display: 'flex', justifyContent: 'center', alignItems: 'center', height: '100%' }}
+    >
+      <Spin size="large" />
+    </div>
+  );
+}
 
 interface MessageApi {
   success: (msg: string) => void;
@@ -75,8 +88,16 @@ export default function AIDemo() {
       if (userToggledRef.current) return;
       setCollapsed(window.innerWidth < 768);
     };
-    window.addEventListener('resize', onResize);
-    return () => window.removeEventListener('resize', onResize);
+    let timer: ReturnType<typeof setTimeout>;
+    const debouncedResize = () => {
+      clearTimeout(timer);
+      timer = setTimeout(onResize, 100);
+    };
+    window.addEventListener('resize', debouncedResize);
+    return () => {
+      window.removeEventListener('resize', debouncedResize);
+      clearTimeout(timer);
+    };
   }, []);
 
   const navigateToTab = useCallback((key: string) => {
@@ -89,49 +110,81 @@ export default function AIDemo() {
         key: 'dashboard',
         icon: <DashboardOutlined />,
         label: '控制台',
-        component: <Dashboard onNavigate={navigateToTab} />,
+        component: (
+          <Suspense fallback={<TabFallback />}>
+            <DashboardLazy onNavigate={navigateToTab} />
+          </Suspense>
+        ),
       },
       {
         key: 'chat',
         icon: <MessageOutlined />,
         label: 'AI 聊天',
-        component: <Chat />,
+        component: (
+          <Suspense fallback={<TabFallback />}>
+            <Chat />
+          </Suspense>
+        ),
       },
       {
         key: 'knowledge',
         icon: <BookOutlined />,
         label: '知识库',
-        component: <KnowledgeBase />,
+        component: (
+          <Suspense fallback={<TabFallback />}>
+            <KnowledgeBase />
+          </Suspense>
+        ),
       },
       {
         key: 'models',
         icon: <AppstoreOutlined />,
         label: '模型管理',
-        component: <Models />,
+        component: (
+          <Suspense fallback={<TabFallback />}>
+            <Models />
+          </Suspense>
+        ),
       },
       {
         key: 'agents',
         icon: <RobotOutlined />,
         label: '智能体',
-        component: <Agents />,
+        component: (
+          <Suspense fallback={<TabFallback />}>
+            <Agents />
+          </Suspense>
+        ),
       },
       {
         key: 'playground',
         icon: <ApiOutlined />,
         label: 'Playground',
-        component: <Playground />,
+        component: (
+          <Suspense fallback={<TabFallback />}>
+            <Playground />
+          </Suspense>
+        ),
       },
       {
         key: 'a2ui',
         icon: <DeploymentUnitOutlined />,
         label: 'A2UI',
-        component: <A2UI />,
+        component: (
+          <Suspense fallback={<TabFallback />}>
+            <A2UI />
+          </Suspense>
+        ),
       },
       {
         key: 'plugins',
         icon: <SettingOutlined />,
         label: '插件中心',
-        component: <Plugins />,
+        component: (
+          <Suspense fallback={<TabFallback />}>
+            <Plugins />
+          </Suspense>
+        ),
       },
     ],
     [navigateToTab],

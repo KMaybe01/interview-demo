@@ -39,3 +39,9 @@ body {
   pointer-events: none;
   will-change: clip-path;
 }
+
+/* Content visibility for long scrollable areas */
+.auto-visible {
+  content-visibility: auto;
+  contain-intrinsic-size: 0 500px;
+}

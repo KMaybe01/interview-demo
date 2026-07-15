@@ -37,7 +37,7 @@ export default defineConfig({
     modulePreload: {
       polyfill: false,
     },
-    chunkSizeWarningLimit: 1200,
+    chunkSizeWarningLimit: 400,
     rolldownOptions: {
       output: {
         entryFileNames: 'assets/[name]-[hash].js',
@@ -64,6 +64,16 @@ export default defineConfig({
               name: 'antd-cssinjs',
               test: /node_modules[\/\\]@ant-design[\/\\]cssinjs/,
               priority: 26,
+            },
+            {
+              name: 'dayjs',
+              test: /node_modules[\/\\]dayjs/,
+              priority: 24,
+            },
+            {
+              name: 'motion',
+              test: /node_modules[\/\\](motion|framer-motion)/,
+              priority: 27,
             },
           ],
         },

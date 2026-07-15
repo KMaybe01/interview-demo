@@ -100,7 +100,7 @@ bun run lint                        # Biome check
 | test-backend | `go test ./internal/...` | Go test |
 | lint-workspaces | `bun run lint`（turbo 三 workspace 并行） | Biome 2.5 |
 | test-workspaces | `bun run test`（turbo 并行缓存，不依赖 build） | Vitest 4 |
-| typecheck-workspaces | `bun run typecheck`（turbo 并行缓存 .tsbuildinfo） | TypeScript 6 |
+| typecheck-workspaces | `bun run typecheck` | TypeScript 6 |
 
 ## CI/CD + K8s 部署
 
@@ -132,4 +132,22 @@ helm upgrade --install interview-demo ./helm \
   --wait --timeout 120s
 ```
 
-#
+## 性能优化
+
+
+| 指标 | 优化前 (估算) | 优化后 | 提升 |
+|------|--------------|--------|------|
+| 初始 JS (压缩) | ~180 KB | ~96 KB (frontend) / ~72 KB (ai-demo) | 47-60% ↓ |
+| CSS (压缩) | ~2 KB | ~2 KB (不变) | — |
+| 导航体验 | 路由切换白屏 | Suspense + Spin 加载态 + 预渲染 | 即时反馈 |
+| 页面切换 | 所有 Tab 组件预加载 | React.lazy 按需加载 | 按需加载 |
+
+
+### 性能预算达标情况
+
+| 资源 | 预算 | Frontend | Ai-demo | 状态 |
+|------|------|----------|---------|------|
+| 初始 JS (压缩) | < 300 KB | ~96 KB | ~72 KB | ✅ |
+| CSS (压缩) | < 100 KB | ~2 KB | ~4 KB | ✅ |
+| 字体 | < 100 KB | 系统字体，无额外加载 | 系统字体 | ✅ |
+| 第三方 | < 200 KB | 无 | 无 | ✅ |

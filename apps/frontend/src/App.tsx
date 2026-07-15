@@ -1,5 +1,6 @@
-import { App as AntApp, ConfigProvider, theme } from 'antd';
+import { App as AntApp, ConfigProvider, Spin, theme } from 'antd';
 import { AnimatePresence } from 'motion/react';
+import { Suspense } from 'react';
 import { Route, Routes, useLocation } from 'react-router-dom';
 import AuthGuard from './components/AuthGuard.tsx';
 import PageTracker from './components/PageTracker.tsx';
@@ -8,6 +9,16 @@ import MainLayout from './layouts/MainLayout.tsx';
 import Login from './pages/Login.tsx';
 import { routes } from './routes';
 import { useThemeStore } from './stores';
+
+function SuspenseFallback() {
+  return (
+    <div
+      style={{ display: 'flex', justifyContent: 'center', alignItems: 'center', height: '60vh' }}
+    >
+      <Spin size="large" />
+    </div>
+  );
+}
 
 export default function App() {
   const mode = useThemeStore((s) => s.mode);
@@ -43,11 +54,13 @@ export default function App() {
                     key={r.path}
                     path={r.path}
                     element={
-                      <PageTracker>
-                        <PageTransition>
-                          <r.element />
-                        </PageTransition>
-                      </PageTracker>
+                      <Suspense fallback={<SuspenseFallback />}>
+                        <PageTracker>
+                          <PageTransition>
+                            <r.element />
+                          </PageTransition>
+                        </PageTracker>
+                      </Suspense>
                     }
                   />
                 ))}

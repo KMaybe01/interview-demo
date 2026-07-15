@@ -30,9 +30,15 @@ export default function MainLayout() {
       }
     };
     onResize();
-    window.addEventListener('resize', onResize);
+    let timer: ReturnType<typeof setTimeout>;
+    const debouncedResize = () => {
+      clearTimeout(timer);
+      timer = setTimeout(onResize, 100);
+    };
+    window.addEventListener('resize', debouncedResize);
     return () => {
-      window.removeEventListener('resize', onResize);
+      window.removeEventListener('resize', debouncedResize);
+      clearTimeout(timer);
     };
   }, []);
 
@@ -84,7 +90,7 @@ export default function MainLayout() {
               {collapsed ? 'Demo' : 'Interview Demo'}
             </Title>
           </div>
-          <div style={{ overflow: 'auto', height: 'calc(100vh - 64px)' }}>
+          <div className="auto-visible" style={{ overflow: 'auto', height: 'calc(100vh - 64px)' }}>
             <Menu
               theme={mode === 'dark' ? 'dark' : 'light'}
               mode="inline"
@@ -136,7 +142,10 @@ export default function MainLayout() {
               </Dropdown>
             </div>
           </Header>
-          <Content style={{ padding: 24, overflow: 'auto', height: 'calc(100vh - 64px)' }}>
+          <Content
+            className="auto-visible"
+            style={{ padding: 24, overflow: 'auto', height: 'calc(100vh - 64px)' }}
+          >
             <Outlet />
           </Content>
         </Layout>

@@ -43,7 +43,7 @@ export default defineConfig({
     modulePreload: {
       polyfill: false,
     },
-    chunkSizeWarningLimit: 1200,
+    chunkSizeWarningLimit: 400,
     rolldownOptions: {
       output: {
         entryFileNames: 'assets/[name]-[hash].js',
@@ -77,6 +77,11 @@ export default defineConfig({
               priority: 25,
             },
             {
+              name: 'motion',
+              test: /node_modules[\/\\](motion|framer-motion)/,
+              priority: 27,
+            },
+            {
               name: 'gis',
               test: /node_modules[\/\\]ol/,
               priority: 25,
@@ -85,6 +90,11 @@ export default defineConfig({
               name: 'form',
               test: /node_modules[\/\\](@rjsf|ajv)/,
               priority: 25,
+            },
+            {
+              name: 'dayjs',
+              test: /node_modules[\/\\]dayjs/,
+              priority: 24,
             },
             {
               name: 'vendor-common',

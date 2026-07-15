@@ -4,6 +4,22 @@
     <meta charset="UTF-8" />
     <meta name="viewport" content="width=device-width, initial-scale=1.0" />
     <link rel="icon" type="image/svg+xml" href="/react.svg" />
+    <meta name="theme-color" content="#667eea" />
+
+    <!-- DNS & connection hints -->
+    <link rel="dns-prefetch" href="//github.com">
+    <link rel="preconnect" href="//github.com">
+
+    <!-- Speculation Rules: instant prerender on hover -->
+    <script type="speculationrules">
+      {
+        "prerender": [{
+          "where": { "href_matches": "/*" },
+          "eagerness": "moderate"
+        }]
+      }
+    </script>
+
     <title>AI Demo</title>
   </head>
   <body style="margin:0">
