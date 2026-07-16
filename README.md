@@ -31,7 +31,7 @@ Monorepo (Bun workspaces + Turborepo) 全栈项目，包含：
 ## 演示功能
 
 | # | 页面 | 核心实现 |
-|   |------|----------|
+|---|------|----------|
 | 1 | 告警 WebSocket | 多协议传输层 (WebSocket→SSE→Polling 降级) + 手动 Segmented 切换 + 直连后端 + 二进制协议 + 背压控制 + 消息合并 + 心跳保活 + 断线重连 + 消息去重 + RAF 节流 + ECharts 实时趋势 |
 | 2 | JSON Schema 动态表单 | 自定义递归渲染引擎: Schema/initialData 从后端 `GET /api/schema/config` 加载 + augmentSchema() 注入校验函数 + `fetchedRef` StrictMode 防重复请求 + 条件显隐 / 数组列表 / 自定义/异步校验 / 字段联动 / ajv / 循环检测 / 实时 JSON 编辑与双向同步 |
 | 3 | LRU 路由缓存 | 3 页 Tab + Config + Logs + Monitor 子页 + DOM display:none 保持状态 + LRU 淘汰 + staleKeys 写后失效 + activeRef 两阶段 useEffect + 惰性刷新 + 淘汰通知 |
