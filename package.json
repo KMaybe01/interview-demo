@@ -9,7 +9,7 @@
   "scripts": {
     "prepare": "husky",
     "changelog": "conventional-changelog -p conventionalcommits -i CHANGELOG.md -s",
-    "dev": "turbo run dev",
+    "dev": "turbo run dev --filter=!@interview-demo/backend-nest",
     "preview": "turbo run preview",
     "build": "turbo run build",
     "test": "turbo run test",
