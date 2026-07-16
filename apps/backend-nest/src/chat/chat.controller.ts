@@ -45,7 +45,8 @@ export class ChatController {
   @ApiOperation({ summary: '流式聊天' })
   async chatStream(
     @Body() body: {
-      messages: { role: string; content: string }[];
+      content?: string;
+      messages?: { role: string; content: string }[];
       model?: string;
       conversationId?: string;
     },
@@ -56,20 +57,23 @@ export class ChatController {
     res.header('Connection', 'keep-alive');
     res.flushHeaders();
 
+    const messages: { role: string; content: string }[] = body.messages || [
+      { role: 'user', content: body.content || '' },
+    ];
+    const model = body.model || 'gpt-3.5-turbo';
+
     let fullContent = '';
 
-    await this.llmService.chatStream(
-      body.messages,
-      body.model || 'gpt-3.5-turbo',
-      (chunk: string) => {
-        res.write(`data: ${chunk}\n\n`);
+    await this.llmService.chatStream(messages, model, (chunk: string) => {
+      res.write(`data: ${chunk}\n\n`);
+      try {
         const parsed = JSON.parse(chunk);
         if (parsed.content) fullContent += parsed.content;
-      },
-    );
+      } catch {}
+    });
 
     if (body.conversationId) {
-      for (const msg of body.messages) {
+      for (const msg of messages) {
         this.memoryService.addMemory(body.conversationId, msg.role, msg.content);
       }
       this.memoryService.addMemory(body.conversationId, 'assistant', fullContent);
@@ -103,7 +107,17 @@ export class ModelController {
   @Get()
   @ApiOperation({ summary: '模型列表' })
   listModels() {
-    return this.modelManager.listModels();
+    const rawModels = this.modelManager.listModels();
+    const models = rawModels.map((m) => ({
+      id: m.id,
+      model_name: m.name,
+      provider: m.provider,
+      context_window: m.contextWindow,
+      max_tokens: m.maxTokens,
+      supports_tools: m.capabilities.includes('tool_use'),
+      supports_vision: m.capabilities.includes('vision'),
+    }));
+    return { models, count: models.length };
   }
 
   @Get(':id')

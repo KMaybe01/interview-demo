@@ -48,7 +48,7 @@ export interface ChatStreamRequest {
   model?: string;
 }
 
-export type ChunkStrategyType = 'fixed' | 'recursive' | 'semantic';
+export type ChunkStrategyType = 'fixed' | 'recursive' | 'token' | 'markdown';
 
 export interface ChunkStrategy {
   type: ChunkStrategyType;
@@ -59,6 +59,14 @@ export interface ChunkStrategy {
 export interface EmbeddingConfig {
   model: string;
   dimension: number;
+}
+
+export interface KnowledgeConfig {
+  chunkStrategy: ChunkStrategyType;
+  chunkSize: number;
+  overlap: number;
+  embeddingModel: string;
+  dimensions: number;
 }
 
 export interface ToolDefinition {
@@ -195,10 +203,24 @@ export interface Document {
   createdAt: string;
 }
 
+export interface DocumentChunk {
+  id: string;
+  document_id: string;
+  content: string;
+  chunk_index: number;
+  metadata?: Record<string, unknown>;
+}
+
+export interface DocumentChunksResponse {
+  chunks: DocumentChunk[];
+  count: number;
+}
+
 export interface KnowledgeSearchRequest {
   query: string;
   knowledgeBaseId?: string;
   topK?: number;
+  hybrid?: boolean;
 }
 
 export interface KnowledgeSearchResult {

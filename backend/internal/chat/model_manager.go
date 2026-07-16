@@ -17,6 +17,7 @@ const (
 	ProviderDeepSeek ModelProvider = "deepseek"
 	ProviderOllama   ModelProvider = "ollama"
 	ProviderAzure    ModelProvider = "azure"
+	ProviderGemini   ModelProvider = "gemini"
 )
 
 type ModelConfig struct {
@@ -118,6 +119,8 @@ func (m *ModelManager) createClient(config *ModelConfig) ModelClient {
 		return NewDeepSeekClient(config)
 	case ProviderOllama:
 		return NewOllamaClient(config)
+	case ProviderGemini:
+		return NewGeminiClient(config)
 	default:
 		return NewOpenAIClient(config)
 	}
@@ -265,6 +268,62 @@ func (c *OllamaClient) ModelInfo() ModelInfo {
 	}
 }
 
+type GeminiClient struct {
+	config *ModelConfig
+}
+
+func NewGeminiClient(config *ModelConfig) *GeminiClient {
+	return &GeminiClient{config: config}
+}
+
+func (c *GeminiClient) Chat(ctx context.Context, messages []model.Message) (string, error) {
+	return fmt.Sprintf("Gemini %s 响应: 我已收到你的请求，让我来帮你解答。", c.config.ModelName), nil
+}
+
+func (c *GeminiClient) ChatWithTools(ctx context.Context, messages []model.Message, tools []ToolDefinition) (*ChatResponse, error) {
+	if len(tools) == 0 {
+		content, err := c.Chat(ctx, messages)
+		if err != nil {
+			return nil, err
+		}
+		return &ChatResponse{
+			Content:      content,
+			ToolCalls:    []ToolCall{},
+			Usage:        TokenUsage{PromptTokens: 150, CompletionTokens: 80, TotalTokens: 230},
+			FinishReason: "stop",
+		}, nil
+	}
+	return &ChatResponse{
+		Content: "Gemini 正在调用工具...",
+		ToolCalls: []ToolCall{
+			{
+				ID:   uuid.New().String(),
+				Name: tools[0].Name,
+				Arguments: map[string]interface{}{
+					"input": "示例输入",
+				},
+			},
+		},
+		Usage: TokenUsage{
+			PromptTokens:     150,
+			CompletionTokens: 80,
+			TotalTokens:      230,
+		},
+		FinishReason: "tool_calls",
+	}, nil
+}
+
+func (c *GeminiClient) ModelInfo() ModelInfo {
+	return ModelInfo{
+		Provider:        ProviderGemini,
+		ModelName:       c.config.ModelName,
+		ContextWindow:   1048576,
+		MaxOutputTokens: 8192,
+		SupportsTools:   true,
+		SupportsVision:  true,
+	}
+}
+
 type ModelSelector struct {
 	manager *ModelManager
 }
@@ -346,6 +405,24 @@ func DefaultModelManager() *ModelManager {
 		MaxTokens:   2048,
 		Temperature: 0.7,
 		Timeout:     60 * time.Second,
+	})
+
+	manager.RegisterModel(&ModelConfig{
+		ID:          "gemini-2.5-flash",
+		Provider:    ProviderGemini,
+		ModelName:   "gemini-2.5-flash",
+		MaxTokens:   8192,
+		Temperature: 0.7,
+		Timeout:     30 * time.Second,
+	})
+
+	manager.RegisterModel(&ModelConfig{
+		ID:          "gemini-2.5-pro",
+		Provider:    ProviderGemini,
+		ModelName:   "gemini-2.5-pro",
+		MaxTokens:   8192,
+		Temperature: 0.7,
+		Timeout:     30 * time.Second,
 	})
 
 	return manager

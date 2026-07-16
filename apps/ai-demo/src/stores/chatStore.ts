@@ -92,7 +92,20 @@ function createNewConversation(title = '新对话'): Conversation {
 }
 
 export const useChatStore = create<ChatHistoryState>((set) => {
-  const savedConversations = loadConversations();
+  let savedConversations: Conversation[] = [];
+  try {
+    savedConversations = loadConversations();
+    // 验证数据完整性，清除损坏数据
+    if (
+      !Array.isArray(savedConversations) ||
+      savedConversations.some((c) => !c?.id || !Array.isArray(c?.messages))
+    ) {
+      savedConversations = [];
+      localStorage.removeItem('chat_conversations');
+    }
+  } catch {
+    localStorage.removeItem('chat_conversations');
+  }
 
   const initialConversations =
     savedConversations.length > 0 ? savedConversations : [createNewConversation()];

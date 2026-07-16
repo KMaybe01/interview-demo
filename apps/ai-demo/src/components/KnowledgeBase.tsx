@@ -7,12 +7,16 @@ import {
   InboxOutlined,
   PlusOutlined,
   ReloadOutlined,
+  SaveOutlined,
+  ScissorOutlined,
   SearchOutlined,
   SettingOutlined,
 } from '@ant-design/icons';
+import { XMarkdown } from '@ant-design/x-markdown';
 import {
   Button,
   Card,
+  Collapse,
   Form,
   Input,
   List,
@@ -38,6 +42,7 @@ import type {
   ChunkStrategy,
   ChunkStrategyType,
   Document,
+  DocumentChunk,
   EmbeddingConfig,
   KnowledgeBase,
   KnowledgeSearchResult,
@@ -70,20 +75,24 @@ function KnowledgeBasePage() {
   const [uploadProgress, setUploadProgress] = useState({ total: 0, done: 0 });
   const fileInputRef = useRef<HTMLInputElement>(null);
 
-  const [docModalVisible, setDocModalVisible] = useState(false);
-  const [selectedKBDocs, setSelectedKBDocs] = useState<Document[]>([]);
-  const [loadingDocs, setLoadingDocs] = useState(false);
+  const [kbDocs, setKbDocs] = useState<Record<string, Document[]>>({});
+  const [loadingKbDocs, setLoadingKbDocs] = useState<string | null>(null);
+  const [expandedKbRows, setExpandedKbRows] = useState<Set<string>>(new Set());
 
   const [chunkStrategy, setChunkStrategy] = useState<ChunkStrategy>({
     type: 'recursive',
-    chunkSize: 500,
+    chunkSize: 512,
     overlap: 50,
   });
   const [embeddingConfig, setEmbeddingConfig] = useState<EmbeddingConfig>({
-    model: 'text-embedding-ada-002',
+    model: 'openai',
     dimension: 1536,
   });
   const [hybridSearch, setHybridSearch] = useState(false);
+  const [configSaving, setConfigSaving] = useState(false);
+  const [docChunks, setDocChunks] = useState<Record<string, DocumentChunk[]>>({});
+  const [loadingChunks, setLoadingChunks] = useState<string | null>(null);
+  const [expandedChunkDocs, setExpandedChunkDocs] = useState<Set<string>>(new Set());
 
   const [createForm] = Form.useForm();
 
@@ -170,6 +179,16 @@ function KnowledgeBasePage() {
       setUploadFiles([]);
       setAddDocModalVisible(false);
       loadKnowledgeBases();
+      setKbDocs((prev) => {
+        const next = { ...prev };
+        delete next[selectedKB.id];
+        return next;
+      });
+      setExpandedKbRows((prev) => {
+        const next = new Set(prev);
+        next.delete(selectedKB.id);
+        return next;
+      });
     } catch {
       message.error('批量上传失败');
     } finally {
@@ -184,6 +203,7 @@ function KnowledgeBasePage() {
       const response = await knowledgeAPI.search({
         query: searchQuery,
         topK: 5,
+        hybrid: hybridSearch,
       });
       setSearchResults(response.results || []);
     } catch {
@@ -191,19 +211,86 @@ function KnowledgeBasePage() {
     }
   };
 
-  const viewDocuments = async (kb: KnowledgeBase) => {
-    setSelectedKB(kb);
-    setLoadingDocs(true);
-    setDocModalVisible(true);
+  const loadConfig = useCallback(async () => {
     try {
-      const response = await knowledgeAPI.get(kb.id);
-      setSelectedKBDocs(response.documents || []);
+      const config = await knowledgeAPI.getConfig();
+      setChunkStrategy({
+        type: config.chunkStrategy,
+        chunkSize: config.chunkSize,
+        overlap: config.overlap,
+      });
+      setEmbeddingConfig({
+        model: config.embeddingModel,
+        dimension: config.dimensions,
+      });
     } catch {
-      message.error('加载文档失败');
-    } finally {
-      setLoadingDocs(false);
+      // 后端未启动时使用默认值
     }
-  };
+  }, []);
+
+  const handleSaveConfig = useCallback(async () => {
+    setConfigSaving(true);
+    try {
+      const config = await knowledgeAPI.updateConfig({
+        chunkStrategy: chunkStrategy.type,
+        chunkSize: chunkStrategy.chunkSize,
+        overlap: chunkStrategy.overlap,
+        embeddingModel: embeddingConfig.model,
+      });
+      setChunkStrategy({
+        type: config.chunkStrategy,
+        chunkSize: config.chunkSize,
+        overlap: config.overlap,
+      });
+      setEmbeddingConfig({
+        model: config.embeddingModel,
+        dimension: config.dimensions,
+      });
+      message.success('配置已保存，后续添加的文档将使用新配置');
+    } catch {
+      message.error('保存配置失败');
+    } finally {
+      setConfigSaving(false);
+    }
+  }, [chunkStrategy, embeddingConfig, message]);
+
+  useEffect(() => {
+    loadConfig();
+  }, [loadConfig]);
+
+  const loadChunks = useCallback(
+    async (kbId: string, docId: string) => {
+      if (docChunks[docId]) return;
+
+      setLoadingChunks(docId);
+      try {
+        const res = await knowledgeAPI.getDocumentChunks(kbId, docId);
+        setDocChunks((prev) => ({ ...prev, [docId]: res.chunks || [] }));
+      } catch {
+        message.error('加载分块失败');
+      } finally {
+        setLoadingChunks(null);
+      }
+    },
+    [docChunks, message],
+  );
+
+  const loadDocuments = useCallback(
+    async (kbId: string) => {
+      if (kbDocs[kbId]) return;
+
+      setLoadingKbDocs(kbId);
+      try {
+        const response = await knowledgeAPI.get(kbId);
+        setKbDocs((prev) => ({ ...prev, [kbId]: response.documents || [] }));
+      } catch {
+        message.error('加载文档失败');
+      } finally {
+        setLoadingKbDocs(null);
+      }
+    },
+    [kbDocs, message],
+  );
 
   const columns = [
     {
@@ -250,9 +337,6 @@ function KnowledgeBasePage() {
             }}
           >
             添加文档
-          </Button>
-          <Button type="link" size="small" onClick={() => viewDocuments(record)}>
-            查看文档
           </Button>
           <Popconfirm title="确定删除此知识库吗？" onConfirm={() => handleDelete(record.id)}>
             <Button type="link" size="small" danger>
@@ -309,21 +393,162 @@ function KnowledgeBasePage() {
                   loading={loading}
                   pagination={{ pageSize: 10 }}
                   expandable={{
+                    expandedRowKeys: [...expandedKbRows],
+                    onExpand: (expanded: boolean, record: KnowledgeBase) => {
+                      if (expanded) {
+                        loadDocuments(record.id);
+                        setExpandedKbRows((prev) => new Set(prev).add(record.id));
+                      } else {
+                        setExpandedKbRows((prev) => {
+                          const next = new Set(prev);
+                          next.delete(record.id);
+                          return next;
+                        });
+                      }
+                    },
                     expandedRowRender: (record: KnowledgeBase) => (
-                      <div style={{ padding: '8px 0' }}>
-                        <Text type="secondary">
-                          文档数: {record.docCount} | 分块数: {record.chunkCount}
-                        </Text>
-                        <br />
-                        <Button
-                          type="link"
-                          size="small"
-                          onClick={() => viewDocuments(record)}
-                          style={{ padding: 0, marginTop: 4 }}
-                        >
-                          查看文档列表
-                        </Button>
-                      </div>
+                      <Table<Document>
+                        loading={loadingKbDocs === record.id && !kbDocs[record.id]}
+                        dataSource={kbDocs[record.id] || []}
+                        rowKey="id"
+                        size="small"
+                        pagination={{ pageSize: 5 }}
+                        locale={{ emptyText: '暂无文档，点击「添加文档」上传' }}
+                        columns={[
+                          {
+                            title: '标题',
+                            dataIndex: 'title',
+                            key: 'title',
+                            render: (text: string) => <Text strong>{text}</Text>,
+                          },
+                          {
+                            title: '来源',
+                            dataIndex: 'source',
+                            key: 'source',
+                            width: 100,
+                            render: (source?: string) =>
+                              source ? <Tag>{source}</Tag> : <Text type="secondary">-</Text>,
+                          },
+                          {
+                            title: '创建时间',
+                            dataIndex: 'createdAt',
+                            key: 'createdAt',
+                            width: 160,
+                            render: (t: string) => (
+                              <Text type="secondary" style={{ fontSize: 12 }}>
+                                {new Date(t).toLocaleString()}
+                              </Text>
+                            ),
+                          },
+                          {
+                            title: '内容预览',
+                            dataIndex: 'content',
+                            key: 'content',
+                            ellipsis: true,
+                            render: (content: string) => (
+                              <Text type="secondary" style={{ fontSize: 12 }}>
+                                {content.length > 50 ? `${content.slice(0, 50)}...` : content}
+                              </Text>
+                            ),
+                          },
+                          {
+                            title: '操作',
+                            key: 'action',
+                            width: 100,
+                            render: (_: unknown, doc: Document) => {
+                              const expanded = expandedChunkDocs.has(doc.id);
+                              return (
+                                <Button
+                                  size="small"
+                                  type="link"
+                                  icon={<ScissorOutlined />}
+                                  loading={loadingChunks === doc.id}
+                                  onClick={() => {
+                                    if (expanded) {
+                                      setExpandedChunkDocs((prev) => {
+                                        const next = new Set(prev);
+                                        next.delete(doc.id);
+                                        return next;
+                                      });
+                                    } else {
+                                      loadChunks(record.id, doc.id);
+                                      setExpandedChunkDocs((prev) => new Set(prev).add(doc.id));
+                                    }
+                                  }}
+                                >
+                                  {expanded ? '收起' : '查看分块'}
+                                </Button>
+                              );
+                            },
+                          },
+                        ]}
+                        expandable={{
+                          expandedRowKeys: [...expandedChunkDocs],
+                          onExpand: (expanded: boolean, doc: Document) => {
+                            if (expanded) {
+                              loadChunks(record.id, doc.id);
+                              setExpandedChunkDocs((prev) => new Set(prev).add(doc.id));
+                            } else {
+                              setExpandedChunkDocs((prev) => {
+                                const next = new Set(prev);
+                                next.delete(doc.id);
+                                return next;
+                              });
+                            }
+                          },
+                          expandedRowRender: (doc: Document) => (
+                            <div>
+                              <div
+                                style={{
+                                  marginBottom: 12,
+                                  padding: 12,
+                                  background: token.colorFillQuaternary,
+                                  borderRadius: 6,
+                                  maxHeight: 200,
+                                  overflow: 'auto',
+                                }}
+                              >
+                                <Text type="secondary" style={{ fontSize: 12 }}>
+                                  完整内容（{doc.content.length} 字符）
+                                </Text>
+                                <XMarkdown content={doc.content} openLinksInNewTab />
+                              </div>
+                              {loadingChunks === doc.id && !docChunks[doc.id] && (
+                                <Text type="secondary" style={{ fontSize: 12 }}>
+                                  加载分块中...
+                                </Text>
+                              )}
+                              {docChunks[doc.id] && (
+                                <>
+                                  <Text strong style={{ fontSize: 13 }}>
+                                    <ScissorOutlined /> 分块列表（{docChunks[doc.id].length} 个）
+                                  </Text>
+                                  <Collapse
+                                    size="small"
+                                    style={{ marginTop: 8 }}
+                                    items={docChunks[doc.id].map(
+                                      (chunk: DocumentChunk, i: number) => ({
+                                        key: chunk.id || i,
+                                        label: (
+                                          <Space>
+                                            <Tag color="blue">#{chunk.chunk_index + 1}</Tag>
+                                            <Text type="secondary" style={{ fontSize: 12 }}>
+                                              {chunk.content.length} 字符
+                                            </Text>
+                                          </Space>
+                                        ),
+                                        children: (
+                                          <XMarkdown content={chunk.content} openLinksInNewTab />
+                                        ),
+                                      }),
+                                    )}
+                                  />
+                                </>
+                              )}
+                            </div>
+                          ),
+                        }}
+                      />
                     ),
                   }}
                 />
@@ -414,7 +639,8 @@ function KnowledgeBasePage() {
                         options={[
                           { value: 'fixed', label: '固定大小' },
                           { value: 'recursive', label: '递归分割' },
-                          { value: 'semantic', label: '语义分割' },
+                          { value: 'token', label: 'Token 分割' },
+                          { value: 'markdown', label: 'Markdown 分割' },
                         ]}
                       />
                     </div>
@@ -443,24 +669,19 @@ function KnowledgeBasePage() {
 
                 <Card title="向量化配置" style={{ marginBottom: 16 }}>
                   <div style={{ marginBottom: 16 }}>
-                    <Text strong>Embedding 模型</Text>
+                    <Text strong>Embedding 模型（{embeddingConfig.dimension} 维）</Text>
                     <div style={{ marginTop: 8 }}>
                       <Select
                         value={embeddingConfig.model}
-                        onChange={(v) => setEmbeddingConfig((prev) => ({ ...prev, model: v }))}
+                        onChange={(v) => {
+                          const dim = v === 'openai' ? 1536 : v === 'bge' ? 1024 : 768;
+                          setEmbeddingConfig((prev) => ({ ...prev, model: v, dimension: dim }));
+                        }}
                         style={{ width: '100%' }}
                         options={[
-                          { value: 'text-embedding-ada-002', label: 'OpenAI Ada-002 (1536维)' },
-                          {
-                            value: 'text-embedding-3-small',
-                            label: 'OpenAI text-embedding-3-small (512维)',
-                          },
-                          {
-                            value: 'text-embedding-3-large',
-                            label: 'OpenAI text-embedding-3-large (3072维)',
-                          },
-                          { value: 'bge-large-zh', label: 'BGE Large ZH (1024维)' },
-                          { value: 'm3e-large', label: 'M3E Large (1024维)' },
+                          { value: 'openai', label: 'OpenAI (1536维)' },
+                          { value: 'bge', label: 'BGE (1024维)' },
+                          { value: 'local', label: 'Local (768维)' },
                         ]}
                       />
                     </div>
@@ -484,6 +705,16 @@ function KnowledgeBasePage() {
                     <Switch checked={hybridSearch} onChange={setHybridSearch} />
                   </div>
                 </Card>
+
+                <Button
+                  type="primary"
+                  icon={<SaveOutlined />}
+                  loading={configSaving}
+                  onClick={handleSaveConfig}
+                  style={{ marginTop: 16 }}
+                >
+                  保存配置
+                </Button>
               </div>
             ),
           },
@@ -630,58 +861,6 @@ function KnowledgeBasePage() {
             </Button>
           </>
         )}
-      </Modal>
-
-      <Modal
-        title={`${selectedKB?.name || ''} - 文档列表`}
-        open={docModalVisible}
-        onCancel={() => setDocModalVisible(false)}
-        footer={null}
-        width={800}
-      >
-        <List
-          loading={loadingDocs}
-          bordered
-          dataSource={selectedKBDocs}
-          locale={{ emptyText: '暂无文档' }}
-          renderItem={(doc: Document) => (
-            <List.Item>
-              <List.Item.Meta
-                avatar={<FileTextOutlined style={{ fontSize: 20, color: '#667eea' }} />}
-                title={<Text strong>{doc.title}</Text>}
-                description={
-                  <div>
-                    <Text type="secondary" style={{ fontSize: 12 }}>
-                      {doc.source && <Tag style={{ marginRight: 8 }}>{doc.source}</Tag>}
-                      {new Date(doc.createdAt).toLocaleString()}
-                    </Text>
-                    <div
-                      style={{
-                        marginTop: 8,
-                        padding: 12,
-                        background: token.colorFillQuaternary,
-                        borderRadius: 6,
-                        maxHeight: 200,
-                        overflow: 'auto',
-                      }}
-                    >
-                      <pre
-                        style={{
-                          margin: 0,
-                          whiteSpace: 'pre-wrap',
-                          fontSize: 12,
-                          fontFamily: 'monospace',
-                        }}
-                      >
-                        {doc.content}
-                      </pre>
-                    </div>
-                  </div>
-                }
-              />
-            </List.Item>
-          )}
-        />
       </Modal>
     </div>
   );

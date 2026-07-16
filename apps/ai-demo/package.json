@@ -14,7 +14,6 @@
     "typecheck": "tsc -p tsconfig.app.json --noEmit && tsc -p tsconfig.node.json --noEmit"
   },
   "dependencies": {
-    "@interview-demo/shared-theme": "workspace:*",
     "@a2ui/markdown-it": "^0.1.0",
     "@a2ui/react": "^0.10.1",
     "@a2ui/web_core": "^0.10.4",
@@ -24,12 +23,14 @@
     "@ant-design/x-card": "^2.8.0",
     "@ant-design/x-markdown": "^2.8.0",
     "@ant-design/x-sdk": "^2.7.0",
+    "@interview-demo/shared-theme": "workspace:*",
     "@rc-component/cascader": "^1.21.0",
     "antd": "6.4.5",
     "is-mobile": "^5",
     "react": "^19.2.7",
     "react-dom": "^19.2.7",
     "react-is": "^19",
+    "react-router-dom": "^7.18.1",
     "zustand": "^5.0.14"
   },
   "devDependencies": {

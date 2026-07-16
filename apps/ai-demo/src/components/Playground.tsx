@@ -42,28 +42,28 @@ import { telemetry } from '../utils/telemetry.ts';
 const { Text } = Typography;
 
 const DEFAULT_ROUTER: ModelRouterConfig = {
-  defaultModel: 'openai-gpt4',
-  fallbackModel: 'deepseek-chat',
+  defaultModel: 'gemini-2.5-flash',
+  fallbackModel: 'gemini-2.5-pro',
   routingRules: [
     {
       id: 'rule-1',
-      name: '代码生成 → GPT-4',
+      name: '代码生成 → Gemini',
       condition: 'task: coding',
-      model: 'openai-gpt4',
+      model: 'gemini-2.5-pro',
       priority: 1,
     },
     {
       id: 'rule-2',
-      name: '文本创作 → Claude',
+      name: '文本创作 → Gemini',
       condition: 'task: writing',
-      model: 'claude-3',
+      model: 'gemini-2.5-pro',
       priority: 2,
     },
     {
       id: 'rule-3',
-      name: '简单问答 → DeepSeek',
+      name: '简单问答 → Gemini Flash',
       condition: 'complexity: low',
-      model: 'deepseek-chat',
+      model: 'gemini-2.5-flash',
       priority: 3,
     },
   ],
@@ -384,9 +384,10 @@ function Playground() {
                         value={router.defaultModel}
                         onChange={(v) => setRouter((prev) => ({ ...prev, defaultModel: v }))}
                         options={[
+                          { value: 'gemini-2.5-flash', label: 'Gemini 2.5 Flash' },
+                          { value: 'gemini-2.5-pro', label: 'Gemini 2.5 Pro' },
                           { value: 'openai-gpt4', label: 'GPT-4' },
                           { value: 'deepseek-chat', label: 'DeepSeek Chat' },
-                          { value: 'claude-3', label: 'Claude 3' },
                           { value: 'ollama-llama3', label: 'Ollama Llama 3' },
                         ]}
                       />
@@ -396,9 +397,10 @@ function Playground() {
                         value={router.fallbackModel}
                         onChange={(v) => setRouter((prev) => ({ ...prev, fallbackModel: v }))}
                         options={[
+                          { value: 'gemini-2.5-flash', label: 'Gemini 2.5 Flash' },
+                          { value: 'gemini-2.5-pro', label: 'Gemini 2.5 Pro' },
                           { value: 'openai-gpt4', label: 'GPT-4' },
                           { value: 'deepseek-chat', label: 'DeepSeek Chat' },
-                          { value: 'claude-3', label: 'Claude 3' },
                           { value: 'ollama-llama3', label: 'Ollama Llama 3' },
                         ]}
                       />

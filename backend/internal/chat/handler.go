@@ -4,7 +4,9 @@ import (
 	"context"
 	"fmt"
 	"io"
+	"log"
 	"net/http"
+	"strings"
 	"time"
 
 	"github.com/gin-gonic/gin"
@@ -19,11 +21,12 @@ type AgentExecutor interface {
 }
 
 type Handler struct {
-	llmService    *LLMService
-	memoryService *memory.Service
-	ragService    *knowledge.RAGService
-	lookupAgent   func(id string) AgentExecutor
-	createAgent   func(agentType, name string) AgentExecutor
+	llmService       *LLMService
+	geminiLLMService *LLMService
+	memoryService    *memory.Service
+	ragService       *knowledge.RAGService
+	lookupAgent      func(id string) AgentExecutor
+	createAgent      func(agentType, name string) AgentExecutor
 }
 
 func NewHandler(
@@ -40,6 +43,19 @@ func NewHandler(
 		lookupAgent:   lookupAgent,
 		createAgent:   createAgent,
 	}
+}
+
+// SetGeminiLLMService 设置 Gemini LLM 服务
+func (h *Handler) SetGeminiLLMService(svc *LLMService) {
+	h.geminiLLMService = svc
+}
+
+// selectLLMService 根据模型名称选择 LLM 服务
+func (h *Handler) selectLLMService(modelName string) *LLMService {
+	if h.geminiLLMService != nil && strings.Contains(strings.ToLower(modelName), "gemini") {
+		return h.geminiLLMService
+	}
+	return h.llmService
 }
 
 // Chat  godoc
@@ -119,11 +135,12 @@ func (h *Handler) Chat(c *gin.Context) {
 			response, err = agt.Execute(context.Background(), req.Content)
 		}
 	} else {
-		model := req.Model
-		if model == "" {
-			model = "gpt-3.5-turbo"
+		modelName := req.Model
+		if modelName == "" {
+			modelName = "gpt-3.5-turbo"
 		}
-		resp, chatErr := h.llmService.Chat(context.Background(), messages, model)
+		svc := h.selectLLMService(modelName)
+		resp, chatErr := svc.Chat(context.Background(), messages, modelName)
 		if chatErr != nil {
 			err = chatErr
 		} else {
@@ -214,9 +231,12 @@ func (h *Handler) ChatStream(c *gin.Context) {
 	ctx := c.Request.Context()
 	ch := make(chan model.StreamChunk, 10)
 
-	stream, err := h.llmService.ChatStream(ctx, messages, req.Model)
+	svc := h.selectLLMService(req.Model)
+	log.Printf("[ChatStream] model=%q, using gemini=%v", req.Model, svc == h.geminiLLMService)
+	stream, err := svc.ChatStream(ctx, messages, req.Model)
 	if err != nil {
-		go MockChatStream(ctx, req.Content, ch)
+		log.Printf("[ChatStream] API error: %v", err)
+		go MockChatStreamReason(ctx, req.Content, err.Error(), ch)
 	} else {
 		go ReadStream(stream, ch)
 	}

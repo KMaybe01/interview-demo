@@ -24,7 +24,7 @@ import type { Plugin } from '../types/index.ts';
 
 const { Title, Text } = Typography;
 
-const builtinPlugins: Plugin[] = [
+export const builtinPlugins: Plugin[] = [
   {
     id: 'weather',
     name: '天气查询',

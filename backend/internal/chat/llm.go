@@ -24,6 +24,19 @@ func NewLLMService(apiKey string) *LLMService {
 	}
 }
 
+// NewGeminiLLMService 创建一个指向 Gemini OpenAI 兼容端点的 LLMService。
+// Gemini 的 OpenAI 兼容端点: https://generativelanguage.googleapis.com/v1beta/openai/
+// 认证方式与 OpenAI 相同 (Authorization: Bearer <apiKey>)。
+func NewGeminiLLMService(apiKey string) *LLMService {
+	config := openai.DefaultConfig(apiKey)
+	config.BaseURL = "https://generativelanguage.googleapis.com/v1beta/openai/"
+	client := openai.NewClientWithConfig(config)
+
+	return &LLMService{
+		client: client,
+	}
+}
+
 func toOpenAIMessages(messages []model.Message) []openai.ChatCompletionMessage {
 	openaiMessages := make([]openai.ChatCompletionMessage, len(messages))
 	for i, msg := range messages {
@@ -137,8 +150,25 @@ func MockChatStream(ctx context.Context, input string, ch chan<- model.StreamChu
 		"系统使用本地模拟模式生成回复。",
 		"\n\n你可以设置 OPENAI_API_KEY 环境变量来启用真实的 AI 对话。",
 	}
+	doMock(ctx, ch, mockResponses)
+}
 
-	for _, text := range mockResponses {
+// MockChatStreamReason 与 MockChatStream 类似，但支持传入自定义原因说明
+func MockChatStreamReason(ctx context.Context, input string, reason string, ch chan<- model.StreamChunk) {
+	defer close(ch)
+
+	mockResponses := []string{
+		"API 调用失败: " + reason,
+		"\n\n这是一个降级的模拟响应。由于真实 API 不可用，",
+		"系统使用本地模拟模式生成回复。",
+		"\n\n请稍后重试。",
+	}
+	doMock(ctx, ch, mockResponses)
+}
+
+func doMock(ctx context.Context, ch chan<- model.StreamChunk, responses []string) {
+
+	for _, text := range responses {
 		for _, r := range []rune(text) {
 			select {
 			case <-ctx.Done():

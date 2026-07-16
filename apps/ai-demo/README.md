@@ -40,6 +40,55 @@ bun run --cwd apps/ai-demo typecheck  # 类型检查
 bun run --cwd apps/ai-demo lint      # Biome 代码检查
 ```
 
+## 构建与拆包策略
+
+构建配置位于 `vite.config.ts` 的 `build.rolldownOptions.output.codeSplitting.groups`，按优先级将第三方依赖拆分为独立 chunk，配合路由懒加载实现按需加载。
+
+### Vendor Chunk（第三方依赖，长期缓存）
+
+| chunk | 体积 / gzip | 内容 | 加载时机 |
+|-------|------------|------|----------|
+| `vendor-antd-x` | 1139 KB / 392 KB | `@ant-design/x` + `@ant-design/x-sdk`（Bubble/Sender/Conversations 等 AI 组件） | Chat / A2UI |
+| `vendor-antd` | 555 KB / 175 KB | `antd` 核心 | 全局 |
+| `vendor-a2ui` | 268 KB / 89 KB | `@a2ui/*` 协议库 | 仅 A2UI |
+| `vendor-react` | 234 KB / 75 KB | `react` / `react-dom` / `react-is` / `react-router` / `scheduler` / `zustand` | 全局 |
+| `vendor-motion` | 125 KB / 41 KB | `motion` 动画引擎（@ant-design/x 依赖） | Chat / A2UI |
+| `vendor-antd-x-markdown` | 120 KB / 40 KB | `@ant-design/x-markdown` 流式 Markdown 渲染 | 仅 Chat |
+| `vendor-antd-icons` | 50 KB / 12 KB | `@ant-design/icons` | 全局 |
+| `vendor-antd-x-card` | 1.5 KB / 0.8 KB | `@ant-design/x-card` 卡片组件 | 仅 A2UI |
+| `vendor` | — | 其他 `node_modules` 兜底 | 按需 |
+
+### 页面 Chunk（业务逻辑，路由懒加载）
+
+| 页面 | 体积 / gzip |
+|------|------------|
+| Agents | 16.9 KB / 5.8 KB |
+| Chat | 14.7 KB / 5.3 KB |
+| KnowledgeBase | 11.0 KB / 4.1 KB |
+| A2UI | 10.8 KB / 3.5 KB |
+| Dashboard | 9.1 KB / 3.2 KB |
+| Playground | 8.7 KB / 3.2 KB |
+| Plugins | 5.8 KB / 2.2 KB |
+| Models | 4.0 KB / 1.6 KB |
+
+### 设计原则
+
+1. **按生态拆分**：React / antd / @ant-design/x / @a2ui 各自独立 chunk，依赖不变时 hash 稳定，浏览器长期缓存
+2. **按页面细分重依赖**：`x-markdown` 仅 Chat 加载、`x-card` + `a2ui` 仅 A2UI 加载，首屏（Dashboard）无需下载这些重依赖
+3. **兜底分组**：`vendor` 捕获零散依赖（如 `purify.es`），避免污染其他 vendor chunk
+4. **页面 chunk 极轻**：业务逻辑 chunk 均 < 17 KB，路由切换瞬时
+
+### 优化效果
+
+| chunk | 优化前 | 优化后 | 变化 |
+|-------|--------|--------|------|
+| `vendor-react` | 890 KB | 234 KB | **-74%** |
+| `vendor-antd` | 868 KB | 555 KB | **-36%** |
+| `Chat` | 195 KB | 14.7 KB | **-92%** |
+| `A2UI` | 279 KB | 10.8 KB | **-96%** |
+
+> 优化前 `@ant-design/x` 系列内联在 `Chat` chunk、`@a2ui` 内联在 `A2UI` chunk，且未归类的共享依赖全堆入 `vendor-react` 导致其虚高至 890 KB。
+
 ## 技术栈
 
 | 领域 | 选型 |

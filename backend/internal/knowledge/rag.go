@@ -113,6 +113,20 @@ func (s *RAGService) Documents(kbID string) []model.Document {
 	return docs
 }
 
+// DocumentChunks 返回指定知识库中某文档的所有分块
+func (s *RAGService) DocumentChunks(kbID, docID string) []model.DocumentChunk {
+	s.mu.RLock()
+	defer s.mu.RUnlock()
+
+	var result []model.DocumentChunk
+	for _, chunk := range s.chunks[kbID] {
+		if chunk.DocumentID == docID {
+			result = append(result, chunk)
+		}
+	}
+	return result
+}
+
 func (s *RAGService) DeleteDocument(kbID, docID string) bool {
 	s.mu.Lock()
 	defer s.mu.Unlock()

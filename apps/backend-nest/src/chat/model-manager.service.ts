@@ -103,6 +103,28 @@ export class ModelManager {
       pricing: { input: 0, output: 0 },
       isAvailable: true,
     },
+    {
+      id: 'gemini-2.5-flash',
+      name: 'Gemini 2.5 Flash',
+      provider: 'Google',
+      description: 'Google Gemini 快速多模态模型',
+      capabilities: ['chat', 'vision', 'tool_use'],
+      contextWindow: 1048576,
+      maxTokens: 8192,
+      pricing: { input: 0.15, output: 0.6 },
+      isAvailable: true,
+    },
+    {
+      id: 'gemini-2.5-pro',
+      name: 'Gemini 2.5 Pro',
+      provider: 'Google',
+      description: 'Google Gemini 旗舰模型',
+      capabilities: ['chat', 'vision', 'tool_use', 'code'],
+      contextWindow: 1048576,
+      maxTokens: 8192,
+      pricing: { input: 3.5, output: 10.5 },
+      isAvailable: true,
+    },
   ];
 
   listModels() {

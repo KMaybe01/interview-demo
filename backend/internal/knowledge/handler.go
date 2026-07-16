@@ -242,6 +242,45 @@ func (h *Handler) KnowledgeBaseDocuments(c *gin.Context) {
 	})
 }
 
+// GetDocumentChunks  godoc
+// @Summary     获取文档分块
+// @Description 获取指定文档的分块列表（含分块内容、索引、元数据）
+// @Tags        知识库
+// @Produce     json
+// @Param       id    path string true "知识库 ID"
+// @Param       docId path string true "文档 ID"
+// @Success     200 {object} map[string]interface{}
+// @Failure     404 {object} map[string]interface{}
+// @Router      /knowledge-base/{id}/document/{docId}/chunks [get]
+func (h *Handler) DocumentChunks(c *gin.Context) {
+	kbID := c.Param("id")
+	docID := c.Param("docId")
+
+	if _, exists := h.ragService.KnowledgeBase(kbID); !exists {
+		c.JSON(http.StatusNotFound, gin.H{"error": "知识库不存在"})
+		return
+	}
+
+	chunks := h.ragService.DocumentChunks(kbID, docID)
+
+	// 清除 embedding 向量，避免传输大量浮点数据
+	result := make([]gin.H, 0, len(chunks))
+	for _, chunk := range chunks {
+		result = append(result, gin.H{
+			"id":          chunk.ID,
+			"document_id": chunk.DocumentID,
+			"content":     chunk.Content,
+			"chunk_index": chunk.ChunkIndex,
+			"metadata":    chunk.Metadata,
+		})
+	}
+
+	c.JSON(http.StatusOK, gin.H{
+		"chunks": result,
+		"count":  len(result),
+	})
+}
+
 // DeleteDocument  godoc
 // @Summary     删除文档
 // @Description 从知识库中删除指定文档
@@ -383,5 +422,67 @@ func (h *Handler) Search(c *gin.Context) {
 		"query":   req.Query,
 		"results": response.Results,
 		"count":   len(response.Results),
+	})
+}
+
+// GetConfig  godoc
+// @Summary     获取知识库配置
+// @Description 返回当前分块策略和向量化配置
+// @Tags        知识库
+// @Produce     json
+// @Success     200 {object} map[string]interface{}
+// @Router      /knowledge-base/config [get]
+func (h *Handler) GetConfig(c *gin.Context) {
+	strategy, chunkSize, overlap := h.chunkerManager.GetConfig()
+
+	c.JSON(http.StatusOK, gin.H{
+		"chunkStrategy":  strategy,
+		"chunkSize":      chunkSize,
+		"overlap":        overlap,
+		"embeddingModel": string(h.embeddingService.GetModel()),
+		"dimensions":     h.embeddingService.Dimensions(),
+	})
+}
+
+// UpdateConfig  godoc
+// @Summary     更新知识库配置
+// @Description 动态更新分块策略（fixed/recursive/token/markdown）和向量化模型（openai/bge/local）
+// @Tags        知识库
+// @Accept      json
+// @Produce     json
+// @Param       body body     object{chunkStrategy=string,chunkSize=int,overlap=int,embeddingModel=string} true "配置"
+// @Success     200 {object} map[string]interface{}
+// @Failure     400 {object} map[string]interface{}
+// @Router      /knowledge-base/config [put]
+func (h *Handler) UpdateConfig(c *gin.Context) {
+	var req struct {
+		ChunkStrategy  string `json:"chunkStrategy"`
+		ChunkSize      int    `json:"chunkSize"`
+		Overlap        int    `json:"overlap"`
+		EmbeddingModel string `json:"embeddingModel"`
+	}
+
+	if err := c.ShouldBindJSON(&req); err != nil {
+		c.JSON(http.StatusBadRequest, gin.H{"error": "请求参数错误"})
+		return
+	}
+
+	if req.ChunkStrategy != "" {
+		h.chunkerManager.UpdateConfig(ChunkingStrategy(req.ChunkStrategy), req.ChunkSize, req.Overlap)
+	}
+
+	if req.EmbeddingModel != "" {
+		h.embeddingService.UpdateModel(EmbeddingModel(req.EmbeddingModel))
+	}
+
+	strategy, chunkSize, overlap := h.chunkerManager.GetConfig()
+
+	c.JSON(http.StatusOK, gin.H{
+		"chunkStrategy":  strategy,
+		"chunkSize":      chunkSize,
+		"overlap":        overlap,
+		"embeddingModel": string(h.embeddingService.GetModel()),
+		"dimensions":     h.embeddingService.Dimensions(),
+		"message":        "配置已更新",
 	})
 }

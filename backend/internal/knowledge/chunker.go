@@ -3,6 +3,7 @@ package knowledge
 import (
 	"regexp"
 	"strings"
+	"sync"
 	"unicode/utf8"
 )
 
@@ -278,7 +279,12 @@ func (c *TextChunker) runeIndexToByte(text string, runeIndex int) int {
 }
 
 type ChunkerManager struct {
+	mu       sync.RWMutex
 	chunkers map[ChunkingStrategy]*TextChunker
+	// 用户可配置的覆盖（空值表示按 mimeType 自动选择）
+	overrideStrategy ChunkingStrategy
+	overrideSize     int
+	overrideOverlap  int
 }
 
 func NewChunkerManager() *ChunkerManager {
@@ -299,7 +305,60 @@ func (m *ChunkerManager) Chunker(strategy ChunkingStrategy) *TextChunker {
 	return m.chunkers[ChunkingRecursive]
 }
 
+// GetConfig 返回当前分块配置（策略、块大小、重叠长度）
+func (m *ChunkerManager) GetConfig() (strategy string, chunkSize, overlap int) {
+	m.mu.RLock()
+	defer m.mu.RUnlock()
+
+	if m.overrideStrategy != "" {
+		chunker := m.chunkers[m.overrideStrategy]
+		size, overlapVal := m.overrideSize, m.overrideOverlap
+		if chunker != nil && size <= 0 {
+			size = chunker.ChunkSize
+		}
+		if chunker != nil && overlapVal < 0 {
+			overlapVal = chunker.ChunkOverlap
+		}
+		return string(m.overrideStrategy), size, overlapVal
+	}
+	return string(ChunkingRecursive), 512, 50
+}
+
+// UpdateConfig 动态更新分块策略和参数，重建对应策略的 chunker
+func (m *ChunkerManager) UpdateConfig(strategy ChunkingStrategy, chunkSize, overlap int) {
+	m.mu.Lock()
+	defer m.mu.Unlock()
+
+	m.overrideStrategy = strategy
+	m.overrideSize = chunkSize
+	m.overrideOverlap = overlap
+
+	if strategy == "" {
+		return
+	}
+
+	chunker := NewTextChunker(strategy)
+	if chunkSize > 0 {
+		chunker.ChunkSize = chunkSize
+	}
+	if overlap >= 0 {
+		chunker.ChunkOverlap = overlap
+	}
+	m.chunkers[strategy] = chunker
+}
+
 func (m *ChunkerManager) ChunkDocument(content, mimeType string) []Chunk {
+	m.mu.RLock()
+	if m.overrideStrategy != "" {
+		chunker := m.chunkers[m.overrideStrategy]
+		m.mu.RUnlock()
+		if chunker != nil {
+			return chunker.ChunkText(content)
+		}
+	} else {
+		m.mu.RUnlock()
+	}
+
 	strategy := m.selectStrategy(mimeType)
 	chunker := m.Chunker(strategy)
 	return chunker.ChunkText(content)

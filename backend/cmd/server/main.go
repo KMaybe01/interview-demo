@@ -45,6 +45,7 @@ import (
 	"interview-demo/backend/internal/vitals"
 
 	"github.com/gin-gonic/gin"
+	"github.com/joho/godotenv"
 
 	"github.com/swaggo/files"
 	"github.com/swaggo/gin-swagger"
@@ -52,6 +53,10 @@ import (
 )
 
 func main() {
+	// 加载 .env 文件（优先当前目录，其次 backend/ 目录）
+	_ = godotenv.Load(".env")
+	_ = godotenv.Load("../backend/.env")
+
 	r := gin.Default()
 	r.MaxMultipartMemory = 100 << 20
 	r.Use(middleware.CORS())
@@ -65,6 +70,8 @@ func main() {
 
 	authService := auth.NewService()
 	llmService := chat.NewLLMService(apiKey)
+	geminiApiKey := os.Getenv("GEMINI_API_KEY")
+	geminiLLMService := chat.NewGeminiLLMService(geminiApiKey)
 	memoryService := memory.NewService()
 	ragService := knowledge.NewRAGService()
 	chunkerManager := knowledge.NewChunkerManager()
@@ -97,6 +104,7 @@ func main() {
 			return agentFactory.CreateAgent(t, name)
 		},
 	)
+	chatHandler.SetGeminiLLMService(geminiLLMService)
 	knowledgeHandler := knowledge.NewHandler(ragService, chunkerManager, embeddingService, vectorDB)
 	modelHandler := chat.NewModelHandler(modelManager)
 
@@ -130,13 +138,16 @@ func main() {
 
 		api.POST("/knowledge-base", knowledgeHandler.CreateKnowledgeBase)
 		api.GET("/knowledge-base", knowledgeHandler.ListKnowledgeBases)
+		api.GET("/knowledge-base/config", knowledgeHandler.GetConfig)
+		api.PUT("/knowledge-base/config", knowledgeHandler.UpdateConfig)
+		api.POST("/knowledge-base/search", knowledgeHandler.Search)
 		api.GET("/knowledge-base/:id", knowledgeHandler.KnowledgeBaseDetail)
 		api.DELETE("/knowledge-base/:id", knowledgeHandler.DeleteKnowledgeBase)
 		api.POST("/knowledge-base/:id/document", knowledgeHandler.AddDocument)
 		api.POST("/knowledge-base/:id/documents/batch", knowledgeHandler.BatchAddDocuments)
 		api.GET("/knowledge-base/:id/document", knowledgeHandler.KnowledgeBaseDocuments)
 		api.DELETE("/knowledge-base/:id/document/:docId", knowledgeHandler.DeleteDocument)
-		api.POST("/knowledge-base/search", knowledgeHandler.Search)
+		api.GET("/knowledge-base/:id/document/:docId/chunks", knowledgeHandler.DocumentChunks)
 		api.POST("/knowledge-base/init-docs", func(c *gin.Context) {
 			// InitDocs godoc
 			// @Summary     初始化文档

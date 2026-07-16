@@ -1,9 +1,13 @@
 import {
   BookOutlined,
+  CheckOutlined,
+  CopyOutlined,
   DeleteOutlined,
   EditOutlined,
   EyeInvisibleOutlined,
   EyeOutlined,
+  MenuFoldOutlined,
+  MenuUnfoldOutlined,
   MessageOutlined,
   ReloadOutlined,
   RobotOutlined,
@@ -11,9 +15,10 @@ import {
   UserOutlined,
 } from '@ant-design/icons';
 import type { BubbleItemType } from '@ant-design/x';
-import { Bubble, Conversations, Prompts, Sender, Welcome } from '@ant-design/x';
+import { Bubble, CodeHighlighter, Conversations, Prompts, Sender, Welcome } from '@ant-design/x';
 import { XMarkdown } from '@ant-design/x-markdown';
 import { Avatar, Button, Input, Modal, Tag, Tooltip, Typography, theme } from 'antd';
+import type { ReactNode } from 'react';
 import { useCallback, useEffect, useMemo, useRef, useState } from 'react';
 import { useMessageApi } from '../AIDemo.tsx';
 import { agentAPI, chatAPI, knowledgeAPI, modelAPI } from '../services/api.ts';
@@ -24,6 +29,78 @@ import { maskPII } from '../utils/data-masker.ts';
 import { formatTokenCount } from '../utils/token-estimator.ts';
 
 const { Text } = Typography;
+
+const COLLAPSE_THRESHOLD = 800;
+
+function renderMarkdownWithCodeHighlight(content: string, streaming = false) {
+  const codeBlockRegex = /```([a-zA-Z0-9_-]+)?\s*\n([\s\S]*?)```/g;
+  const parts: Array<{ type: 'text' | 'code'; text?: string; code?: string; lang?: string }> = [];
+  let lastIndex = 0;
+  let match: RegExpExecArray | null;
+
+  match = codeBlockRegex.exec(content);
+  while (match !== null) {
+    const [fullMatch, lang = 'text', code] = match;
+    const before = content.slice(lastIndex, match.index);
+
+    if (before.trim()) {
+      parts.push({ type: 'text', text: before });
+    }
+
+    parts.push({ type: 'code', lang, code });
+    lastIndex = match.index + fullMatch.length;
+    match = codeBlockRegex.exec(content);
+  }
+
+  const tail = content.slice(lastIndex);
+  if (tail.trim()) {
+    parts.push({ type: 'text', text: tail });
+  }
+
+  if (parts.length === 0) {
+    parts.push({ type: 'text', text: content });
+  }
+
+  const streamingProps = streaming
+    ? {
+        streaming: {
+          hasNextChunk: true,
+          enableAnimation: true,
+          tail: true,
+          incompleteMarkdownComponentMap: {
+            link: 'incomplete-link',
+            image: 'incomplete-image',
+          },
+        },
+      }
+    : {
+        streaming: { hasNextChunk: false },
+      };
+
+  return (
+    <div style={{ display: 'flex', flexDirection: 'column', gap: 12 }}>
+      {parts.map((part, index) =>
+        part.type === 'code' ? (
+          <CodeHighlighter
+            key={`code-${index}`}
+            lang={part.lang}
+            style={{ margin: 0 }}
+            highlightProps={{ customStyle: { margin: 0, borderRadius: 8 } }}
+          >
+            {part.code ?? ''}
+          </CodeHighlighter>
+        ) : (
+          <XMarkdown
+            key={`text-${index}`}
+            content={part.text ?? ''}
+            openLinksInNewTab
+            {...streamingProps}
+          />
+        ),
+      )}
+    </div>
+  );
+}
 
 export default function Chat() {
   const { token } = theme.useToken();
@@ -37,9 +114,12 @@ export default function Chat() {
   const [agents, setAgents] = useState<Agent[]>([]);
   const [selectedAgentId, setSelectedAgentId] = useState('');
   const [models, setModels] = useState<Model[]>([]);
-  const [selectedModel, setSelectedModel] = useState('openai-gpt4');
+  const [selectedModel, setSelectedModel] = useState('gemini-2.5-flash');
   const [streamingContent, setStreamingContent] = useState('');
   const [maskPIIEnabled, setMaskPIIEnabled] = useState(false);
+  const [sidebarCollapsed, setSidebarCollapsed] = useState(true);
+  const [expandedMessages, setExpandedMessages] = useState<Set<string>>(new Set());
+  const [copiedMessageId, setCopiedMessageId] = useState<string | null>(null);
 
   const abortControllerRef = useRef<AbortController | null>(null);
   const lastQueryRef = useRef('');
@@ -71,7 +151,10 @@ export default function Chat() {
       setModels(modelRes.models || []);
       setAgents(agentRes.agents || []);
       if (modelRes.models?.length > 0) {
-        setSelectedModel(modelRes.models[0].model_name);
+        const geminiModel = modelRes.models.find((m: Model) =>
+          m.id.toLowerCase().includes('gemini'),
+        );
+        setSelectedModel(geminiModel?.id || modelRes.models[0].id);
       }
     } catch {
       // ignore
@@ -106,6 +189,9 @@ export default function Chat() {
       const controller = new AbortController();
       abortControllerRef.current = controller;
 
+      // selectedModel 就是 API 模型名（如 "gemini-2.0-flash"），直接传给后端
+      const modelName = selectedModel;
+
       accumulatedContentRef.current = '';
       try {
         await chatAPI.chatStream(
@@ -138,6 +224,8 @@ export default function Chat() {
               setStreamingContent('');
             }
           },
+          modelName,
+          selectedKnowledgeBase || undefined,
         );
       } catch (err) {
         if (!controller.signal.aborted) {
@@ -150,7 +238,7 @@ export default function Chat() {
         }
       }
     },
-    [inputValue, isLoading, addMessage, setLoading, setError],
+    [inputValue, isLoading, addMessage, setLoading, setError, selectedModel, selectedKnowledgeBase],
   );
 
   const handleNewChat = useCallback(() => {
@@ -205,27 +293,92 @@ export default function Chat() {
     handleSend(lastQueryRef.current);
   }, [setError, handleSend]);
 
+  const renderMarkdown = useCallback(
+    (content: string) => renderMarkdownWithCodeHighlight(content),
+    [],
+  );
+
+  const renderMarkdownStreaming = useCallback(
+    (content: string) => renderMarkdownWithCodeHighlight(content, true),
+    [],
+  );
+
+  const handleCopy = useCallback((content: string, messageId: string) => {
+    navigator.clipboard.writeText(content).then(() => {
+      setCopiedMessageId(messageId);
+      setTimeout(() => setCopiedMessageId(null), 1500);
+    });
+  }, []);
+
+  const toggleMessageExpand = useCallback((messageId: string) => {
+    setExpandedMessages((prev) => {
+      const next = new Set(prev);
+      if (next.has(messageId)) {
+        next.delete(messageId);
+      } else {
+        next.add(messageId);
+      }
+      return next;
+    });
+  }, []);
+
   const bubbleItems = useMemo(() => {
-    const items: BubbleItemType[] = messages.map((msg) => ({
-      key: msg.id ?? '',
-      role: msg.role === 'user' ? 'user' : 'ai',
-      content:
-        maskPIIEnabled && msg.role === 'assistant' ? maskPII(msg.content).masked : msg.content,
-      contentRender:
-        msg.role === 'assistant' ? (content: string) => <XMarkdown content={content} /> : undefined,
-    }));
+    const items: BubbleItemType[] = messages.map((msg) => {
+      const messageKey = msg.id ?? '';
+      const rawContent =
+        maskPIIEnabled && msg.role === 'assistant' ? maskPII(msg.content).masked : msg.content;
+      const isAI = msg.role === 'assistant';
+      const isExpanded = expandedMessages.has(messageKey);
+      const shouldCollapse = rawContent.length > COLLAPSE_THRESHOLD;
+
+      let contentRender: ((content: string) => ReactNode) | undefined;
+      if (isAI) {
+        contentRender = shouldCollapse
+          ? (content: string) => {
+              const displayContent = isExpanded
+                ? content
+                : `${content.slice(0, COLLAPSE_THRESHOLD)}\n\n...`;
+              return (
+                <div>
+                  {renderMarkdown(displayContent)}
+                  <Button
+                    size="small"
+                    type="link"
+                    onClick={() => toggleMessageExpand(messageKey)}
+                    style={{ padding: '4px 0', fontSize: 12 }}
+                  >
+                    {isExpanded ? '收起' : `展开全文（共 ${content.length} 字符）`}
+                  </Button>
+                </div>
+              );
+            }
+          : renderMarkdown;
+      }
+
+      return {
+        key: messageKey,
+        role: msg.role === 'user' ? 'user' : 'ai',
+        content: rawContent,
+        contentRender,
+        footer: (
+          <Tooltip title={copiedMessageId === messageKey ? '已复制' : '复制'}>
+            <Button
+              size="small"
+              type="text"
+              icon={copiedMessageId === messageKey ? <CheckOutlined /> : <CopyOutlined />}
+              onClick={() => handleCopy(rawContent, messageKey)}
+            />
+          </Tooltip>
+        ),
+      };
+    });
     if (isLoading && streamingContent) {
       items.push({
         key: 'streaming-msg',
         role: 'ai',
         content: maskPIIEnabled ? maskPII(streamingContent).masked : streamingContent,
         streaming: true,
-        contentRender: (content: string) => (
-          <XMarkdown
-            content={content}
-            streaming={{ hasNextChunk: true, enableAnimation: true, tail: true }}
-          />
-        ),
+        contentRender: renderMarkdownStreaming,
       });
     } else if (isLoading) {
       items.push({
@@ -236,7 +389,18 @@ export default function Chat() {
       });
     }
     return items;
-  }, [messages, isLoading, streamingContent, maskPIIEnabled]);
+  }, [
+    messages,
+    isLoading,
+    streamingContent,
+    maskPIIEnabled,
+    renderMarkdown,
+    renderMarkdownStreaming,
+    expandedMessages,
+    copiedMessageId,
+    handleCopy,
+    toggleMessageExpand,
+  ]);
 
   const convItems = useMemo(
     () =>
@@ -297,40 +461,42 @@ export default function Chat() {
   }, [messages, hasMessages, streamingContent]);
 
   return (
-    <div style={{ display: 'flex', height: 'calc(100vh - 200px)' }}>
-      <div
-        style={{
-          width: 260,
-          background: token.colorBgElevated,
-          borderRadius: '12px 0 0 12px',
-          borderRight: `1px solid ${token.colorBorderSecondary}`,
-          display: 'flex',
-          flexDirection: 'column',
-          flexShrink: 0,
-          padding: '12px 8px',
-        }}
-      >
-        <Conversations
-          items={convItems}
-          activeKey={currentConversationId ?? ''}
-          onActiveChange={(key) => switchConversation(key)}
-          creation={{
-            onClick: handleNewChat,
+    <div style={{ display: 'flex', height: '100%', overflow: 'hidden' }}>
+      {!sidebarCollapsed && (
+        <div
+          style={{
+            width: 260,
+            background: token.colorBgElevated,
+            borderRadius: '12px 0 0 12px',
+            borderRight: `1px solid ${token.colorBorderSecondary}`,
+            display: 'flex',
+            flexDirection: 'column',
+            flexShrink: 0,
+            padding: '12px 8px',
           }}
-          styles={{ creation: { marginBottom: 12 } }}
-          menu={(conversation) => ({
-            items: [
-              { key: 'rename', label: '重命名', icon: <EditOutlined /> },
-              { key: 'delete', label: '删除', icon: <DeleteOutlined />, danger: true },
-            ],
-            onClick: ({ key: actionKey }) => {
-              if (actionKey === 'rename') handleRename(conversation.key);
-              if (actionKey === 'delete') handleDeleteConfirm(conversation.key);
-            },
-          })}
-          style={{ flex: 1, overflow: 'auto' }}
-        />
-      </div>
+        >
+          <Conversations
+            items={convItems}
+            activeKey={currentConversationId ?? ''}
+            onActiveChange={(key) => switchConversation(key)}
+            creation={{
+              onClick: handleNewChat,
+            }}
+            styles={{ creation: { marginBottom: 12 } }}
+            menu={(conversation) => ({
+              items: [
+                { key: 'rename', label: '重命名', icon: <EditOutlined /> },
+                { key: 'delete', label: '删除', icon: <DeleteOutlined />, danger: true },
+              ],
+              onClick: ({ key: actionKey }) => {
+                if (actionKey === 'rename') handleRename(conversation.key);
+                if (actionKey === 'delete') handleDeleteConfirm(conversation.key);
+              },
+            })}
+            style={{ flex: 1, overflow: 'auto' }}
+          />
+        </div>
+      )}
 
       <div
         style={{
@@ -338,13 +504,14 @@ export default function Chat() {
           display: 'flex',
           flexDirection: 'column',
           background: token.colorBgContainer,
-          borderRadius: '0 12px 12px 0',
+          borderRadius: sidebarCollapsed ? 12 : '0 12px 12px 0',
           overflow: 'hidden',
         }}
       >
         <div
           style={{
             flex: 1,
+            minHeight: 0,
             overflow: 'auto',
             display: 'flex',
             flexDirection: 'column',
@@ -421,6 +588,15 @@ export default function Chat() {
             alignItems: 'center',
           }}
         >
+          <Tooltip title={sidebarCollapsed ? '展开对话列表' : '收起对话列表'}>
+            <Button
+              size="small"
+              icon={sidebarCollapsed ? <MenuUnfoldOutlined /> : <MenuFoldOutlined />}
+              onClick={() => setSidebarCollapsed((prev) => !prev)}
+              style={{ borderRadius: 16, fontSize: 12 }}
+            />
+          </Tooltip>
+
           <Tooltip title={maskPIIEnabled ? '显示原始内容' : '脱敏显示'}>
             <Button
               size="small"
@@ -646,17 +822,15 @@ export default function Chat() {
                               borderRadius: 6,
                               cursor: 'pointer',
                               background:
-                                selectedModel === m.model_name
-                                  ? token.colorPrimaryBg
-                                  : 'transparent',
-                              border: `1px solid ${selectedModel === m.model_name ? token.colorPrimaryBorder : 'transparent'}`,
+                                selectedModel === m.id ? token.colorPrimaryBg : 'transparent',
+                              border: `1px solid ${selectedModel === m.id ? token.colorPrimaryBorder : 'transparent'}`,
                               marginBottom: 4,
                               color: 'inherit',
                               fontSize: 'inherit',
                               fontFamily: 'inherit',
                             }}
                             onClick={() => {
-                              setSelectedModel(m.model_name);
+                              setSelectedModel(m.id);
                               Modal.destroyAll();
                             }}
                           >
@@ -681,7 +855,7 @@ export default function Chat() {
                 }}
                 style={{ borderRadius: 16, fontSize: 12 }}
               >
-                {models.find((m) => m.model_name === selectedModel)?.model_name || '模型'}
+                {models.find((m) => m.id === selectedModel)?.model_name || '模型'}
               </Button>
             </Tooltip>
           )}

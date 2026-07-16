@@ -18,6 +18,7 @@ function App() {
     >
       <StyleProvider layer>
         <AntApp>
+          <style>{`html, body, #root { margin: 0; height: 100%; overflow: hidden; }`}</style>
           <ThemedLayout />
         </AntApp>
       </StyleProvider>
@@ -37,9 +38,11 @@ function ThemedLayout() {
   return (
     <div
       style={{
-        height: '100vh',
+        height: '100dvh',
         display: 'flex',
         flexDirection: 'column',
+        overflow: 'hidden',
+        minHeight: 0,
       }}
     >
       <header
@@ -56,7 +59,7 @@ function ThemedLayout() {
         <h2 style={{ margin: 0, color: token.colorText }}>AI Demo</h2>
         <ThemeToggle mode={mode} onToggle={handleToggleTheme} />
       </header>
-      <main style={{ flex: 1, overflow: 'hidden' }}>
+      <main style={{ flex: 1, overflow: 'hidden', minHeight: 0 }}>
         <AIDemo />
       </main>
       {transitionOverlay}

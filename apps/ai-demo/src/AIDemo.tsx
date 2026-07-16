@@ -18,10 +18,10 @@ import {
   useCallback,
   useContext,
   useEffect,
-  useMemo,
   useRef,
   useState,
 } from 'react';
+import { Navigate, NavLink, Route, Routes, useLocation, useNavigate } from 'react-router-dom';
 import styles from './AIDemo.module.css';
 import { ErrorBoundary } from './components/ErrorBoundary.tsx';
 
@@ -59,29 +59,30 @@ const defaultMessageApi: MessageApi = {
 export const MessageApiContext = createContext<MessageApi>(defaultMessageApi);
 export const useMessageApi = () => useContext(MessageApiContext);
 
-type TabKey =
-  | 'dashboard'
-  | 'chat'
-  | 'knowledge'
-  | 'models'
-  | 'agents'
-  | 'plugins'
-  | 'playground'
-  | 'a2ui';
-
-interface TabConfig {
-  key: TabKey;
+interface NavItem {
+  path: string;
   icon: ReactNode;
   label: string;
-  component: ReactNode;
 }
+
+const NAV_ITEMS: NavItem[] = [
+  { path: '/', icon: <DashboardOutlined />, label: '控制台' },
+  { path: '/chat', icon: <MessageOutlined />, label: 'AI 聊天' },
+  { path: '/knowledge', icon: <BookOutlined />, label: '知识库' },
+  { path: '/models', icon: <AppstoreOutlined />, label: '模型管理' },
+  { path: '/agents', icon: <RobotOutlined />, label: '智能体' },
+  { path: '/playground', icon: <ApiOutlined />, label: 'Playground' },
+  { path: '/a2ui', icon: <DeploymentUnitOutlined />, label: 'A2UI' },
+  { path: '/plugins', icon: <SettingOutlined />, label: '插件中心' },
+];
 
 export default function AIDemo() {
   const { message } = AntApp.useApp();
   const { token } = theme.useToken();
-  const [activeTab, setActiveTab] = useState<TabKey>('dashboard');
   const [collapsed, setCollapsed] = useState(() => window.innerWidth < 768);
   const userToggledRef = useRef(false);
+  const location = useLocation();
+  const navigate = useNavigate();
 
   useEffect(() => {
     const onResize = () => {
@@ -100,99 +101,12 @@ export default function AIDemo() {
     };
   }, []);
 
-  const navigateToTab = useCallback((key: string) => {
-    setActiveTab(key as TabKey);
-  }, []);
-
-  const tabs = useMemo<TabConfig[]>(
-    () => [
-      {
-        key: 'dashboard',
-        icon: <DashboardOutlined />,
-        label: '控制台',
-        component: (
-          <Suspense fallback={<TabFallback />}>
-            <DashboardLazy onNavigate={navigateToTab} />
-          </Suspense>
-        ),
-      },
-      {
-        key: 'chat',
-        icon: <MessageOutlined />,
-        label: 'AI 聊天',
-        component: (
-          <Suspense fallback={<TabFallback />}>
-            <Chat />
-          </Suspense>
-        ),
-      },
-      {
-        key: 'knowledge',
-        icon: <BookOutlined />,
-        label: '知识库',
-        component: (
-          <Suspense fallback={<TabFallback />}>
-            <KnowledgeBase />
-          </Suspense>
-        ),
-      },
-      {
-        key: 'models',
-        icon: <AppstoreOutlined />,
-        label: '模型管理',
-        component: (
-          <Suspense fallback={<TabFallback />}>
-            <Models />
-          </Suspense>
-        ),
-      },
-      {
-        key: 'agents',
-        icon: <RobotOutlined />,
-        label: '智能体',
-        component: (
-          <Suspense fallback={<TabFallback />}>
-            <Agents />
-          </Suspense>
-        ),
-      },
-      {
-        key: 'playground',
-        icon: <ApiOutlined />,
-        label: 'Playground',
-        component: (
-          <Suspense fallback={<TabFallback />}>
-            <Playground />
-          </Suspense>
-        ),
-      },
-      {
-        key: 'a2ui',
-        icon: <DeploymentUnitOutlined />,
-        label: 'A2UI',
-        component: (
-          <Suspense fallback={<TabFallback />}>
-            <A2UI />
-          </Suspense>
-        ),
-      },
-      {
-        key: 'plugins',
-        icon: <SettingOutlined />,
-        label: '插件中心',
-        component: (
-          <Suspense fallback={<TabFallback />}>
-            <Plugins />
-          </Suspense>
-        ),
-      },
-    ],
-    [navigateToTab],
-  );
-
-  const activeComponent = useMemo(
-    () => tabs.find((t) => t.key === activeTab)?.component,
-    [tabs, activeTab],
+  // Dashboard 通过该回调跳转到对应路由
+  const handleNavigate = useCallback(
+    (key: string) => {
+      navigate(key === 'dashboard' ? '/' : `/${key}`);
+    },
+    [navigate],
   );
 
   const toggleCollapsed = useCallback(() => {
@@ -235,20 +149,22 @@ export default function AIDemo() {
             className={`${styles.sidebar} ${collapsed ? styles['sidebar--collapsed'] : styles['sidebar--expanded']}`}
           >
             <nav className={styles.navList}>
-              {tabs.map((tab) => (
-                <button
-                  key={tab.key}
-                  type="button"
-                  className={`${styles.navItem} ${activeTab === tab.key ? styles['navItem--active'] : ''}`}
-                  onClick={() => setActiveTab(tab.key)}
+              {NAV_ITEMS.map((item) => (
+                <NavLink
+                  key={item.path}
+                  to={item.path}
+                  end={item.path === '/'}
+                  className={({ isActive }) =>
+                    `${styles.navItem} ${isActive ? styles['navItem--active'] : ''}`
+                  }
                 >
-                  <span className={styles.navIcon}>{tab.icon}</span>
+                  <span className={styles.navIcon}>{item.icon}</span>
                   <span
                     className={`${styles.navLabel} ${collapsed ? styles['navLabel--hidden'] : ''}`}
                   >
-                    {tab.label}
+                    {item.label}
                   </span>
-                </button>
+                </NavLink>
               ))}
             </nav>
             <button
@@ -263,7 +179,21 @@ export default function AIDemo() {
             </button>
           </div>
           <div className={styles.content}>
-            <ErrorBoundary key={activeTab}>{activeComponent}</ErrorBoundary>
+            <ErrorBoundary key={location.pathname}>
+              <Suspense fallback={<TabFallback />}>
+                <Routes>
+                  <Route path="/" element={<DashboardLazy onNavigate={handleNavigate} />} />
+                  <Route path="/chat" element={<Chat />} />
+                  <Route path="/knowledge" element={<KnowledgeBase />} />
+                  <Route path="/models" element={<Models />} />
+                  <Route path="/agents" element={<Agents />} />
+                  <Route path="/playground" element={<Playground />} />
+                  <Route path="/a2ui" element={<A2UI />} />
+                  <Route path="/plugins" element={<Plugins />} />
+                  <Route path="*" element={<Navigate to="/" replace />} />
+                </Routes>
+              </Suspense>
+            </ErrorBoundary>
           </div>
         </div>
       </XProvider>

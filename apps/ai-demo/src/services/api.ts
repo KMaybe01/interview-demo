@@ -9,8 +9,10 @@ import type {
   ChatRequest,
   ChatResponse,
   CreateKnowledgeBaseRequest,
+  DocumentChunksResponse,
   KnowledgeBaseDetailResponse,
   KnowledgeBaseListResponse,
+  KnowledgeConfig,
   KnowledgeSearchRequest,
   KnowledgeSearchResponse,
   MCPListResponse,
@@ -113,12 +115,14 @@ export const chatAPI = {
     onChunk?: (chunk: string) => void,
     onDone?: () => void,
     onError?: (error: string) => void,
+    model?: string,
+    knowledgeBaseId?: string,
   ): Promise<void> {
     try {
       const response = await fetch(`${API_BASE}/chat/stream`, {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ content }),
+        body: JSON.stringify({ content, model, knowledgeBaseId }),
         signal,
       });
 
@@ -220,6 +224,21 @@ export const knowledgeAPI = {
       body: JSON.stringify(req),
     });
   },
+
+  async getConfig(): Promise<KnowledgeConfig> {
+    return request<KnowledgeConfig>('/knowledge-base/config');
+  },
+
+  async updateConfig(data: Partial<KnowledgeConfig>): Promise<KnowledgeConfig> {
+    return request<KnowledgeConfig>('/knowledge-base/config', {
+      method: 'PUT',
+      body: JSON.stringify(data),
+    });
+  },
+
+  async getDocumentChunks(kbId: string, docId: string): Promise<DocumentChunksResponse> {
+    return request<DocumentChunksResponse>(`/knowledge-base/${kbId}/document/${docId}/chunks`);
+  },
 };
 
 export const modelAPI = {
@@ -230,10 +249,10 @@ export const modelAPI = {
   async chat(
     modelId: string,
     messages: { role: string; content: string }[],
-  ): Promise<ChatResponse> {
-    return request<ChatResponse>('/chat', {
+  ): Promise<{ model_id: string; response: string; timestamp: string }> {
+    return request(`/models/${modelId}/chat`, {
       method: 'POST',
-      body: JSON.stringify({ model: modelId, messages }),
+      body: JSON.stringify({ messages }),
     });
   },
 };

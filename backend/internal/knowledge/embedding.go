@@ -47,6 +47,36 @@ type EmbeddingResult struct {
 	TokenCount int
 }
 
+// UpdateModel 动态切换 Embedding 模型，同时更新向量维度
+func (s *EmbeddingService) UpdateModel(model EmbeddingModel) {
+	s.mu.Lock()
+	defer s.mu.Unlock()
+
+	dimensions := 1536
+	switch model {
+	case EmbeddingBGE:
+		dimensions = 1024
+	case EmbeddingLocal:
+		dimensions = 768
+	}
+	s.model = model
+	s.dimensions = dimensions
+}
+
+// GetModel 返回当前使用的 Embedding 模型名称
+func (s *EmbeddingService) GetModel() EmbeddingModel {
+	s.mu.RLock()
+	defer s.mu.RUnlock()
+	return s.model
+}
+
+// Dimensions 返回当前向量维度
+func (s *EmbeddingService) Dimensions() int {
+	s.mu.RLock()
+	defer s.mu.RUnlock()
+	return s.dimensions
+}
+
 func (s *EmbeddingService) EmbedText(text string) (*EmbeddingResult, error) {
 	vector := s.generateMockEmbedding(text)
 	return &EmbeddingResult{
