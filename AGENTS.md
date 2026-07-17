@@ -10,16 +10,16 @@ bun install          # 只能用 bun, 不能用 npm（从根目录安装所有 w
 
 ### Turborepo（根目录执行）
 
-| 命令 | 说明 |
-|------|------|
-| `bun run dev` | 并行启动所有 dev server（frontend :5173 + ai-demo :5175 + interview-docs :5000 + backend-nest :8080） |
-| `bun run preview` | `turbo run preview` — 预览所有已构建的 Vite 应用（依赖 build） |
-| `bun run build` | `turbo run build` — 构建所有 workspace（缓存加速） |
-| `bun run build --filter=@interview-demo/frontend` | 仅构建 frontend |
-| `bun run test` | `turbo run test` — 运行所有 workspace 测试 |
-| `bun run lint` | `turbo run lint` — 并行 lint 所有 workspace |
-| `bun run format` | `turbo run format` — 并行 format 所有 workspace |
-| `bun run typecheck` | `turbo run typecheck` — 并行类型检查 |
+| 命令 | 说明                                                                       |
+|------|--------------------------------------------------------------------------|
+| `bun run dev` | 并行启动所有 dev server（frontend :5173 + ai-demo :5175 + interview-docs :5000） |
+| `bun run preview` | `turbo run preview` — 预览所有已构建的 Vite 应用（依赖 build）                         |
+| `bun run build` | `turbo run build` — 构建所有 workspace（缓存加速）                                 |
+| `bun run build --filter=@interview-demo/frontend` | 仅构建 frontend                                                             |
+| `bun run test` | `turbo run test` — 运行所有 workspace 测试                                     |
+| `bun run lint` | `turbo run lint` — 并行 lint 所有 workspace                                  |
+| `bun run format` | `turbo run format` — 并行 format 所有 workspace                              |
+| `bun run typecheck` | `turbo run typecheck` — 并行类型检查                                           |
 
 ### 单个 workspace 直接执行
 

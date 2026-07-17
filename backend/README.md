@@ -1,6 +1,6 @@
 # Interview Demo — Backend
 
-Go 1.26 + Gin 1.12 后端服务，为前端 16 个技术演示场景提供 API 支持。无外部数据库，所有数据存储在内存中。
+Go 1.26 + Gin 1.12 后端服务，为前端 15 个技术演示场景及 AI Demo 提供 API 支持。无外部数据库，所有数据存储在内存中。
 
 ## 技术栈
 
@@ -25,12 +25,12 @@ backend/
 ├── internal/
 │   ├── agent/               # 智能体引擎（ReAct / Function Calling / Multi-Agent）
 │   ├── alert/               # 多协议告警（WebSocket / SSE / HTTP Polling 统一分发）
-│   ├── auth/                # JWT 双 Token 认证（登录/刷新/重放检测）
+│   ├── auth/                # JWT 双 Token 认证（登录/刷新/重放检测 + Session Nonce）
 │   ├── chat/                # LLM 对话（流式 / 模型管理 / 对话历史 / OpenAI/DeepSeek/Ollama）
 │   ├── encryptedlog/        # 加密日志流（RSA 密钥交换 + AES-256-GCM 加密）
 │   ├── gis/                 # GIS 随机点位生成（上限 50 万点）
 │   ├── health/              # 健康检查端点
-│   ├── knowledge/           # RAG 知识库（文档加载 / 分块 / 嵌入 / 向量搜索 / 9 个源文件）
+│   ├── knowledge/           # RAG 知识库（文档加载 / 分块 / 嵌入 / 向量搜索）
 │   ├── lrucache/            # LRU 缓存演示（服务列表 / 配置 / 日志）
 │   ├── memory/              # 对话记忆管理
 │   ├── middleware/          # CORS 中间件
@@ -74,7 +74,7 @@ swag init -g cmd/server/main.go -o docs
 go test ./internal/... -v
 ```
 
-当前覆盖 **19 个内部包**，共 67 个 .go 源文件。
+当前覆盖 19 个内部包，共 37 个非测试源文件 + 29 个测试文件。
 
 ## API 路由
 
@@ -155,7 +155,7 @@ go test ./internal/... -v
 - **Access Token**：短期有效（15 分钟），携带用户身份
 - **Refresh Token**：长期有效，支持轮换（Rotation）
 - **重放检测**：旧 Refresh Token 被二次使用视为重放攻击，立即失效
-- **Session Nonce**：基于用户会话的唯一标识，可检测多设备同时登录
+- **Session Nonce**：基于用户会话的唯一标识，可检测多设备同时登录（单用户单设备踢出）
 
 ## 配置
 

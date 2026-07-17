@@ -1,22 +1,23 @@
 # Interview Demo — Frontend
 
-React 19 + TypeScript 6 + Vite 8 前端 SPA，为 **15 个技术场景**（含仪表盘首页 + 14 个核心演示）提供交互界面。
+React 19 + TypeScript 7 + Vite 8 前端 SPA，为 **16 个技术场景**（含仪表盘首页 + 15 个路由页面）提供交互界面。
 
 ## 技术栈
 
 | 组件 | 用途 |
 |------|------|
-| React 19 | UI 框架（Compiler 启用） |
-| TypeScript 6 | 类型系统（strict 模式） |
+| React 19 | UI 框架（Compiler 启用，自动 memo） |
+| TypeScript 7 | 类型系统（strict 模式） |
 | Vite 8 + Rolldown | 构建工具（Rust bundler） |
 | Ant Design 6 | UI 组件库 |
 | Zustand 5 | 状态管理（persist 中间件） |
 | @interview-demo/shared-theme | 共享主题包（Zustand store） |
+| @interview-demo/shared-monitor | 共享前端监控 SDK（声明式埋点 + 异常/性能/API 监控） |
 | React Router 7 | 路由（懒加载） |
 | ECharts 6 | 图表可视化 |
 | OpenLayers 10 | GIS 地图渲染 |
 | AJV 8 | JSON Schema 校验 |
-| Axios 1 | HTTP 客户端 |
+| Axios 1 | HTTP 客户端（统一请求层 + 自动 401 刷新） |
 | react-window | 虚拟滚动 |
 | web-vitals 5 | 页面性能指标采集 |
 | Biome 2.5 | Lint + Format |
@@ -30,10 +31,12 @@ src/
 ├── assets/                     # 静态资源
 ├── components/
 │   ├── AuthGuard.tsx           # 路由守卫（未认证重定向 /login）
-│   ├── PageTracker.tsx         # 页面渲染性能追踪
+│   ├── PageTracker.tsx         # 页面渲染性能追踪 (StrictMode 防重复)
+│   ├── PageTransition.tsx      # 页面切换过渡动画
+│   ├── GridDistortion.tsx      # 网格形变背景动画（Login 页）
 │   └── dynamic-form/           # 自定义递归表单引擎
-│       ├── DynamicForm.tsx      # 容器组件
-│       ├── Renderer.tsx         # 递归 AST 渲染器
+│       ├── DynamicForm.tsx      # 容器组件 (forwardRef + useImperativeHandle)
+│       ├── Renderer.tsx         # 递归 AST 渲染器 (深度保护 + 循环引用检测)
 │       ├── registry.tsx         # 策略模式字段注册表
 │       ├── types.ts            # Schema 类型 + AJV 校验
 │       └── fields/             # 7 个字段组件
@@ -48,11 +51,12 @@ src/
 │   └── MainLayout.tsx          # 应用外壳 (Sider + Header + Content + 主题切换)
 ├── pages/
 │   ├── Dashboard.tsx           # / 仪表盘首页
+│   ├── MonitorDashboard.tsx    # /monitor 前端监控大盘
 │   ├── Login.tsx               # /login CSS Module + 涟漪动画
-│   ├── AlertWebSocket.tsx      # /alert-websocket 多协议告警
-│   ├── JsonSchemaForm.tsx      # /json-schema-form 动态表单
+│   ├── AlertWebSocket.tsx      # /alert-websocket 多协议告警 (WS/SSE/Polling)
+│   ├── JsonSchemaForm.tsx      # /json-schema-form 动态表单 (递归引擎 + 实时 JSON)
 │   ├── ChunkedUpload.tsx       # /chunked-upload 大文件断点续传
-│   ├── GisRendering.tsx        # /gis-rendering GIS 点位渲染
+│   ├── GisRendering.tsx        # /gis-rendering GIS 点位渲染 (Cluster + BBOX)
 │   ├── LogStream.tsx           # /log-stream 加密日志流解密
 │   ├── LruRouteCache.tsx       # /lru-route-cache LRU 路由缓存
 │   ├── LruRouteCacheConfig.tsx # LRU 缓存配置面板
@@ -64,27 +68,28 @@ src/
 │   ├── TokenRefresh.tsx        # /token-refresh 双 Token 无感刷新
 │   ├── TreeDataEngine.tsx      # /tree-data-engine 树形数据引擎
 │   ├── WebWorkerMerge.tsx      # /web-worker-merge Worker 分治合并
-│   ├── UniPay.tsx              # /unipay 统一支付中台
+│   └── UniPay.tsx              # /unipay 统一支付中台
 ├── routes/
-│   └── index.tsx               # 14 条路由配置（懒加载）
+│   └── index.tsx               # 15 条路由配置（React.lazy 懒加载）
 ├── stores/                     # Zustand 状态管理
 │   ├── authStore.ts            # 认证状态（hydrate + Token 过期自检）
-│   ├── alertStore.ts           # WebSocket 告警（MAX_ALERTS=5000）
-│   ├── lruRouteStore.ts        # LRU 路由缓存状态
-│   ├── requestLoadingStore.ts  # 请求加载追踪
+│   ├── alertStore.ts           # WebSocket 告警（MAX_ALERTS=5000 防 OOM）
+│   ├── lruRouteStore.ts        # LRU 路由缓存状态 (staleKeys + invalidateAll)
+│   ├── monitorStore.ts         # 前端监控大盘 (shared-monitor Zustand store)
+│   ├── requestLoadingStore.ts  # 请求加载追踪 (pending/resolved/rejected/cancelled)
 │   ├── themeStore.ts           # 主题切换 (re-export from @interview-demo/shared-theme)
 │   └── uploadStore.ts          # 分片上传状态（persist localStorage）
 ├── utils/
 │   ├── fetchClient.ts          # 统一 HTTP 客户端（自动注入 Bearer Token + 401 无感刷新）
 │   ├── token.ts                # JWT Token 管理（localStorage）
-│   ├── lru.ts                  # 泛型 LRUCache 类
-│   ├── rbac.ts                 # RBAC 位运算工具函数
-│   ├── wsTransport.ts          # WebSocket 传输层（多协议降级、心跳、背压）
-│   ├── vitalsReporter.ts       # Web Vitals 上报
-│   ├── vitalsSnapshot.ts       # Vitals 快照采集
-│   ├── requestResource.ts      # 请求资源追踪
+│   ├── lru.ts                  # 泛型 LRUCache 类 (Map 插入顺序淘汰)
+│   ├── rbac.ts                 # RBAC 位运算工具函数 (O(1) 权限检查)
+│   ├── wsTransport.ts          # WebSocket 传输层（多协议降级、心跳、背压、消息合并）
+│   ├── vitalsReporter.ts       # Web Vitals 上报 (LCP/INP/CLS/TTFB/FCP)
+│   ├── vitalsSnapshot.ts       # Vitals 快照采集 (Navigation/Resource Timing)
+│   ├── requestResource.ts      # 请求资源追踪 (Signal 载体)
 │   ├── hash.worker.ts          # SHA-256 分片哈希 Web Worker
-│   ├── merge.worker.ts         # 归并排序 Web Worker
+│   ├── merge.worker.ts         # 归并排序 Web Worker (Worker Pool)
 │   └── decrypt.worker.ts       # RSA 密钥生成 + AES-256-GCM 解密 Web Worker
 ```
 
@@ -93,6 +98,7 @@ src/
 | 路由 | 页面 | 核心实现 |
 |------|------|----------|
 | `/` | Dashboard | 仪表盘首页 |
+| `/monitor` | MonitorDashboard | 前端监控大盘 (shared-monitor SDK + 声明式埋点) |
 | `/login` | Login | CSS Module + 涟漪动画 |
 | `/alert-websocket` | AlertWebSocket | WebSocket + SSE + Polling 三协议，二进制协议，心跳，背压，虚拟滚动 |
 | `/json-schema-form` | JsonSchemaForm | 递归 AST 渲染引擎，7 字段类型，条件显隐，实时 JSON 编辑，4 层校验 |
@@ -138,7 +144,7 @@ src/
 ├── test/
 │   └── setup.ts             # 全局初始化（jest-dom 匹配器 + matchMedia mock）
 ├── utils/__tests__/         # 纯函数单元测试（token / lru / rbac / fetchClient）
-├── stores/__tests__/        # Zustand store 测试（auth / theme / alert / requestLoading / lruRoute）
+├── stores/__tests__/        # Zustand store 测试（auth / theme / alert / requestLoading / lruRoute / monitor）
 ├── components/__tests__/    # 组件渲染测试（AuthGuard）
 └── pages/__tests__/         # 页面集成测试（Login / Dashboard）
 ```
@@ -150,12 +156,13 @@ src/
 
 ## 状态管理
 
-6 个 Zustand store:
+7 个 Zustand store:
 
 - **authStore** — 认证状态，hydrate + Token 过期自检
 - **alertStore** — WebSocket 告警，`MAX_ALERTS=5000` 防止 OOM
-- **lruRouteStore** — LRU 路由缓存
-- **requestLoadingStore** — 请求加载追踪
+- **lruRouteStore** — LRU 路由缓存 (staleKeys 写后失效 + invalidateAll)
+- **monitorStore** — 前端监控大盘 (shared-monitor 共享包 Zustand store)
+- **requestLoadingStore** — 请求加载追踪 (pending/resolved/rejected/cancelled)
 - **themeStore** — 亮色/暗色主题（基于 `@interview-demo/shared-theme` 的 Zustand store）
 - **uploadStore** — 分片上传（persist + partialize）
 
@@ -163,13 +170,13 @@ src/
 
 3 个 Web Worker 处理 CPU 密集型任务：
 
-- `hash.worker.ts` — SHA-256 增量文件哈希
+- `hash.worker.ts` — SHA-256 增量文件哈希（Blob 原生拼接，消除二次拷贝）
 - `merge.worker.ts` — 归并排序（Worker Pool + 自适应分区）
 - `decrypt.worker.ts` — RSA 密钥生成 + AES-256-GCM 并行解密
 
 ## 代码质量
 
-- **React Compiler** Babel 插件启用
+- **React 19 编译器** Babel 插件启用（自动 memo，40+ 组件受益）
 - **Biome 2.5** lint + format
 - **Husky** pre-commit hook（lint-staged）
 - **commitlint** conventional commits

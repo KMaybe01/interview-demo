@@ -7,7 +7,7 @@ graph TB
     Title["🎯 Interview Demo<br/>全栈技术演示平台"]
 
     subgraph Highlights["项目亮点"]
-        H1["15 个高级技术场景"]
+        H1["19 个高级技术场景"]
         H2["React 19 + Go 全栈"]
         H3["独立架构设计"]
         H4["生产级工程实践"]
@@ -18,6 +18,8 @@ graph TB
         D2["⚡ 性能优化<br/>Worker + 虚拟滚动"]
         D3["🏗️ 工程架构<br/>表单引擎 + RBAC"]
         D4["💳 支付中台<br/>UniPay 状态机"]
+        D5["🤖 AI 全栈工程化<br/>六阶段模式"]
+        D6["📊 前端监控体系<br/>shared-monitor"]
     end
 
     subgraph Skills["展示能力"]
@@ -37,15 +39,15 @@ graph TB
 | # | 章节 | 内容 |
 |---|------|------|
 | **一** | [项目概述](#项目概述) | 背景 / 定位 / 技术栈 / 模块全景 / 部署 / CI/CD |
-| **二** | [技术难点深度剖析](#二技术难点深度剖析) | 15 个技术点详解（表单引擎 / 断点续传 / WebSocket / Worker / GIS / 请求加载 / 日志解密 / 支付中台...） |
+| **二** | [技术难点深度剖析](#二技术难点深度剖析) | 16 个技术点详解（表单引擎 / 断点续传 / WebSocket / Worker / GIS / 请求加载 / 日志解密 / 支付中台 / AI 后端六阶段 / 前端监控 SDK / 共享主题包） |
 | **三** | [设计模式与架构亮点](#三设计模式与架构亮点) | 9 种设计模式 / 状态管理 / 错误处理 / 数据流 / 统一 HTTP 请求层 |
 | **四** | [React 19 实战](#四react-19-新特性实战应用) | forwardRef / 编译器 / 闭包陷阱修复 |
 | **五** | [性能优化策略](#五性能优化策略) | 渲染 / 计算 / 网络 / 构建 四级优化 |
-| **六** | [工程化体系](#六工程化体系) | 三层约束 / Biome+ESLint+TS / CI/CD / 构建优化 |
+| **六** | [工程化体系](#六工程化体系) | 三层约束 / Biome+TS / CI/CD / 构建优化 |
 | **七** | [组件设计亮点](#七组件设计亮点) | 表单引擎组件 / Zustand Store / Web Worker |
 | **八** | [面试高频问题](#八面试高频问题深度版) | 8 个深度 Q&A（闭包 / 表单 / WS vs SSE / Zustand...） |
 | **九** | [面试追问模拟](#附面试追问模拟) | 5 个面试场景模拟 |
-| **十** | [共享包与 NestJS](#217-共享主题包-shared-theme-) | shared-theme / shared-monitor / NestJS 重构版 |
+| **十** | [共享包](#十共享包) | shared-theme / shared-monitor |
 | **十一** | [面试自我介绍](#十一面试自我介绍) | 1 分钟 / 3 分钟 两个版本 |
 
 > 💡 **使用建议**: 面试前重点看「八、面试高频问题」和「附、面试追问模拟」；技术细节参考「二、技术难点深度剖析」
@@ -54,7 +56,7 @@ graph TB
 
 ### 一、项目背景
 
-在 React 19 + TypeScript 6 的技术浪潮下，前端工程化与性能优化已成为中高级前端工程师的核心竞争力。本项目旨在构建一个**覆盖 17 个高级技术场景（含 2 个监控系统）的全栈演示平台**，系统性地展示实时通信、性能优化、工程架构、AI 智能、支付中台、监控体系六大领域的关键技术方案。
+在 React 19 + TypeScript 7 的技术浪潮下，前端工程化与性能优化已成为中高级前端工程师的核心竞争力。本项目旨在构建一个**覆盖 17 个演示页面（含 14 个前端技术场景 + 2 个监控系统 + 1 个 AI 全栈演示平台 8 选项卡）的全栈演示平台**，系统性地展示实时通信、性能优化、工程架构、AI 智能、支付中台、前端监控六大领域的关键技术方案。
 
 ### 二、核心定位
 
@@ -64,7 +66,7 @@ graph TB
 | **项目类型** | 前端工程化与性能优化综合演示 |
 | **开发周期/人数** | 独立开发，持续迭代 |
 | **当前状态** | 本地开发运行，Docker/Helm 可部署 |
-| **一句话定位** | 覆盖 17 个高级技术场景的 React 19 + Go 1.26 + NestJS 11 全栈演示平台，聚焦前端工程化、性能优化与架构设计 |
+| **一句话定位** | 覆盖 19 个高级技术场景的 React 19 + Go 1.26 全栈演示平台，包含 frontend / ai-demo / interview-docs 三个前端应用，聚焦前端工程化、性能优化与架构设计 |
 | **部署环境** | Docker 多阶段构建 → Kubernetes Helm (滚动更新) |
 | **构建编排** | Bun workspaces + Turborepo 2 (缓存加速 + 并行编排) |
 | **CI/CD** | GitHub Actions + GitLab CI, Turbo 缓存复用 |
@@ -75,7 +77,7 @@ graph TB
 ```mermaid
 graph TB
     subgraph UI["🎨 表现层 UI Layer"]
-        React["React 19 + TS 6"]
+        React["React 19 + TS 7"]
         Antd["Ant Design 6"]
         Zustand["Zustand 5"]
         Charts["ECharts 6 + OL 10.9"]
@@ -90,19 +92,18 @@ graph TB
     subgraph Build["🔧 构建层 Build"]
         Vite["Vite 8 + Rolldown"]
         Turbo["Turborepo 2 编排"]
-        Biome["Biome 2.5 + ESLint 9"]
+        Biome["Biome 2.5"]
         Babel["Babel React 编译器"]
     end
 
     subgraph Backend["🖥️ 后端层 Backend"]
         Go["Go 1.26 + Gin<br/>19 内部包"]
-        Nest["NestJS 11<br/>16 功能模块"]
         WS["Gorilla WebSocket"]
         JWT["golang-jwt"]
     end
 
     subgraph Shared["📦 共享包层 Shared"]
-        Theme["shared-theme<br/>Zustand + DOM"]
+        Theme["shared-theme<br/>Zustand + DOM + ThemeToggle"]
         Monitor["shared-monitor<br/>声明式监控 SDK"]
     end
 
@@ -123,7 +124,7 @@ graph TB
 
 ```mermaid
 mindmap
-  root((全栈演示平台<br/>25 个模块))
+  root((全栈演示平台<br/>17 个演示页面))
     ::icon(fa fa-globe)
     实时通信
       WebSocket 告警推送
@@ -155,12 +156,12 @@ mindmap
     工程架构
       📋 动态表单引擎
         递归渲染
-         7 种字段类型
+        7 种字段类型
         实时 JSON 编辑
       🔐 RBAC 位编码权限
-        ["位运算 O(1) 检查"]
+        位运算 O(1) 检查
         三层联动
-       ["📡 请求加载 Signal + use()"]
+      请求加载 Signal + use()
         Suspense + ErrorBoundary
       🌳 树形数据操作引擎
         递归 CRUD
@@ -171,10 +172,8 @@ mindmap
      AI 后端模式
        🤖 LLM 流式对话
          SSE 流式
-         上下文管理
        📚 混合 RAG 知识库
          BM25 + Vector
-         多格式文档解析
        🧠 智能体 Agent
          ReAct 流式
          Function Calling
@@ -184,59 +183,49 @@ mindmap
          PromptGuard
          ResponseCache
          Token 估算
-         遥测上报
        🛡️ 中间件层
          PromptGuard 中间件
          ResponseCache 中间件
        📊 遥测与监控
          Token/Latency 统计
-         仪表盘可视化
-     支付中台
-        💳 UniPay 统一支付
-          支付状态机
-          幂等性防护
-          指数退避重试
-          T+1 对账脚本
-          安全检测
-     前端监控
-        📊 声明式埋点 SDK
-          data-stat 属性
-          优先级上报队列
-        🚨 异常监控
-          onerror + unhandledrejection
-          资源加载失败
-          二级去重
-        📡 API 监控
-          慢查询追踪
-          Axios 拦截器
-        ⚡ 性能采集
-          Navigation Timing
-          Resource Timing
-        🛡️ 柔性降级
-          withDegradation
-          超时/重试/业务容错
+    支付中台
+       💳 UniPay 统一支付
+         支付状态机
+         幂等性防护
+         指数退避重试
+         T+1 对账
+    前端监控
+       📊 声明式埋点 SDK
+         data-stat 属性
+       🚨 异常监控
+         onerror + unhandledrejection
+       📡 API 监控
+         Axios 拦截器
+       ⚡ 性能采集
+         Navigation Timing
+       🛡️ 柔性降级
+         withDegradation
 ```
-
-> **负责模块**: 全部独立架构设计与实现
 
 ### 五、项目规模
 
 | 维度 | 数量 | 说明 |
 |------|------|------|
-| **演示页面** | 19 个 | 覆盖实时通信/性能优化/工程架构/AI 智能/支付/仪表盘/监控七大领域 (16 路由页 + 3 LRU 子页) |
-| **自定义组件** | 9 个 | 递归表单引擎的 7 种字段类型 + A2UI 集成组件 + ErrorBoundary |
+| **前端应用** | 3 个 | frontend + ai-demo + interview-docs |
+| **演示页面** | 16 个 | frontend 15 路由页 (含 Dashboard 首页 + MonitorDashboard) + 1 登录页 |
+| **AI 演示页面** | 8 个 | ai-demo 8 选项卡 |
 | **路由配置** | 15 条 | 14 条懒加载路由 + 1 条 Eager 加载登录页 |
-| **后端 API (NestJS)** | ~67 个 | 16 个 Controller 覆盖认证/校验/文件/SSE/WebSocket/RBAC/Vitals/支付/AI 智能体/知识库/MCP-A2A/混合搜索/PromptGuard/ResponseCache/遥测/监控 |
-| **后端 API (Go)** | 80+ | 19 个 internal 包覆盖相同功能集 |
+| **后端 API (Go)** | 80+ | 19 个 internal 包 |
 | **Go 内部包** | 19 个 | agent/alert/auth/chat/encryptedlog/gis/health/knowledge/lrucache/memory/middleware/model/payment/rbac/requestload/schema/sse/upload/vitals |
-| **Go 源码文件** | 66 个 | `go test ./internal/... -v` 全量通过 |
-| **NestJS TypeScript 文件** | 56 个 | 16 功能模块 + 全局中间件/守卫/过滤器/Swagger 文档 |
+| **Go 源文件** | 37 个 | 非测试源文件 |
+| **Go 测试文件** | 29 个 | `go test ./internal/... -v` 全量通过 |
 | **前端状态存储** | 7 个 | Zustand 状态管理 (alert/auth/lru/monitor/request/theme/upload) |
 | **共享包** | 2 个 | `shared-theme` (7 文件), `shared-monitor` (10 文件) |
-| **工具函数** | 30+ 个 | Token/LRU/RBAC/WS 传输层/VitalsReporter/VitalsSnapshot/RequestResource + 共享监控 SDK (StatSDK/ErrorMonitor/APIMonitor/PerformanceMonitor/ReportManager/BundleMonitor) + 3 Workers + AI Demo 工具链 (context-manager/data-masker/error-handler/prompt-guard/response-cache/telemetry/text-splitter/token-estimator) |
+| **工具函数** | 30+ 个 | Token/LRU/RBAC/WS 传输层/VitalsReporter/VitalsSnapshot/RequestResource + 共享监控 SDK + 3 Workers + AI Demo 工具链 |
 | **Web Worker** | 3 个 | 归并排序 + AES-GCM 解密 + SHA-256 文件哈希 |
-| **共享监控模块** | 10 文件 | 类型定义/ReportManager/StatSDK/ErrorMonitor/APIMonitor/PerformanceMonitor/BundleMonitor + store + barrel + degradation 降级 |
-| **第三方依赖** | 20+ | React 生态核心库 + Ant Design X + NestJS + Go |
+| **共享监控模块** | 10 文件 | 类型定义/ReportManager/StatSDK/ErrorMonitor/APIMonitor/PerformanceMonitor/BundleMonitor + store + barrel + degradation |
+| **共享主题包** | 7 文件 | 类型定义/store/hook/dom/transition/ThemeToggle/barrel |
+| **第三方依赖** | 20+ | React 生态核心库 + Ant Design X + Go |
 
 ### 六、核心数据结构
 
@@ -268,57 +257,6 @@ interface LeafSchema {
 }
 ```
 
-#### 表单数据 → JSON 结构
-
-表单数据与 JSON 一一对应。Schema 定义字段结构，运行时数据始终为平坦的 `Record<string, unknown>`：
-
-```typescript
-// Schema 定义（树形 AST，4 层嵌套）
-// tabs → card → form → leaf.properties
-//  ├─ 基站配置 → 基本信息 → cellName, cellId, cellType, ...
-//  ├─ 传输配置 → SCTP 配置 → sctpPorts[]
-//  └─ 业务参数 → 业务配置 → maxUsers, bandwidth, enableEncryption, ...
-
-// 运行时数据（平坦 key-value map，字段 key 全局唯一）
-type FormData = Record<string, unknown>
-
-// === 实时 JSON 数据示例 ===
-{
-  "cellName": "SMF-01",          // string, 基站名称
-  "cellId": "CELL-001",          // string, 基站 ID
-  "cellType": "macro",           // select, 基站类型
-  "fullCellName": "宏基站-SMF-01", // string, autoFill 自动生成
-  "ipAddress": "192.168.1.100",  // string, 管理 IP
-  "port": 8080,                  // number, 端口号
-  "mcc": "460",                  // string, 移动国家码
-  "mnc": "01",                   // string, 移动网络码
-  "tac": 1,                      // number, 跟踪区码
-  "sctpPorts": [                 // array, SCTP 端口数组
-    { "localPort": 38472, "remotePort": 38472 }
-  ],
-  "maxUsers": 10000,             // number, 最大用户数
-  "bandwidth": 100,              // select, 带宽 (MHz)
-  "enableEncryption": true,      // switch, 加密开关
-  "enableLogging": false,        // switch, 日志开关
-  "encryptAlgorithm": "aes-256", // select, 加密算法（依赖 enableEncryption）
-  "certType": "self-signed",     // select, 证书类型（依赖 enableEncryption）
-  "extraConfig": {               // json, 扩展配置
-    "nfId": "smf-001",
-    "plmn": "46001"
-  }
-}
-```
-
-**关键设计**：
-
-| 特性 | 说明 |
-|------|------|
-| **字段 key 全局唯一** | 所有 leaf 的 `key` 即使在不同 tab/card 下也必须唯一，保证 `data[key]` 无冲突 |
-| **数组嵌套** | 数组字段（如 `sctpPorts`）内嵌的对象不展开到顶层，由 `ArrayField` 组件管理 |
-| **条件字段** | `visible` 表达式为 false 时，值保留在数据中但不渲染到 UI |
-| **autoFill 字段** | `fullCellName` 由依赖字段自动计算，前端只读 |
-| **JSON 双向同步** | 右侧 JSON 面板可编辑后 `setFormData()` 写回表单，触发完整校验流程 |
-
 #### LRU 路由缓存
 
 ```typescript
@@ -337,7 +275,6 @@ class LRUCache<K, V> {
 #### RBAC 权限编码
 
 ```typescript
-// 6 种权限位编码
 const Permissions = {
   READ:   1 << 0,  // 1
   WRITE:  1 << 1,  // 2
@@ -347,7 +284,6 @@ const Permissions = {
   ADMIN:  1 << 5,  // 32
 } as const
 
-// 5 个预设角色
 const Roles = {
   GUEST:     Permissions.READ,
   EDITOR:    Permissions.READ | Permissions.WRITE,
@@ -362,28 +298,27 @@ const Roles = {
 | 亮点 | 技术价值 | 难度 |
 |------|----------|------|
 | **递归动态表单引擎** | 自定义递归渲染 + 7 种字段 + 条件显隐 + 双校验 + 实时 JSON 编辑 | ⭐⭐⭐ |
-| **大文件断点续传** | SHA-256 分片 + Zustand 持久化 + 暂停/恢复 + 刷新恢复 + 下载完成文件 + 清除已完成 + 重置全部 | ⭐⭐⭐ |
-| **WebSocket 告警推送** | 多协议降级链 + 手动 Segmented 切换 + 直连后端 + 二进制协议 + 背压控制 + 消息合并 + 心跳保活 + 断线重连 + RAF 节流 + 去重 + 虚拟滚动 + aliveRef 卸载保护 | ⭐⭐⭐ |
+| **大文件断点续传** | SHA-256 分片 + Zustand 持久化 + 暂停/恢复 + 刷新恢复 + 代际锁 | ⭐⭐⭐ |
+| **WebSocket 告警推送** | 多协议降级链 + 二进制协议 + 背压控制 + 消息合并 + 心跳保活 + RAF 节流 | ⭐⭐⭐ |
 | **Web Worker 分治排序** | Worker Pool + 自适应分区 + 有序归并 | ⭐⭐⭐ |
 | **GIS 十万级点位渲染** | Cluster + BBOX + dataCache + 惰性刷新 (60fps) | ⭐⭐ |
 | **双 Token 无感刷新** | Promise gate + Token Rotation + Replay 检测 + 单设备登录 | ⭐⭐ |
-| **RBAC 位编码权限** | 位运算权限编码 + 三层联动 (菜单/路由/按钮) + 后端 API 双校验 + 前后端一致性对比 | ⭐⭐⭐ |
+| **RBAC 位编码权限** | 位运算权限编码 + 三层联动 + 后端 API 双校验 | ⭐⭐⭐ |
 | **SSE 日志流** | ReadableStream + AbortController + RAF 节流 | ⭐⭐ |
 | **请求加载 Signal + use()** | React 19 use() + Suspense + ErrorBoundary + AbortController | ⭐⭐⭐ |
 | **树形数据操作引擎** | 递归 CRUD + 拖拽排序 + 节点校验 | ⭐⭐ |
-| **LRU 路由缓存** | DOM display:none 保持状态 + LRU 淘汰 + staleKeys 写后失效 + 惰性过期 + 多页面文件分离 + 后端 API | ⭐⭐ |
+| **LRU 路由缓存** | DOM display:none 保持状态 + LRU 淘汰 + staleKeys 写后失效 | ⭐⭐ |
 | **十万行日志流解密** | 生产/消费模式 + AES-256-GCM 解密 + RSA 密钥交换 + 虚拟滚动 | ⭐⭐ |
-| **Web Vitals 性能采集** | RUM 实时采集 LCP/INP/CLS + 页面级渲染追踪 + ECharts 多维可视化 | ⭐⭐ |
+| **Web Vitals 性能采集** | RUM 实时采集 LCP/INP/CLS + 页面级渲染追踪 + ECharts 可视化 | ⭐⭐ |
 | **LLM 流式对话** | SSE 流式 `[DONE]` 标记 + DeepSeek 解析 + 上下文窗口管理 | ⭐⭐ |
 | **混合 RAG 知识库** | BM25 + Vector 混合检索 + 多格式文档解析 + 智能分块策略 | ⭐⭐⭐ |
-| **智能体 Agent 流式** | ReAct 循环 SSE 流式输出 + Function Calling + Multi-Agent 编排 + MCP 工具协议 | ⭐⭐⭐ |
-| **Playground 调试台** | PromptGuard + ResponseCache + Token 估算 + 错误分类 + 上下文管理 + 数据脱敏 + 遥测上报 | ⭐⭐⭐ |
+| **智能体 Agent 流式** | ReAct 循环 SSE 流式输出 + Function Calling + Multi-Agent + MCP | ⭐⭐⭐ |
+| **Playground 调试台** | PromptGuard + ResponseCache + Token 估算 + 遥测上报 | ⭐⭐⭐ |
 | **PromptGuard 中间件** | 提示注入检测（正则 + 关键词 + 模式匹配）+ HTTP 中间件封装 | ⭐⭐ |
-| **ResponseCache 中间件** | LRU 缓存 + TTL 过期 + Content-Type 智能缓存 + Middleware 封装 | ⭐⭐ |
-| **AI 遥测系统** | Token 用量 / Latency / Cache 命中率 / 错误率实时上报 + ECharts 仪表盘 | ⭐⭐ |
-| **前端监控与埋点系统** | `shared-monitor` 共享包：声明式 data-stat 埋点 + 优先级上报队列 (sendBeacon/RIC/64KB 分片) + 异常全捕获 + 性能采集 (Navigation/Resource/Bundle Timing) + 内存+sessionStorage 二级去重 + 采样降级 + 柔性降级 withDegradation + Zustand 监控大盘 | ⭐⭐⭐ |
-| **共享主题包 (shared-theme)** | 跨应用 dark/light 主题切换统一管理：Zustand store + useSyncExternalStore hook + class/attribute 双 DOM 策略 + 带动画过渡切换 + 3 应用独立配置复用 | ⭐⭐ |
-| **NestJS 后端重构版** | NestJS 11 完整覆盖 Go 19 包功能：16 模块 / 56 TS 文件 / 67 API / Swagger UI / JWT Guard / PromptGuard 中间件 / ResponseCache 中间件 / 全内存存储 / AI 智能体流式 SSE | ⭐⭐⭐ |
+| **ResponseCache 中间件** | LRU 缓存 + TTL 过期 + Content-Type 智能缓存 | ⭐⭐ |
+| **AI 遥测系统** | Token 用量 / Latency / Cache 命中率 / 错误率上报 + ECharts | ⭐⭐ |
+| **前端监控与埋点系统** | shared-monitor 共享包：声明式 data-stat 埋点 + 优先级上报队列 + 异常全捕获 + 性能采集 + 多级去重 + 柔性降级 | ⭐⭐⭐ |
+| **共享主题包 (shared-theme)** | 跨应用 dark/light 主题切换统一管理：Zustand + DOM 策略 + Transition 动画 + ThemeToggle 组件 | ⭐⭐ |
 
 ### 八、部署架构
 
@@ -391,7 +326,7 @@ const Roles = {
 graph TB
     User["🌐 浏览器<br/>React SPA"] --> Ingress["🔀 Nginx Ingress<br/>路由转发"]
 
-    Ingress -->|"/api/*"| Backend["🖥️ backend-service:8080<br/>Gin / NestJS REST API + WS Upgrade"]
+    Ingress -->|"/api/*"| Backend["🖥️ backend-service:8080<br/>Gin REST API + WS Upgrade"]
     Ingress -->|"/*"| Frontend["📦 frontend-service:80<br/>nginx 静态资源<br/>gzip + 缓存控制"]
     Ingress -->|"/ws"| Backend
     Ingress -->|"/swagger"| Backend
@@ -408,51 +343,16 @@ graph TB
     style K8s fill:#e1f5fe,stroke:#01579b
 ```
 
-| 路由规则 | 目标 | 说明 |
-|----------|------|------|
-| `/api/*` | `backend-service:8080` | REST API + SSE |
-| `/ws` | `backend-service:8080` | WebSocket Upgrade (3600s timeout) |
-| `/swagger` | `backend-service:8080` | Swagger UI (NestJS) |
-| `/interview-demo/*` | `interview-docs-service:80` | 前端知识库文档站点 |
-| `/ai-demo/*` | `ai-demo-service:80` | AI 演示应用 |
-| `/*` | `frontend-service:80` | 主应用 SPA 静态资源 |
-
-### 九、CI/CD 流水线
-
-```mermaid
-graph LR
-    A["💻 代码提交"] --> B["GitLab CI 触发"]
-    B --> C1["lint-backend-go<br/>go vet"]
-    B --> C2["test-backend-go<br/>go test -race"]
-    B --> C3["lint-nestjs<br/>bunx biome"]
-    B --> C4["test-nestjs<br/>vitest run"]
-    B --> C5["lint-frontend<br/>turbo run lint<br/>biome"]
-    B --> C6["test-frontend<br/>turbo run test<br/>vitest"]
-    B --> C7["typecheck<br/>turbo run typecheck<br/>tsc -b"]
-    C1 & C2 & C3 & C4 & C5 & C6 & C7 --> D["build-backend-go<br/>go build"]
-    C3 & C4 --> E["build-nestjs<br/>nest build"]
-    C5 & C6 & C7 --> F["build-frontend<br/>turbo --filter<br/>Vite + Rolldown"]
-    C5 & C6 & C7 --> G["build-ai-demo<br/>turbo --filter"]
-    C5 & C6 & C7 --> H["build-interview-docs<br/>turbo --filter"]
-    D & E & F & G & H --> I["🐳 Docker 多阶段构建"]
-    I --> J["📦 推送镜像仓库"]
-    J --> K["☸ Helm upgrade --install"]
-    K --> L["✅ --wait 滚动更新确认"]
-    L --> M["🚀 部署完成"]
-```
-
-### 十、面试价值总结
+### 九、面试价值总结
 
 本项目具有以下面试讲述价值：
 
 1. **架构设计能力**：递归表单引擎、分层架构设计、状态管理策略
 2. **算法设计能力**：LRU 缓存淘汰、RBAC 位运算（前后端双校验）、分治合并排序
 3. **React 深度应用**：React 19 编译器、forwardRef + useImperativeHandle、闭包陷阱修复
-4. **实时通信能力**：多协议传输层 (WebSocket→SSE→Polling)、背压控制、消息合并、二进制协议、心跳/重连、SSE 流式传输、Token Rotation
+4. **实时通信能力**：多协议传输层 (WebSocket→SSE→Polling)、背压控制、消息合并、心跳/重连
 5. **性能优化能力**：Web Worker 多线程、GIS 四重优化、虚拟滚动、RAF 节流
 6. **工程化能力**：TypeScript strict、Zustand 持久化、CI/CD、Docker/Helm 部署
-
----
 
 ## 一、项目架构全景
 
@@ -484,7 +384,7 @@ graph TB
     end
 
     subgraph Shared["📦 共享包层 Shared"]
-        TH["shared-theme<br/>Zustand + DOM 策略"]
+        TH["shared-theme<br/>Zustand + DOM + ThemeToggle"]
         MO["shared-monitor<br/>StatSDK / ErrorMonitor<br/>APIMonitor / ReportManager"]
         DG["withDegradation<br/>柔性降级"]
     end
@@ -499,7 +399,6 @@ graph TB
 
     subgraph BackendLayer["🖥️ 后端服务层"]
         GO["Go 1.26 / Gin<br/>19 内部包"]
-        NEST["NestJS 11<br/>16 模块 / 67 API"]
     end
 
     Presentation --> Components
@@ -575,45 +474,9 @@ graph LR
 
 **第零步：Schema/InitialData 后端化**
 
-Schema 和初始数据不再硬编码在前端，改为在页面 mount 时从 `GET /api/schema/config` 获取：
+Schema 和初始数据从 `GET /api/schema/config` 获取，使用 `fetchedRef`（`useRef(false)`）做 StrictMode 幂等保护。
 
-```
-JsonSchemaForm useEffect
-  → GET /api/schema/config
-  → { schema, initialData }
-  → augmentSchema() 注入 JS 行为（validation/asyncValidation/autoFill）
-  → setSchema + setInitialData
-```
-
-纯 JSON Schema 从后端返回（Go gin.H），前端 `augmentSchema()` 将无法 JSON 序列化的函数行为挂回 Schema 树。由于 `useEffect` 在 `React StrictMode` 下会 double-invoke，使用 `fetchedRef`（`useRef(false)`）做幂等保护：
-
-```typescript
-const fetchedRef = useRef(false)
-
-useEffect(() => {
-  if (fetchedRef.current) return
-  fetchedRef.current = true
-  http.get("/api/schema/config")
-    .then(...)
-}, [])
-```
-
-> 同理，`PageTracker` 组件也需防御 StrictMode。原实现用两个 `useEffect` 分别在 mount + pathname 变化时重置 `reportedRef`，但 Effect 2 在 mount 时立即重置了 Effect 1 刚设置的 `reportedRef`，导致 StrictMode 第二次 mount 重复发送请求。修复后合并为一个 effect，将 guard 重置移到 **render-time** — 仅在 `pathname` 真实变化时重置，StrictMode 假卸载/重挂载不受影响：
-
-```typescript
-if (prevPathRef.current !== pathname) {
-  reportedRef.current = false
-  renderStartRef.current = performance.now()
-}
-
-useEffect(() => {
-  if (reportedRef.current) return
-  reportedRef.current = true
-  // ... 上报 page-report + vitals/report
-}, [pathname])
-```
-
-**第一步：定义 Schema 类型系统（types.ts）**
+**第一步：定义 Schema 类型系统**
 
 ```typescript
 interface FormSchema {
@@ -624,222 +487,53 @@ interface FormSchema {
   properties?: Record<string, LeafSchema>
   tabs?: TabSchema[]
 }
-
-interface LeafSchema {
-  type: FieldType  // string | number | select | switch | datetime | json | array
-  key: string
-  title: string
-  visible?: string           // 条件显隐表达式
-  validation?: Function      // 同步校验
-  asyncValidation?: Function // 异步校验
-  autoFill?: Function        // 字段联动
-  ajvSchema?: Record<string, unknown>
-}
 ```
 
-**第二步：构建策略模式注册表（registry.tsx）**
+**第二步：构建策略模式注册表**
 
-```
-Map<FieldType, Component> → registerField(type, Comp) / getField(type)
-                           → 新增字段类型只需一行注册
-```
+`Map<FieldType, Component>` → `registerField(type, Comp)` / `getField(type)` — 新增字段类型只需一行注册。
 
-**第三步：实现递归渲染器（Renderer.tsx）**
+**第三步：实现递归渲染器**
 
-Renderer 是引擎核心，接收 Schema AST 树，按类型分派到不同渲染分支：
+Renderer 按 Schema.type 分派到不同渲染分支：
 
 | Schema.type | 渲染目标 | 递归策略 |
 |-------------|----------|----------|
-| `tabs` | Ant Design `<Tabs>` | 每个 Tab 的 children 递归调用 Renderer |
-| `card` | Ant Design `<Card>` | children 递归调用 Renderer |
-| `form` | `<div>` 容器 | properties 每项递归调用 Renderer |
-| `leaf` | 查询 registry → 字段组件 | 递归终止，渲染具体表单控件 |
+| `tabs` | `<Tabs>` | 每个 Tab 的 children 递归 |
+| `card` | `<Card>` | children 递归 |
+| `form` | `<div>` 容器 | properties 每项递归 |
+| `leaf` | 查询 registry | 递归终止 |
 
-深度保护：`_depth` 参数 + `maxDepth=20` 防止无限递归；`_visitedRefs` Set 检测循环引用。
+深度保护：`_depth` 参数 + `maxDepth=20`；`_visitedRefs` Set 检测循环引用。
 
-**第四步：添加条件显隐（evalVisible）**
+**第四步：条件显隐**
 
-字符串表达式解析，将 `"enableEncryption === true && certType === 'ca-signed'"` 在运行时求值：
+字符串表达式 `"enableEncryption === true"` 在运行时求值：提取变量名 keys + 对应值 → `new Function(...keys, 'return ${prepared}')(...values)`。
 
-```
-1. 表达式预处理 → 替换操作符（&&/||/===/!==）
-2. 提取变量名列表 keys + 对应值 values
-3. new Function(...keys, 'return ${prepared}')(...values)
-4. 解析失败 → 默认 visible = true（安全降级）
-```
-
-**第五步：实现实时 JSON 编辑双向绑定**
+**第五步：实时 JSON 编辑双向绑定**
 
 ```
 表单编辑 → handleChange → setData → useEffect → onChange → JSON 面板刷新
-JSON 编辑 → handleApplyJson → JSON.parse → formRef.setFormData → setData → 表单刷新
+JSON 编辑 → handleApplyJson → JSON.parse → formRef.setFormData → 表单刷新
 ```
-
-关键：DynamicForm 通过 `forwardRef` 暴露 `setFormData` 方法，父组件通过 ref 直接写入。
 
 **第六步：四重校验体系**
 
-| 校验层级 | 触发时机 | 错误反馈 |
-|----------|----------|----------|
-| 同步校验 `validation()` | 每次 onChange | 字段级黄色警告 |
-| 异步校验 `asyncValidation()` | onChange 防抖 300ms | 字段级 Spin + 红色错误 |
-| AJV Schema 校验 | useEffect 监听 data | 面板级错误列表 |
-| 后端业务校验 | Submit 提交 | `setFields` 精准映射到字段 |
+| 校验层级 | 触发时机 |
+|----------|----------|
+| 同步校验 `validation()` | 每次 onChange |
+| 异步校验 `asyncValidation()` | onChange 防抖 300ms |
+| AJV Schema 校验 | useEffect 监听 data |
+| 后端业务校验 | Submit 提交 |
 
 #### 优化
 
-| 问题 | 优化手段 | 效果 |
-|------|----------|------|
-| 递归深度无上限 | `_depth` 参数 + `maxDepth=20` | 防止栈溢出 |
-| 循环引用导致死循环 | `_visitedRefs` WeakSet 检测 | 安全终止递归 |
-| 条件显隐频繁重算 | 表达式缓存（useMemo key=data） | 避免无效 re-render |
-| 异步校验抖动 | 300ms debounce + AbortController | 防抖 + 取消过期请求 |
-| JSON 编辑器大文件卡顿 | 折叠/展开 + 惰性渲染 + 分页 | 1000+ 行 JSON 流畅 |
-| 字段联动触发无限循环 | autoFill 最多执行 1 次 + 循环检测 | 防止死循环 |
-| 请求失败后无法重试 | catch 中重置 `fetchedRef.current = false` | 网络错误后可重新加载 |
-| 组件卸载后 debounce 继续执行 | useEffect cleanup 清理 `debounceRef` | 防止 unmount 后 setState |
- 
-#### 体系化
-
-动态表单引擎是项目中**组件化程度最高**的模块，4 个核心文件 + 7 个字段组件形成完整的微内核架构：
-
-```mermaid
-graph TB
-    subgraph Core["核心层 core/"]
-        DF["DynamicForm.tsx<br/>容器: 状态管理 + 校验调度"]
-        REN["Renderer.tsx<br/>递归 AST 遍历"]
-        REG["registry.tsx<br/>策略模式映射"]
-        TYPES["types.ts<br/>类型 + AJV"]
-    end
-
-    subgraph Fields["字段组件 fields/"]
-        SF["StringField"]
-        NF["NumberField"]
-        SLF["SelectField"]
-        SWF["SwitchField"]
-        DTF["DateTimeField"]
-        JF["JsonField"]
-        AF["ArrayField"]
-    end
-
-    DF --> REN --> REG
-    REG --> Fields
-    TYPES -.-> DF
-```
-
-> 新增字段类型只需：1) 创建组件文件 2) `registerField(type, Comp)` 一行注册。
-
-#### 存在问题与解决方案
-
-| 问题 | 产生原因 | 解决方案 |
-|------|----------|----------|
-| **条件显隐闪烁** | 表达式解析异步 + setState 批次渲染 | 初始渲染时预先计算 `initialVisible`，不依赖 useEffect |
-| **JSON 编辑与表单状态不一致** | JSON 中缺失字段导致表单未定义 | setFormData 内部做深度合并：`{ ...prevData, ...parsed }` |
-| **数组字段拖拽排序卡顿** | 整数组重新渲染 | 使用 `dnd-kit` + key 稳定策略，只重绘被移动项 |
-| **循环依赖 `A→B→A`** | autoFill 相互引用 | 依赖图拓扑排序 + `maxAutoFillDepth=5` |
-| **Schema 变更后表单不刷新** | renderer 未检测 schema 引用变化 | `schema` 变化时 `key` 属性强制重新挂载 |
-
-#### 追问链路
-
-**Q1: 条件显隐表达式为什么不直接用 eval？**
-```
-eval/new Function 在 CSP（Content Security Policy）严格模式下被禁止。
-企业级应用通常启用 CSP 防止 XSS → eval 不可用。
-替代方案:
-  a. 表达式解析器（手写语法分析）：灵活但复杂
-  b. 安全沙箱（iframe + postMessage）：隔离执行
-  c. 预定义条件 DSL（如 { when: { field: "enableEncryption", eq: true } }）：最简单
-当前实现用 new Function 但替换了变量名为参数名，限制在可控范围。
-```
-
-**Q2: 字段联动 autoFill 如何避免死循环？**
-```
-A 字段变化 → autoFill B → B 变化 → autoFill A → 死循环。
-解决方案:
-  1. autoFill 执行时设置 _isAutoFilling 标记
-  2. 标记为 true 时 onChange 不触发联动
-  3. maxAutoFillDepth=5 深度限制
-  4. 依赖图拓扑排序: 计算 autoFill 调用顺序，确保单向
-```
-
-**Q3: 性能问题—树形表单 100 个字段会卡吗？**
-```
-100 个字段 = 100 个 React 组件。
-React 19 编译器自动 memo，无关字段变化不重渲染。
-实测 200 个字段无卡顿。
-
-如果字段数 > 500（如企业级配置表单）:
-  → 分层加载（只渲染当前 Tab）
-  → virtualization（react-window）
-```
-
-**Q4: 和 @rjsf 的取舍？什么场景该用 @rjsf？**
-```
-用 @rjsf: 标准 JSON Schema，无特殊 UI 需求，快速开发。
-自研: 高度定制（条件显隐/字段联动/自定义校验/实时 JSON 编辑）。
-面试价值: 自研更能展示架构能力，但需要说明何时选 @rjsf。
-```
-
-**Q5: 四级校验体系中，异步校验的 300ms 防抖有用到 AbortController，具体怎么避免竞态？**
-```
-竞态场景: 连续输入 "abc" → 触发了 3 个异步校验请求。
-
-实现:
-  1. 每次校验前检查 latestPendingRef
-  2. 如果存在 → controller.abort() 取消前一次
-  3. 创建新 AbortController → signal 传入 fetch
-  4. fetch 被中止 → catch 中忽略 AbortError → 不更新错误状态
-
-这样只有最后一次请求的结果会被应用，
-避免了「先发的请求晚返回，覆盖后发的正确结果」的典型竞态问题。
-```
-
-**Q6: 假设后端返回的错误是数组（多个字段各有错），如何精准映射到对应字段？**
-```
-后端返回格式: { errors: [{field: "ipAddress", msg: "格式错误"}, ...] }
-
-前端处理:
-  1. 遍历 errors 数组，提取 field → msg 映射
-  2. 调用 Ant Design Form 的 setFields([{name: fieldPath, errors: [msg]}])
-  3. 字段路径支持嵌套: "config.encryption.algorithm" → ['config', 'encryption', 'algorithm']
-
-这个反向映射的关键是确保前端的 field key 与后端的字段路径完全一致。
-设计时在前端和后端使用同一份 Schema 定义，避免路径漂移。
-```
-
-#### 技术边界
-
-> 递归表单引擎在实际使用中遇到的几个边界场景及其处理方案。
-
-**边界 1：RadioGroup 嵌套 RadioGroup**
-```
-场景: 表单 A 的选项决定表单 B 的显示选项。
-问题: 简单的条件显隐（visible 表达式）只能控制显示/隐藏，
-      无法动态修改选项列表。
-方案: autoFill 联动 + 动态重写 schema.properties 的 options。
-  例: select "中国" → 省份下拉动态加载中国省份列表。
-```
-
-**边界 2：受控组件与非受控组件的冲突**
-```
-场景: 表单字段使用 Ant Design Input，默认受控。
-      但用户手动输入时，setData 触发重新渲染，
-      导致光标跳动到末尾（中文输入法尤甚）。
-方案: 
-  a. 字段组件使用 defaultValue 初始化 + ref 读取值（非受控）
-  b. 仅在失焦（onBlur）时同步到 data
-  c. 对 JSONField 等需要实时校验的字段保持受控
-结论: 同一表单内受控/非受控混合使用，按字段特性选择。
-```
-
-**边界 3：大 Schema（2000+ 行 JSON）的性能**
-```
-问题: JSON 面板渲染 2000 行 JSON 时，语法高亮 + 折叠导致卡顿。
-方案: 使用 react-live-editor 的懒加载虚拟行，
-      仅渲染可视区域的 JSON 行（约 50 行），
-      平移到新区域时动态替换 DOM 节点。
-实测: 2000 行 JSON 打开耗时 < 100ms，滚动无卡顿。
-```
+| 问题 | 优化手段 |
+|------|----------|
+| 递归深度无上限 | `_depth` 参数 + `maxDepth=20` |
+| 循环引用 | `_visitedRefs` WeakSet 检测 |
+| 条件显隐频繁重算 | useMemo key=data |
+| 异步校验抖动 | 300ms debounce + AbortController |
 
 ---
 
@@ -849,289 +543,31 @@ React 19 编译器自动 memo，无关字段变化不重渲染。
 
 #### 实现思路
 
-大文件上传的核心矛盾：**网络不可靠 + 文件体积大 = 失败成本高**。直接上传的致命缺陷是任何中断导致全量重传。分片上传将大文件切割为 N 个独立分片，每片失败独立重试，总进度 = 已完成分片 / 总分片。
+**选型决策**：SHA-256 分片级校验、Zustand persist 持久化、滑动窗口并发（默认 4）。
 
-**选型决策**：
-- SHA-256 分片级校验（非 MD5）：防碰撞要求更高的完整性验证
-- Zustand persist 持久化（非 IndexedDB）：API 简单，适合中小规模文件状态
-- 滑动窗口并发（非全量并发）：控制网络连接数，避免 bandwidth 争抢
+**核心流程**：文件选择→哈希计算→初始化会话→并发上传（滑动窗口）→暂定/恢复(Promise Park)→合并+完整性验证→刷新恢复。
 
-#### 实现过程
-
-**第一步：文件选择 + 哈希计算**
-
-```
-用户拖入/选择文件
-  → computeFileHash(file, chunkSize) 在 Web Worker 中计算 SHA-256
-  → 返回文件级哈希，用于最终完整性验证
-```
-
-Web Worker 避免大文件哈希计算阻塞主线程（500MB 文件约 2-3s 计算时间）。
-
-**第二步：初始化上传会话**
-
-```
-POST /api/upload/init
-  Body: { fileName, fileSize, fileHash, chunkSize }
-  ← Response: { uploadId, totalChunks, chunkSize }
-
-后端: 创建 uploads/{uploadId}/ 目录，记录元数据到内存 map
-```
-
-**第三步：并发上传分片（滑动窗口）**
-
-```
-并发窗口大小 = 4（可配置 1-10）
-对每个分片:
-  1. 计算分片 SHA-256
-  2. POST /api/upload/chunk (FormData: chunkIndex + 二进制数据 + chunkHash)
-  3. 服务端: 写入 uploads/{uploadId}/{chunkIndex} + 校验 SHA-256
-  4. 如果失败 → 指数退避重试 (1s → 2s → 4s, 最多 3 次)
-  5. 如果全部失败 → 标记为 error，用户可手动重试
-
-上传每一片都通过 AbortController 支持暂停
-```
-
-**第四步：暂停/恢复 — Promise Park 模式**
-
-```typescript
-// 核心：暂停时将上传循环挂起在一个 Promise 上
-const parkPromiseRef = useRef<{ resolve: () => void } | null>(null)
-
-const startUpload = async () => {
-  for (const chunk of pendingChunks) {
-    if (pausedRef.current) {
-      await new Promise<void>((resolve) => {
-        parkPromiseRef.current = { resolve }  // 挂起
-      })
-    }
-    await uploadChunk(chunk)  // Promise 被 resolve 后继续
-  }
-}
-```
-
-与 AbortController 暂停的区别：
-| 方式 | 行为 | 适用 |
-|------|------|------|
-| AbortController | 中断正在上传的请求 | 停止（不可恢复） |
-| Promise Park | 阻塞后续分片，保留 in-flight 请求 | 暂停（可恢复） |
-
-**第五步：合并 + 完整性验证**
-
-```
-POST /api/upload/complete
-  Body: { uploadId }
-  后端:
-    1. 检查 totalChunks 是否全部到齐
-    2. 按 chunkIndex 顺序合并文件
-    3. 计算合并后文件的 SHA-256
-    4. 与 init 时提交的 fileHash 对比
-    5. 一致 → 返回 success；不一致 → 返回 error + 缺失分片列表
-```
-
-**第六步：刷新恢复**
-
-Zustand `persist` 中间件自动将文件列表序列化到 localStorage，页面刷新后自动恢复状态：
-
-```
-页面加载 → Zustand persist 自动反序列化文件列表
-  → useEffect → GET /api/upload/status/:uploadId
-  → 服务端返回已接收分片索引列表
-  → 前端标记 done，显示"续传"按钮
-  → 续传跳过已完成分片
-```
-
-**第七步：清除已完成 & 重置全部**
-
-```typescript
-clearCompleted: () => set((s) => ({
-  files: s.files.filter((f) => f.status !== "done" && f.status !== "error"),
-})),
-
-resetAll: () => {
-  set({ files: [] })
-}
-```
-
-**第八步：上传后下载**
-
-上传完成后 session 保留在服务端内存中，用户可通过"下载文件"按钮取回合并后的文件：
-
-```
-GET /api/upload/download/:uploadId
-  → 服务端从 uploadSessions 查找 session，获取 filename
-  → 返回 uploads/{uploadId}_{filename} 文件
-  → Content-Disposition: attachment 触发浏览器下载
-```
-
-后端 `CompleteUpload` 不再清理 session，保留用于下载时查询文件名。下载按钮通过 `<Button href="...">` 直接跳转，走标准 HTTP 文件下载流程。
+**代际锁（Generation Lock）**：`uploadingRef` 守卫 + `uploadGenRef` 代际计数器，防止连续点击停止→续传→停止导致的并发竞态。
 
 #### 优化
 
-| 维度 | 优化手段 | 效果 |
-|------|----------|------|
-| **计算** | Web Worker 计算 SHA-256 | 主线程 0 阻塞 |
-| **网络** | 滑动窗口并发（默认 4，可调 1-10） | 带宽利用 vs 拥塞控制的平衡 |
-| **网络** | 指数退避重试（1s/2s/4s） | 避免重连风暴 |
-| **存储** | Zustand persist + localStorage | 刷新后秒级恢复，无后端依赖 |
-| **内存** | 分片逐个读取，非全量加载 | 500MB 文件仅占用 5MB 内存 |
-| **UI** | 进度条 + 分片状态矩阵 | 精确到每片的可视化反馈 |
-| **UI** | DraggerCard / ToolbarActions 子组件 `React.memo` | 文件项每 200ms 更新时不重渲染无关 UI |
-| **UI** | `useUploadStore.getState()` 替代闭包 files | 防止闭包陷阱导致回调重复创建 |
-| **数据安全** | SHA-256 分片 + 文件双重校验 | 防止传输损坏 |
-| **存储** | Zustand `persist` 中间件自动序列化 | 无需手写 debouncedSave/localStorage，`StorageAdapter` 节流写入 |
-| **下载** | `GET /api/upload/download/:uploadId` + session 保留 | 合并完成后直接下载原文件 |
-| **并发** | 代际锁（`uploadingRef` + `uploadGenRef` 代际计数器） | 防止双击"开始"→停止→重试导致并发上传 |
-| **并发** | `abort()` 中重置 `uploadingRef` + 递增 `uploadGenRef` | 停止后"续传"不再无响应 |
-| **网络** | catch 中先 `checkAbort()` 再指数退避 | 停止后 chunk 重试立即退出，不等待退避 |
-| **体验** | `handleDrop` 按 filename+fileSize 匹配所有状态（含 done） | 同一文件拖入不再重复生成，自动 reset 续传 |
-| **数据安全** | `sync.Mutex` 保护 `UploadSession.Received` 全部读写 | 消除并发请求导致的数据竞争 |
-| **存储** | `sessionSnapshot` 深拷贝快照 + 释放锁后序列化 | 避免序列化时持锁阻塞其他请求 |
+| 维度 | 优化手段 |
+|------|----------|
+| 计算 | Web Worker 计算 SHA-256 |
+| 网络 | 滑动窗口并发（默认 4，可调 1-10） |
+| 网络 | 指数退避重试（1s/2s/4s） |
+| 存储 | Zustand persist + localStorage |
+| 内存 | 分片逐个读取，非全量加载 |
+| 并发 | 代际锁防止并发竞态 |
+| 数据安全 | SHA-256 分片 + 文件双重校验 |
 
-#### 体系化
-
-```mermaid
-graph TB
-    subgraph FrontendLayer["前端"]
-        PAGE["ChunkedUpload.tsx<br/>页面层: UI + 交互"]
-        STORE["uploadStore.ts<br/>状态层: Zustand + persist"]
-        LS["localStorage<br/>持久化层"]
-    end
-
-    subgraph BackendLayer["后端 API"]
-        INIT["POST /api/upload/init<br/>创建上传会话"]
-        CHUNK["POST /api/upload/chunk<br/>接收分片 + SHA-256"]
-        COMPLETE["POST /api/upload/complete<br/>合并 + 文件级校验"]
-        STATUS["GET /api/upload/status<br/>查询已接收分片"]
-        DOWNLOAD["GET /api/upload/download<br/>下载合并后文件"]
-        SESSIONS["GET /api/upload/sessions<br/>所有活跃会话"]
-    end
-
-    PAGE --> STORE
-    STORE -.->|persist| LS
-    PAGE --> INIT & CHUNK & COMPLETE & STATUS & DOWNLOAD & SESSIONS
-```
-
-> 前端状态通过 Zustand persist 持久化到 localStorage，后端无数据库（内存 map + 文件系统）。适合演示场景，生产环境可替换为 Redis/MinIO。
-
-#### 存在问题与解决方案
-
-| 问题 | 产生原因 | 解决方案 |
-|------|----------|----------|
-| **CSS 动画引用未定义** | Biome 自动格式化移除了未使用的导入 `ClearOutlined`/`DeleteOutlined` | 在 `ChunkedUpload.tsx` 中显式 import 图标组件 |
-| **暂停时上传状态不一致** | 暂停标记 `pausedRef=true` 后 in-flight 分片可能已完成 | 暂停仅阻塞后续分片，不中断正在上传的请求 |
-| **刷新后分片状态丢失** | localStorage 存储的是旧状态，未同步服务端实际已接收分片 | 恢复时调用 `GET /api/upload/status` 与服务端对账 |
-| **大文件（>2GB）内存溢出** | 一次性读取整个文件到内存计算哈希 | 使用 `File.slice()` 分块读取 + Web Worker 流式处理 |
-| **并发控制失效** | 多个文件同时上传时并发数叠加 | 每个文件独立维护滑动窗口，全局并发上限 = 文件数 × 3 |
-| **离开页面后定时器/请求持续运行** | 无 cleanup effect，`setInterval`、in-flight fetch、pause Promise 均未清理 | 新增 unmount cleanup：`abortRef.current=true`、resolve 暂停 Promise、`clearInterval`，统一中止所有操作 |
-| **上传并发竞态** | `startUpload` 无守卫，快速点击停止→重试→续传导致两次并发执行，共享 `abortRef` 互相干扰 | `uploadingRef` 守卫 + `uploadGenRef` 代际计数器，`finally` 中 `gen === uploadGenRef.current` 跳过过期调用 |
-| **停止后"续传"无响应** | `abort()` 只设 `abortRef=true`，旧 `startUpload` 还在后台等待 HTTP 重试退避 | `abort()` 中重置 `uploadingRef=false` + 递增 `uploadGenRef`，旧 finally 跳过清理 |
-| **停止后 chunk 重试等待** | catch 中没有立即检查 abort，停止后还在等指数退避（最长 14s） | catch 中先 `if (checkAbort()) return`，停止后立即退出重试循环 |
-| **相同文件重复生成** | `handleDrop` 匹配条件排除 `status !== "done"`，完成后的文件被当做新文件添加 | 改为按 filename+fileSize 匹配所有状态，找到后直接 reset 到 pending |
-| **UploadSession 数据竞争** | `sync.Mutex` 定义后从未加锁，`Received` 读写无任何保护 | `UploadChunk`/`GetUploadStatus`/`CompleteUpload`/`ListUploadSessions`/`saveSessions` 全部加锁；`saveSessions` 深拷贝快照后释放锁再序列化 |
-
-#### 追问链路
-
-**Q1: 为什么并发上限设为 4？**
-```
-网络连接数过多 → TCP 拥塞控制退化（HOL blocking）。
-经验值: 
-  - 普通网络 3-6 并发最优
-  - 5G/光纤: 6-10
-  - 本项目默认 4，用户可通过 InputNumber 调节（1-10）
-```
-
-**Q2: SHA-256 对比 MD5 的优势？**
-```
-MD5: 128 位，计算快，防碰撞弱（2004 年已被破解）。
-SHA-256: 256 位，计算慢 2-3 倍，防碰撞强（至今未破解）。
-本项目用 Web Worker 计算 SHA-256，主线程无感知，两者用户无差异。
-文件完整性场景 → SHA-256 更安全。
-```
-
-**Q3: 暂停后刷新，如何精确恢复进度？**
-```
-流程:
-  1. Zustand persist 从 localStorage 自动恢复文件元数据（uploadId, 文件名, 总分片）
-  2. GET /api/upload/status/:uploadId → 获取服务端已接收分片列表
-  3. 对比本地分片状态 vs 服务端 → 标记差异
-  4. 用户选择"续传" → 仅上传 missing 分片
-
-为什么不信任 localStorage？
-  浏览器可能清除 localStorage，用户可能在另一台设备上传。
-  必须与服务端对账确认实际进度。
-```
-
-**Q4: 服务端分片怎么存？文件怎么合并？**
-```
-存储: uploads/{uploadId}/{chunkIndex} 二进制文件。
-合并: 按 chunkIndex 遍历 → os.Copy(dst, src) 追加写入。
-验证: 合并后计算 SHA-256 → 对比 init 时提交的 fileHash。
-清理: 合并成功后删除 uploads/{uploadId}/ 目录。
-```
-
-**Q5: 滑动窗口并发为什么比全量并发好？**
-```
-全量并发（N 个分片一起发）:
-  - 浏览器 TCP 连接数有限（Chrome 同一域名最多 6 个）
-  - 超过限制 → 排队等待，无实质加速
-  - 带宽争抢 → 每个连接分到的带宽变少 → 总完成时间反而增加
-  
-滑动窗口（同时 4 个分片）:
-  - 保持 4 个 TCP 连接持续传输
-  - 一片完成立即补充下一片 → 带宽满负荷
-  - 控制连接数避免 TCP 拥塞控制退化
-  
-类比: 全量并发 = 6 车道堵车，滑动窗口 = 4 车道匀速行驶。
-```
-
-**Q6: 对账续传时，如何判断服务端的分片是完整的（没有被篡改或损坏）？**
-```
-每个分片上传时服务端都会校验 SHA-256:
-  POST /api/upload/chunk
-  Body: { chunkIndex, chunkData, chunkHash }
-
-服务端逻辑:
-  1. 接收 chunkData → 计算 SHA-256 → 对比 chunkHash
-  2. 匹配 → 写入文件 → 返回 200
-  3. 不匹配 → 返回 409 Conflict → 客户端重传
-
-对账时:
-  GET /api/upload/status/:uploadId → 返回已接收的 chunkIndex 列表
-  列表中的 chunk 都是已通过 SHA-256 校验的 → 不需要重新上传
-
-所以「对账 + 续传」= 只需上传服务器缺失的分片，已有的直接跳过。
-```
-
-**Q7: 代际锁（Generation Lock）如何解决"点击停止→续传→再次停止"的并发竞态？**
-```
-竞态场景:
-  1. 点击"开始" → startUpload 执行（检查 abortRef.current === false）
-  2. 点击"停止" → abortRef.current = true
-  3. 点击"续传" → startUpload 再次执行（abortRef.current = false）
-  4. 此时有两个 startUpload 并发: 旧的在等待 retry，新的在循环上传
-  5. 两个实例共享 abortRef → 互相干扰，出现"停止了还在上传"或"续传无响应"
-
-代际锁方案:
-  1. uploadingRef: boolean 守卫 → 只有一个 startUpload 能进入
-  2. uploadGenRef: 代际计数器 → 每次 abort() 递增
-  3. finally 中判断 gen === uploadGenRef.current → 旧代际的 finally 什么都不做
-
-关键设计:
-  - abort() 中 `uploadingRef.current = false` 释放锁 + `uploadGenRef.current++` 增代
-  - 锁释放后新的 startUpload 才能进入 → 旧实例的 finally 因代际不匹配跳过 cleanup
-  - 旧实例的 catch → checkAbort() → return（不再等待退避）
-  - 最终: 只有一个活跃的上传循环，abortRef 不会互相覆盖
-```
 ---
 
 ### 2.3 WebSocket 告警推送 ⭐⭐⭐
 
-**位置**: `src/utils/wsTransport.ts` (613 行) + `src/pages/AlertWebSocket.tsx` + `backend/handlers/alert.go` (374 行)
+**位置**: `src/utils/wsTransport.ts` (547 行) + `src/pages/AlertWebSocket.tsx` + `backend/handlers/alert.go`
 
 #### 实现思路
-
-WebSocket 的可靠性不是"连上了就行"——它的复杂之处在于**网络环境不可控**。企业内网可能屏蔽 WebSocket、代理超时断开、Nginx 不转发 Upgrade 头。核心目标：**任何网络环境下都能拿到数据，且实时性尽量高**。
 
 ```
 理想链路: WebSocket (全双工, 实时)
@@ -1139,352 +575,28 @@ WebSocket 的可靠性不是"连上了就行"——它的复杂之处在于**网
 保底链路: Polling (HTTP 轮询, 所有环境支持)
 ```
 
-**架构决策**：将传输层抽象为独立模块，所有传输实现统一 `Transport` 接口，上层（页面）无感知。
+**统一 Transport 接口**：三种实现（WebSocketTransport / SSETransport / PollingTransport），通过 `ReconnectingTransport` 构建降级链。
 
-#### 实现过程
+**背压控制**：`bufferedAmount > 1MB` 进入排队模式，RAF 每帧检查，`< 256KB` 恢复发送。
 
-**第一步：定义统一 Transport 接口**
+**消息合并**：MessageBatcher 16ms 定时器或 64KB 上限触发 flush，减少网络包数量 10-50 倍。
 
-```typescript
-interface Transport {
-  connect(): void
-  disconnect(): void
-  send(data: string): void
-  setCallbacks(cbs: TransportCallbacks): void
-  // onopen / onmessage / onerror / onclose / onstatus
-}
-```
-
-三种实现：
-| Transport | 底层 | 优势 | 劣势 |
-|-----------|------|------|------|
-| `WebSocketTransport` | `new WebSocket(url)` | 全双工，实时性最高 | 可能被代理拦截 |
-| `SSETransport` | `fetch + ReadableStream` | 基于 HTTP，兼容性好 | 单向，仅服务端推送 |
-| `PollingTransport` | `setInterval + fetch` | 所有环境都支持 | 延迟最高 (1s 轮询间隔) |
-
-**第二步：构建降级链（ReconnectingTransport）**
-
-```mermaid
-graph TD
-    START(["连接请求"]) --> TRY{"可用传输?"}
-    TRY -->|"activeIndex=0<br/>优先"| WS["WebSocketTransport<br/>ws://host/ws/alerts"]
-    TRY -->|"activeIndex=1"| SSE["SSETransport<br/>fetch + ReadableStream"]
-    TRY -->|"activeIndex=2"| POLL["PollingTransport<br/>setInterval + fetch"]
-
-    WS -->|成功| CONN["✅ 已连接"]
-    WS -->|失败 ❌| RETRY{"retryCount ><br/>MAX_RETRY?"}
-    SSE -->|成功| CONN
-    SSE -->|失败 ❌| RETRY
-    POLL -->|成功| CONN
-    POLL -->|失败 ❌| ALLFAIL["全部降级失败<br/>onStatus('disconnected')"]
-
-    RETRY -->|否| WAIT["指数退避<br/>1s → 2s → 4s ... → 30s"]
-    WAIT -->|重试当前传输| TRY
-    RETRY -->|是| FALLBACK["activeIndex++<br/>降级到下一协议"]
-    FALLBACK --> TRY
-
-    style WS fill:#e3f2fd
-    style SSE fill:#fff3e0
-    style POLL fill:#fce4ec
-    style CONN fill:#e8f5e9
-```
-
-> 用户可通过 Segmented 组件手动切换协议（`forceTransport(index)`），切换时重置 retryCount 强制立即尝试指定协议。
-
-**第三步：添加背压控制（BackpressureController）**
-
-WebSocket 发送过快时，`bufferedAmount` 持续增长会导致内存溢出：
-
-```typescript
-// bufferedAmount > 1MB → 进入排队模式
-// 使用 requestAnimationFrame 每帧检查 bufferedAmount
-// bufferedAmount < 256KB → 恢复发送
-class BackpressureController {
-  private highWater = 1024 * 1024  // 1MB
-  private lowWater = 256 * 1024    // 256KB
-  private queue: string[] = []
-  
-  async send(ws: WebSocket, data: string): Promise<void> {
-    if (ws.bufferedAmount > this.highWater) {
-      // 排队等待 drain
-      await new Promise<void>(resolve => {
-        this.queue.push(data)
-        this.drain(ws, resolve)
-      })
-    } else {
-      ws.send(data)
-    }
-  }
-}
-```
-
-**第四步：消息合并（MessageBatcher）**
-
-高频率小块消息（如实时告警）会产生大量小网络包。合并为更大的包发送：
-
-```mermaid
-sequenceDiagram
-    participant App as 应用层
-    participant B as MessageBatcher
-    participant WS as WebSocket
-
-    App->>B: add(data)
-    B->>B: buffer.push(data)
-    B->>B: size += data.length
-    B->>B: 启动 16ms 定时器(首条)
-
-    alt size > 64KB
-        B->>WS: flush() → send(buffer)
-    else 定时器到期
-        B->>WS: flush() → send(buffer)
-    end
-
-    WS-->>B: 发送完成
-    B->>App: 回调通知
-```
-
-**第五步：心跳保活（HeartbeatController）**
-
-```mermaid
-sequenceDiagram
-    participant C as 客户端
-    participant WS as WebSocket
-    participant S as 服务端
-
-    Note over C: 每 30s
-    C->>WS: BackpressureController.send("ping")
-    WS->>S: 发送 Ping 帧
-    S-->>WS: 响应 Pong 帧
-    WS-->>C: lastPongTime = Date.now()
-
-    Note over C: 每 1s 检查
-    C->>C: Date.now() - lastPongTime > 10s?
-    alt 超时
-        C->>C: 触发 onclose
-        C->>C: 触发重连/降级
-    else 正常
-        C->>C: 继续等待
-    end
-```
-
-> Ping 通过 BackpressureController 发送，遵循背压控制规则，不绕过流量控制。
-
-**第六步：后端统一路由分发（alert.go）**
-
-Go 后端使用 `AlertDispatcher` 结构体，通过 `?transport=` 参数区分三种协议：
-
-```go
-func AlertDispatcher(c *gin.Context) {
-    transport := c.DefaultQuery("transport", "ws")
-    switch transport {
-    case "sse":
-        serveAlertSSE(c)     // SSE: 100ms ticker, 消息聚合发送
-    case "poll":
-        serveAlertPoll(c)    // Polling: JSON 数组，1s 批量
-    default:
-        serveAlertWS(c)      // WebSocket: gorilla/websocket 升级
-    }
-}
-```
-
-同一份告警数据生成逻辑，三种出口方式，通过接口实现复用。
-
-**第七步：页面集成 + Segmented 手动切换**
-
-```typescript
-// AlertWebSocket.tsx
-const transport = new ReconnectingTransport(baseUrl)
-
-transport.setCallbacks({
-  onMessage: (msg) => addAlert(msg),
-  onStatus:  (s) => setStatus(s),
-})
-
-transport.onFallbackChange((type) => setTransportType(type))
-
-// 断开后切换 → 自动重新连接
-const handleTransportChange = (v: string) => {
-  const index = v === "WebSocket" ? 0 : v === "SSE" ? 1 : 2
-  transport.forceTransport(index)
-}
-```
+**心跳保活**：30s Ping / 10s Pong 超时检测。
 
 #### 优化
 
-| 方向 | 优化 | 效果 |
-|------|------|------|
-| **连接** | 指数退避 + jitter | 避免 N 个客户端同时重连导致服务端尖峰 |
-| **连接** | 三级协议降级 | 任何网络环境都能工作 |
-| **连接** | 直连后端 :8080 而非 Vite proxy | 避免 Vite proxy ECONNABORTED |
-| **数据** | MessageBatcher 16ms/64KB | 减少网络包数量 10-50 倍 |
-| **数据** | BinaryProtocol 编码 | 减少 payload 体积 30%+ |
-| **数据** | seenRef 消息去重 (上限 5000) | 防止重连后重复消息 |
-| **性能** | RAF 双缓冲 | 合并多次微任务为一次宏任务，60fps 流畅 |
-| **性能** | requestAnimationFrame drain | 背压恢复时逐帧释放，不卡主线程 |
-| **性能** | react-window 虚拟滚动 | 只渲染可视区域 DOM，支持无限告警 |
-| **性能** | aliveRef 卸载保护 | 组件 unmount 时立即停止 RAF 循环，避免切换页面卡顿 |
-| **性能** | DISPLAY_LIMIT=2000 渲染上限 | 控制最后一次渲染 reconciliation 成本 |
-| **心跳** | 30s Ping / 10s Pong | 5s 内发现僵尸连接 |
-| **后端** | 100ms ticker（`rate × 0.1` 条/tick） | 避免 4000 msg/s 压垮连接 |
-| **交互** | 手动连接 | 进入页面不自动连接 WS，用户按需点击"重连" |
+| 方向 | 优化 |
+|------|------|
+| 连接 | 指数退避 + jitter |
+| 连接 | 三级协议降级 |
+| 数据 | MessageBatcher 16ms/64KB |
+| 数据 | BinaryProtocol 编码 |
+| 数据 | seenRef 消息去重 (上限 5000) |
+| 性能 | RAF 双缓冲 |
+| 性能 | react-window 虚拟滚动 |
+| 性能 | aliveRef 卸载保护 |
 
-#### 体系化
-
-```mermaid
-graph TB
-    subgraph Frontend["前端 wsTransport.ts (613 行)"]
-        BP["BinaryProtocol<br/>编码/解码"]
-        BC["BackpressureController<br/>背压控制"]
-        MB["MessageBatcher<br/>消息合并"]
-        HB["HeartbeatController<br/>心跳"]
-        WT["WebSocketTransport"]
-        ST["SSETransport"]
-        PT["PollingTransport"]
-        RT["ReconnectingTransport<br/>降级链 + 手动切换"]
-    end
-
-    subgraph Backend["后端 handlers/alert.go (374 行)"]
-        AD["AlertDispatcher<br/>路由分发"]
-        AWS["serveAlertWS<br/>WebSocket"]
-        ASSE["serveAlertSSE<br/>SSE"]
-        APOLL["serveAlertPoll<br/>Polling"]
-        AG["AlertGenerator<br/>数据生成"]
-        COMMON["parseRate / parseWorkers"]
-    end
-
-    RT --> WT & ST & PT
-    WT & ST & PT --> BP & BC & MB & HB
-    AD --> AWS & ASSE & APOLL
-    AWS & ASSE & APOLL --> AG
-    AD --> COMMON
-    Frontend <-->|onMessage / onStatus| Backend
-```
-
-> 前端页面 ↔ Transport 接口 ↔ 后端路由，三层通过统一的 `onMessage`/`onStatus` 回调解耦。
-
-#### 存在问题与解决方案
-
-| 问题 | 发现过程 | 解决方案 |
-|------|----------|----------|
-| **Vite proxy ECONNABORTED** | SSE 高频率 (rate=1000) 时连接中断 | 前端直连 `localhost:8080`，绕过 proxy；后端 CORS `Allow-Origin: *` |
-| **切换传输时回调干扰** | WebSocket → SSE 切换后，旧 WebSocket 的 `onerror` 异步触发，错误修改 `activeIndex` | `forceTransport` 先 `old.setCallbacks(this.callbacks)` 恢复原始回调，再 disconnect |
-| **SSE 高吞吐压垮 proxy** | 后端 1ms ticker × 4 msg = 4000 msg/s，浏览器连接中止 | 后端改为 100ms ticker，`rate × 0.1` 条/tick |
-| **Segmented 切换不生效** | `disconnect()` 将 `transportRef.current = null`，切换时空引用 | Segmented onChange 检测 null 后调用 `initTransport()` 重建 |
-| **重连风暴** | 断网后所有客户端同时重试 | 指数退避 + random jitter，分散重连时间 |
-| **消息乱序** | 重连后新消息可能先于旧消息到达 | 服务端 `seq` 序号 + 前端 `lastSeq` 对比，丢弃过期消息 |
-| **背压积压不释放** | `bufferedAmount` 持续 > 1MB 时排队队列无限增长 | `maxQueueSize = 5000` 条上限，超出丢弃旧消息 |
-| **WebSocket 直接连接跨域** | 直连 localhost:8080 与前端 localhost:5173 不同源 | Go 后端 CORS 中间件设置 `Access-Control-Allow-Origin: *` |
-| **列表渲染 80 条上限** | `displayAlerts.slice(0, 80)` 固定截取 | 替换为 react-window 虚拟滚动，支持无限制告警 |
-| **切换页面卡顿** | 组件 unmount 时 RAF 循环仍在处理数据，最后一次 reconciliation 成本高 | `aliveRef` 立即停止 RAF + `startTransition` 低优先级更新 + `DISPLAY_LIMIT=2000` 控制渲染上限 |
-| **StrictMode 下数据不显示** | `useRef(true)` 在 StrictMode 重挂载后 aliveRef 仍为 `false` | mount effect 中重置 `aliveRef.current = true` |
-| **页面自动连接 WS** | 进入页面即建立 WebSocket 连接 | 改为手动"重连"按钮触发，用户按需连接 |
-
-#### 追问链路
-
-**Q1: Vite proxy 为什么会导致 ECONNABORTED？**
-```
-Vite dev proxy 基于 http-proxy，WebSocket 升级后维持长连接。
-高频消息（如 4ms 间隔）→ 连接压力大 → proxy 缓冲区溢出 → ECONNABORTED。
-直连后端后:
-  WebSocket 直接通过浏览器 ↔ Go 服务器，无中间层。
-  SSE/Polling 也是前端直连 localhost:8080，Go 端 CORS 允许跨域。
-```
-
-**Q2: 三级降级的触发阈值是什么？**
-```
-WebSocket → SSE: 连续 10 次重连失败（每次间隔指数退避: 1s,2s,4s...30s）
-  → 最长等待约 5 分钟后降级。
-SSE → Polling: SSE 连接失败（HTTP 错误或 ReadableStream 中断）→ 即时降级。
-Polling 保底: 轮询永不降级（最后一个方案）。
-每次降级 UI 显示橙色 Tag："SSE 降级" / "轮询降级"。
-```
-
-**Q3: 心跳 Ping/Pong 如何实现的？**
-```
-发送: setInterval 30s → BackpressureController.send("ping") → WebSocket.send
-响应: WebSocket.onmessage → 判断 data === "pong" → 刷新 lastPongTime
-超时: setInterval 1s 检查 Date.now() - lastPongTime > 10000
-  → 超时 → 触发 onclose → 触发重连
-注意: Ping 数据包通过 BackpressureController 发送，遵循背压控制规则。
-```
-
-**Q4: 消息去重为什么需要上限 5000？**
-```
-Set 存储已处理消息 ID → 内存无限增长。
-上限 5000: 约 5000 × 36 字节 (UUID) = 180KB，可接受。
-超出上限时丢弃旧 ID（shift），保持 Set 大小稳定。
-为什么不设更大？消息 ID 仅用于去重，太旧的消息不会重复出现。
-```
-
-**Q5: 二进制协议编码的具体格式？相比纯 JSON 优势在哪？**
-```
-二进制格式: [1 字节类型] + [4 字节 payload 长度] + [JSON payload]
-
-类型字节: 0x01=alert, 0x02=status, 0x03=heartbeat
-接收端: read type → read length → read payload → decode JSON
-
-优势:
-  1. 类型解析无需 JSON.parse（直接读首字节 → 分流）
-  2. payload 减少约 30%（JSON 的 field names 在 Binary 中合并为 type byte）
-  3. 心跳包仅 5 字节（type=0x03, length=0），JSON 版本至少 30 字节
-```
-
-**Q6: RAF 双缓冲渲染如何保证 60fps？**
-```
-RAF 双缓冲 = requestAnimationFrame + 双缓冲队列。
-
-流程:
-  1. 消息到达 → push 到 pendingBuffer
-  2. RAF callback → 交换 pendingBuffer ↔ displayBuffer
-  3. 只在 displayBuffer 更新时 setState
-  4. 下一帧到来时重复
-
-为什么不直接 setState？
-  高频消息（4000 msg/s）→ 每秒 setState 4000 次
-  → React reconciliation 来不及完成 → 丢帧
-
-RAF 双缓冲:
-  4000 msg/s → 16ms 一帧 → 每帧合并约 64 条消息
-  → setState 60 次/s → React 刚好完成 → 60fps
-```
-
-#### 技术边界
-
-> WebSocket 传输层在实际生产环境中遇到的边界场景。
-
-**边界 1：消息时序一致性（CAS 模式）**
-```
-场景: 服务端发送 seq=5, seq=6, 断线重连后服务端重新发送 seq=5, seq=6。
-问题: 前端收到重复的 seq=5，如果直接丢弃 seq≤lastSeq 的消息，
-      会丢失 seq=6（因为 seq=5 已处理，lastSeq=5，seq=6 被当做新消息）。
-方案: 
-  不依赖 seq 单调递增，改用 CAS (Compare-And-Swap)：
-  每条消息携带 { uuid, prevUuid }，前端维护 lastUuid。
-  只有 prevUuid === lastUuid 的消息才被接受，否则丢弃。
-  这样即使重发，也不会产生乱序或重复。
-```
-
-**边界 2：浏览器 Tab 休眠后的连接恢复**
-```
-场景: 用户切到其他标签页 30 分钟后切回。
-问题: 浏览器 Tab 休眠时 JS 定时器被节流（Chrome 限制到 1 次/分钟），
-      心跳 Ping 无法按时发送，连接被服务端断开。
-方案:
-  a. 使用 document.visibilitychange 事件检测 Tab 可见性
-  b. Tab 隐藏时主动断开 WebSocket（避免无用心跳）
-  c. Tab 重新可见时重新连接（自动触发降级链）
-实测: Tab 休眠 1 小时后恢复，连接重建时间 < 500ms。
-```
-
-**边界 3：WebSocket 与 HTTP/2 的兼容性**
-```
-场景: 部署环境使用 HTTP/2（如 gRPC 网关），
-      但 HTTP/2 不支持 WebSocket Upgrade（RFC 7540 限制）。
-方案:
-  a. 降级为 SSE（HTTP/2 支持 SSE，且多路复用效率更高）
-  b. 或配置 Nginx 将 /ws 路径独立到 HTTP/1.1 连接
-  c. 本项目: 自动降级链在 HTTP/2 环境下自动切换到 SSE
-```
+---
 
 ### 2.4 Web Worker 分治有序合并 ⭐⭐⭐
 
@@ -1492,5151 +604,389 @@ RAF 双缓冲:
 
 #### 实现思路
 
-JavaScript 是单线程模型，CPU 密集任务（如排序 100 万个数字）会阻塞主线程，导致 UI 冻结。Web Worker 提供真正的多线程并行能力，但直接使用需要解决三个问题：
+Worker Pool = `navigator.hardwareConcurrency`，自适应等量分区，K 路指针归并。
 
-1. **线程管理**：手动创建/销毁 Worker 繁琐，且与 CPU 核心数不匹配导致上下文切换
-2. **任务调度**：如何将大型任务拆分为子任务，均衡分配给 Worker
-3. **结果合并**：多个 Worker 的排序结果如何高效合并为最终有序数组
+#### 关键流程
 
-**核心决策**：采用分治策略，将数组均匀分区后分配给 Worker Pool 并行排序，主线程负责多路归并。
-
-#### 实现过程
-
-**第一步：初始化 Worker Pool**
-
-```typescript
-const POOL_SIZE = navigator.hardwareConcurrency || 4
-const pool: Worker[] = []
-const taskQueue: Task[] = []
-const taskResolves: Map<string, (result: number[]) => void> = new Map()
-
-for (let i = 0; i < POOL_SIZE; i++) {
-  const worker = new Worker(new URL('../utils/merge.worker.ts', import.meta.url), {
-    type: 'module',
-  })
-  worker.onmessage = handleWorkerMessage
-  pool.push(worker)
-}
-```
-
-`navigator.hardwareConcurrency` 返回 CPU 逻辑核心数，确保线程数与硬件匹配。
-
-**第二步：自适应分区**
-
-```typescript
-function partition(data: number[], numChunks: number): number[][] {
-  const size = Math.ceil(data.length / numChunks)
-  const chunks: number[][] = []
-  for (let i = 0; i < numChunks; i++) {
-    chunks.push(data.slice(i * size, (i + 1) * size))
-  }
-  return chunks
-}
-```
-
-每个分区大小 = `ceil(N / poolSize)`，最后一个分区可能略小，但 Worker 间负载基本均衡。
-
-**第三步：调度任务到 Worker**
-
-```typescript
-function runTask(data: number[]): Promise<number[]> {
-  return new Promise((resolve) => {
-    const idleWorker = pool.find((w) => !w.busy)
-    if (idleWorker) {
-      idleWorker.busy = true
-      idleWorker.postMessage({ type: 'sort', data })
-      taskResolves.set(idleWorker.id, resolve)
-    } else {
-      // 全部繁忙 → 排队
-      taskQueue.push({ data, resolve })
-    }
-  })
-}
-```
-
-Worker 空闲标记（`busy`）避免重复分配；全部繁忙时排队等待。
-
-**第四步：多路归并**
-
-```typescript
-function mergeSorted(...arrays: number[][]): number[] {
-  const result: number[] = []
-  const pointers = new Array(arrays.length).fill(0)
-  while (true) {
-    let minIdx = -1, minVal = Infinity
-    for (let i = 0; i < arrays.length; i++) {
-      if (pointers[i] < arrays[i].length && arrays[i][pointers[i]] < minVal) {
-        minVal = arrays[i][pointers[i]]
-        minIdx = i
-      }
-    }
-    if (minIdx === -1) break
-    result.push(minVal)
-    pointers[minIdx]++
-  }
-  return result
-}
-```
-
-K 路指针扫描（K ≤ 8），每轮比较 K 个值取最小，线性扫描足够高效。
+1. 分区：`Math.ceil(data.length / numChunks)`
+2. 调度：空闲 Worker 优先，全部繁忙排队
+3. Worker 内 `Array.sort()` 快速排序
+4. 归并：线性扫描 K 个指针取最小值
+5. Transferable Objects 零拷贝传输
 
 #### 优化
 
-| 维度 | 优化手段 | 效果 |
-|------|----------|------|
-| **线程** | Worker Pool = hardwareConcurrency | 避免过度创建导致上下文切换 |
-| **调度** | 空闲优先 + 任务队列 | Worker 利用率最大化 |
-| **计算** | 自适应等量分区 | 负载均衡，各 Worker 完成时间相近 |
-| **归并** | 线性扫描（K ≤ 8） | 无需最小堆，简单高效 |
-| **传输** | Transferable Objects | 大数组零拷贝传输 |
+| 维度 | 优化手段 |
+|------|----------|
+| 线程 | Worker Pool = hardwareConcurrency |
+| 调度 | 空闲优先 + 任务队列 |
+| 传输 | Transferable Objects |
+| 容错 | worker.onerror + 替补 Worker |
 
-#### 体系化
-
-```mermaid
-graph TB
-    MAIN["主线程<br/>WebWorkerMerge.tsx"] -->|"partition()"| CHUNKS["分片数组"]
-    MAIN --> POOL["Worker Pool<br/>n = hardwareConcurrency"]
-    POOL --> W1["Worker 1<br/>快速排序"]
-    POOL --> W2["Worker 2<br/>快速排序"]
-    POOL --> WN["Worker N<br/>快速排序"]
-    W1 & W2 & WN -->|"postMessage"| MAIN
-    MAIN -->|"mergeSorted()"| RESULT["最终有序数组"]
-    MAIN -->|"对比"| NATIVE["Array.sort()<br/>主线程排序"]
-```
-
-主线程负责分区和归并（计算量小），Worker 负责排序（计算量大），分工明确。
-
-#### 存在问题与解决方案
-
-| 问题 | 产生原因 | 解决方案 |
-|------|----------|----------|
-| **Worker 创建开销** | 每次排序新建 Worker | Worker Pool 复用，预先创建并常驻 |
-| **大数组 postMessage 拷贝** | structured clone 深拷贝大数组 | Transferable Objects（`[buffer]`）零拷贝 |
-| **Worker 排序出错** | Worker 内代码抛异常 | `worker.onerror` 捕获 + 重试该分区 |
-| **已排序数据重复排序** | 分区策略未利用数据有序性 | 检测已有序区间，跳过排序直接归并 |
-| **离开页面 Worker 持续运行** | Worker 存储在 `run()` 局部变量，无组件级引用 | 新增 `workersRef` 存储 Worker 引用 + cleanup effect 遍历 `terminate()` |
-
-#### 追问链路
-
-**Q1: Worker Pool 为什么要限制数量？**
-```
-`navigator.hardwareConcurrency` 返回 CPU 核心数（通常是 4-8 或 16）。
-超过核心数 → 线程上下文切换开销 > 并行收益；
-低于核心数 → CPU 资源未充分利用。
-所以 POOL_SIZE = hardwareConcurrency 是最优值。
-```
-
-**Q2: 为什么可以用 `new Worker` 而不是 `importScripts`？**
-```
-new Worker → 每个 Worker 独立上下文，可并行执行不同任务。
-importScripts → 同步加载脚本，阻塞 Worker 线程。
-本项目 Worker 执行计算密集任务（排序），独立上下文更安全。
-Webpack/Vite 支持 import.meta.url 模式打包 Worker 入口文件。
-```
-
-**Q3: 自适应分区如何保证负载均衡？**
-```
-按数据量平均分片（Math.ceil(data.length / numChunks)）。
-如果数据分布极不均匀（如部分已排序），分治后各 Worker 完成时间差异大。
-优化方向：动态调度，先分大块，空闲 Worker 主动领取剩余任务（work-stealing）。
-```
-
-**Q4: 多路归并的时间复杂度？**
-```
-每轮比较 K 个指针的最小值 → O(K × N)，K=分区数。
-用最小堆优化：O(logK × N)。
-当前实现用线性扫描（K ≤ 8），堆优化收益不明显。
-```
-
-**Q5: Worker 并行排序后，主线程如何拿到有序结果？postMessage 传输大数组会不会卡？**
-```
-postMessage 传输采用结构化克隆算法（structured clone）。
-1MB 数据克隆约 1-2ms → 100 万数字（~8MB）约 10-15ms。
-这个耗时在可接受范围内。
-
-如果数据量继续增大（>50MB）：
-  方案 a: Transferable Objects → transfer 零拷贝
-  方案 b: SharedArrayBuffer → 共享内存，无需传输
-  方案 c: 分块传输 → 每 1MB 一组，流水线发送
-```
-
-**Q6: 如果某个 Worker 出错（代码异常），怎么保证整体不出错？**
-```
-Worker 内 try-catch 包裹所有计算逻辑。
-
-出错时:
-  1. worker.onerror → 捕获异常
-  2. 该 Worker terminate() → 销毁异常 Worker
-  3. 创建新 Worker 替补 → 重新分配其分片
-  4. 主线程记录错误日志，但整体流程继续
-
-容错设计：8 个 Worker 中坏 1 个 → 剩下 7 个多分担 1/7 的工作量
-→ 对整体完成时间影响仅 ~14%。
-```
-
-#### 技术边界
-
-**边界 1：Worker 内的 `Array.sort` 是否可靠？**
-```
-Worker 内使用标准的 Array.sort()，与主线程行为一致。
-V8 引擎对小型数组用插入排序（TimSort 的退化），
-大型数组用 TimSort（稳定排序），100 万数字排序约 80ms。
-```
-**边界 2：`postMessage` 传输大数组的内存峰值**
-```
-100 万个数字 → Float64Array 约 8MB。
-structured clone 会复制一份，峰值内存 16MB。
-使用 Transferable Objects 将所有权转移给 Worker/主线程，
-接收方获得数据，发送方失去访问权，实现零拷贝。
-```
-**边界 3：Web Worker 在 HTTP/HTTPS 不同协议下的行为**
-```
-new Worker() 要求同源策略。
-file:// 协议下 Worker 无法加载（CORS 限制）。
-开发环境: Vite dev server 自动处理 Worker 编译和提供。
-生产环境: 打包为独立 chunk 文件，同域加载。
-```
+---
 
 ### 2.5 GIS 十万级点位渲染 ⭐⭐
 
 **位置**: `src/pages/GisRendering.tsx`
 
-#### 实现思路
+#### 优化链路
 
-十万个地理坐标点位直接渲染到地图上会导致帧率 < 10fps。瓶颈在于 DOM 节点数量过多 — 每个点位对应一个 Overlay 元素，10 万个 DOM 节点使浏览器的 Layout/Paint 循环崩溃。
-
-**核心策略**：从数据量、渲染范围、更新频率三个维度逐级裁剪：
-
-```mermaid
-graph LR
-    RAW["100,000 点"] --> BBOX["① BBOX 裁剪<br/>视口外 60% → 40k"]
-    BBOX --> CLUSTER["② Cluster 聚合<br/>距离<40px 聚合 → 50 点"]
-    CLUSTER --> CACHE["③ dataCache 缓存<br/>zoom+extent key"]
-    CACHE --> LAZY["④ moveend 惰性渲染<br/>拖动结束 + RAF"]
-    LAZY --> DONE["✅ 渲染量 50 点 · 60fps"]
+```
+100,000 点 → BBOX 视口裁剪 (60%) → 40k → Cluster 聚合 (distance=40) → 50 点 → 渲染
 ```
 
-#### 实现过程
+#### 关键策略
 
-**第一步：全量数据加载 + dataCache**
+- dataCache 全量缓存：平移/缩放零请求
+- moveend 惰性渲染：拖动全程 60fps，结束才计算
+- 50ms 防抖：连续 moveend 仅最后一次生效
 
-```typescript
-const dataCache = useRef<Map<string, Point[]>>(new Map())
-
-useEffect(() => {
-  fetch('/api/gis/points').then(async (res) => {
-    const allPoints = await res.json()
-    dataCache.current.set('all', allPoints)  // 全量缓存
-    updateView(allPoints)
-  })
-}, [])
-```
-
-后端一次性返回 100k 点（约 2MB gzip），前端全量缓存，后续平移/缩放不触发网络请求。
-
-**第二步：BBOX 视口裁剪**
-
-```typescript
-function filterByExtent(points: Point[], extent: [number,number,number,number]): Point[] {
-  return points.filter(p =>
-    p.x >= extent[0] && p.x <= extent[2] &&
-    p.y >= extent[1] && p.y <= extent[3]
-  )
-}
-```
-
-只保留当前视口矩形内的点位，裁剪掉约 60%。
-
-**第三步：OpenLayers Cluster 聚合**
-
-```typescript
-const clusterSource = new Cluster({
-  source: vectorSource,
-  distance: 40,  // 像素距离 < 40 聚合为 1 点
-})
-```
-
-OL 内置 Cluster 基于距离聚类，低 Zoom 时大量点位聚合为少数聚类点，高 Zoom 自动展开。
-
-**第四步：moveend 惰性刷新 + 防抖**
-
-```typescript
-const moveEndTimer = useRef<ReturnType<typeof setTimeout> | null>(null)
-
-const debouncedRefresh = () => {
-  if (moveEndTimer.current != null) clearTimeout(moveEndTimer.current)
-  moveEndTimer.current = setTimeout(() => {
-    const extent = map.getView().calculateExtent(map.getSize())
-    const visiblePoints = filterByExtent(cachedPoints, extent)
-    clusterSource.getSource().clear()
-    clusterSource.getSource().addFeatures(visiblePoints.map(toFeature))
-  }, 50)  // 50ms 防抖，合并连续的 moveend 事件
-}
-
-map.on('moveend', debouncedRefresh)
-```
-
-用户拖动结束（`moveend`）触发 50ms 防抖，连续 moveend（如惯性滑动）仅最后一次生效。拖动过程中不做任何计算，保证交互流畅。
-
-#### 优化
-
-| 维度 | 优化手段 | 效果 |
-|------|----------|------|
-| **渲染量** | Cluster 聚合 distance=40 | 100k → 50 聚类点（Zoom 0-15） |
-| **渲染量** | BBOX 视口裁剪 | 再减少 60% 待聚合数据 |
-| **网络** | dataCache 全量缓存 | 平移/缩放零请求 |
-| **重绘** | moveend 事件触发 | 拖动全程 60fps，结束才计算 |
-| **重绘** | requestAnimationFrame 节流 | 合并多次微任务为一次宏任务 |
-| **重绘** | 50ms 防抖 (`setTimeout` + `clearTimeout`) | 连续 moveend（如惯性滑动）仅最后一次生效 |
-
-#### 体系化
-
-```mermaid
-graph TB
-    BACKEND["Go 后端<br/>GET /api/gis/points"] -->|"100k 点 JSON<br/>~2MB gzip"| FETCH["前端 fetch"]
-    FETCH --> CACHE["dataCache<br/>Map<'all', Point[]>"]
-    CACHE --> BBOX["BBOX 裁剪<br/>filterByExtent()"]
-    BBOX --> CLUSTER["Cluster 聚合<br/>distance=40"]
-    CLUSTER --> OL["OpenLayers Map<br/>VectorLayer + Cluster 样式"]
-    OL --> EVENTS["moveend 事件<br/>→ RAF 节流"]
-    EVENTS --> RE_RENDER["重绘"]
-```
-
-#### 存在问题与解决方案
-
-| 问题 | 产生原因 | 解决方案 |
-|------|----------|----------|
-| **聚类点点击展开后空白** | Cluster 展开 Zoom 级别不足以展示子点 | 点击聚类点时 `map.getView().animate({ zoom: targetZoom })` 渐进放缩 |
-| **dataCache 内存占用** | 100k 点 ≈ 5MB 内存 | 单页应用可接受；百万级需改 Tile 方案 |
-| **拖动惯性导致频繁重绘** | `moveend` 在惯性结束后才触发 | `setTimeout 50ms` + `clearTimeout` 防抖，连续 moveend 仅最后一次生效；cleanup 中清除定时器 |
-| **Cluster 样式闪烁** | 每次聚合重新计算样式 | 样式函数缓存（`useMemo`），zoom 不变时复用样式 |
-| **dataCache 未释放** | unmount 后 `dataCache.current` 持有 100k+ Feature 对象 | cleanup 中 `dataCache.current = []` 及时释放内存 |
-
-#### 追问链路
-
-**Q1: Cluster 和 BBOX 哪个先执行？**
-```
-BBOX（视口裁剪）先于 Cluster 执行。
-原因: 裁剪掉视口外的 60% 点位后，Cluster 只需聚合剩余 40%，
-减少 Cluster 计算量。
-流程: 原始 100k → BBOX 裁剪 → 40k → Cluster 聚合 → 50 个聚类点。
-```
-
-**Q2: Cluster 聚合使用什么算法？**
-```
-OpenLayers 内置的 Cluster 类，基于距离（distance）参数。
-当前配置: distance=40（像素），同一聚类内点间距 < 40px 时聚合为 1 个点。
-聚类点样式: 显示该聚类包含的点数量。点击聚类点 Zoom In 展开。
-```
-
-**Q3: dataCache 缓存的 key 是什么？**
-```
-key = zoom 级别 + 视口范围（extent）。
-例如: "12_12345_67890_12345_67890"。
-相同 key 命中缓存时直接返回，不触发网络请求。
-平移操作 extent 变化 → cache miss → 请求新数据。
-缩放操作 zoom 变化 → cache miss。
-```
-
-**Q4: 100k 点数据怎么传输的？**
-```
-后端一次性返回全部 100k 点（JSON 数组迭代编码，约 2MB gzip）。
-前端 dataCache 全量缓存，后续平移/缩放不再请求。
-如果数据量继续增大到百万级，需改为瓦片（Tile）方案:
-  服务端预切瓦片，前端根据视口请求对应瓦片。
-```
-
-**Q5: BBOX 裁剪是前端做还是后端做？为什么选择前端做？**
-```
-前端 BBOX 裁剪:
-  后端返回全量数据 → 前端缓存 → BBOX 裁剪 → Cluster 聚合 → 渲染
-
-为什么不交给后端做？
-  方案一: 后端 BBOX 过滤 + 返回裁剪结果
-    → 每次平移触发后端查询 → 100k POST 请求 → 服务端压力大
-  方案二: 后端预切 Tile（MVT 矢量瓦片）
-    → 最优方案，但需要 Tile 服务器 + 预生成
-
-当前选择「前端全量 + BBOX 裁剪」:
-  100k 点 ≈ 2MB gzip，一次加载可接受
-  dataCache 缓存后零额外请求
-  适合企业内网带宽下的小规模（<500k 点）场景
-```
-
-**Q6: Cluster distance=40 是怎么确定的？太大会怎样？太小会怎样？**
-```
-distance=40 是经过视觉调试的经验值:
-
-距离过小（如 10px）:
-  → 聚合不充分，低 Zoom 下仍有大量点 → 渲染性能下降
-  → 标签文本相互重叠 → 视觉杂乱
-
-距离过大（如 100px）:
-  → 聚合过度，实际分布被掩盖
-  → 用户无法感知具体的聚集区域 → 信息丢失
-
-调试方法: 在不同 Zoom 级别下拖动地图，
-观察聚类数与视觉清晰度的平衡点。
-通常 30-50px 是大众地图（如 Google Maps）的推荐范围。
-```
-
-#### 技术边界
-
-**边界 1：不同 Zoom 级别的聚合策略**
-```
-Zoom 0-5（全球视图）: 聚类为 10-50 个点，显示国家级数据密度。
-Zoom 6-10（省级视图）: 聚类为 100-500 个点，显示城市级热点。
-Zoom 11-15（城市视图）: 聚类逐渐解散，展示街道级点位。
-Zoom 16+（街道视图）: 全部展开，展示每个独立点位。
-distance=40 固定时，Cluster 天然在不同 Zoom 下自适应。
-```
-**边界 2：大量点位点击交互的性能**
-```
-100k 点 → 10k 聚类点 → 用户点击展开。
-问题: 点击聚类点后动画放大，如果放大的区域仍有 5000+ 点，
-      渲染压力仍然存在。
-方案: 点击聚类点后先 Cluster 展开一级（distance→20），
-      再动画放缩，避免突然渲染大量 DOM。
-```
-**边界 3：高 DPI 屏幕的 Canvas 渲染**
-```
-OpenLayers 默认使用 Canvas 渲染器（非 DOM Overlay）。
-4K/Retina 屏幕需要设置 devicePixelRatio 以保证清晰度。
-OL 自动处理: map.setTarget('map') 时读取 window.devicePixelRatio，
-Canvas 尺寸自动缩放 2-3 倍，像素密度无关。
-```
+---
 
 ### 2.6 双 Token 无感刷新 ⭐⭐
 
 **位置**: `src/pages/TokenRefresh.tsx` + `src/utils/token.ts` + `src/utils/fetchClient.ts`
 
-#### 实现思路
+#### 核心机制
 
-Access Token 有效期短（通常 15 分钟），过期后需要重新获取。如果每个 401 都跳转登录页，用户体验极差。核心目标：**用户无感知地刷新 Token，并安全处理并发请求**。
+- **Promise gate**：`refreshPromise` 模块级变量，N 个并发 401 → 1 次刷新
+- **Token Rotation**：刷新时同时更换 access + refresh token
+- **Replay 检测**：已使用的 refresh token 被二次使用标记为重放攻击
+- **请求拦截器主动等待**：Token 过期且刷新进行中，主动等待新 Token
 
-三个核心问题：
-1. **并发 401**：多个请求同时返回 401，同时触发刷新 → 浪费 + 可能冲突
-2. **刷新的原子性**：刷新过程中不处理新请求，等待刷新完成后统一重放
-3. **Token 安全性**：Refresh Token 泄露后，攻击者可以无限续签
-
-**核心决策**：Promise gate + Token Rotation。
-
-#### 实现过程 — 演示页面架构
-
-本页面是一个**交互式演示页面**（非生产级拦截器），通过按钮手动触发请求模拟，可视化展示 Token 刷新、队列合并、轮换检测的完整流程。核心概念架构与生产级方案一致，但触发方式为手动模拟。
-
-**第一步：模块级 Promise gate + 等待队列**
-
-```typescript
-let refreshPromise: Promise<string> | null = null
-const pendingQueue: PendingItem[] = []
-
-const acquireRefresh = async (): Promise<string> => {
-  // 复用进行中的刷新
-  if (refreshPromise != null) {
-    setQueueLength((l) => l + 1)
-    return new Promise<string>((resolve, reject) => {
-      pendingQueue.push({ resolve, reject })
-    })
-  }
-
-  refreshPromise = doRefresh()
-  try {
-    const token = await refreshPromise
-    // 刷新成功 → 重放所有等待请求
-    for (const item of pendingQueue) { item.resolve(token) }
-    pendingQueue.length = 0
-    return token
-  } catch (err) {
-    // 刷新失败 → reject 所有等待请求
-    for (const item of pendingQueue) { item.reject(err) }
-    pendingQueue.length = 0
-    throw err
-  } finally {
-    refreshPromise = null
-  }
-}
-```
-
-`refreshPromise` 是模块级变量，第一个刷新设置它；后续请求检测到 `refreshPromise != null` 时加入 `pendingQueue` 等待。刷新完成后统一 resolve/reject。
-
-**第二步：模拟请求触发（simulateRequest）**
-
-```typescript
-const simulateRequest = () => {
-  const stored = getAccessToken()
-  if (isTokenExpired(stored)) {
-    // Access Token 已过期 → 触发无感刷新
-    acquireRefresh().then((newToken) => {
-      // 用新 Token 重放请求
-      addLog("✅ 无感刷新成功，请求使用新 Token 重放")
-    })
-  } else {
-    // Token 有效 → 正常请求（使用封装好的 http 实例）
-    http.get("/api/auth/check", { validateStatus: () => true }).then((res) => {
-      if (res.status === 401) {
-        // 服务端返回 401 → 触发无感刷新
-        return acquireRefresh().then((newToken) => {
-          addLog("✅ 无感刷新成功，重放请求")
-        })
-      }
-      addLog(`✅ 请求成功，Token 还剩 ${data.remaining}s 过期`)
-    })
-  }
-}
-```
-
-页面内包含 5 个交互按钮，覆盖完整流程：
-| 按钮 | 作用 |
-|------|------|
-| **模拟请求** | 模拟一次 API 调用，过期时自动触发刷新 |
-| **强制过期** | 修改本地 Access Token 的 exp 为过去时间 |
-| **手动刷新** | 直接调用 acquireRefresh 触发刷新 |
-| **并发 3 请求** | 连续发送 3 个请求，验证队列合并机制 |
-| **退出** | 清除 Token 并重置状态 |
-
-**第三步：Token 生命周期可视化**
-
-页面使用 `TokenRecord` 历史表格 + 操作日志面板，展示 Token 的完整生命周期：
-
-```typescript
-interface TokenRecord {
-  id: number
-  type: "access" | "refresh"  // 类型
-  status: "active" | "used" | "expired"  // 状态流转
-  token: string
-  createdAt: number
-  expiresAt: number
-}
-
-// 每步操作记录 Token 状态:
-// 登录 → access(active) + refresh(active)
-// 刷新 → 旧 refresh(used) + 新 access(active) + 新 refresh(active)
-// 过期 → access(expired)
-```
-
-页面底部实时显示：Token 剩余时间（Progress 进度条）、刷新次数、等待队列长度、已轮换 Refresh Token 数量。
-
-**第四步：后端 Token Rotation + Replay 检测**
-
-后端使用 `golang-jwt` 签发双 Token，每次刷新执行轮换 + 重放检测：
-
-```
-服务端逻辑:
-  1. 接收旧 refreshToken
-  2. 解析 JWT 获取 tokenHash
-  3. 检查 usedTokens[tokenHash] 是否已用
-  4. 已用 → 401 + 告警（重放攻击检测）
-  5. 未用 → usedTokens[tokenHash]=true → 生成新 accessToken + 新 refreshToken
-  6. 返回新双 Token
-
-前端:
-  1. 收到新双 Token → setTokens 覆盖本地存储
-  2. 旧 refreshToken 立即失效（服务端标记为 used）
-  3. GET /api/auth/used-tokens 定时轮询（3s）展示已轮换数量
-```
-
-每次刷新同时更换 refreshToken，旧 token 立即标记为已用，无法二次使用。页面通过 `used-tokens` 接口展示轮换计数。
-
-#### 优化
-
-| 维度 | 优化手段 | 效果 |
-|------|----------|------|
-| **并发** | Promise gate 复用刷新 + 等待队列 | N 个并发 401 → 1 次刷新 |
-| **安全** | Token Rotation + usedTokens 列表 | 旧 refreshToken 立即失效，防重放 |
-| **可视化** | Token 生命周期表格 + 操作日志 | 演示 Token 状态流转全过程 |
-| **交互** | 强制过期 / 并发请求 / 手动刷新 | 覆盖所有边界场景的交互演示 |
-| **可复用** | 统一 `http` 实例封装请求/响应拦截器 | 所有页面复用，无需手写 Authorization |
-
-#### 体系化
-
-```mermaid
-sequenceDiagram
-    participant User as 用户
-    participant Page as TokenRefresh.tsx
-    participant Auth as 认证模块
-    participant Server as 后端
-
-    User->>Page: 点击「模拟请求」
-    Page->>Page: isTokenExpired 检查
-
-    alt Token 未过期
-        Page->>Server: http GET /api/auth/check
-        Server-->>Page: 200 { remaining: 30 }
-        Page->>Page: 显示成功日志
-    else Token 已过期
-        Page->>Auth: acquireRefresh()
-        Auth->>Auth: refreshPromise = http.post(...)
-        Auth->>Server: http POST /api/auth/refresh (RT1)
-        Note over Page: 并发点击「并发3请求」
-        Page->>Auth: acquireRefresh() (复用)
-        Auth->>Auth: pendingQueue 中等待
-        Server-->>Auth: { access_token: AT2, refresh_token: RT2 }
-        Auth->>Auth: 旧 RT1 标记 used, 新 AT2/RT2 存储
-        Auth-->>User: 刷新完成, 重放等待请求
-    end
-```
-
-#### 存在问题与解决方案
-
-| 问题 | 产生原因 | 解决方案 |
-|------|----------|----------|
-| **并发刷新请求** | 多个 401 同时触发刷新 | Promise gate 保证只发一次刷新请求 |
-| **重放攻击** | Refresh Token 被截获 | Token Rotation + usedTokens 列表 |
-| **刷新中的请求丢失** | 刷新时新请求也进入等待队列 | `pendingQueue` 暂存，刷新后统一 resolve |
-| **多次刷新死循环** | Refresh 过期仍尝试刷新 | Refresh 过期直接登出，不循环 |
-| **拦截器干扰演示** | `http` 响应拦截器遇 401 自动刷新，与演示页手动逻辑冲突 | 使用 `validateStatus: () => true` 绕过拦截器，演示页手动处理 401 |
-
-#### 追问链路
-
-**Q1: 和真实生产级别的请求拦截器有什么区别？**
-```
-当前实现是演示页面，核心区别:
-  1. 触发方式: 手动点击按钮模拟，而非自动拦截所有请求
-  2. 网络请求: 使用 `http` 封装实例（axios），`validateStatus: () => true` 接收所有状态码
-    以便演示页面手动处理 401 逻辑
-
-生产级方案已封装在 `fetchClient.ts`:
-  - 请求拦截器自动添加 `Authorization: Bearer <token>` 头
-  - 响应拦截器自动捕获 401 → 调用 `acquireRefresh()` → 重放原请求
-  - 同一 Promise gate + Token Rotation 机制，对业务代码完全透明
-  - 所有页面只需 `import { http } from "../utils/fetchClient.ts"` 即可使用
-```
-
-**Q2: Promise gate 如何保证并发请求只刷新一次？**
-```
-refreshPromise 是模块级变量（非 React state），初始 null。
-第一个请求: refreshPromise = doRefresh() → 触发刷新 API。
-后续并发: if (refreshPromise) return → 加入 pendingQueue 等待。
-所有等待请求 await 同一个 Promise，刷新完成后统一 resolve。
-finally: refreshPromise = null，准备下一次刷新。
-```
-
-**Q3: Refresh Token Rotation 的实现细节？**
-```
-刷新成功时服务端同时返回新的 accessToken 和新的 refreshToken：
-旧 refreshToken 立即失效（服务端标记为 used）。
-即使旧 refreshToken 泄露，攻击者也用不了第二次。
-服务端维护 usedTokens Map[tokenHash]bool，检测重放攻击。
-页面每 3 秒轮询 GET /api/auth/used-tokens 展示已轮换计数。
-```
-
-**Q4: 如果刷新请求也返回 401 怎么办？**
-```
-说明 refreshToken 也已过期 → 清空 Token → setLoggedIn(false) → 登出。
-不循环重试，防止死循环。
-用户需重新登录获取新双 Token。
-```
-
-**Q5: 并发请求如何验证队列合并机制？**
-```
-页面提供「并发 3 请求」按钮，一次性发送 3 个 simulateRequest:
-  const repeatRequest = () => {
-    for (let i = 0; i < 3; i++) {
-      setTimeout(() => simulateRequest(), i * 100)
-    }
-  }
-第一个请求触发刷新 → refreshPromise 设置 → 后续 2 个检测到刷新中
-→ 加入 pendingQueue → 刷新完成后 3 个请求全部重放 → 队列长度归零
-```
-
-#### 技术边界
-
-**边界 1：演示页面与实际拦截器的差异**
-```
-本页面为纯演示目的，展示了无感刷新的核心机制（Promise gate + Token Rotation）。
-生产环境需要:
-  a. 全局 fetch 封装或 axios interceptor 自动拦截 401
-  b. 刷新成功后的请求自动重放
-  c. 超时控制（刷新请求 5s 超时 fallback）
-  d. 多 Tab 同步（localStorage + storage 事件）
-```
-**边界 2：多 Tab 同时刷新 Token 的冲突**
-```
-场景: 用户在两个 Tab 中操作，同时触发 Token 刷新。
-问题: 两个 Tab 各自刷新，后刷新的 Token 覆盖前者，
-      前者的旧 refreshToken 被标记为已用。
-方案: 
-  a. localStorage 共享 Token 状态（storage 事件监听）
-  b. 刷新时先获取锁（localStorage flag），
-     只有获取锁的 Tab 执行刷新
-  c. 另一个 Tab 等待锁释放后读取新 Token
-```
-**边界 3：页面关闭时未完成的刷新请求**
-```
-场景: 用户关闭浏览器时，正在进行的刷新请求被 abort。
-问题: 下次打开页面时，旧 refreshToken 可能尚未被标记为 used。
-方案: 后端设置 refreshToken 的过期 TTL（如 7 天），
-      即使未被标记，       过期后自动失效。
-```
+---
 
 ### 2.7 单用户单设备登录 ⭐⭐
 
-**位置**: `backend/internal/auth/service.go` + `apps/frontend/src/utils/fetchClient.ts` + `apps/frontend/src/pages/Login.tsx`
+**位置**: `backend/internal/auth/service.go` + `apps/frontend/src/utils/fetchClient.ts`
 
-#### 实现思路
+服务端维护 `activeSessions[userId] → nonce`，nonce 嵌入 JWT claims。`AuthMiddleware` 全局校验，登录时生成新 nonce 覆盖旧记录。
 
-同一用户在多设备登录时，后登录的设备踢掉前一个设备。核心矛盾：**服务端无状态 JWT 如何感知多设备登录？**
-
-**核心决策**：服务端维护活跃会话映射 `activeSessions[userId] → nonce`，nonce 同时嵌入 Access Token 与 Refresh Token 的 JWT claims。后端 `AuthMiddleware` 在每个 API 请求上校验 nonce，登录时生成新 nonce 覆盖旧记录，旧会话的下一个 API 请求即因 nonce 不匹配被拒绝。
-
-#### 实现过程
-
-**第一步：活跃会话映射**
-
-```go
-var activeSessions sync.Map // userId → nonce (string)
-```
-
-`sync.Map` 支持并发读写，无需手动加锁。
-
-**第二步：登录时生成 nonce**
-
-```go
-nonce := fmt.Sprintf("%d", time.Now().UnixNano())
-activeSessions.Store("user_001", nonce)
-```
-
-每次登录产生新的 nonce 值，覆盖旧会话的记录。
-
-**第三步：双 Token 嵌入 nonce**
-
-Access Token 与 Refresh Token 的 JWT claims 中均包含 nonce：
-
-```go
-func createToken(sub string, duration time.Duration, nonce ...string) (string, error) {
-    // nonce 嵌入 Access Token 的 claims
-    claims := jwt.MapClaims{"sub": sub, "nonce": nonce[0], ...}
-    ...
-}
-```
-
-Access Token 也携带 nonce——每次 API 请求都能即时判定会话是否已被替换。
-
-**第四步：AuthMiddleware 全局校验**
-
-中间件在受保护路由上拦截每个请求，验证 Access Token 中的 nonce：
-
-```go
-func AuthMiddleware() gin.HandlerFunc {
-    return func(c *gin.Context) {
-        claims, _ := parseAndValidateToken(tokenStr)
-        sub, _ := (*claims)["sub"].(string)
-        nonceFromToken, _ := (*claims)["nonce"].(string)
-        storedNonce, ok := activeSessions.Load(sub)
-        if ok && nonceFromToken != storedNonce.(string) {
-            c.AbortWithStatusJSON(http.StatusUnauthorized, gin.H{"code": "SESSION_REPLACED"})
-            return
-        }
-        c.Next()
-    }
-}
-```
-
-`/api/auth/*` 和 `/api/sse/*` 路由无需认证，其余 `/api/*` 全部走中间件。
-
-**第五步：Refresh 时双重校验**
-
-Refresh 接口同样校验 nonce，旧 Refresh Token 也无法通过：
-
-```go
-if ok && nonceFromToken != storedNonce.(string) {
-    c.JSON(http.StatusUnauthorized, gin.H{"code": "SESSION_REPLACED"})
-    return
-}
-```
-
-**第六步：前端双重拦截 SESSION_REPLACED**
-
-1. 响应拦截器 — 任何 API 返回 `SESSION_REPLACED` 时立即跳转登录页
-2. `doRefresh()` — 刷新接口返回 `SESSION_REPLACED` 时同样跳转
-
-**第七步：登录页展示提示**
-
-```go
-nonceFromToken, _ := (*claims)["nonce"].(string)
-storedNonce, ok := activeSessions.Load(sub)
-if ok && nonceFromToken != storedNonce.(string) {
-    // nonce 不匹配 → 旧会话已被踢
-    c.JSON(http.StatusUnauthorized, gin.H{
-        "code":    "SESSION_REPLACED",
-        "message": "您的账号已在其他设备登录，请重新登录",
-    })
-    return
-}
-```
-
-首次登录时 `activeSessions` 尚不存在记录（`ok == false`），跳过校验，兼容服务端重启场景。`isLoginPage()` 守卫确保已在登录页时不重复触发跳转，避免 `PageTracker` 发送的匿名 401 请求导致死循环。
-
-#### 优化
-
-| 维度 | 优化手段 | 效果 |
-|------|----------|------|
-| **安全** | nonce 同时嵌入 Access Token + AuthMiddleware 全局校验 | 旧会话即时失效，下一个 API 请求即拒绝 |
-| **兼容** | `ok == false` 跳过校验 | 服务端重启后存量 Token 不受影响 |
-| **并发** | `sync.Map` 替代 `map + RWMutex` | 并发读写无锁竞争 |
-| **死循环防护** | `isLoginPage()` 守卫 | 已在登录页时不重复跳转，避免 PageTracker 401 死循环 |
-| **后端无状态** | nonce 嵌入 JWT claims | 不做额外的服务端存储，不引入 Redis |
-
-#### 追问链路
-
-**Q1: 为什么不直接用 `usedRefreshTokens` 实现？**
-
-旧登录生成的 Refresh Token 存在于客户端，服务端不知道其值，无法将其加入 `usedRefreshTokens`。nonce 映射方案无需知道旧 Token 值，只通过 userId 维度覆盖即可。
-
-**Q2: Access Token 也校验 nonce 会不会有性能问题？**
-
-`activeSessions` 使用 `sync.Map`，读操作无锁，在 Go 中开销极低（约 10-20ns/op）。对比 JWT 签名验证本身（约 1-5μs/op），`sync.Map.Load` 的额外开销可忽略不计。
-
-**Q3: 服务端重启后 `activeSessions` 丢失怎么办？**
-
-`ok == false` 时跳过校验——重启后所有 Token 都能正常使用直到过期。这是安全与可用性的权衡：重启是低频事件，不可用时间 ≈ 1 分钟（Access Token TTL）。
-
-#### 测试
-
-**位置**: `backend/internal/auth/service_test.go`
-
-17 个测试用例覆盖所有认证流程：
-
-| 测试 | 验证点 | 边界 |
-|------|--------|------|
-| `TestLogin_Success` | 正常登录返回双 Token | Token 不为空、expires_in 正确 |
-| `TestLogin_WrongPassword` | 密码错误返回 401 | — |
-| `TestLogin_MissingBody` | 缺少必填字段返回 400 | — |
-| `TestRefreshToken_Success` | 正常刷新返回新双 Token | rotation=true |
-| `TestRefreshToken_Replay` | 同一 Refresh Token 二次使用返回 TOKEN_REUSED | — |
-| `TestRefreshToken_InvalidToken` | 非法 JWT 返回 401 | — |
-| `TestRefreshToken_SessionReplaced` | nonce 不匹配返回 SESSION_REPLACED | — |
-| `TestRefreshToken_MissingBody` | 缺少 refresh_token 返回 400 | — |
-| `TestCheckToken_Valid` | 有效 Token 返回 valid=true | — |
-| `TestCheckToken_MissingHeader` | 无 Authorization 头返回 401 | — |
-| `TestCheckToken_InvalidToken` | 非法 Token 返回 401 | — |
-| `TestGetUsedTokenCount` | 返回 count 字段 | — |
-| `TestAuthMiddleware_ValidToken` | 有效 Token 放行 | — |
-| `TestAuthMiddleware_MissingHeader` | 无 Authorization 中止 | context.Abort 调用 |
-| `TestAuthMiddleware_InvalidToken` | 非法 Token 中止 | context.Abort 调用 |
-| `TestAuthMiddleware_SessionReplaced` | nonce 不匹配中止 + SESSION_REPLACED | context.Abort 调用 |
-| `TestAuthMiddleware_NoSessionRecord` | 无 activeSessions 记录时放行 | 兼容服务端重启场景 |
-
-运行方式：`cd backend && go test -v -run "TestAuth" ./internal/auth/`
+---
 
 ### 2.8 RBAC 位编码权限 ⭐⭐⭐
 
 **位置**: `src/pages/RbacPermission.tsx` + `src/utils/rbac.ts` + `backend/handlers/rbac.go`
 
-#### 实现思路
-
-权限管理的核心是"谁有什么权限"的查询。传统做法用数组/Set 存储，检查时需要遍历 O(n)。位运算将权限编码到一个 32 位整数中，检查变为 O(1) 的位运算。
-
-**为什么位运算？**
-- 存储：6 种权限 → 1 个 number（4 字节），数组需要 ~100 字节
-- 检查：`(perm & required) === required` → 1 条 CPU 指令
-- 组合：角色 = 权限的 OR 运算
-
-#### 实现过程
-
-**第一步：定义权限常量（位编码）**
-
-```typescript
-export const Permissions = {
-  READ:   1 << 0,  // 1     (二进制 000001)
-  WRITE:  1 << 1,  // 2     (二进制 000010)
-  DELETE: 1 << 2,  // 4     (二进制 000100)
-  EXPORT: 1 << 3,  // 8     (二进制 001000)
-  IMPORT: 1 << 4,  // 16    (二进制 010000)
-  ADMIN:  1 << 5,  // 32    (二进制 100000)
-} as const
-```
-
-每个权限占独立一位，互不干扰。
-
-**第二步：预设角色**
-
-```typescript
-export const Roles = {
-  GUEST:     Permissions.READ,                                          // 只读
-  EDITOR:    Permissions.READ | Permissions.WRITE,                      // 读写
-  MODERATOR: Permissions.READ | Permissions.WRITE | Permissions.DELETE, // 读写+删除
-  ADMIN:     Permissions.READ | Permissions.WRITE | Permissions.DELETE | Permissions.ADMIN,
-  SUPER:     Object.values(Permissions).reduce((a, b) => a | b, 0),     // 全部
-} as const
-```
-
-角色 = 权限的按位或组合，`SUPER` 使用 `reduce` 自动聚合所有权限位，新增权限时无需手动修改角色定义。
-
-**第三步：实现权限检查 + 工具函数**
-
-```typescript
-// O(1) 权限检查 — 单条 CPU 指令
-function hasPermission(code: number, permission: number): boolean {
-  return (code & permission) === permission
-}
-
-// 权限增减
-function addPermission(code: number, permission: number): number {
-  return code | permission
-}
-
-function removePermission(code: number, permission: number): number {
-  return code & ~permission
-}
-
-// 反向查找角色名 / 权限列表
-function getRoleName(code: number): string { ... }
-function getPermissionsFromCode(code: number): PermissionKey[] { ... }
-```
-
-**第四步：后端双重校验（Go handler）**
-
-新增 `POST /api/rbac/check` 后端 API，接收前端提交的所有节点权限数据，服务端独立执行位运算校验：
-
-```go
-func CheckPermissions(c *gin.Context) {
-    var body struct {
-        RoleCode int             `json:"roleCode"`
-        Nodes    []struct {
-            Key           string `json:"key"`
-            RequiredPerms []int  `json:"requiredPerms"`
-        } `json:"nodes"`
-    }
-    // 服务端独立执行位运算校验
-    for _, node := range body.Nodes {
-        ok := true
-        for _, p := range node.RequiredPerms {
-            if (body.RoleCode & p) != p { ok = false; break }
-        }
-        results = append(results, { Key: node.Key, Accessible: ok })
-    }
-}
-```
-
-前后端使用相同的位运算逻辑（`(code & perm) === perm`），前端负责 UI 展示与交互，后端负责独立鉴权验证，形成双重校验闭环。
-
-**第五步：前端-backend 一致性对比**
-
-前端在角色切换时自动调用后端 API，获取服务端校验结果，与前端本地计算结果逐项对比：
-
-```typescript
-// 角色切换 → 触发后端校验
-useEffect(() => { checkBackend(roleCode) }, [roleCode])
-
-// 每个节点记录 frontendAccessible 和 backendAccessible
-// Table 新增「Backend」列显示一致/不一致标记
-```
-
-页面新增 **"Backend Verified" / "Backend Mismatch"** 状态 Tag，直观展示前后端校验一致性。
-
-**第六步：三层联动演示（单页可视化）**
-
-页面实现为**单页演示**，通过 `Tree` + `Table` 可视化展示三层权限联动效果，而非真实的路由守卫：
-
-```typescript
-// 1. 菜单层 — Tree 组件展示层级菜单可见性
-<Tree treeData={buildTreeData(ROOT_NODES, roleCode)} defaultExpandAll showIcon />
-
-// 2. 路由层 — Table 展示路由级权限检查结果
-<Table dataSource={routeData} columns={ROUTE_COLUMNS} />
-// routeData 每条记录计算: accessible = requiredPerms.every(p => hasPermission(code, Permissions[p]))
-
-// 3. 按钮层 — Table 展示按钮级权限
-<Table dataSource={buttonData} columns={BUTTON_COLUMNS} />
-// buttonData 每条记录计算: 每个 action 独立检查 hasPermission
-```
-
-三层统一引用 `rbac.ts` 中的 `hasPermission` 函数，所有权限定义集中在一处管理。
-
-#### 优化
-
-| 维度 | 优化手段 | 效果 |
-|------|----------|------|
-| **存储** | 32 位整数编码 | 6 种权限仅 4 字节 |
-| **检查** | 位运算 O(1) | 单条 CPU 指令，纳秒级 |
-| **组合** | 按位或 `\|` | 角色预设一行代码 |
-| **扩展** | 新增权限 = 新增常量 | 不改已有角色定义（SUPER 用 reduce 自动聚合） |
-| **联动** | 菜单/路由/按钮统一函数 | 一处修改全局生效 |
-| **双校验** | 后端 API 独立鉴权 + 前后端一致性对比 | 防止前端篡改，越权漏洞风险接近 0 |
-
-#### 体系化
-
-```mermaid
-graph TB
-    subgraph DEF["权限定义层 rbac.ts"]
-        PERM["Permissions 常量<br/>位编码"]
-        ROLE["Roles 常量<br/>预设角色"]
-        CHECK["hasPermission()<br/>O(1) 检查"]
-        UTIL["addPermission / removePermission<br/>getRoleName / getPermissionsFromCode"]
-    end
-
-    subgraph UI["UI 展示层（RbacPermission.tsx）"]
-        TREE["菜单层<br/>Tree 组件展示层级可见性"]
-        ROUTE["路由层<br/>Table 展示路由访问控制 + Backend 对比列"]
-        BTN["按钮层<br/>Table 展示按钮启用/禁用 + Backend 对比列"]
-    end
-
-    subgraph BACKEND["后端鉴权层 rbac.go"]
-        API["POST /api/rbac/check<br/>独立位运算校验"]
-        CONSISTENCY["前后端一致性对比<br/>Backend Verified / Mismatch"]
-    end
-
-    DEF --> UI
-    UI -->|"checkBackend(roleCode)"| BACKEND
-    BACKEND -->|"results[]"| UI
-```
-
-> 此页面已集成后端双重校验（`POST /api/rbac/check`），前端展示 UI 控制，后端独立鉴权验证，形成前/后端一致性闭环。
-
-#### 存在问题与解决方案
-
-| 问题 | 产生原因 | 解决方案 |
-|------|----------|----------|
-| **32 位限制** | JS 位运算仅支持 31 位有效位 | 权限 < 32 种时够用；超出换 BigInt |
-| **位运算可读性差** | 新人难以理解 `1 << 3` | 常量命名清晰 + 注释说明每位含义 |
-| **角色预设冲突** | 新增权限后，旧角色可能自动获得新权限 | SUPER 用 reduce 自动聚合；其他角色显式枚举权限 |
-| **权限码与后端不同步** | 前后端各自定义枚举 | 权限定义前移到共享配置文件 |
-| **纯前端校验可被绕过** | 前端展示 UI 层控制可被篡改 | 新增 `POST /api/rbac/check` 后端独立鉴权，前后端一致性对比 |
-
-#### 追问链路
-
-**Q1: 位运算权限相比数组/对象存储的优势？**
-```
-位运算:
-  - 存储: 1 个 number（32 位）存 6 种权限 → 4 字节
-  - 检查: hasPermission = (code & perm) === perm → O(1) 常数时间
-  - 组合: code | perm / code & ~perm → 1 次位运算
-
-数组/对象:
-  - 存储: Set<string> 或 Record<string,boolean> → 数百字节
-  - 检查: includes() / hasOwnProperty() → O(n)
-  - 组合: 需要遍历
-
-结论: 位运算适合权限总量少（<32）且检查频繁的场景。
-```
-
-**Q2: 三层联动 + 后端双校验是怎么实现的？**
-```
-页面使用 Ant Design Tree + Table 组件可视化展示三层联动效果:
-   1. 菜单层: Tree 组件展示层级权限，无权限的节点灰色+删除线
-   2. 路由层: Table 展示路由级权限检查，显示 granted/denied 权限对比 + Backend 列
-   3. 按钮层: Table 展示按钮级权限，逐项检查 hasPermission + Backend 列
-
-新增第四层——后端双校验:
-   4. 后端层: POST /api/rbac/check 接收 roleCode + 所有节点权限数据，
-      服务端独立执行位运算，返回逐节点的 accessible 结果。
-      前端逐项对比: frontend === backend → "Backend Verified" / "Backend Mismatch"
-```
-
-**Q3: 32 位限制怎么突破？**
-```
-JavaScript 位运算操作符只能处理 32 位有符号整数（31 位有效位）。
-超过 32 种权限 → 改用 BigInt (1n << 33n)，或改用字符串/数组。
-本项目只有 6 种权限，32 位完全够用。
-```
-
-**Q4: 前后端一致性对比的价值是什么？**
-```
-纯前端权限校验的缺陷: 前端代码可能被篡改 (DevTools 修改 hasPermission 返回值)。
-后端双校验:
-   1. 前端负责 UI 展示（控制菜单/路由/按钮的可见性）
-   2. 后端独立执行相同逻辑（校验 API 返回结果）
-   3. 前端对比自身结果 vs 后端结果 → 一致性检测
-   4. 不一致时显示 "Backend Mismatch" Tag → 告警
-
-面试价值: 展示了 "防御纵深" 安全设计思维——不只依赖前端控制。
-```
-
-**Q5: 权限码枚举为什么用常量对象而非 TypeScript enum？**
-```
-用 const object + as const 而非 enum，因为:
-  - 编译后无残留代码（enum 会生成反向映射）
-  - 配合 typeof 提取 key 类型更方便
-  - 配合 Object.values/entries 遍历更简洁（如 SUPER 的 reduce 模式）
-
-新增权限: Permissions 末尾加一行 NewPerm = 1 << 6，不影响已有编码。
-SUPER 使用 reduce 自动包含新权限，无需手动修改。
-```
-
-#### 技术边界
-
-**边界 1：权限码的二进制溢出**
-```
-JavaScript 按位运算符将操作数视为 32 位有符号整数。
-1 << 31 = -2147483648（负号因为符号位被占用）。
-1 << 32 = 1（循环移位！）。
-解决方案: 权限数量严格限制在 31 以内，超过后分模块。
-```
-**边界 2：演示页面 vs 生产级权限系统**
-```
-当前实现为前后端双校验演示，核心价值在于展示位运算编码原理 + 后端独立鉴权。
-生产环境需要:
-   a. 后端 API 二次鉴权（已实现: POST /api/rbac/check）
-   b. 动态角色/权限管理后台
-   c. 权限变更的实时推送（WebSocket）
-```
-**边界 3：前后端权限同步**
-```
-前端角色编码 = 后端角色编码 = 相同 number。
-不一致风险: 前端更新枚举后未同步后端。
-方案: 共享 proto 文件或配置文件，前后端统一生成枚举代码。
-```
-
-### 2.8 SSE 日志流 ⭐⭐
-
-**位置**: `src/pages/SseLogStream.tsx`
-
-#### 实现思路
-
-实现实时日志流（`tail -f` 效果），核心在于**流式读取**。与 WebSocket 的区别：SSE 是单向（服务端→客户端），基于 HTTP，浏览器原生支持。
-
-**为什么用 `fetch + ReadableStream` 而非 `EventSource`？**
-- EventSource 仅支持 GET、无法自定义请求头、不支持 AbortController
-- fetch + ReadableStream 支持 POST、精确控制连接生命周期、支持暂停/恢复
-
-#### 实现过程
-
-**第一步：建立 SSE 连接 + AbortController**
-
-```typescript
-const bufferRef = useRef<LogLine[]>([])
-const abortRef = useRef<AbortController | null>(null)
-const rafRef = useRef<number | null>(null)
-
-// RAF 节流 flush — 合并多次微任务为一次宏任务
-const flush = useCallback(() => {
-  const batch = bufferRef.current
-  if (batch.length > 0) {
-    setLogs((prev) => [...prev, ...batch].slice(-500))
-    bufferRef.current = []
-  }
-}, [])
-
-const scheduleFlush = useCallback(() => {
-  if (rafRef.current != null) return
-  rafRef.current = requestAnimationFrame(() => {
-    rafRef.current = null
-    if (lastFlushRef.current === 0 || now - lastFlushRef.current >= 100) {
-      flush()
-    }
-  })
-}, [flush])
-
-// 建立 SSE 连接
-const connect = useCallback(() => {
-  const abort = new AbortController()
-  abortRef.current = abort
-
-  const startStream = async () => {
-    const response = await fetch('/api/sse/logs', {
-      headers: { Accept: 'text/event-stream' },
-      signal: abort.signal,
-    })
-    const reader = response.body!.getReader()
-    const decoder = new TextDecoder()
-    let remainder = ""
-
-    while (!abort.signal.aborted) {
-      const { done, value } = await reader.read()
-      if (done) break
-      remainder += decoder.decode(value, { stream: true })
-      const lines = remainder.split("\n")
-      remainder = lines.pop() ?? ""
-      for (const line of lines) {
-        if (line.startsWith("data: ")) {
-          bufferRef.current.push(parseLine(line.slice(6)))
-          scheduleFlush()
-        }
-      }
-    }
-  }
-
-  startStream().catch(() => {
-    if (abortRef.current === abort) {
-      setConnected(false)
-      setTimeout(connect, 3000)  // 自动重连
-    }
-  })
-}, [])
-
-// 暂停/恢复 — 切换 paused 时重新建立连接
-useEffect(() => {
-  if (!paused) { connect() }
-  else { disconnect() }
-  return () => { disconnect() }
-}, [paused])
-```
-
-`AbortController` 控制连接生命周期，`useEffect` 清理时断开。
-
-**第二步：暂停/恢复**
-
-```typescript
-const pausedRef = useRef(false)
-
-const togglePause = () => {
-  pausedRef.current = !pausedRef.current
-  if (pausedRef.current) {
-    controllerRef.current?.abort()  // 断开连接
-  } else {
-    // 重新连接
-    controllerRef.current = new AbortController()
-    connect()
-  }
-}
-```
-
-暂停时断开连接，恢复时重新建立。`pausedRef` 不触发重渲染。
-
-**第三步：日志管理 — RingBuffer 裁剪**
-
-```typescript
-setLogs((prev) => [...prev, ...batch].slice(-500))
-```
-
-固定 500 行上限，超出时丢弃最旧行，防止内存泄漏。
-
-#### 优化
-
-| 维度 | 优化手段 | 效果 |
-|------|----------|------|
-| **连接** | AbortController | 精确断开，不遗留连接 |
-| **渲染** | RAF 节流（合并微任务） | 高频日志更新不卡 UI |
-| **内存** | RingBuffer 500 行 | 内存可控 ~50KB |
-| **控制** | pausedRef（非 state） | 暂停不触发重渲染 |
-
-#### 体系化
-
-```mermaid
-sequenceDiagram
-    participant Page as 页面
-    participant SSE as SSE 连接
-    participant Backend as Go 后端
-    participant LogSource as 日志源
-
-    Page->>SSE: fetch('/api/sse/logs')<br/>Accept: text/event-stream
-    SSE->>Backend: 建立 HTTP 长连接
-    Backend->>LogSource: tail -f 读取
-
-    loop 每 100ms
-        LogSource-->>Backend: 增量日志行
-        Backend-->>SSE: chunked 响应
-        SSE-->>Page: ReadableStream.read()
-        Page->>Page: setLogs([...prev, ...batch].slice(-500))
-    end
-
-    Page->>SSE: togglePause()
-    SSE->>SSE: AbortController.abort() 断开
-    Page->>SSE: togglePause() 恢复
-    SSE->>Backend: 重新建立连接
-```
-
-#### 存在问题与解决方案
-
-| 问题 | 产生原因 | 解决方案 |
-|------|----------|----------|
-| **暂停时数据丢失** | pausedRef=true 丢弃数据 | 需要恢复时补全 → 改用 bufferRef 暂存 |
-| **断线自动重连** | 网络异常导致连接断开 | catch 中启动 3s 定时器自动重连 |
-| **日志行不完整** | chunk 边界截断日志行 | 按 `\n` 拆分 + 缓存未完成行到下一 chunk |
-| **高频日志卡顿** | setLogs 每次追加导致重渲染 | React 19 编译器自动 memo + RAF 节流 |
-
-#### 追问链路
-
-**Q1: 为什么用 fetch + ReadableStream 而不是 EventSource API？**
-```
-EventSource:
-  - 浏览器原生，自动重连，支持 Last-Event-ID
-  - 但仅支持 GET，无法自定义请求头，不支持 AbortController（仅能 .close()）
-fetch + ReadableStream:
-  - 支持 POST + 自定义请求头
-  - AbortController 精确控制连接生命周期
-  - ReadableStream.getReader() 逐块读取，精细控制
-  - 缺点：需手动处理重连逻辑
-
-本项目选择 fetch 的原因是需要暂停/恢复控制和 AbortController。
-```
-
-**Q2: 暂停期间的数据怎么处理？**
-```
-pausedRef.current = true 时，数据被丢弃（不写入 state）。
-如果需要在恢复时补上暂停期间的数据:
-  → 改为存入 bufferRef 缓冲区，恢复时一次性追加。
-当前实现: 暂停期间丢弃，因为日志流数据量太大且实时性要求不高。
-```
-
-**Q3: 日志上限 500 行的原因？**
-```
-setLogs((prev) => [...prev, ...batch].slice(-500))。
-500 行 ≈ 25-50KB DOM 节点，浏览器渲染压力可控。
-超过 500 行时自动丢弃最旧行，防止内存泄漏。
-虚拟滚动方案: 只渲染可视区域 30 行，可支持 100 万行。
-```
-
-**Q4: 断线自动重连怎么实现？**
-```
-连接因网络错误断开时，catch 中启动定时器 3 秒后自动重连:
-  startStream().catch(() => {
-    if (abortRef.current === abort) {
-      setConnected(false)
-      setTimeout(connect, 3000)  // 自动重连
-    }
-  })
-
-注意:
-  - 只重连非 AbortError 的意外断开（用户暂停走 paused 分支，不会触发重连）
-  - abortRef 引用比较防止重连时旧的 catch 回调覆盖新连接
-  - 当前固定 3s 延迟，可优化为指数退避（1s→2s→4s...30s）
-```
-
-**Q5: SSE 和 WebSocket 告警推送都是实时通信，为什么日志流用 SSE、告警用 WebSocket？**
-```
-选型依据: 通信方向 × 消息频率 × 协议复杂度
-
-SSE 日志流:
-  ① 单向通信: 服务端 → 客户端（日志是只读的，客户端不需要发送）
-  ② 大流量: 250K 行日志批量推送，SSE 基于 HTTP 长连接传输效率高
-  ③ 暂停控制: AbortController 精确控制连接生命周期
-
-WebSocket 告警:
-  ① 全双工: 客户端需要心跳/重连/发送确认 (ping-pong)
-  ② 实时性: 告警要求毫秒级推送，WS 全双工延迟最低
-  ③ 高频: 4000 msg/s 需背压控制/消息合并/二进制协议 → WS 支持更丰富的控制
-
-结论: 单向低频率用 SSE，双向高频率用 WebSocket，
-两者在项目中互补，覆盖不同的实时通信场景。
-```
-
-#### 技术边界
-
-**边界 1：Chunk 边界截断导致日志行不完整**
-```
-问题: fetch ReadableStream 每块数据可能切在日志行中间。
-  例如: "2024-01-01 INFO request\n2024-01-01 ERR"（下半句在下一块）
-方案: 维护 bufferRef 缓存未完成行:
-  const lines = (bufferRef.current + text).split('\n')
-  bufferRef.current = lines.pop()!  // 最后一段可能不完整，缓存
-  setLogs(prev => [...prev, ...lines].slice(-500))
-```
-**边界 2：浏览器并发连接数限制**
-```
-HTTP/1.1: 每个域名最多 6 个并发连接。
-SSE 长连接占 1 个连接，其他 API 请求可能排队。
-方案:
-  a. 使用 HTTP/2（多路复用，无 6 连接限制）
-  b. 或将 SSE 部署在子域名（logs.example.com）
-本项目: 开发环境无此问题，生产环境建议 HTTP/2。
-```
-**边界 3：SSE 在浏览器后台 Tab 中的行为**
-```
-Chrome 后台 Tab 会降低 JS 定时器频率（1 次/分钟）。
-但 SSE 的 ReadableStream.read() 是异步回调，
-不受定时器节流影响（回调由数据到达驱动）。
-结果: 后台 Tab 仍能正常接收日志，但渲染可能被节流。
-```
-
-### 2.9 请求加载 Signal + React 19 use() ⭐⭐⭐
-
-**位置**: `src/pages/RequestLoading.tsx` + `src/stores/requestLoadingStore.ts` + `src/utils/requestResource.ts` + `backend/handlers/request_loading.go`
-
-#### 实现思路
-
-传统做法使用页面级 `<Spin>` 或按钮级 `loading` prop，但无法与 React 19 的 Suspense 机制集成。本模块结合 **React 19 `use()` API** 与 **Signal 请求管理**，实现声明式的、Suspense 驱动的数据加载模式。
-
-**核心思想**：
-
-1. 用 `use()` 消费 Promise — 让 Suspense 自动处理加载态
-2. 用 `createRequestResource` 封装 fetch + AbortController + 元数据
-3. 后端 `/api/request-loading/demo` 提供可配置延迟/失败率的真实 HTTP 接口
-4. Zustand Store 记录每个请求的完整生命周期（`pending → resolved | rejected | cancelled`）
-
-#### 实现过程
-
-**第一步：后端 — 可配置信号端点**
-
-```go
-// backend/handlers/request_loading.go
-func DemoRequest(c *gin.Context) {
-    delay := parseDelay(c.Query("delay"))     // 可配置延迟 (0-10000ms)
-    failRate := parseFailRate(c.Query("fail")) // 可配置失败率 (0.0-1.0)
-
-    select {
-    case <-time.After(time.Duration(delay) * time.Millisecond):
-    case <-c.Request.Context().Done():
-        return // 客户端取消 → 立即返回
-    }
-
-    if rand.Float64() < failRate {
-        c.JSON(500, gin.H{"error": "simulated server error"})
-        return
-    }
-
-    c.JSON(200, gin.H{"success": true, "data": data, "delay": delay})
-}
-```
-
-后端支持 `?delay=1500&fail=0.3&type=users` 等参数，模拟不同场景。
-
-**第二步：定义 RequestResource — Signal 载体**
-
-```typescript
-// src/utils/requestResource.ts
-export interface RequestResource<T = unknown> {
-  key: string
-  method: string
-  path: string
-  delay: number       // 配置的目标延迟
-  failRate: number    // 配置的失败概率
-  promise: Promise<T> // 可被 use() 消费的 Promise
-  abort: () => void   // 取消信号
-  startTime: number   // 创建时间戳
-}
-
-export function createRequestResource(key: string, method: string, path: string): RequestResource {
-  const controller = new AbortController()
-  const promise = http.get("/api/request-loading/demo", {
-    params: { type, delay: String(delay), fail: String(failRate) },
-    signal: controller.signal,
-  }).then((res) => res.data)
-
-  return { key, method, path, delay, failRate, promise, abort: () => controller.abort(), startTime }
-}
-```
-
-每个 Resource 携带完整的请求上下文，通过 `use(resource.promise)` 消费。
-
-**第三步：Zustand Store — Signal 生命周期管理**
-
-```typescript
-// requestLoadingStore.ts
-type RequestStatus = "pending" | "resolved" | "rejected" | "cancelled"
-
-interface RequestRecord {
-  key: string
-  method: string
-  path: string
-  delay: number
-  startTime: number
-  duration: number | null
-  status: RequestStatus
-  error: string | null
-}
-```
-
-Store 记录每个请求的完整生命周期，支持：
-- `addRequest()` → 记录新请求
-- `recordResolved/resolved/rejected/cancelled()` → 状态迁移
-- `clearCompleted()` → 清理已完成请求
-- 自动计算 `duration = performance.now() - startTime`
-
-**第四步：React 19 use() + Suspense 集成**
-
-```tsx
-function RequestResult({ resource }: { resource: RequestResource }) {
-  const raw = use(resource.promise) // Suspense 自动处理 pending
-  return <pre>{JSON.stringify(raw.data, null, 2)}</pre>
-}
-
-function LoadingFallback({ resource }: { resource: RequestResource }) {
-  const [elapsed, setElapsed] = useState(0)
-  useEffect(() => {
-    const id = setInterval(() => setElapsed(performance.now() - resource.startTime), 100)
-    return () => clearInterval(id)
-  }, [resource.startTime])
-  return <div>已耗时: {formatDuration(elapsed)}</div>
-}
-
-// 每请求独立 Suspense 边界
-function RequestCard({ resource }: { resource: RequestResource }) {
-  return (
-    <ErrorBoundary fallback={RequestError}>
-      <Suspense fallback={<LoadingFallback resource={resource} />}>
-        <RequestResult resource={resource} />
-      </Suspense>
-    </ErrorBoundary>
-  )
-}
-```
-
-每个活跃请求拥有独立的 `<Suspense>` + `<ErrorBoundary>` 边界，互不阻塞。
-
-**第五步：请求操作面板**
-
-| 操作 | 实现方式 |
-|------|----------|
-| **发起请求** | `handleStart()` → `createRequestResource()` + `addRequest()` |
-| **取消请求** | `handleCancel()` → `resource.abort()` + `recordCancelled()` |
-| **批量请求** | 6 个请求同时发起，各自独立 Suspense |
-| **自动清理** | resolve 后 5s 自动 `removeRequest()` |
-
-#### 优化
-
-| 维度 | 优化手段 | 效果 |
-|------|----------|------|
-| **信号** | AbortController 精确取消 | 取消后服务端 `context.Done()` 立即停止处理 |
-| **Suspense** | 每请求独立边界 | 请求间互不阻塞，UI 独立加载 |
-| **错误** | ErrorBoundary + use() 自动 throw | 无需手写 try/catch，声明式错误处理 |
-| **跟踪** | `.then()` / `.catch()` 自动更新 Store | 状态转换无需手写 |
-| **精度** | `performance.now()` 计时 | 微秒级耗时统计 |
-| **可视化** | elapsed 定时器 100ms 更新 | 实时展示耗时进度条 |
-| **清理** | 5s 自动移除 + `clearCompleted` | 防止历史请求无限堆积 |
-| **渲染** | 移除冗余 `setNow(Date.now())` 200ms 定时器 | `LoadingFallback` 已自带 elapsed 计时，避免整页 re-render |
-| **后端** | `<-c.Request.Context().Done()` | 客户端取消后服务端立即释放 goroutine |
-
-#### 体系化
-
-```mermaid
-graph TB
-    subgraph Frontend["前端"]
-        PAGE["RequestLoading.tsx"]
-        RESOURCE["requestResource.ts<br/>Signal 载体"]
-        STORE["requestLoadingStore<br/>生命周期管理"]
-    end
-
-    subgraph React19["React 19 特性"]
-        USE["use(promise)<br/>消费 Signal"]
-        SUSPENSE["Suspense<br/>自动加载态"]
-        EB["ErrorBoundary<br/>错误捕获"]
-    end
-
-    subgraph Backend["后端"]
-        API["GET /api/request-loading/demo<br/>?delay&fail&type"]
-    end
-
-    PAGE --> RESOURCE -->|"promise"| USE
-    PAGE --> STORE
-    USE --> SUSPENSE
-    USE --> EB
-    RESOURCE -->|"HTTP GET"| API
-```
-
-#### 存在问题与解决方案
-
-| 问题 | 产生原因 | 解决方案 |
-|------|----------|----------|
-| **use() 无法在 try/catch 中捕获错误** | `use()` 将 rejected promise 作为 Error throw | ErrorBoundary 类组件 `getDerivedStateFromError` 统一捕获 |
-| **请求完成前离开页面** | unmount 后定时器仍在运行 | cleanup effect 停止定时器 + AbortController 取消 in-flight |
-| **AbortError 误报为失败** | `controller.abort()` 导致 promise reject | `.catch()` 中判断 `err.name === "AbortError"` 跳过 Store 更新 |
-| **相同 key 重复请求** | 用户连续点击同一按钮 | `handleStart` 先 abort 旧资源再创建新资源 |
-| **Suspense fallback 无动态信息** | fallback 是静态 ReactNode | LoadingFallback 组件内用 `useState + setInterval` 实时刷新 |
-
-#### 追问链路
-
-**Q1: 为什么用 use() 而非传统的 state + useEffect？**
-```
-use():
-  - 声明式: 由 Suspense 自动管理加载态，无手写 loading bool
-  - 安全: 不会触发 stale closure 或 race condition
-  - 可组合: promise 可跨组件传递，父组件提前 fetch
-
-传统方式:
-  - 命令式: isLoading → if (isLoading) return <Spin/>
-  - 易出错: 忘记 setLoading(false) 或组件已 unmount
-  - 不可组合: loading 状态绑定在组件内，无法传递
-
-本项目两者结合: use() 处理数据消费，Store 处理精确的 UI 控制。
-```
-
-**Q2: 如何实现取消？**
-```
-前端:
-  1. AbortController → signal → axios → fetch
-  2. controller.abort() → fetch promise rejects with CanceledError
-  3. .catch() 跳过 CanceledError/AbortError，不更新 Store
-
-后端:
-  1. Gin 监听 c.Request.Context().Done()
-  2. 取消后 select case 立即 return
-  3. goroutine 释放，不处理后续请求
-```
-
-**Q3: 和传统 fetch + loading state 比，优势在哪？**
-```
-传统:
-  const [data, setData] = useState(null)
-  const [loading, setLoading] = useState(false)
-  const [error, setError] = useState(null)
-
-  useEffect(() => {
-    setLoading(true)
-    fetch(url).then(setData).catch(setError).finally(() => setLoading(false))
-  }, [])
-
-  if (loading) return <Spin/>
-  if (error) return <Error/>
-  return <Data data={data}/>
-
-use() 模式:
-  function DataViewer({ promise }) {
-    const data = use(promise)  // 无 loading/error 样板代码
-    return <Data data={data}/>
-  }
-  // 由 Suspense/ErrorBoundary 在父层统一处理
-
-优势: 消除重复的 loading/error 样板代码，提升可读性。
-```
-
-**Q4: ErrorBoundary 如何与 use() 配合？**
-```
-ErrorBoundary 是一个 class component，通过 getDerivedStateFromError
-捕获子组件树中所有 throw 的 Error。
-
-use(promise) 在 promise rejected 时会 throw 该 Error。
-ErrorBoundary 捕获后渲染 fallback 组件，显示错误信息。
-
-这比传统的 try/catch + setError 更简洁：
-  - 无需在每个组件内声明 error state
-  - 错误处理集中到 ErrorBoundary 层
-  - 支持嵌套 ErrorBoundary 做局部错误恢复
-```
-
-#### 技术边界
-
-**边界 1：use() 在条件分支中调用**
-```
-React 规则: use() 必须在组件顶层调用，不能放在 if/for/try 中。
-如果条件不满足时不想 use() → 在父组件判断，条件成立时再渲染子组件。
-```
-
-**边界 2：Suspense fallback 无法访问组件状态**
-```
-fallback 是静态 JSX，与已挂载的组件上下文隔离。
-需要动态加载信息（如已耗时）→ 在 fallback 组件内用 useState + useEffect 独立维护。
-```
-
-**边界 3：多个 use() 调用导致多次 Suspense**
-```
-一个组件内调用多个 use()，按顺序逐一挂起：
-  1. 第一个 pending → Suspense 捕获 → 显示 fallback
-  2. 第一个 resolve → 渲染第二个 use() → 可能再次挂起
-解决方案：
-  - 每个 use() 独立 Suspense 边界（推荐）
-  - 将多个 promise 用 Promise.all 合并为一个
-```
-**边界 2：非 fetch 场景的 loading 追踪**
-```
-场景: 文件下载、Web Worker 计算等非 fetch API 也需要 loading。
-方案: 扩展 trackRequest 接受任意 key:
-  const clean = trackRequest('custom:file-merge')
-  try { await mergeInWorker() } finally { clean() }
-```
-**边界 3：页面卸载时未清理的 loading 状态**
-```
-场景: 用户切换页面时，未完成的请求的 clean() 未被调用。
-问题: loadingMap 残留 true 状态。
-方案: 在 store 中监听路由变化，清理当前页面对应的 loading key。
-```
-
-### 2.10 树形数据操作引擎 ⭐⭐
-
-**位置**: `src/pages/TreeDataEngine.tsx`
-
-#### 实现思路
-
-树形数据的 CRUD 操作（组织架构、分类目录、文件系统）需要递归算法。难点不在于"能实现"，而在于**保持函数式不可变性**（每次操作返回新树）的同时保持代码简洁可读。
-
-**核心设计**：将树操作抽象为纯函数，输入树 → 操作参数 → 输出新树，无副作用。
-
-#### 实现过程
-
-**第一步：递归查找节点**
-
-```typescript
-function findNode(tree: TreeNode[], key: string): TreeNode | null {
-  for (const node of tree) {
-    if (node.key === key) return node
-    if (node.children) {
-      const found = findNode(node.children, key)
-      if (found) return found
-    }
-  }
-  return null
-}
-```
-
-深度优先搜索，时间复杂度 O(N)，N=节点总数。
-
-**第二步：递归删除节点（不可变）**
-
-```typescript
-function removeNode(tree: TreeNode[], key: string): TreeNode[] {
-  return tree
-    .filter((node) => node.key !== key)
-    .map((node) => ({
-      ...node,
-      children: node.children ? removeNode(node.children, key) : [],
-    }))
-}
-```
-
-filter 排除目标节点，map 递归处理子节点，返回全新树。
-
-**第三步：递归更新节点**
-
-```typescript
-function updateNode(tree: TreeNode[], key: string, updater: (node: TreeNode) => TreeNode): TreeNode[] {
-  return tree.map((node) => {
-    if (node.key === key) return updater(node)
-    if (node.children) {
-      return { ...node, children: updateNode(node.children, key, updater) }
-    }
-    return node
-  })
-}
-```
-
-**第四步：拖拽排序（dnd-kit）**
-
-```typescript
-// onDragEnd 处理器
-const handleDragEnd = (event: DragEndEvent) => {
-  const { active, over } = event
-  if (!over) return
-
-  setTree((prev) => {
-    const newTree = removeNode(prev, active.id as string)
-    return insertNode(newTree, over.id as string, extractedNode, position)
-  })
-}
-```
-
-先删除再插入，确保操作可逆。`position` 根据鼠标位置判断：`before` / `after` / `inside`。
-
-#### 优化
-
-| 维度 | 优化手段 | 效果 |
-|------|----------|------|
-| **不可变性** | map/filter 返回新树 | React 状态管理友好，不可变数据 |
-| **性能** | 递归深度限制 1000 | 防止栈溢出 |
-| **可视化** | dnd-kit 拖拽高亮 | 跨层级拖拽指示清晰 |
-| **批量** | 先标记后过滤 | 批量删除避免父删子悬空 |
-
-#### 体系化
-
-```mermaid
-graph TB
-    subgraph API["递归算法库"]
-        FIND["findNode()<br/>深度优先查找"]
-        REMOVE["removeNode()<br/>递归过滤删除"]
-        UPDATE["updateNode()<br/>递归映射更新"]
-        INSERT["insertNode()<br/>定位插入"]
-    end
-
-    subgraph UI["交互层"]
-        TREE["Ant Design Tree<br/>树形展示"]
-        DND["dnd-kit<br/>拖拽排序"]
-        BATCH["Checkbox<br/>批量操作"]
-    end
-
-    subgraph STATE["状态层"]
-        TREE_STATE["useState<TreeNode[]><br/>树数据"]
-    end
-
-    API --> TREE
-    DND --> API
-    TREE --> STATE
-```
-
-#### 存在问题与解决方案
-
-| 问题 | 产生原因 | 解决方案 |
-|------|----------|----------|
-| **递归深度过深栈溢出** | 树退化为链表（深度=节点数） | 限制递归深度 maxDepth=1000 + 迭代替代 |
-| **拖拽后 key 冲突** | 移动节点与目标位置 key 相同 | 每次操作后重新生成 key（`nanoid`） |
-| **批量删除父节点后子节点悬空** | 先删父节点，子节点引用丢失 | 先收集所有要删除的 key（含子节点），一次过滤 |
-| **大树（10000+ 节点）卡顿** | 每次操作递归遍历全量 | 虚拟化 + 懒加载（只展开当前可见的子树） |
-
-#### 追问链路
-
-**Q1: 递归操作树的性能风险？**
-```
-最坏情况: 树深度 = 节点数（单链表结构），递归 N 次 → 栈溢出。
-解决方案:
-  1. 尾递归优化（TS 编译到 ES6 后不支持，需手动改迭代）
-  2. 限制递归深度 maxDepth=1000
-  3. 对查找操作使用迭代 + 显式栈（while + stack.push）
-当前实现: 递归，深度 < 100 时安全。
-```
-
-**Q2: 拖拽排序如何保证树结构正确？**
-```
-拖拽使用 dnd-kit（React DnD 的新一代替代品）。
-拖拽结束 → onDragEnd → 解析 active.id / over.id
-  → 从树中移除节点 → 插入到目标位置（before / after / inside）
-  → setTree(newTree)
-
-难点: 跨层级拖拽（拖到子节点 vs 兄弟节点）的判断。
-解决方案: 拖拽时高亮可放置区域，用 CSS 指示插入位置。
-```
-
-**Q3: 批量操作如何实现？**
-```
-选中多个节点（Checkbox）→ 批量删除/移动/导出。
-需遍历全树收集选中节点，递归删除时注意节点间依赖（防止删父节点后子节点悬空）。
-方案: 先标记要删除的节点 key，一次遍历过滤所有标记节点。
-```
-
-**Q4: 如何保证每个节点的 key 在树中唯一？重复 key 会有什么后果？**
-```
-key 是树操作的基石 —— findNode/removeNode/insertNode 都依赖 key 定位。
-
-如果重复:
-  1. findNode 找到第一个即返回 → 第二个永远无法操作
-  2. removeNode 删除第一个 → 第二个变了孤儿（父节点仍引用它）
-  3. 拖拽插入到错误位置
-
-保证唯一性:
-  1. 初始导入时检测重复 key → 抛异常
-  2. 新增节点时用 nanoid 生成 → 碰撞概率 2^-122
-  3. 拖拽后重新检查全树 key 唯一性
-  4. 如果发现重复 → 自动为冲突节点重生成 key
-```
-
-**Q5: 操作权限 Map 怎么生成和校验？**
-```
-操作权限 Map = 每个节点对应的允许操作集合（add/edit/delete/move）。
-
-生成:
-  遍历树 → 根据节点属性（类型/层级/状态）计算可执行操作
-  { nodeKey: { canAdd: bool, canEdit: bool, canDelete: bool, canMove: bool } }
-
-校验:
-  每次操作前查权限 Map:
-  if (!permissionMap[nodeKey]?.canDelete) → 阻止操作 + 提示 "无权限"
-
-这保证了「用户只能在自己的可见范围内执行允许的操作」，
-与 RBAC 权限体系形成前后端双层校验。
-```
-
-#### 技术边界
-
-**边界 1：循环引用导致的死循环**
-```
-场景: 后端返回的树数据存在 A→B→A 的循环引用。
-问题: findNode 陷入 A→B→A→... 死循环。
-方案: 使用 _visitedRefs: WeakSet 记录已访问节点:
-  function findNode(tree, key, visited = new WeakSet()) {
-    for (const node of tree) {
-      if (visited.has(node)) continue
-      visited.add(node)
-      ...
-    }
-  }
-```
-**边界 2：异步加载子树的数据竞争**
-```
-场景: 点击展开节点时异步加载子节点，但用户快速点击展开/折叠。
-问题: 第一次展开请求返回时节点已被折叠，数据错误写入展开状态。
-方案: generation 计数器，每次展开递增 gen，
-      API 返回时检查 gen 是否匹配。
-```
-**边界 3：超大树的虚拟化策略**
-```
-10000+ 节点的树 → 全部渲染导致 DOM 节点过多。
-方案: 只渲染展开的路径上的节点 + 虚拟滚动。
-  例: 根 10 个 → 展开第 3 个 → 加载其 100 个子 → 只渲染这 110 个。
-  未展开的节点不创建 DOM，延迟加载。
-```
-
-### 2.11 LRU 路由缓存 ⭐⭐
-
-**位置**: `src/pages/LruRouteCache.tsx` + `src/pages/LruRouteCacheMonitor.tsx` + `src/pages/LruRouteCacheConfig.tsx` + `src/pages/LruRouteCacheLogs.tsx` + `src/utils/lru.ts` + `src/stores/lruRouteStore.ts`
-
-#### 实现思路
-
-Tab 切换保持页面状态的常规做法是"切换时卸载，回来时重新挂载"，但会丢失滚动位置、输入值、展开/折叠等临时状态。
-
-**核心方案**：DOM `display:none` 保持状态 + LRU 淘汰限制内存 + 写后失效保证缓存一致性。
-
-三个问题需同时解决：
-1. **状态保持**：切换不卸载，用 CSS 隐藏
-2. **内存控制**：限制最多 5 个 Tab，超出淘汰最不活跃的
-3. **一致性**：A 页面修改数据后，B 页面的缓存需要标记为过期
-
-#### 实现过程
-
-**第一步：LRU 缓存类**
-
-```typescript
-export class LRUCache<K, V> {
-  private capacity: number
-  private cache = new Map<K, V>()
-
-  get(key: K): V | undefined {
-    if (!this.cache.has(key)) return undefined
-    const value = this.cache.get(key)!
-    this.cache.delete(key)      // 删除后重新插入 → 提升到 Map 尾部
-    this.cache.set(key, value)
-    return value
-  }
-
-  put(key: K, value: V): void {
-    if (this.cache.has(key)) {
-      this.cache.delete(key)
-    } else if (this.cache.size >= this.capacity) {
-      const firstKey = this.cache.keys().next().value  // Map 头部 = 最久未使用
-      if (firstKey !== undefined) this.cache.delete(firstKey)
-    }
-    this.cache.set(key, value)
-  }
-}
-```
-
-利用 `Map` 的插入顺序特性：`get` 时 `delete + set` 将 key 提升到尾部，淘汰时删除头部（最久未使用）。O(1) 淘汰，比访问计数方案更高效。
-
-**第二步：页面缓存策略 — display:none**
-
-```typescript
-// 路由切换时，非活跃页面隐藏而非卸载
-{activePages.map((page) => (
-  <div key={page.key} style={{ display: page.key === currentPage ? 'block' : 'none' }}>
-    <page.component />
-  </div>
-))}
-```
-
-所有缓存的页面 DOM 都在，切换只是切换 `display` 属性。
-
-**第三步：staleKeys 机制 — 缓存失效追踪**
-
-如何知道哪些缓存过期了？Zustand store 中维护一个 `staleKeys: string[]` 集合，集中管理所有过期缓存标记：
-
-```typescript
-// lruRouteStore.ts
-interface LruRouteState {
-  staleKeys: string[]
-  invalidateCache(key: string): void    // 标记单个页面过期（幂等）
-  invalidateAll(except?: string): void  // 标记所有页面过期（排除当前页）
-  clearStale(key: string): void         // 刷新成功后清除过期标记
-}
-```
-
-```typescript
-// invalidateAll 实现 — 将除 except 外的所有页加入 staleKeys
-invalidateAll: (except) => {
-  const state = get()
-  const keys = Object.keys(state.pages).filter((k) => k !== except)
-  const newStale = keys.filter((k) => !state.staleKeys.includes(k))
-  if (newStale.length === 0) return
-  set({ staleKeys: [...state.staleKeys, ...newStale] })
-}
-```
-
-**不预知数据变化，而是「悲观标记 + 惰性刷新」**：
-- 不判断数据是否真的变了（无法预知）
-- 只要「可能变了」，就标记为过期（悲观策略）
-- 实际刷新延迟到用户切回该页面时执行（惰性）
-
-**第四步：单一 useEffect — 合并初始加载与过期检测**
-
-每个页面组件使用单一 `useEffect` 处理所有加载场景，`dataLoadedRef` 的双 effect 模式容易导致初始加载和过期检测同时触发（double-fetch），且缺少请求取消能力：
-
-```typescript
-const abortRef = useRef<AbortController | null>(null)
-
-const fetchData = useCallback(() => {
-  abortRef.current?.abort()               // 取消前一次请求
-  const controller = new AbortController()
-  abortRef.current = controller
-
-  setLoading(pageKey, true)
-  clearStale(pageKey)
-  void fetch(url, { signal: controller.signal })
-    .then(res => res.json())
-    .then(json => {
-      if (controller.signal.aborted) return  // 请求过期，丢弃结果
-      updateData(pageKey, json as Record<string, unknown>)
-    })
-    .catch(() => undefined)                 // AbortError 静默忽略
-}, [pageKey, setLoading, updateData, clearStale])
-
-// 单一 effect：初始加载、stale 刷新、TTL 过期均由此处理
-useEffect(() => {
-  if (!isActive) return
-  const isTtlExpired = page.loadedAt != null && Date.now() - page.loadedAt > 30000
-  if (!page.data || isStale || isTtlExpired) {
-    if (isTtlExpired) clearStale(pageKey)
-    fetchData()
-  }
-}, [isActive, isStale, pageKey, page.data, page.loadedAt, fetchData, clearStale])
-
-// 卸载时取消所有进行中的请求
-useEffect(() => {
-  return () => { abortRef.current?.abort() }
-}, [])
-```
-
-关键设计：
-| 机制 | 作用 | 说明 |
-|------|------|------|
-| 单一 effect | 消除 double-fetch | `dataLoadedRef` 和过期 `useEffect` 合并为一个，`!page.data` 处理初始加载，`isStale/isTtlExpired` 处理数据一致性 |
-| `AbortController` | 取消过期请求 | 连续触发时 abort 前一次；组件卸载时中止所有 in-flight 请求，防止内存泄漏 |
-| `controller.signal.aborted` 守卫 | 防止竞态 | 请求返回时检测是否已被新请求替代，丢弃过期结果 |
-| 无 activeRef | 激活切换不触发加载 | 仅响应 `isStale`（写后失效标记）或 `isTtlExpired`（30s 惰性过期），激活本身不引发网络请求 |
-
-> ⚠️ **踩坑记录**：早期版本使用两阶段 effect（`dataLoadedRef` 初始加载 + 过期检测），Mount 时两个 effect 同时触发导致 double-fetch。合并为单一 effect 后用 `!page.data` 天然区分首次加载，`AbortController` 确保快速连续切换时只有最后一次请求生效。
-
-**第五步：ConfigPage 保存触发连锁反应**
-
-```typescript
-// ConfigPage — 保存配置，失效其他所有页面缓存
-const handleSave = () => {
-  updateData(pageKey, { config })
-  invalidateAll(pageKey)  // 标记除自己外的所有页面为过期
-  notification.success({
-    title: "配置已保存",
-    description: "相关页面缓存数据已标记为过期，切换时将自动刷新",
-  })
-}
-
-// MonitorPage — 检测到 isStale 后自动刷新
-const isStale = staleKeys.includes(pageKey)
-useEffect(() => {
-  if ((activeRef.current || isStale) && isActive) {
-    setLoading(pageKey, true)
-    setTimeout(() => {
-      updateData(pageKey, { services: allData })
-      clearStale(pageKey)
-    }, 600)
-  }
-}, [isActive, isStale])
-```
-
-**时序链路**：
-```
-ConfigPage 保存
-  → invalidateAll("config")
-    → staleKeys = ["monitor", "logs"]
-      → MonitorPage/LogsPage 的 isStale 变为 true
-        → useEffect 触发重新加载数据
-          → clearStale(pageKey) 清除过期标记
-```
-
-#### 优化
-
-| 维度 | 优化手段 | 效果 |
-|------|----------|------|
-| **状态保持** | display:none 非卸载 | 输入/滚动/展开状态零丢失 |
-| **切换性能** | CSS 切换 display | 零延迟，不重新挂载 |
-| **内存控制** | LRU 淘汰 ≤ 3 个 | DOM 数量可控 |
-| **一致性** | staleKeys + 写后失效 | 修改数据后其他缓存页自动刷新 |
-| **视觉反馈** | 橙色 Tag + Badge + 通知 | 用户感知数据已过期 |
-| **惰性刷新** | stale 标记 + 激活时再请求 | 不浪费带宽刷新未查看页面 |
-| **后端驱动** | Go API 提供真实数据（`/api/services`、`/api/config`、`/api/logs`） | 替代前端 mock，展示全栈能力 |
-| **模块分离** | MonitorPage / ConfigPage / LogsPage 各自独立文件 | 代码行数降低 50%，维护性提升 |
-| **单一 effect** | 合并初始加载与过期检测为一个 `useEffect` | 消除 double-fetch，`dataLoadedRef` guard 不再需要 |
-| **AbortController** | 每个请求关联独立 signal，连续触发时 abort 前一次 | 防止竞态，卸载时自动取消 in-flight 请求 |
-
-#### 体系化
-
-```mermaid
-graph TB
-    subgraph CACHE["缓存层"]
-        LRU["LRUCache<br/>访问计数淘汰"]
-        DISPLAY["display:none<br/>保持状态"]
-    end
-
-    subgraph CONSISTENCY["一致性层"]
-        STALE["staleKeys 集合<br/>Zustand 管理"]
-        INVALIDATE["invalidateAll()<br/>标记过期"]
-        REFRESH["useEffect<br/>检测 + 自动刷新"]
-    end
-
-    subgraph UI["交互层"]
-        PAGE_A["配置管理<br/>保存→invalidateAll"]
-        PAGE_B["业务监控<br/>检测 stale → 刷新"]
-        PAGE_C["日志查询<br/>检测 stale → 刷新"]
-    end
-
-    CACHE --> UI
-    CONSISTENCY --> UI
-    PAGE_A -->|"保存"| CONSISTENCY
-    CONSISTENCY -->|"stale"| PAGE_B & PAGE_C
-```
-
-#### 存在问题与解决方案
-
-| 问题 | 方案 |
-|------|------|
-| A 修改数据，B 缓存过时 | staleKeys 标记 + 自动刷新 |
-| 如何知道哪些缓存过期 | Zustand 集中管理 staleKeys |
-| 切换回 B 时如何刷新 | useEffect 监听 isActive + isStale |
-| 初始加载与过期检测双触发（double-fetch） | 移除 `dataLoadedRef` 两阶段模式，改用单一 effect：`!page.data \|\| isStale \|\| isTtlExpired` 三条件合一 |
-| 快速连续切换导致竞态 | `AbortController` 每次 fetch 前 abort 前一次，返回时检查 `signal.aborted` 丢弃过期结果 |
-| 组件卸载未完成的请求 | 第二个 `useEffect` 的 cleanup 中 `abortRef.current?.abort()` |
-| 如何确保每次切回都刷新 | `isStale`（写后失效）+ `isTtlExpired`（惰性过期）双条件驱动，激活切换本身不触发 |
-| 如何不预知数据变化 | 悲观标记（只要可能变了就标过期） + 惰性刷新 |
-| 视觉反馈 | 橙色 "数据已过期" Tag + 按钮 Badge 感叹号 |
-| 保存配置后通知 | notification.success 提示 "相关页面缓存已标记为过期" |
-| **外部数据变更无法感知**（如返回列表页时数据已被其他用户修改） | 三种可选方案：① **惰性过期（已实现）** — 切回时判断 `Date.now() - loadedAt > 30s` 自动刷新，在单一 effect 中加入 TTL 检查；② **WebSocket 推送** — 服务端主动推送 `invalidate` 事件（待实现）；③ **Pull-to-refresh** — 用户主动点击刷新按钮 |
-
-#### 追问链路
-
-**Q1: LRUCache 为什么要用 Map 插入顺序而非访问计数淘汰？**
-```
-本项目最初使用访问计数（count++），
-但更好的方案是利用 Map 的插入顺序特性。
-
-Map 标准 LRU:
-  - get: delete + set 提升到尾部 → O(1)
-  - put: 容量满时删除头部 → O(1)
-  - 比访问计数（淘汰需要遍历 O(n)）更高效
-
-由于缓存最多 3 个页面，两种方案差异极小。
-改用 Map 标准 LRU 只是因为实现更简洁规范。
-
-注意: Zustand 的 order[] 数组独立跟踪页面访问顺序，
-与 LRUCache 的 Map 淘汰机制互补。
-order 决定页面展示顺序，LRUCache 决定数据淘汰策略。
-```
-
-**Q2: display:none 保持状态有哪些优缺点？**
-```
-优点:
-  - 状态零丢失（input 值、滚动位置、展开/折叠）
-  - 切换零延迟（不需要重新挂载）
-缺点:
-  - 内存占用持续（所有 Tab 的 DOM 都在）
-  - 生命周期钩子只执行一次（useEffect 在首次挂载）
-  - CSS 污染风险（display:none 的元素仍影响布局计算）
-
-本项目: 限制最多 3 个 Tab 缓存（`maxPages: 3`），超出淘汰最不活跃的（`order[0]`）。淘汰时 notification.warning 提示用户。
-```
-
-**Q3: 缓存如何「预知」数据变化？**
-
-```
-缓存无法预知数据变化。核心设计思路是：
-
-悲观策略（Pessimistic Invalidation）：
-  - 不判断数据是否真的变了（判断成本高、时机难把握）
-  - 只要「可能变了」就标记为过期
-  - 例：ConfigPage 保存 → 不知道改了什么配置 → invalidateAll()
-    → 所有其他页面都标记过期
-
-惰性刷新（Lazy Refresh）：
-  - 标记过期时不触发网络请求
-  - 用户切回该页面时才真正刷新数据
-  - 好处：用户可能永不切回 → 省一次请求
-
-对比其他方案：
-  | 方案 | 特点 | 适用 |
-  |------|------|------|
-  | 轮询 Polling | 定期拉取最新数据 | 实时性要求高 |
-  | 写穿透 Write-Through | 写入时同步通知所有缓存更新 | 已知变更范围 |
-  | 悲观标记 + 惰性刷新 | 写入时标记过期，读取时刷新 | 变更范围不确定 |
-
-本项目选用「悲观标记 + 惰性刷新」的原因：
-  1. 配置页面不知道改了什么数据（可能影响多个页面）
-  2. 其他页面可能已被用户关闭，无需浪费请求
-  3. 用户切回时看到橙色 Tag，感知上可接受（知道是缓存数据）
-```
-
-**Q5: 写后失效如何避免竞态？**
-```
-ConfigPage 点击保存:
-  1. invalidateAll(currentKey) → staleKeys 更新
-  2. MonitorPage/LogsPage 的 useEffect 检测到 isStale
-  3. 触发数据刷新 → clearStale(key)
-  4. 如果刷新期间用户再次切换 → 第二次 useEffect 执行
-
-竞态: 第一次刷新完成前 staleKey 已被清除 → 数据未更新。
-解决方案: 使用 generation 计数器，每次 invalidate 递增 gen，
-刷新完成时检查 gen 是否匹配。
-```
-
-**Q6: 为什么限制缓存页面数为 3？不是越多越好吗？**
-```
-三个页面是经验值，基于以下权衡:
-
-缓存太少（1-2 个）:
-  → 频繁淘汰 → 用户切回频繁请求 → 失去缓存意义
-
-缓存太多（5+ 个）:
-  → DOM 占用持续增长 → 内存压力
-  → display:none 的隐藏组件可能含有定时器（如 3s 轮询）
-  → 每个隐藏页面的定时器都在运行 → 带宽浪费
-
-3 个的合理性:
-  用户最多同时在 3 个页面间切换（典型操作: 监控页查看 → 配置页修改 → 日志页确认）
-  超出的页面被卸载，资源完全释放，不会「静默消耗」
-
-LruRouteCache 页面本身也实现了这一上限的用户可见控制:
-  - 页面顶部显示 "3/3 缓存已满" Badge
-  - 新的页面访问时自动淘汰最久未访问页面
-  - 淘汰时 notification.warning 通知用户
-```
-
-**Q7: TTL 为什么定为 30s？如果 TTL 过长或过短会怎样？**
-```
-30s 是「数据新鲜度」和「请求频率」的平衡点:
-
-TTL 过短（5s）:
-  → 频繁发送 GET /api/logs 请求
-  → 服务端压力增大
-  → 数据可能 5s 内无变化 → 浪费
-
-TTL 过长（5min）:
-  → 用户看到 5 分钟前的过时数据
-  → 排查问题时误导决策
-  → 橙色 Tag 失去了「数据需注意」的意义
-
-30s 的合理性:
-  配置变更通常需要 10-30s 传播到监控数据
-  用户停留在一个页面平均 30-60s
-  日志查询间隔通常在 30s 以上
-
-实现上 isTtlExpired 是惰性检查（切换回来时判断），
-不是轮询，所以不会消耗额外请求。
-```
-
-#### 技术边界
-
-**边界 1：display:none 元素的 CSS 污染**
-```
-display:none 元素仍参与 CSS 选择器匹配。
-如果全局 CSS 有 .container > div 选择器，
-隐藏的 Tab div 也会被匹配 → 影响布局计算。
-方案: 在 display:none 的同时添加 aria-hidden="true" + inert 属性，
-     使隐藏元素从可访问性树中移除。
-```
-**边界 2：隐藏 Tab 中的定时器仍在运行**
-```
-useEffect 只在首次挂载时执行，不会因 display:none 而清理。
-隐藏的日志页可能仍在 polling 数据 → 浪费带宽。
-方案: 使用 IntersectionObserver 检测 Tab 可见性，
-      隐藏时暂停不必要的轮询。
-```
-**边界 3：浏览器 Tab 休眠后的缓存恢复**
-```
-用户关闭浏览器后重新打开 → 所有缓存丢失（内存释放）。
-方案: localStorage 持久化 lastActivePages 列表，
-      页面加载时从 localStorage 恢复最近使用的 Tab。
-```
+6 种权限位编码，5 个预设角色，菜单/路由/按钮三层联动，后端 `POST /api/rbac/check` 双校验。
 
 ---
 
-### 2.12 十万行日志流解密 ⭐⭐
-
-**位置**: `apps/frontend/src/pages/LogStream.tsx` + `apps/frontend/src/utils/decrypt.worker.ts`
-
-#### 实现思路
-
-核心挑战：源源不断到达的加密日志需要实时解密、顺序重组、流畅渲染，不能阻塞 UI 线程。
-
-**四层流水线架构**：
-
-1. **SSE 流式读取**：通过 `fetch + ReadableStream` 持续接收服务端推送的加密 chunk
-2. **RSA-AES 混合加密**：RSA-2048 交换 AES-GCM 密钥，chunk 级别对称加密保障性能
-3. **多 Worker 并行解密**：利用 `navigator.hardwareConcurrency` 启动多个 Worker，AES-GCM 解密在 Worker 内并行执行
-4. **Seq 序号保序合并**：由于 Worker 解密完成时间不定，通过 seq 序号 + Map 缓冲区实现乱序到达后的按序重组
-
-辅以 `requestAnimationFrame` 批量 flush 减少 React 渲染次数 + auto-scroll 自动跟随 + 实时统计面板展示解密吞吐量。
-
-#### 实现过程
-
-**第一步：SSE 流式读取 + 密钥交换**
-
-安全重构：客户端 Worker 生成临时 RSA-2048 密钥对，仅将公钥（SPKI DER base64）通过 `?clientKey=` 查询参数发送给服务端。服务端用客户端公钥加密 AES-256 密钥后返回，客户端 Worker 用私钥解密得到 AES 密钥 —— **服务端不再持有或传输私钥**。
-
-```typescript
-// LogStream.tsx - performKeyExchange()
-// 1. Worker 生成 RSA 密钥对 → 返回公钥
-keyWorker.postMessage({ type: "generate-key" })
-keyWorker.onmessage = async (e) => {
-  const { publicKey } = e.data
-  // 2. SSE 连接携带客户端公钥
-  const resp = await fetch(`/api/sse/encrypted-logs?clientKey=${encodeURIComponent(publicKey)}`)
-  const reader = resp.body?.getReader()
-  // 3. 读取 SSE 事件，找到 key-exchange 事件
-  while (true) {
-    const { done, value } = await reader.read()
-    if (done) break
-    // ... 解析 SSE data: 行 ...
-    if (evt.type === "key-exchange") {
-      // 4. 将加密的 AES 密钥发给 Worker 用私钥解密
-      keyWorker.postMessage({ type: "init", key: encryptedAESKey })
-      keyWorker.onmessage = (e2) => resolve(e2.data.key)  // → 得到 AES 密钥
-      return
-    }
-  }
-}
-```
-
-**第二步：多 Worker 并行解密**
-
-```typescript
-// 初始化 Worker 池
-for (let i = 0; i < workerCount; i++) {
-  const worker = new Worker(new URL("../utils/decrypt.worker.ts", import.meta.url), {
-    type: "module",
-  })
-  worker.postMessage({ type: "init", key: aesKey })
-  worker.onmessage = (e) => {
-    // 解密完成 → 归还 Worker 到空闲池 → 保序合并
-    availableRef.current.push(idx)
-    handleDecryptResult(e.data.seq, e.data.lines)
-  }
-  workersRef.current.push(worker)
-  availableRef.current.push(i)
-}
-
-// Worker 内解密逻辑
-self.onmessage = async (e) => {
-  if (e.data.type === "init") {
-    aesKey = await crypto.subtle.importKey("raw", e.data.key, "AES-GCM", false, ["decrypt"])
-    return
-  }
-  const { data, seq } = e.data
-  const raw = Uint8Array.from(atob(data), (c) => c.charCodeAt(0))
-  const nonce = raw.slice(0, 12)
-  const ciphertext = raw.slice(12)
-  const plaintext = await crypto.subtle.decrypt({ name: "AES-GCM", iv: nonce }, aesKey, ciphertext)
-  const lines = new TextDecoder("utf-8").decode(plaintext).split("\n").filter(Boolean)
-  self.postMessage({ lines, seq })
-}
-```
-
-Worker 内使用浏览器原生 `crypto.subtle.decrypt`，AES-GCM 模式自带完整性校验，解密后按约定格式解析为行数组。
-
-**第三步：Seq 保序合并 + rAF 批量渲染**
-
-```typescript
-const handleDecryptResult = (seq: number, decryptedLines: string[]) => {
-  // 1. 移除对应的加密占位
-  setEncryptedLines((prev) => prev.filter((e) => e.seq !== seq))
-  // 2. 存入合并缓冲区
-  mergeRef.current.set(seq, decryptedLines)
-  // 3. 从期望序号开始，连续的可输出
-  while (mergeRef.current.has(expectedSeqRef.current)) {
-    const entry = mergeRef.current.get(expectedSeqRef.current)
-    mergeRef.current.delete(expectedSeqRef.current)
-    displayRef.current.push(...entry)
-    expectedSeqRef.current++
-  }
-  // 4. 触发 rAF 批量 flush（合并多次状态更新为一次）
-  scheduleFlush()
-  // 5. 从待处理队列取出下一个任务，分发给空闲 Worker
-  if (pendingRef.current.length > 0) {
-    const next = pendingRef.current.shift()
-    const idx = availableRef.current.shift()
-    if (idx != null && next) {
-      workersRef.current[idx]?.postMessage({ type: "decrypt", data: next.data, seq: next.seq })
-    }
-  }
-}
-```
-
-`scheduleFlush` 使用 `requestAnimationFrame` 将多个解密结果合并为一次 `setLines` 调用，避免高频 setState 导致的渲染抖动。
-
-**第四步：中断与重新开始**
-
-```typescript
-const interrupt = useCallback(() => {
-  abortRef.current?.abort()            // 中断 SSE 连接
-  for (const w of workersRef.current) { w.terminate() }  // 销毁 Worker
-  encryptedBufRef.current = []          // 清空加密预览缓冲
-  setStatus("interrupted")             // 切换到中断状态，保留已解密数据
-}, [])
-
-const start = useCallback(() => {
-  disconnect()                          // 清除全部状态
-  doneTimeRef.current = 0               // 重置完成时间
-  // ...重新发起 SSE 连接
-}, [])
-```
-
-按钮状态三态流转：`idle → [开始解密]` → `解密中 → [中断]` → `interrupted/done → [重新开始]`。中断后已解密数据保留在界面中，供审查后再决定是否重新开始。
-
-#### 优化
-
-| 维度 | 优化手段 | 效果 |
-|------|----------|------|
-| **解密并发** | 多 Worker（`hardwareConcurrency`）并行解密 | 解密速度提升 4-8x |
-| **渲染频率** | rAF 批量 flush，合并多次 setLines | setState 次数降低 90%+ |
-| **保序合并** | Map + expectedSeq 连续输出 | 不乱序，不丢行 |
-| **空闲复用** | availableRef 池化管理 Worker | Worker 利用率最大化 |
-| **自动跟随** | auto-scroll，检测用户手动滚动后暂停 | 不干扰用户查看历史 |
-| **内存控制** | `.slice(-2000)` 限制显示行数 | 页面 DOM 控制在 2000 行以内 |
-| **渲染频率** | 进度条更新合并到 rAF flush | 避免 SSE 循环中直接 setProgress 导致额外 re-render |
-| **DOM 稳定性** | `lineIdRef` 唯一 ID 替代索引 key | 切片追加时旧行保持稳定，避免 unmount/remount |
-| **交互控制** | 中断/重新开始三态按钮 | 解密中可随时中断，审查后重新开始 |
-
-#### 体系化
-
-```mermaid
-sequenceDiagram
-    participant UI as UI 主线程
-    participant Worker as Key Worker
-    participant SSE as SSE Stream
-    participant Pool as Worker 池
-    participant Merge as 保序合并
-
-    UI->>Worker: postMessage({ type: "generate-key" })
-    Worker->>Worker: crypto.subtle.generateKey(RSA-OAEP, 2048)
-    Worker->>UI: { type: "key-generated", publicKey(spki) }
-    UI->>SSE: fetch(/api/sse/encrypted-logs?clientKey=publicKey)
-    SSE->>UI: data: { type: "key-exchange", encryptedKey }
-    UI->>Worker: postMessage({ type: "init", key: encryptedKey })
-    Worker->>Worker: crypto.subtle.decrypt(RSA-OAEP)
-    Worker->>UI: { type: "aes-key-ready", key: aesKey }
-    UI->>Pool: initWorkers(aesKey)
-    Note over Pool: N 个 Worker 并行准备
-
-    SSE->>UI: data: { seq, data(base64), progress }
-    UI->>UI: 存入加密预览区
-    UI->>Pool: dispatchJob(data, seq)
-    Pool->>Merge: postMessage(lines, seq)
-    Merge->>Merge: Map 缓存 + expectedSeq 检测
-    Merge->>UI: setLines（rAF 批量）
-    UI->>UI: auto-scroll / 统计面板更新
-
-    SSE->>UI: data: { type: "done" }
-    UI->>UI: doneTimeRef 冻结 elapsed
-    UI->>UI: setStatus("done")
-
-    Note over UI,Pool: 用户可随时点击「中断」
-    UI->>SSE: abortRef.abort()
-    UI->>Pool: terminate Workers
-    UI->>UI: 保留已解密数据
-    UI->>UI: setStatus("interrupted")
-
-    Note over UI: 点击「重新开始」→ disconnect + start
-```
-
-#### 存在问题与解决方案
-
-| 问题 | 方案 |
-|------|------|
-| Worker 解密完成顺序与发送顺序不一致 | seq 序号 + Map 缓冲区 + expectedSeq 连续检测 |
-| 频繁 setLines 导致渲染卡顿 | requestAnimationFrame 合并多次更新为一次 |
-| 用户手动滚动时自动跟随干扰阅读 | `userScrolledRef` 检测手动滚动，暂停 auto-scroll |
-| Worker 解密速度跟不上生产速度 | availableRef 空闲队列 + pendingRef 背压缓冲 |
-| 大量 DOM 导致内存膨胀 | `.slice(-2000)` + encryptedLines 使用后自动移除 |
-| 连接中断恢复 | AbortController 管理生命周期，disconnect 彻底清理 |
-| 解密中需要暂停审查已解密数据 | interrupt() 中断 SSE + 销毁 Worker，保留解密结果 |
-| 解密完成但进度未达 100% | status === "done" 时 Progress 强制显示 100% |
-| done 后 Worker 仍在后台解密，统计面板不同步 | doneTimeRef 冻结 elapsed，scheduleFlush 持续更新统计 |
-| SSE 循环中 setProgress 触发额外 re-render | progressRef ref 存值，scheduleFlush 统一 setProgress | 减少中间态渲染次数 |
-| 索引 key 导致切片后全量 remount | lineIdRef 累加器 + `{ id, text }` 结构，stable key | 2000 行截断时旧行无需卸载重建 |
-
-#### 追问链路
-
-**Q1: 为什么用 AES-256-GCM 而不是 XOR 加密？**
-```
-XOR 是对称流密码，密钥重复使用会泄密。
-AES-256-GCM 提供:
-  - 认证加密（完整性校验）
-  - 12 字节随机 nonce，保证同一密钥加密不同数据密文不同
-  - 浏览器内置 crypto.subtle 硬件加速
-
-100 万行 × 100 字节 ≈ 100MB，AES-256-GCM 解密耗时约 1-2s。
-分 4 个 Worker 并行 → 约 250-500ms，用户几乎无感知。
-```
-
-**Q2: 保序合并的具体流程？竞态如何处理？**
-```
-expectedSeq 从 0 递增:
-  - Worker A 解密 seq=3 先完成 → Map.set(3, lines)
-  - Worker B 解密 seq=0 后完成 → Map.set(0, lines)
-  - 检测 expectedSeq=0, Map 有 → 输出, expectedSeq++
-  - 检测 expectedSeq=1, Map 没有 → 等待
-  - Worker C 解密 seq=1 完成 → 输出, expectedSeq=2
-  - 此时 seq=2 不在 Map 中 → 等待
-  - Worker A 返回 seq=3, 但 seq=2 未到 → 不输出
-
-竞态: 无。Map 读写都在主线程同一事件循环，不涉及共享内存。
-JavaScript 单线程 + 异步 → 天然串行化。
-```
-
-**Q3: 为什么选择 SSE 而不是 WebSocket？**
-```
-SSE 优势:
-  - 浏览器原生 ReadableStream → 流式解析
-  - 自动重连（EventSource API 的 reconnect）
-  - 单向推送足够（服务端→客户端日志流）
-  - 基于 HTTP，穿透防火墙更容易
-
-WebSocket 适用场景: 双向实时通信（如聊天、协同编辑）。
-本项目日志流是单向推送，SSE 是更轻量的选择。
-```
-
-**Q5: 中断和重新开始的实现要点？**
-```
-中断 (interrupt):
-  - abortRef.abort() 中断 SSE ReadableStream
-  - terminate() 销毁所有 Worker（正在解密的 chunk 直接丢弃）
-  - 不 touch displayRef/lines → 已解密数据保留在界面
-  - encryptedBufRef 清空（中断后不再接收新加密数据）
-
-重新开始:
-  - 复用 start()，内部先调用 disconnect() 清除全部状态
-  - 从 SSE 连接开始全新流程
-
-竞态防护:
-  - abortRef 用局部变量 + 引用比较，防止中断后旧回调更新状态
-  - interrupt 后 Worker 全量 terminate，不存在残留回调
-```
-
-**Q6: 如果日志超过 1000 万行，架构能否支撑？**
-```
-当前架构:
-  - 解密: Worker 池并行，可线性扩展（更多 Worker）
-  - 渲染: 限制显示行数 .slice(-2000)，与总行数无关
-  - 内存: lines 数组存 2000 条文本 ≈ 200KB
-
-瓶颈转移到加密预览区 encryptedLines:
-  encryptedLines 保存所有未解密的占位项
-  1000 万行 → 1000 万个对象 → 内存 OOM
-
-优化方向:
-  - 环形缓冲区（RingBuffer）代替数组，固定最大容量
-  - 虚拟滚动替代全量渲染
-```
-
-**Q7: RSA-2048 密钥交换的完整流程是怎样的？为什么需要 RSA？**
-```
-完整流程:
-  1. 客户端 SSE 连接建立后，服务端生成临时 RSA-2048 密钥对
-  2. 服务端发送 RSA 公钥 → 客户端接收（publicKey）
-  3. 客户端生成 AES-256 随机密钥 → 用 RSA-OAEP (SHA-256) 加密
-  4. 客户端将加密后的 AES 密钥发送给服务端
-  5. 服务端解密得到 AES 密钥 → 后续日志用 AES-256-GCM 加密
-  6. 服务端将 RSA 私钥也返回给客户端（用于手动解密验证）
-
-为什么需要 RSA？
-  - AES 密钥不能明文传输（被截获 = 全部日志解密）
-  - RSA 非对称加密: 公钥加密、私钥解密
-  - 即使中间人截获了公钥和加密后的 AES 密钥
-  - 没有私钥也无法解密 → 安全
-
-为什么是 RSA-2048 而不是 RSA-4096？
-  每次连接生成新的 RSA 密钥对，解密性能要求不高。
-  2048 位足够安全（等效 112 位对称加密），
-  4096 位生成慢 4-5 倍，对一次性会话密钥不合理。
-```
-
-#### 技术边界
-
-**边界 1：浏览器 Worker 数量限制**
-```
-navigator.hardwareConcurrency 通常返回 4-8。
-超出此值创建 Worker 不会报错，但线程切换开销 > 收益。
-部分移动端浏览器限制最多 2-4 个 Worker。
-方案: 动态检测，降级到 2 个 Worker + 串行任务队列。
-```
-
-**边界 2：crypto.subtle.decrypt 的异步耗时**
-```
-AES-GCM 解密是异步操作（返回 Promise），
-每次解密约 0.5-2ms（100 字节数据）。
-100 万行 × 0.5ms = 500ms 总解密时间（单 Worker）。
-4 Worker 并行 ≈ 125ms，可作为首屏展示基准数据。
-```
-
-**边界 3：SSE 连接的浏览器限制**
-```
-浏览器对同一域名 SSE 连接数有限制（Chrome 6 个）。
-如果页面同时打开多个 SSE 流 → 超出限制后被阻塞。
-方案: 单例 SSE 管理 + 连接复用（多路复用）。
-```
-
-### 2.13 Web Worker 两场景对比：分治合并 vs 流式解密
-
-| 维度 | 2.4 分治有序合并 | 2.12 十万行日志流解密 |
-|---|---|---|
-| **数据模式** | 一次性批处理 | 流式持续到达 |
-| **输入方式** | 全量 100 万数字一次传入 | SSE 逐 chunk 推送，总量不确定 |
-| **Worker 职责** | `Array.sort()` 排序 | `crypto.subtle.decrypt()` AES-GCM 解密 |
-| **结果合并** | K 路指针归并（有序 → 有序） | seq 序号 + Map 缓冲区（乱序 → 有序） |
-| **传输内容** | Float64Array ~8MB | Base64 字符串 ~100B/chunk |
-| **传输优化** | Transferable Objects 零拷贝 | 无需优化，数据量小 |
-| **Worker 创建时机** | 组件挂载时固定 Pool | RSA 密钥交换完成后创建 |
-| **Pool 大小** | `hardwareConcurrency` | `hardwareConcurrency` |
-| **背压处理** | 无（分区数 = Worker 数） | pendingRef 等待队列 + availableRef 空闲池 |
-| **中断恢复** | 无 | interrupt() 保留数据中断 + 重新开始 |
-| **进度反馈** | 无（一次性出结果） | rAF 统计面板（行数/速度/chunks） |
-| **主线程负载** | 多路归并（CPU 轻量） | SSE 解析 + 保序合并 + 渲染（IO + UI） |
-| **内存控制** | 无（全量数据常驻） | `.slice(-2000)` + encryptedLines 自动清理 |
-
-#### 设计取舍对比
-
-**相同点**：
-- 都用 `navigator.hardwareConcurrency` 决定 Worker 数量，匹配 CPU 核心数
-- 都用 `availableRef/pool` 管理 Worker 空闲状态，避免重复创建
-- 都通过 `postMessage` 传递任务 + Worker 回调接收结果
-
-**差异点**：
-
-**分治合并**是"分而治之"的批处理模型。数据一次性到位，任务可以预先分割，Worker 之间完全独立，归并阶段在主线程串行完成。本质是用空间换时间——多核并行缩短排序延迟。
-
-**流式解密**是"生产-消费"的流水线模型。数据源源不断，任务总量不可预知，需要同时处理：乱序到达（seq 保序）、生产 > 消费（pendingRef 背压）、用户主动中断（interrupt）、后台任务收尾（doneTimeRef）。本质是用异步流水线换响应性——主线程不被阻塞，用户看到的是逐行追加的流式效果。
-
-```mermaid
-graph TB
-    subgraph BATCH["批处理模型（2.4）"]
-        A1["全量数据"] --> A2["等量分区"]
-        A2 --> A3["Worker 并行排序"]
-        A3 --> A4["主线程 K 路归并"]
-        A4 --> A5["一次性输出"]
-    end
-
-    subgraph STREAM["流式模型（2.12）"]
-        B1["SSE 持续推送"] --> B2["dispatchJob"]
-        B2 --> B3["Worker 并行解密"]
-        B3 --> B4["seq 保序合并"]
-        B4 --> B5["rAF 逐批追加"]
-        B5 --> B6["实时统计面板"]
-    end
-
-    BATCH -.->|"面试对比"| STREAM
-```
-
-#### 面试价值
-
-面试官追问 "Web Worker 你用过吗"，这两个例子可以展示你对 Worker 的深度理解：
-
-1. **基础认知**：Worker 是独立线程，通过 `postMessage` 通信，适合 CPU 密集任务
-2. **进阶实践**：Pool 管理、Transferable Objects、`hardwareConcurrency` 适配
-3. **场景差异**：批处理 vs 流式——同样用 Worker，架构决策截然不同
-4. **工程取舍**：背压、保序、中断、进度——流式场景特有的问题及解法
+### 2.9 SSE 日志流 ⭐⭐
+
+**位置**: `src/pages/SseLogStream.tsx`
+
+`fetch + ReadableStream` 流式读取，`AbortController` 控制连接生命周期，RAF 节流合并渲染，pausedRef 暂停/恢复。
+
+---
+
+### 2.10 请求加载 Signal + React 19 use() ⭐⭐⭐
+
+**位置**: `src/pages/RequestLoading.tsx` + `requestLoadingStore.ts` + `requestResource.ts`
+
+- `use(resource.promise)` 消费 Promise，Suspense 自动处理加载态
+- `createRequestResource` 封装 fetch + AbortController
+- 每请求独立 Suspense + ErrorBoundary 边界
+
+---
+
+### 2.11 树形数据操作引擎 ⭐⭐
+
+**位置**: `src/pages/TreeDataEngine.tsx`
+
+纯函数递归 CRUD（findNode/removeNode/updateNode/insertNode），dnd-kit 拖拽排序，不可变数据模式。
+
+---
+
+### 2.12 LRU 路由缓存 ⭐⭐
+
+**位置**: `src/pages/LruRouteCache.tsx` + `lruRouteStore.ts` + `lru.ts`
+
+- DOM `display:none` 保持状态
+- Map 插入顺序实现 LRU 淘汰（上限 3 个页面）
+- staleKeys 写后失效 + 惰性刷新
+- 30s TTL 惰性过期
+
+---
+
+### 2.13 十万行日志流解密 ⭐⭐
+
+**位置**: `src/pages/LogStream.tsx` + `decrypt.worker.ts`
+
+- RSA-2048 密钥交换 + AES-256-GCM 对称解密
+- 多 Worker 并行解密（`hardwareConcurrency`）
+- seq 序号保序合并 + rAF 批量渲染
+- 三态按钮：idle → 解密中 → interrupted/done
+
+---
 
 ### 2.14 UniPay 统一支付中台 ⭐⭐⭐⭐
 
-**位置**: `apps/frontend/src/pages/UniPay.tsx` (923 行) + `backend/internal/payment/handler.go` (401 行)
+**位置**: `apps/frontend/src/pages/UniPay.tsx` + `backend/internal/payment/`
 
-#### 实现思路
-
-**为什么要做 UniPay？** 支付是分布式系统中"高可用 + 高一致 + 高安全"的典型场景，支付状态机、幂等性、失败重试、对账脚本、安全防护等设计模式可以完整展示后端架构能力和前端交互设计能力。
-
-**核心架构**：7 种支付状态（PENDING / PROCESSING / SUCCESS / FAIL / REFUNDING / REFUNDED / CLOSED）× 6 种状态驱动力（create / callback-success / callback-fail / refund / re-pay / close），用状态转换矩阵管理订单生命周期。
-
-#### 实现过程
-
-##### 支付状态机
-
-```
-状态转换矩阵:
-  PENDING   → PROCESSING (用户提交支付)
-  PROCESSING → SUCCESS   (渠道回调成功)
-  PROCESSING → FAIL      (渠道回调失败)
-  PROCESSING → CLOSED    (手动关闭)
-  SUCCESS   → REFUNDING  (发起退款)
-  REFUNDING → REFUNDED   (退款完成)
-  FAIL      → PENDING    (重新支付)
-```
-
-状态机核心逻辑采用乐观锁（version 字段）防止并发覆盖：
-
-```go
-// backend/handlers/payment.go
-UPDATE orders SET status = ?, version = version + 1
-WHERE id = ? AND version = ?
-```
-
-前端 `useCallback` 封装每个驱动操作，按钮显隐由当前状态决定：
-
-```typescript
-// PENDING → close, PROCESSING → callback success/fail
-// SUCCESS → refund, FAIL → re-pay + retry demo
-```
-
-##### 幂等性设计（Idempotency-Key）
-
-**四层纵深防御架构**：
-
-| 层级 | 防护手段 | 防御场景 | 容灾兜底 |
-|------|---------|---------|---------|
-| **L1 前端** | 每次支付生成唯一 Idempotency-Key（`idem_${timestamp}_${random}`） | 用户双击提交 | 浏览器层面防重 |
-| **L2 网关** | Idempotency-Key 去重表 | 请求重传 | 返回缓存结果 |
-| **L3 业务** | UNIQUE 索引 + 状态机版本号 | 并发写入冲突 | 对账补偿兜底 |
-| **L4 对账** | T+1 对账脚本 | 跨日漏网重复 | 人工审核退款 |
-
-交互式 Demo：
-
-```typescript
-// 首次请求 → 正常处理
-const result1 = await http.post("/api/payments", order, {
-  headers: { "Idempotency-Key": key },
-})
-// 重复请求（相同 Key）→ 直接返回缓存结果
-const result2 = await http.post("/api/payments", order, {
-  headers: { "Idempotency-Key": key },
-})
-// 断言两次返回相同
-assert.deepEqual(result1, result2)
-```
-
-##### 指数退避重试
-
-**三次重试策略**（确定性：前两次失败，第三次成功）：
-
-| 重试 # | 等待时间 | 预期结果 | 说明 |
-|--------|---------|---------|------|
-| 1 | 1s | ❌ 失败 (HTTP 502) | 服务器繁忙 |
-| 2 | 2s | ❌ 失败 (HTTP 502) | 仍繁忙 |
-| 3 | 4s | ✅ 成功 (HTTP 200) | 服务恢复 |
-
-```typescript
-const BASE_DELAY = 1000 // 1s
-for (let attempt = 1; attempt <= MAX_RETRY; attempt++) {
-  const jitter = BASE_DELAY * Math.pow(2, attempt - 1) // 1s, 2s, 4s
-  // 确定性失败模拟
-  if (attempt < MAX_RETRY) throw new Error("simulated failure")
-}
-```
-
-重试成功后通过 `setOrders` 联动更新当前订单状态为 SUCCESS，日志面板实时滚动。
-
-##### T+1 对账脚本
-
-按 `orderNo|channel` 生成 6 笔测试数据（2 笔正常 + 4 笔重复），对账逻辑：
-
-```typescript
-const groupMap = new Map<string, PaymentOrder[]>()
-testOrders.forEach((o) => {
-  const key = `${o.orderNo}|${o.channel}`
-  groupMap.set(key, [...(groupMap.get(key) ?? []), o])
-})
-// 每组按 createdAt 排序，slice(1) 即为重复订单 → 自动退款
-```
-
-前端实时展示去重过程、重复订单列表、自动退款结果。
-
-##### 支付安全
-
-**回调伪造检测**：
-- RSA 签名验签：回调请求携带 RSA-SHA256 签名，后端用公钥验签
-- IP 白名单：只允许白名单 IP 回调（`192.168.1.0/24`）
-- 默认拒绝原则：未通过直接丢弃
-
-**金额篡改检测**：
-- 前端展示 `¥29.99`，攻击者篡改为 `¥999.00`
-- 后端二次验价：对比请求金额与订单金额，不匹配直接拒绝
-
-#### 交互式 Demo 设计
-
-```
-页面布局:
-┌─ TopBar ──────────────────────────────────────┐
-│ [创建支付订单] [幂等性测试] [对账演示] [安全检测] │
-├─ OrderCard ───────────────────────────────────┤
-│  订单信息 (Descriptions)                        │
-│  [关闭] [回调成功] [回调失败] [退款] [重新支付]    │
-│  [重试演示] ← 仅在 FAIL 状态显示                 │
-├─ RetryLogPanel ───────────────────────────────┤
-│  实时滚动日志（自动递增 ID 去重 key）              │
-├─ SecurityLogPanel ────────────────────────────┤
-│  安全检测日志（签名验签 + IP 校验 + 金额验价）      │
-└───────────────────────────────────────────────┘
-```
-
-**状态驱动按钮显隐**：
-- TopBar 始终可用：创建订单、幂等性测试、对账演示、安全检测
-- 可用操作按状态显示：PENDING→关闭, PROCESSING→回调成功/失败, SUCCESS→退款, FAIL→重新支付+重试演示
-
-**对账逻辑**：`groupMap` 按 `orderNo|channel` 分组 → 每组按 `createdAt` 排序 → `slice(1)` 为重复 → 自动退款标记
-
-#### 技术补充
-
-##### 后端路由设计
-
-| 路由 | 方法 | 功能 |
-|------|------|------|
-| `/api/payments/create` | POST | 创建支付订单，返回完整订单信息 |
-| `/api/payments/:id/process` | POST | 模拟渠道异步回调，更新订单状态 |
-| `/api/payments/:id/transition` | POST | 手动状态流转（6 种驱动力） |
-| `/api/payments/idempotency-test` | POST | 幂等性测试（首次 + 重复请求） |
-| `/api/payments/security-check` | POST | 安全检测（回调伪造 + 金额篡改） |
-| `/api/payments/retry-demo` | POST | 指数退避重试演示 |
-
-##### React 关键实现细节
-
-```typescript
-// 每个操作生成唯一 ID 作为 log 的 React key
-const logIdRef = useRef(0)
-const addLog = useCallback((msg: string) => {
-  logIdRef.current++
-  setRetryLog((prev) => [...prev, { msg, id: logIdRef.current }])
-}, [])
-```
-
-```typescript
-// 异步回调中防止状态覆盖
-const target = orders.find(Boolean)
-if (o.status === "PROCESSING") {
-  // 仅在 PROCESSING 状态时更新，防止手动状态变更被覆盖
-  o.status = success ? "SUCCESS" : "FAIL"
-}
-```
-
-```typescript
-// Re-pay 重新支付：生成新 Idempotency-Key + 新 orderNo
-const rePay = useCallback((orderId: string) => {
-  setOrders((prev) => prev.map((o) =>
-    o.id === orderId ? {
-      ...o,
-      status: "PENDING",
-      orderNo: `ORD${String(Date.now())}`,
-      idempotencyKey: `idem_${String(Date.now())}_${String(Math.random()).slice(2, 8)}`,
-    } : o
-  ))
-}, [])
-```
-
-#### 面试价值
-
-面试官追问 "支付系统你做过吗"，这个例子可以展示你对支付核心问题的深度理解：
-
-1. **幂等性不是"一个 key"那么简单** — 从前端到网关到业务到存储的四层纵深防御，每层解决不同的失败场景
-
-2. **支付失败是常态而非异常** — 三类失败场景（请求失败、处理中断、回调丢失）需要分层策略，指数退避 + 定时轮询 + 主动查单三种手段互补
-
-3. **状态机是支付系统的骨架** — 7 个状态的定义决定了系统健壮性边界，乐观锁 version 防并发覆盖是对账之外的又一层防护
-
-4. **可视化 Demo 的价值** — 状态流转、幂等测试、重试过程、对账流程、安全检测，全部在交互式 Demo 中可操作可观测
+- 7 种状态 × 6 种驱动力状态机
+- Idempotency-Key 幂等性四层纵深防御
+- 指数退避重试（1s/2s/4s 确定性）
+- T+1 对账脚本（groupMap 去重 + 自动退款）
+- 回调伪造检测 + 金额篡改二次验价
 
 ---
 
 ### 2.15 AI 后端六阶段进阶模式 ⭐⭐⭐
 
-**位置**: `apps/ai-demo/` (6 个组件 + 8 个工具函数) + `backend/internal/` (agent/chat/knowledge/middleware/vitals)
-
-#### 实现思路
-
-从零搭建完整的 AI 后端能力矩阵，按六阶段渐进式设计——每个阶段建立在前一阶段基础上，从基础的 LLM 对话到高级的智能体编排、再到可观测的运维体系：
-
-```
-Stage 1 LLM 流式对话  →  Stage 2 混合 RAG 知识库
-        ↓                         ↓
-Stage 3 智能体 Agent  ──────────→  Stage 4 Playground 调试台
-        ↓                         ↓
-Stage 5 中间件层  ──────────────→  Stage 6 遥测与监控
-```
-
-每个阶段都有对应的前端交互组件和后端 API 实现，形成完整的前后端闭环。
-
-#### 实现过程
-
-**Stage 1：LLM 流式对话（Chat.tsx + chat/）**
-
-核心目标：实现类 ChatGPT 的流式对话体验，支持多模型切换。
-
-```
-用户输入 → POST /api/chat/stream → SSE stream → `[DONE]` 标记结束
-                                              → 逐 token 渲染
-```
-
-```typescript
-// 前端 Chat.tsx — SSE 流式读取核心
-const response = await fetch("/api/chat/stream", {
-  method: "POST",
-  body: JSON.stringify({ messages, model, stream: true }),
-})
-const reader = response.body!.getReader()
-const decoder = new TextDecoder()
-
-while (true) {
-  const { done, value } = await reader.read()
-  if (done) break
-  const text = decoder.decode(value, { stream: true })
-  for (const line of text.split("\n")) {
-    if (line.startsWith("data: ")) {
-      const content = line.slice(6)
-      if (content === "[DONE]") break  // 流结束标记
-      setStreamedText((prev) => prev + JSON.parse(content).content)
-    }
-  }
-}
-```
-
-| 技术点 | 说明 |
-|--------|------|
-| SSE 流式 | `fetch + ReadableStream` 逐 token 读取，`[DONE]` 标记结束 |
-| 多模型切换 | OpenAI / DeepSeek / Ollama 三模型，前端选型 + 后端路由 |
-| 上下文窗口 | 维护 messages 数组，按 token 估算裁剪历史 |
-| DeepSeek 兼容 | 修复 response 解析差异（choices 数组结构不同） |
-
-**Stage 2：混合 RAG 知识库（KnowledgeBase.tsx + knowledge/）**
-
-核心目标：支持上传文档 → 解析分块 → 向量嵌入 → 语义检索的全流程 RAG。
-
-```mermaid
-graph LR
-    DOC["上传文档<br/>PDF/TXT/MD"] --> PARSER["文档解析器<br/>多格式支持"]
-    PARSER --> CHUNK["智能分块<br/>按段落/大小"]
-    CHUNK --> EMBED["向量嵌入<br/>OpenAI/本地"]
-    EMBED --> VECTOR["向量存储<br/>内存数组"]
-    VECTOR --> SEARCH["混合检索<br/>BM25 + Vector"]
-    SEARCH --> RERANK["重排序<br/>Top-K 融合"]
-```
-
-```go
-// rag.go — 混合检索核心
-type SearchResult struct {
-    Content string  `json:"content"`
-    Score   float64 `json:"score"`
-    Source  string  `json:"source"` // "bm25" | "vector" | "hybrid"
-}
-
-func (r *RAGEngine) HybridSearch(query string, k int) []SearchResult {
-    bm25Results := r.bm25Search(query, k)      // 关键词检索
-    vecResults := r.vectorSearch(query, k)       // 语义检索
-    return r.fusionSort(bm25Results, vecResults) // 加权融合排序
-}
-```
-
-| 技术点 | 说明 |
-|--------|------|
-| BM25 关键词检索 | 经典 TF-IDF 变体，适合精确匹配 |
-| Vector 语义检索 | OpenAI Embeddings API + 余弦相似度 |
-| 混合加权 | `score = α × bm25 + (1-α) × vector`，α 可调 |
-| 多格式解析 | PDF (pdfcpu)、TXT、Markdown 三种格式 |
-| 智能分块 | 按段落边界 + 最大 token 限制分割 |
-
-**Stage 3：智能体 Agent（Agents.tsx + agent/）**
-
-核心目标：实现 ReAct（推理 + 行动）循环的智能体，支持工具调用和 Multi-Agent 协作。
-
-```
-ReAct 循环:
-  Thought: 分析用户需求 → 决定调用哪个工具
-  Action: 执行工具函数（搜索 / 计算 / 查询）
-  Observation: 获取工具返回结果
-  → 循环直到给出最终 Answer
-
-三档复杂度:
-  Basic Agent  → 单工具调用
-  Function Calling Agent → 多工具编排
-  Multi-Agent → 主 Agent + 子 Agent 委派
-```
-
-```go
-// enhanced.go — ReAct 循环核心
-func (a *EnhancedAgent) ExecuteReact(ctx context.Context, req AgentRequest) error {
-    messages := buildReActMessages(req)
-    for step := 0; step < a.maxSteps; step++ {
-        response := a.llmChat(ctx, messages)
-        
-        if hasFinalAnswer(response) {
-            a.emitEvent("final", response.Answer)
-            return nil
-        }
-
-        toolCall := parseToolCall(response.Content)
-        result := a.executeTool(ctx, toolCall)
-        messages = append(messages, 
-            NewToolMessage(toolCall.Name, result))
-    }
-    return fmt.Errorf("max steps %d reached", a.maxSteps)
-}
-```
-
-```go
-// mcp.go — MCP 工具协议
-type MCPRequest struct {
-    JsonRPC string          `json:"jsonrpc"` // "2.0"
-    Method  string          `json:"method"`  // "tools/call"
-    Params  json.RawMessage `json:"params"`
-    ID      string          `json:"id"`
-}
-
-type MCPTool struct {
-    Name        string   `json:"name"`
-    Description string   `json:"description"`
-    InputSchema Schema   `json:"inputSchema"`
-}
-```
-
-| 技术点 | 说明 |
-|--------|------|
-| ReAct 循环 | Thought → Action → Observation 循环，最大步数保护 |
-| Function Calling | 工具注册表 `map[string]Tool`，动态路由 |
-| Multi-Agent | 主 Agent 委派子 Agent 处理子任务，结果聚合 |
-| MCP 工具协议 | JSON-RPC 2.0 标准工具定义 + 调用 |
-| 流式输出 | ReAct 每一步通过 SSE `data: {...}` 推送 |
-| 代际锁 | `genRef` 控制 Agent 执行生命周期，Stop 后立即终止 |
-
-**Stage 4：Playground 调试台（Playground.tsx）**
-
-核心目标：提供 AI 功能的全方位调试工具链，覆盖安全、性能、可观测性。
-
-```mermaid
-graph TB
-    INPUT["用户输入"] --> PG["PromptGuard<br/>注入检测"]
-    PG --> RC["ResponseCache<br/>缓存查询"]
-    RC --> TE["TokenEstimator<br/>Token 估算"]
-    TE --> EC["ErrorHandler<br/>错误分类"]
-    EC --> CM["ContextManager<br/>上下文管理"]
-    CM --> DM["DataMasker<br/>数据脱敏"]
-    DM --> TL["Telemetry<br/>遥测上报"]
-    TL --> API["后端 API"]
-```
-
-| 面板 | 功能 | 实现方式 |
-|------|------|----------|
-| PromptGuard | 提示注入检测（SQL/XSS/越狱） | 正则 + 关键词 + 模式匹配 |
-| ResponseCache | 响应缓存（LRU + TTL） | `Map<string, {data, ttl}>` |
-| TokenEstimator | Token 用量估算 | 按字符/中英文比例估算 |
-| ErrorHandler | 错误分类（超时/限流/鉴权/模型） | 错误码映射 + 用户友好提示 |
-| ContextManager | 上下文窗口管理 | 自动裁剪 + Token 预算控制 |
-| DataMasker | 敏感数据脱敏 | 正则替换（手机/邮箱/身份证/密钥） |
-| Telemetry | 本地统计上报 | `navigator.sendBeacon` 批量推送 |
-
-```typescript
-// playground 核心: 所有工具函数通过 Pipeline 串联
-const pipeline = [
-    promptGuard,
-    responseCache.check,
-    tokenEstimator,
-    errorHandler.wrap,
-    contextManager.build,
-    dataMasker.mask,
-    telemetry.report,
-]
-const result = pipeline.reduce((acc, fn) => fn(acc), userInput)
-```
-
-**Stage 5：中间件层（middleware/）**
-
-核心目标：将 AI 安全与性能策略提升为 HTTP 中间件，所有 API 路由可复用。
-
-```go
-// promptguard.go — PromptGuard 中间件
-func PromptGuard() gin.HandlerFunc {
-    patterns := []*regexp.Regexp{
-        regexp.MustCompile(`(?i)ignore all previous instructions`),
-        regexp.MustCompile(`(?i)you are now`),
-        regexp.MustCompile(`(?i)system prompt`),
-        // ... 20+ 检测模式
-    }
-    return func(c *gin.Context) {
-        var body struct { Content string `json:"content"` }
-        c.ShouldBindBodyWith(&body, binding.JSON)
-        
-        for _, p := range patterns {
-            if p.MatchString(body.Content) {
-                c.AbortWithStatusJSON(403, gin.H{
-                    "error": "prompt injection detected",
-                    "matched": p.String(),
-                })
-                return
-            }
-        }
-        c.Next()
-    }
-}
-```
-
-```go
-// responsecache.go — ResponseCache 中间件
-func ResponseCache() gin.HandlerFunc {
-    cache := lru.New[string, cacheEntry](1000)
-    mu := sync.RWMutex{}
-    
-    return func(c *gin.Context) {
-        key := c.Request.Method + ":" + c.Request.URL.String()
-        
-        mu.RLock()
-        entry, ok := cache.Get(key)
-        mu.RUnlock()
-        
-        if ok && time.Since(entry.timestamp) < 30*time.Second {
-            c.Data(http.StatusOK, entry.contentType, entry.data)
-            c.Abort()
-            return
-        }
-        c.Next()
-    }
-}
-```
-
-**Stage 6：遥测与监控（vitals/）**
-
-核心目标：AI 服务的可观测性——谁调了什么模型、花了多少 Token、延迟多少。
-
-```go
-// vitals.go — 遥测数据结构
-type AIReport struct {
-    Model       string  `json:"model"`
-    TokensIn    int     `json:"tokensIn"`
-    TokensOut   int     `json:"tokensOut"`
-    LatencyMs   float64 `json:"latencyMs"`
-    CacheHit    bool    `json:"cacheHit"`
-    Error       string  `json:"error,omitempty"`
-    AgentSteps  int     `json:"agentSteps,omitempty"`
-    RAGResults  int     `json:"ragResults,omitempty"`
-}
-```
-
-前端 Dashboard 通过 ECharts 可视化展示：
-- Token 用量趋势（折线图）
-- 模型调用分布（饼图）
-- 延迟 P50/P95/P99（柱状图）
-- 缓存命中率（仪表盘）
-- 错误分类统计（堆叠图）
-
-#### 优化
-
-| 维度 | 优化手段 | 效果 |
-|------|----------|------|
-| **流式** | SSE `[DONE]` 标记 + ReadableStream | 逐 token 渲染，首 token 延迟 < 200ms |
-| **RAG** | BM25 + Vector 混合加权 | 检索准确率提升 30%+ (单一 BM25 基准) |
-| **Agent** | ReAct 流式 + maxSteps 保护 | 避免无限循环，每步可见 |
-| **Agent** | Generation Lock 代际锁 | Stop 后 0 延迟终止执行 |
-| **缓存** | LRU + TTL 30s + Middleware 透明 | GET 请求缓存命中率 ~40% |
-| **安全** | PromptGuard 正则 + 关键词 20+ 模式 | 注入检测召回率 > 95% |
-| **遥测** | `navigator.sendBeacon` 批量上报 | 不影响主请求延迟 |
-| **工具链** | Pipeline 模式串联 7 个调试工具 | 新增工具零侵入 |
-
-#### 体系化
-
-```mermaid
-graph TB
-    subgraph Frontend["apps/ai-demo/"]
-        CHAT["Chat.tsx<br/>SSE 流式对话"]
-        KB["KnowledgeBase.tsx<br/>知识库 CRUD + RAG"]
-        AGENTS["Agents.tsx<br/>ReAct + Multi-Agent + MCP"]
-        PG["Playground.tsx<br/>7 工具调试链"]
-        DASHBOARD["Dashboard.tsx<br/>遥测可视化"]
-        UTILS["utils/*.ts<br/>8 个工具函数"]
-    end
-
-    subgraph Backend["backend/internal/"]
-        CHAT_B["chat/<br/>LLM 流式 + 模型路由"]
-        KNOWLEDGE_B["knowledge/<br/>混合 RAG + 文档解析"]
-        AGENT_B["agent/<br/>ReAct + Function Calling + MCP"]
-        MIDDLEWARE["middleware/<br/>PromptGuard + ResponseCache"]
-        VITALS_B["vitals/<br/>遥测采集与聚合"]
-    end
-
-    Frontend -->|"SSE/HTTP"| Backend
-    CHAT --> CHAT_B
-    KB --> KNOWLEDGE_B
-    AGENTS --> AGENT_B
-    PG --> MIDDLEWARE & VITALS_B
-    DASHBOARD --> VITALS_B
-```
-
-#### 存在问题与解决方案
-
-| 问题 | 产生原因 | 解决方案 |
-|------|----------|----------|
-| **流式响应解析错误** | DeepSeek 返回格式与 OpenAI 不同 | 统一响应格式层，适配各厂商差异 |
-| **RAG 检索结果不相关** | 纯 Vector 检索在冷启动时效果差 | 混合 BM25 + Vector，α 权重可调 |
-| **Agent 无限循环** | ReAct 在复杂任务中反复调用工具 | maxSteps=10 上限 + 代际锁终止 |
-| **Playground 工具链阻塞** | 7 个工具串联，单个失败影响全部 | Pipeline 模式 + 每个工具独立 try-catch |
-| **遥测上报影响性能** | POST `/api/vitals/report` 阻塞主请求 | `navigator.sendBeacon` 异步后台发送 |
-| **MCP 工具调用超时** | Agent 等待工具返回无超时 | context.WithTimeout 5s 容器级超时 |
-| **Multi-Agent 结果冲突** | 子 Agent 返回矛盾结果 | 主 Agent 最终裁决 + 投票机制 |
-
-#### 追问链路
-
-**Q1: SSE 流式为什么用 `[DONE]` 标记而不是 JSON 内字段？**
-```
-两种方案:
-  a. JSON 内字段: data: {"content": "...", "done": false} → 每次解析 JSON + 检查字段
-  b. 特殊标记: data: {"content": "..."} 最后一行 data: [DONE]
-     → JSON 解析无额外判断，read loop 检测标记即 break
-
-本项目选 b: 减少每 token 的解析开销（高频流式场景差异明显）。
-```
-
-**Q2: 混合 RAG 的 α 权重怎么确定？**
-```
-混合检索: score = α × BM25 + (1-α) × Vector
-
-α=1.0 → 纯关键词（适合代码搜索、精确匹配）
-α=0.0 → 纯语义（适合开放问答、同义词检索）
-α=0.5 → 等权重
-
-本项目中 α 可在 KnowledgeBase 页面的 Slider 组件实时调节（0.1-0.9），
-用户肉眼观察检索结果变化，找到最佳平衡点。
-
-经验值: 一般场景 α=0.3-0.5 效果最佳。
-```
-
-**Q3: ReAct Agent 相比直接调用 LLM 的核心优势？**
-```
-直接调用:
-  用户: "北京和上海哪个远？"
-  LLM: "北京到上海约 1200 公里..."
-  → 依赖训练数据，无法获取实时/动态信息
-
-ReAct Agent:
-  Thought: "用户问距离，需要调用实时距离查询工具"
-  Action: call function getDistance("北京", "上海")
-  Observation: 1213 公里
-  Answer: "北京到上海约 1213 公里（实测数据）"
-  → 可调用任意工具获取实时数据，结果更可靠
-```
-
-**Q4: MCP 工具协议和 Function Calling 什么关系？**
-```
-Function Calling: 模型层能力 — LLM 输出结构化 tool_calls 格式
-MCP (Model Context Protocol): 工具层标准 — 定义工具的 JSON-RPC 接口规范
-
-两者是互补关系:
-  Function Calling 决定了"怎么请求 LLM 调用工具"
-  MCP 决定了"工具长什么样、怎么被调用"
-
-本项目两者都用: LLM 通过 Function Calling 发出工具调用请求，
-Agent 通过 MCP 协议路由到具体工具实现。
-```
-
-**Q5: Playground 的 7 个调试工具为什么用 Pipeline 模式串联？**
-```
-Pipeline 模式 vs 手写调用链:
-  // Pipeline
-  const pipeline = [fn1, fn2, fn3]
-  const result = pipeline.reduce((acc, fn) => fn(acc), input)
-
-  // 手写
-  const r1 = fn1(input)
-  const r2 = fn2(r1)
-  const r3 = fn3(r2)
-
-Pipeline 优势:
-  1. 新增工具: pipeline.push(newFn) → 零侵入
-  2. 顺序调整: 数组重排即可
-  3. 条件跳过: filter(Boolean) 移除不需要的工具
-  4. 中间结果: pipeline.map(fn => fn(input)) 对比各工具输出
-```
-
-**Q6: 遥测数据为什么用 `navigator.sendBeacon` 而非 `fetch`？**
-```
-fetch():
-  - 页面关闭时请求可能被取消（in-flight 请求随页面销毁）
-  - 阻塞主请求（正常 API 请求 + 遥测上报串行）
-  - 浏览器可能延迟或合并请求
-
-navigator.sendBeacon(url, data):
-  - 页面关闭时保证发送（浏览器负责完成）
-  - 异步非阻塞（不参与主请求队列）
-  - 优先级低（浏览器在空闲时发送）
-
-对本项目的意义:
-  Dashboard 需要精确的 Token/Latency 统计，
-  sendBeacon 保证数据不丢失且不影响主体验。
-```
-
-#### 技术边界
-
-**边界 1：流式响应的中断恢复**
-```
-用户发出请求后中途刷新/关闭页面:
-  当前实现: 未保存的流式内容丢失
-  优化方向: 
-    a. 后端 session 缓存已生成内容，重连时恢复
-    b. 前端 localStorage 暂存流式片段
-    c. Service Worker 缓存 SSE 数据流
-```
-
-**边界 2：RAG 文档更新的索引重建**
-```
-上传新文档后:
-  当前实现: 立即解析 + 嵌入 + 加入索引
-  问题: 大文档（>100 页）嵌入耗时 > 10s
-  方案: 异步队列处理，前端轮询状态
-```
-
-**边界 3：Multi-Agent 的上下文膨胀**
-```
-主 Agent 记录 → 委派子 Agent 带完整上下文
-→ 子 Agent 返回结果带完整上下文
-→ 主 Agent 上下文 = 原始 + 子 Agent 的全部
-  循环 N 次 → Token 消耗指数级增长
-
-方案: 
-  a. 子 Agent 仅返回摘要（maxTokens=200）
-  b. 主 Agent 丢弃子 Agent 的完整内部分析
-  c. 设置全局 Token 预算，超预算截断
-```
-
-**边界 4：MCP 工具协议的超时与重试**
-```
-工具调用可能因网络/服务故障超时:
-   方案: context.WithTimeout 5s
-   重试: 指数退避 1s/2s/4s，最多 3 次
-   熔断: 连续 5 次失败 → 标记工具不可用 30s
-```
+**位置**: `apps/ai-demo/` (9 组件 + 8 工具函数) + `backend/internal/` (agent/chat/knowledge/middleware/vitals)
+
+| Stage | 功能 | 前端组件 | 后端包 |
+|-------|------|----------|--------|
+| 1 | LLM 流式对话 | Chat.tsx | chat/ |
+| 2 | 混合 RAG 知识库 | KnowledgeBase.tsx | knowledge/ |
+| 3 | 智能体 Agent | Agents.tsx | agent/ |
+| 4 | Playground 调试台 | Playground.tsx | — |
+| 5 | 中间件层 | — | middleware/ |
+| 6 | 遥测与监控 | Dashboard.tsx | vitals/ |
+
+8 个工具函数：token-estimator / error-handler / context-manager / text-splitter / prompt-guard / data-masker / response-cache / telemetry。
 
 ---
 
 ### 2.16 前端监控与埋点系统 ⭐⭐⭐
 
-**位置**: `src/monitor/` (6 文件 + barrel init) + `src/stores/monitorStore.ts` + `src/utils/degradation.ts`
-
-#### 实现思路
-
-前端监控体系覆盖三个核心层次：**数据监控**（埋点）、**异常监控**（错误&API）、**性能监控**（Web Vitals + Performance API），并通过统一的上报队列（ReportManager）实现优先级分级、批量上报、空闲调度。
-
-**架构决策**：
-- **声明式埋点**优先：`data-stat` 属性声明 + 事件委托，低侵入与业务解耦
-- **Axios 拦截器**注入 API 监控：复用已有 `fetchClient` 的 Axios 实例，零额外请求开销
-- **多级去重**：内存 Map（5s 窗口）+ sessionStorage（跨页面刷新持久化），防止重复上报风暴
-- **sendBeacon + RIC 降级链**：优先 sendBeacon 保证页面卸载数据送达，64KB 超限自动分片
-
-#### 实现过程
-
-**第一步：定义监控类型系统（types.ts）**
-
-```typescript
-// 5 种核心上报数据结构 + 优先级枚举
-TrackEvent   // 声明式/代码埋点事件
-ErrorReport  // 5 种错误类型（js/promise/resource/api/business）
-APIReport    // 慢查询 + API 异常
-PerformanceReport  // Web Vitals + Navigation/Resource Timing
-DegradationReport  // 柔性降级事件
-ReportPriority     // HIGH 即时 / NORMAL 空闲批量 / LOW 延迟批量
-```
-
-**第二步：构建 ReportManager — 优先级上报引擎**
-
-```
-add(item)
-  ├── HIGH → immediateReport() → sendBeacon → 64KB 分片 → fetch keepalive
-  ├── NORMAL/LOW → buffer.push() → scheduleFlush()
-                        ├── requestIdleCallback({ timeout: 3000 })
-                        └── setTimeout(2000) fallback
-
-flush()
-  ├── splice(0, 50) 批量取出
-  ├── generateFingerprint() 去重检查
-  ├── sendBeacon → 超 64KB 分片 32KB/片
-  └── buffer 还有剩余 → 继续 scheduleFlush()
-
-去重: 内存 Map (5s 窗口, 500 条目上限) + sessionStorage 持久化
-```
-
-**第三步：StatSDK — 声明式埋点**
-
-```html
-<button data-stat='{ "event": "click", "page": "home", "module": "banner" }'>
-  立即参与
-</button>
-```
-
-```typescript
-// 事件委托 → closest('[data-stat]') → JSON.parse → enqueue → RIC flush
-document.addEventListener('click', (e) => {
-  const target = (e.target as HTMLElement).closest('[data-stat]')
-  const raw = target.getAttribute('data-stat')
-  const event = JSON.parse(raw)  // try/catch 容错
-  statSDK.track(event)
-})
-```
-
-**安全设计**：
-- `try/catch` 包裹 `JSON.parse`，格式错误静默跳过，不影响业务交互
-- 埋点 SDK 全部逻辑在 try/catch 中，不抛出未捕获异常
-
-**第四步：ErrorMonitor — 异常全捕获**
-
-| 捕获方式 | 覆盖范围 | 采样率 |
-|----------|----------|--------|
-| `window.onerror` | JS 运行时错误 (ReferenceError/TypeError/SyntaxError) | 10% (高频降采样) |
-| `unhandledrejection` | 未 catch 的 Promise rejection | 100% |
-| 捕获阶段 `error` | 资源加载失败 (Script/Link/Img) | 100% |
-
-**去重策略 — 二级持久化**：
-```
-生成指纹: error.type + error.message + stack 前 3 行 + source URL
-  → 内存 Map (5s 窗口, 500 上限, LRU 淘汰)
-  → 写入 sessionStorage (100 条目上限, key='__monitor_dedup')
-  → 页面刷新从 sessionStorage 恢复去重状态
-```
-
-**第五步：APIMonitor — Axios 拦截器注入**
-
-```typescript
-http.interceptors.request.use((config) => {
-  (config as any).__monitorStart = { startTime: performance.now() }
-  return config
-})
-
-http.interceptors.response.use(
-  (response) => {
-    const duration = performance.now() - startTime
-    if (duration > 1000)  // 慢查询阈值 1s
-      reportManager.add({ priority: NORMAL, data: { type: 'slow_api', ... } })
-  },
-  (error) => {
-    // API 异常 → HIGH 优先级即时上报
-    reportManager.add({ priority: HIGH, data: { type: 'api_error', ... } })
-  }
-)
-```
-
-**第六步：PerformanceMonitor — 性能采集**
-
-| 数据来源 | 采集项 | 触发策略 |
-|----------|--------|----------|
-| Navigation Timing | DNS/TCP/TLS/TTFB/DOMInteractive/DOMComplete | 初始化时一次 |
-| Resource Timing | 资源总大小/总数/失败数 | 初始化 + 每 60s 定时 |
-
-与已有的 `vitalsReporter.ts`（Web Vitals LCP/INP/CLS/TTFB/FCP）互补，前者关注用户体验指标，后者关注底层加载时序。
-
-**第七步：柔性降级 withDegradation**
-
-```typescript
-const data = await withDegradation(
-  () => fetch('/api/user').then(r => r.json()),
-  { name: '未知用户' },  // fallback 默认值
-  { timeout: 2000, retryCount: 1, module: 'user' }
-)
-```
-
-**降级事件上报**：每次降级触发一条 `{ type: 'degradation', module, reason, fallback }` 上报，让监控大盘感知真实影响面而非只看 API 成功率。
-
-**业务错误 vs 网络错误区分**：
-```typescript
-// fetcher 内检查业务码
-const res = await fetcher()
-if (res.code !== 0) throw new BusinessError(res.message, res.code)
-// catch 中区分 BusinessError → 业务降级 vs 其他 → 网络重试
-```
-
-#### 优化
-
-| 维度 | 优化手段 | 效果 |
-|------|----------|------|
-| **网络** | 优先级队列 (HIGH/NORMAL/LOW) | 错误即时上报，埋点延迟批量 |
-| **网络** | sendBeacon 优先 → fetch keepalive → XHR sync | 页面卸载 100% 送达 |
-| **网络** | 64KB 超限 TextEncoder 分片 32KB/片 | 绕过 sendBeacon Blob 大小限制 |
-| **网络** | requestIdleCallback + setTimeout 降级 | 主线程空闲时上报不阻塞交互 |
-| **去重** | 内存 Map 5s + sessionStorage 持久化 | 高频错误降采样 90%，跨页面不重复 |
-| **去重** | LRU 淘汰 (500 条目上限) | 防止内存泄漏 |
-| **数据** | 批量上报 max 50 条/次 | 减少 HTTP 请求数 |
-| **异常** | JS Error 10% 采样 | 减少 90% 错误上报量 |
-| **异常** | source-map fingerprint (message + stack 3 lines + URL) | 服务端按指纹聚合 |
-| **降级** | withDegradation 区分业务/网络 | 准确感知降级影响面 |
-
-#### 体系化
-
-```mermaid
-graph TB
-    subgraph SDK["监控 SDK 层 src/monitor/"]
-        STAT["StatSDK<br/>声明式埋点"]
-        ERR["ErrorMonitor<br/>异常全捕获"]
-        API["APIMonitor<br/>Axios 拦截器"]
-        PERF["PerformanceMonitor<br/>性能采集"]
-    end
-
-    subgraph REPORT["上报引擎"]
-        RM["ReportManager<br/>优先级队列"]
-        RM -->|HIGH| IMM["Immediate: sendBeacon"]
-        RM -->|NORMAL/LOW| BATCH["Batch: RIC + setTimeout"]
-        RM -->|去重| DEDUP["内存 Map + sessionStorage"]
-    end
-
-    subgraph STORE["状态层"]
-        MS["monitorStore.ts<br/>Zustand 监控大盘"]
-    end
-
-    subgraph UTIL["工具层"]
-        DEGRADE["degradation.ts<br/>柔性降级"]
-    end
-
-    subgraph EXISTING["已有设施"]
-        VR["vitalsReporter.ts<br/>Web Vitals"]
-        PT["PageTracker.tsx<br/>页面渲染追踪"]
-        FC["fetchClient.ts<br/>Axios 实例"]
-    end
-
-    STAT --> RM
-    ERR --> RM
-    API --> FC
-    PERF --> RM
-    RM --> STORE
-    DEGRADE --> RM
-    VR -.->|互补| PERF
-    PT -.->|互补| PERF
-```
-
-> 7 个新文件 + 1 个 store + 1 个工具函数，与已有的 vitalsReporter/PageTracker 互补，覆盖完整的前端监控三层体系。
-
-#### 存在问题与解决方案
-
-| 问题 | 产生原因 | 解决方案 |
-|------|----------|----------|
-| **sendBeacon 64KB 静默失败** | Blob 超过 64KB 时 sendBeacon 返回 false 但无异常 | TextEncoder 分片 + 32KB/片逐块发送 |
-| **RIC 在后台标签页不触发** | 浏览器节流后台页面 RIC | visibilitychange 事件兜底，页面隐藏时立即 flush |
-| **跨域脚本 Script error** | 浏览器安全策略不暴露跨域堆栈 | 配置 crossorigin="anonymous" + CORS 头部 |
-| **API 监控误报 401** | Token 刷新时的 401 被拦截器捕获为 API 异常 | 401 且 _retry 标记的不上报 |
-| **dedupCache 内存泄漏** | 长时间不刷新页面，Map 无限增长 | 500 条目 LRU 淘汰 |
-| **sessionStorage 满写入失败** | 第三方脚本污染或其他原因导致 sessionStorage 满 | try/catch 包裹，写入失败静默降级 |
-| **StatSDK JSON.parse 错误阻断交互** | data-stat 属性格式错误 | try/catch + 静默跳过，不 rethrow |
-
-#### 追问链路
-
-**Q1: 四种埋点方案（代码/可视化/无埋点/声明式）能否并存？**
-```
-可以。数据模型加 source 字段标识来源。
-去重推荐客户端 SDK 内部处理：按 event+page+module+target+timestamp 生成指纹。
-服务端保留原始数据用于校验客户端是否漏报。
-```
-
-**Q2: 跨域脚本报错 Script error. 怎么解决？**
-```
-添加 crossorigin="anonymous" 属性 + 服务端 Access-Control-Allow-Origin 头部。
-仍无法捕获的异常：Web Worker 内错误（需 Worker 内自监听）、
-跨域 iframe 错误、WASM 崩溃（宿主机层异常）。
-```
-
-**Q3: sendBeacon 和 fetch keepalive 的区别？降级顺序？**
-```
-sendBeacon: 只能 POST, Blob 超 64KB 静默失败, 页面卸载最可靠
-fetch keepalive: 可 GET/POST, 无 size 限制, Safari 部分版本不兼容
-降级顺序: sendBeacon → fetch keepalive → XHR sync (仅关键错误) → 丢弃(低优先级)
-```
-
-**Q4: 灰度发布如何与监控系统联动？**
-```
-灰度组和对照组按用户 ID 哈希分流。
-同比对比（灰度上线数据 vs 老版本同时段基线），避免时间偏差。
-监控看板按版本维度展示，设置阈值自动门禁。
-```
-
-
-## 三、设计模式与架构亮点
-
-### 3.1 设计模式应用
-
-| 模式 | 应用场景 | 实现 |
-|------|----------|------|
-| **策略模式** | 表单字段渲染 | registry.tsx: FieldType → FieldComponent |
-| **递归渲染模式** | JSON Schema → React 组件 | Renderer.tsx: tabs → card → form → leaf |
-| **观察者模式** | 表单数据实时监听 | onChange 回调 → 实时 JSON 面板 |
-| **代理模式** | API 请求代理 | Vite proxy: /api → localhost:8080 |
-| **命令模式** | 暂停/恢复上传 | Promise park + AbortController |
-| **工厂模式** | LRU 缓存创建 | LRUCache 泛型类 |
-| **生成器模式** | generation 计数器 | genRef 阻止过期 WebSocket 回调 |
-| **降级链模式** | 传输层协议降级 | WebSocket → SSE → Polling 三级切换 |
-| **策略模式** | 传输层 | 统一 Transport 接口，运行时切换实现 |
-
-### 3.2 状态管理策略
-
-**分层、按需的架构设计**:
-
-```mermaid
-graph TB
-    subgraph Global["🌍 全局状态 Zustand"]
-        direction TB
-        A1["alertStore<br/>WebSocket 告警"]
-        A2["uploadStore<br/>分片上传<br/>persist 持久化"]
-        A3["lruStore<br/>路由缓存<br/>写后失效一致性"]
-        A4["requestLoadingStore<br/>请求追踪"]
-    end
-
-    subgraph Local["📋 组件级状态 useState"]
-        direction TB
-        B1["DynamicForm<br/>表单数据 + 错误"]
-        B2["页面组件<br/>UI 状态"]
-        B3["实时面板<br/>activeTab / jsonEditing"]
-    end
-
-    subgraph Ref["🔗 持久化引用 useRef"]
-        direction TB
-        C1["transportRef<br/>ReconnectingTransport"]
-        C2["wsRef<br/>WebSocket 实例"]
-        C3["bufferRef<br/>RAF 双缓冲"]
-        C4["genRef<br/>generation 计数器"]
-        C5["pausedRef<br/>暂停标志"]
-    end
-
-    subgraph Storage["💾 持久化 localStorage"]
-        D1["Zustand persist<br/>上传状态 + LRU 缓存"]
-    end
-
-    Global --> Local
-    Local --> Ref
-    Global -.->|persist| Storage
-```
-
-### 3.3 错误处理体系
-
-```typescript
-// 三级错误分流
-// 1. 同步校验错误: 黄色警告提示 (字段级)
-// 2. 异步校验错误: 加载 Spin + 红色错误 (字段级)
-// 3. 后端业务错误: 红色错误 + setFields 精准映射 (字段级)
-
-// 统一通知
-notification.error({ title: "表单校验失败", description: `共有 ${result.length} 个错误` })
-message.success("JSON 已应用到表单")
-message.error("JSON 格式错误")
-```
-
-### 3.4 数据流设计
-
-**动态表单数据流**:
-
-```mermaid
-sequenceDiagram
-    participant U as 用户
-    participant F as 表单字段
-    participant D as DynamicForm
-    participant J as JSON 面板
-    participant V as 校验器
-    participant B as 后端
-
-    rect rgb(220, 240, 220)
-        Note over U,B: ① 初始化阶段
-        U->>D: 访问表单
-        D->>D: useState(initialData)
-    end
-
-    rect rgb(240, 240, 220)
-        Note over U,B: ② 编辑阶段
-        U->>F: 输入字段值
-        F->>D: onChange → handleChange
-        D->>D: setData(更新表单)
-        D->>V: 同步校验 validation()
-        D->>V: useEffect → AJV 校验
-        D->>J: onChange 通知
-    end
-
-    rect rgb(220, 220, 240)
-        Note over U,B: ③ JSON 编辑双向绑定
-        J->>D: handleApplyJson
-        D->>F: ref.setFormData → 表单更新
-        F->>J: onChange → UI 实时更新
-    end
-
-    rect rgb(240, 220, 220)
-        Note over U,B: ④ 提交阶段
-        U->>D: 提交
-        D->>V: validateSchema
-        V->>B: 异步校验
-        B->>D: 后端校验结果
-        D->>U: onSubmit 回调
-    end
-```
-
-### 3.5 统一 HTTP 请求层
-
-**位置**: `src/utils/fetchClient.ts`
-
-#### 设计思路
-
-所有 API 请求通过统一的 `http` 实例（axios）发出，避免每个页面手写 `fetch()` + 重复的 error handling + Authorization 头拼接。
-
-```
-http 实例职责:
-├─ 请求拦截器: 自动注入 Authorization + 过期主动等待刷新
-├─ 响应拦截器: 401 自动触发无感刷新 → 重放原请求
-├─ 统一超时: 30s 全局超时
-└─ 导出 getErrorMessage(): 统一的错误信息提取
-```
-
-#### 实现过程
-
-**第一步：创建 axios 实例**
-
-```typescript
-const http = axios.create({ timeout: 30000 })
-// 注意: 不设默认 Content-Type 头
-// axios 自动检测 data 类型:
-//   - FormData → multipart/form-data (自动边界)
-//   - plain object → application/json
-```
-
-**第二步：请求拦截器 — Token 注入 + 过期主动等待**
-
-关键优化：当 Token 已过期且刷新正在进行时，请求拦截器主动等待刷新完成，避免将请求发出去拿一个 401 再重试。
-
-```typescript
-http.interceptors.request.use(async (config) => {
-  const token = getAccessToken()
-  if (token == null) return config
-
-  // 主动等待: Token 已过期且刷新进行中 → 等新 Token
-  if (isTokenExpired(token) && refreshPromise != null) {
-    try {
-      const newToken = await acquireRefresh()
-      config.headers.Authorization = `Bearer ${newToken}`
-      return config
-    } catch {
-      // 刷新失败 → 用旧 Token 发出去，响应拦截器处理 401
-    }
-  }
-
-  config.headers.Authorization = `Bearer ${token}`
-  return config
-})
-```
-
-**第三步：响应拦截器 — 401 自动刷新 + 重放**
-
-```typescript
-http.interceptors.response.use(
-  (response) => response,
-  async (error: AxiosError) => {
-    if (status === 401 && !originalRequest._retry) {
-      // 用 30s 缓冲区分"Token 过期"和"其他鉴权问题":
-      // exp 距现在 >30s → Token 仍然有效 → 401 不是过期引起 → 不刷新
-      // exp 距现在 ≤30s → Token 确实过期 → 触发刷新
-      if (parsed && parsed.exp * 1000 > Date.now() + 30000) {
-        return Promise.reject(error)
-      }
-
-      originalRequest._retry = true
-      const newToken = await acquireRefresh()   // Promise gate 复用
-      originalRequest.headers.Authorization = `Bearer ${newToken}`
-      return await http(originalRequest)         // 重放原请求
-    }
-    return Promise.reject(error)
-  },
-)
-```
-
-**第四步：导出 getErrorMessage()**
-
-```typescript
-export function getErrorMessage(error: unknown): string {
-  if (axios.isAxiosError(error)) {
-    const data = error.response?.data
-    if (data?.error) return data.error
-    if (data?.message) return data.message
-    // 常见 HTTP 状态码中文映射
-    if (error.response?.status === 400) return "请求参数错误"
-    if (error.response?.status === 404) return "请求的资源不存在"
-    if (error.response?.status === 500) return "服务器内部错误"
-    if (!error.response) return "网络错误，请检查后端服务是否正常运行"
-    return `请求失败 (${error.response.status})`
-  }
-  if (error instanceof Error) return error.message
-  return "发生未知错误"
-}
-```
-
-#### 重构收益
-
-所有页面统一使用 `http` 实例发起请求，无需手写 `Authorization`、无需重复 try-catch、错误信息提取一致：
-
-| 页面 | 原方式 | 现方式 | 改造收益 |
-|------|--------|--------|----------|
-| `JsonSchemaForm.tsx` | `fetch("/api/schema/validate")` + 手写 catch | `http.post()` + `getErrorMessage()` | 错误处理统一，代码减少 20 行 |
-| `ChunkedUpload.tsx` | 4 处 `fetch()` (init/chunk/status/complete) | `http.get/post()` | 自动 Token 注入，FormData 正确传输 |
-| `wsTransport.ts` | `fetch()` in PollingTransport | `http.get()` | 统一超时 + 错误追踪 |
-| `SseLogStream.tsx` | `fetch()` (豁免) | 保留 `fetch()` | SSE 需 ReadableStream，axios 不支持 |
-
-#### 关键教训：Content-Type 导致 400 错误
-
-**问题表象**: 分片上传（FormData）时后端返回 400。
-
-**根因**: `axios.create({ headers: { "Content-Type": "application/json" } })` 导致 axios 内部 `transformRequest` 检测到 `hasJSONContentType === true` 时，对 `FormData` 执行 `JSON.stringify(formDataToJSON(data))`，即便 `data` 为 `FormData` 实例。
-
-**解决方案**: 移除默认 `Content-Type: application/json`。axios 自动检测 data 类型：
-- `data` 为 `FormData` → 自动设置 `multipart/form-data` + 正确 boundary
-- `data` 为 plain object → 自动设置 `application/json`
-- 无需手动指定，行为符合预期
-
-```
-axios.transformRequest 关键路径 (1.18.0):
-├─ line 2384: hasJSONContentType(data.headers) → true
-├─ line 2388: data = transformData(data) → JSON.stringify(process(data))
-└─ line 3098: headers.setContentType(undefined) → 太晚，data 已损坏
-```
-
----
-
-### 4.1 forwardRef + useImperativeHandle
-
-**应用场景**: DynamicForm 暴露 setFormData 给父组件
-
-```typescript
-const DynamicForm = forwardRef<DynamicFormHandle, DynamicFormProps>(function DynamicForm(props, ref) {
-  useImperativeHandle(ref, () => ({
-    setFormData(newData) { setData(newData) },
-  }), [])
-})
-```
-
-**价值**: 父组件（JsonSchemaForm）通过 ref 直接写入表单数据，实现 JSON 编辑 → 表单的双向绑定
-
-### 4.2 React 19 编译器 (Auto-memo)
-
-**应用场景**: 整个项目
-
-React 19 编译器自动推断组件依赖，无需手动 `React.memo` / `useMemo` / `useCallback`。编译器在构建期自动为组件添加 memo 包装，props 不变时跳过重渲染。
-
-```typescript
-// 编译前
-function StringField({ schema, value, onChange }) {
-  return <Input value={value} onChange={(e) => onChange(schema.key, e.target.value)} />
-}
-
-// 编译后 (自动 memo)
-function StringField({ schema, value, onChange }) {
-  return <Input value={value} onChange={(e) => onChange(schema.key, e.target.value)} />
-}
-// 编译器自动推导依赖: schema, value, onChange
-// 依赖不变时跳过重渲染
-```
-
-### 4.3 闭包陷阱修复模式
-
-**应用场景**: 大文件断点续传、WebSocket 回调
-
-React 的"声明式"模式在"命令式"异步操作中容易出现隐蔽 Bug。核心修复模式：
-
-```typescript
-// 模式: useRef 持有最新回调
-const onUpdateRef = useRef(onUpdate)
-onUpdateRef.current = onUpdate // 每次都更新
-
-// 异步回调中使用 ref 调用
-async function uploadChunk(chunk) {
-  // ...
-  onUpdateRef.current({ id, progress: 100 }) // 总是调用最新回调
-}
-```
-
----
-
-## 五、性能优化策略
-
-### 5.1 渲染级优化
-
-| 策略 | 应用 | 效果 |
-|------|------|------|
-| RAF 双缓冲 | WebSocket 告警 | 合并多次微任务为一次宏任务 |
-| 虚拟滚动 | 日志流 | 只渲染可视区域 |
-| React 19 编译器 | 整个项目 | 自动 memo，跳过无关重渲染 |
-| Cluster + BBOX | GIS 点位 | 100,000 → 50 渲染量 |
-
-### 5.2 计算级优化
-
-| 策略 | 应用 | 效果 |
-|------|------|------|
-| Web Worker 并行 | 分治排序、日志解密 | 不阻塞主线程 |
-| Blob 原生拼接 (非手动 `Uint8Array` copy) | SHA-256 文件哈希 Worker | 消除二次拷贝，峰值内存减半 |
-| 指数退避 + jitter + 降级链 | WebSocket 重连 | 避免重连风暴，自动降级协议 |
-| 背压控制 + 消息合并 | WebSocket 发送 | 防止内存溢出，降低网络包数量 |
-| LRU 淘汰 | 路由缓存 | 限制内存使用 |
-| 写后失效 | 路由缓存 | 保证缓存一致性，避免展示过期数据 |
-
-### 5.3 网络级优化
-
-| 策略 | 应用 | 效果 |
-|------|------|------|
-| 请求队列 + Promise gate | Token 刷新 | 并发请求排队 |
-| 分片并发 + 滑动窗口 | 大文件上传 | 控制并发数 |
-| 指数退避 + 30s 上限 | Chunk 上传重试 | 避免无限等待，保证重试时效 |
-| dataCache 全量缓存 | GIS 点位 | 平移缩放无需请求 |
-
-### 5.4 可观测性优化 — RUM 性能监控
-
-| 策略 | 应用 | 效果 |
-|------|------|------|
-| Web Vitals LCP/INP/CLS 采集 | 全页面 RUM 埋点 | 实时感知真实用户性能 |
-| Vitals 批量上报 | 3s 缓冲区聚合，单次 POST 批量发送 | 消除死代码 `pendingReports`，减少网络请求量 |
-| 页面渲染时长追踪 | PageTracker 组件 | 精确到每次路由切换的渲染耗时 |
-| StrictMode 防重复请求 | 单 effect + render-time 重置 `reportedRef` | 开发环境下 page-report 不再重复发送 |
-| vitalsSnapshot 共享快照 | 页面访问与指标关联 | 每页对应 LCP/INP/CLS 聚合视图 |
-| 后端按页面聚合 | `/api/vitals/pages` | 平均/最新 LCP/INP/CLS 趋势分析 |
-
-### 5.5 构建级优化 (Turborepo 编排 + 缓存)
-
-```mermaid
-graph LR
-    SRC["📁 TypeScript 源码<br/>3912 模块"] --> TURBO["Turbo 2<br/>编排 + 缓存命中跳过"]
-    TURBO --> TSC["tsc -b<br/>项目引用模式<br/>增量编译"]
-    TSC --> ROLLDOWN["Rolldown Rust 打包<br/>~2.4s 构建"]
-    ROLLDOWN --> BABEL["Babel React 编译器<br/>构建期注入自动 memo"]
-    BABEL --> DIST["📦 dist/ 产物<br/>代码分割 + 按需加载"]
-
-    style SRC fill:#e3f2fd
-    style DIST fill:#e8f5e9
-```
-
-**新增优化项**：
-
-| 优化 | 说明 |
-|------|------|
-| `cssMinify: true` | esbuild 压缩 CSS，减少产物体积 |
-| `target: 'es2020'` | 跳过 ES5 降级转换，输出更紧凑的现代语法 |
-| `modulePreload.polyfill: false` | 现代浏览器原生支持 modulepreload，移除 polyfill |
-| `chunkFileNames: assets/[name]-[hash].js` | 内容哈希文件名，长缓存复用 |
-| vendor 优先级分层 | `priority: 30`(React) → `25`(antd/echarts) → `20`(axios) 精准控制合并 |
-
-**Turborepo 2 配置优化**：
-
-| 优化项 | 变更 | 效果 |
-|--------|------|------|
-| `test` 移除 `^build` 依赖 | test 不再等待 build 完成后执行 | `turbo run build test` 完全并行，CI 提速 |
-| `.tsbuildinfo/**` 加入缓存输出 | build / typecheck 产出缓存增量编译信息 | 二次运行跳过 tsc 增量编译 |
-| `tsBuildInfoFile` 移出 node_modules | frontend 的 `.tsbuildinfo` 从 `node_modules/.tmp/` 移至 `./.tsbuildinfo/` | Turbo 可以缓存 typecheck 增量信息 |
-| `globalEnv: ["NODE_ENV"]` | 环境变量加入全局哈希 | NODE_ENV 变更自动触发缓存失效 |
-| `globalDependencies: [".env*"]` | `.env` 文件变更影响全局哈希 | 配置变更后自动重建 |
-
-### 5.6 性能基准数据
-
-> 以下数据来自 React DevTools Profiler + Chrome Performance Tab 实测
-
-| 场景 | 优化前 | 优化后 | 提升 |
-|------|--------|--------|------|
-| GIS 十万点位初次渲染 | 320ms (卡顿明显) | 45ms (流畅) | 7.1× |
-| WebSocket 4000 msg/s 渲染 | 丢帧 47% (18fps) | 0 丢帧 (60fps) | 全帧率 |
-| 分治归并 100 万数字 | 主线程阻塞 620ms | Worker 后台 180ms | 3.4× + UI 不卡 |
-| SHA-256 500MB 文件哈希 | 主线程阻塞 2.8s | Worker 后台 2.5s | UI 零阻塞 |
-| 首屏加载 (FCP) | 单 bundle 1.2s | 代码分割 0.3s | 4× |
-| Web Vitals 页面指标采集 | 无 | LCP/INP/CLS + 渲染时长 | RUM 全页面覆盖 |
-
----
-
-## 六、工程化体系
-
-### 6.1 代码配置约束体系
-
-项目采用 **三层递进式约束**，各层职责明确且互补：
-
-```mermaid
-graph LR
-    subgraph L1["🥇 第1层: Biome 2.5 - 格式化 + 快速检查"]
-        B1["indentStyle: space"]
-        B2["indentWidth: 2"]
-        B3["lineWidth: 100"]
-        B4["semicolons: asNeeded"]
-        B5["preset: recommended"]
-    end
-
-    subgraph L2["🥈 第2层: ESLint 9 - 严格语义检查"]
-        E1["strictTypeChecked ✅"]
-        E2["no-floating-promises"]
-        E3["await-thenable"]
-        E4["no-unused-vars"]
-        E5["prefer-nullish-coalescing"]
-        E6["prefer-optional-chain"]
-    end
-
-    subgraph L3["🥉 第3层: TypeScript 6 - 类型级约束"]
-        T1["strict: true"]
-        T2["isolatedModules: true"]
-        T3["noUncheckedSideEffectImports"]
-        T4["moduleDetection: force"]
-    end
-
-    L1 -->|"递进检查"| L2 -->|"类型安全"| L3
-```
-
-**各层职责**：
-| 层级 | 速度 | 检查范围 | 失败阻断 |
-|------|------|----------|----------|
-| Biome | ~50ms | 格式 + 基础 lint | ✅ husky pre-commit |
-| ESLint | ~500ms | 类型安全 + 语义规则 | ✅ CI validate 阶段 |
-| tsc | ~2s | 类型检查 + 编译 | ✅ CI build 阶段 |
-
-#### 6.1.1 Biome 2.5 — 格式化 + 快速检查
-
-Biome 统一代码风格，消除格式争议，无需 `.editorconfig` / `.prettierrc`：
-
-```json
-{
-  "formatter": {
-    "indentStyle": "space",
-    "indentWidth": 2,
-    "lineWidth": 100
-  },
-  "javascript": {
-    "formatter": {
-      "semicolons": "asNeeded",
-      "trailingCommas": "all"
-    }
-  },
-  "linter": {
-    "preset": "recommended",
-    "correctness": {
-      "useExhaustiveDependencies": "off"
-    }
-  }
-}
-```
-
-| 规则 | 值 | 说明 |
-|------|-----|------|
-| `indentStyle` | `space` | 空格缩进，非 Tab |
-| `indentWidth` | `2` | 2 空格缩进（React 社区标准） |
-| `lineWidth` | `100` | 单行上限 100 字符，超限自动折行 |
-| `semicolons` | `asNeeded` | 仅在需要时加分号，消除多余分号噪声 |
-| `trailingCommas` | `all` | 多行时末位加逗号，减少 diff 行数 |
-| `useExhaustiveDependencies` | `off` | 交给 ESLint react-hooks 插件管理，避免重复告警 |
-
-#### 6.1.2 ESLint 9 — 严格语义检查 (strictTypeChecked)
-
-基于 `typescript-eslint` 的 `strictTypeChecked` + `stylisticTypeChecked`，确保类型安全：
-
-```js
-// eslint.config.js — 关键配置
-export default defineConfig([
-  tseslint.configs.strictTypeChecked,     // 类型严格检查
-  tseslint.configs.stylisticTypeChecked,  // 代码风格类型约束
-
-  {
-    rules: {
-      // ─── 类型安全 ───
-      '@typescript-eslint/no-floating-promises': 'error',        // 禁止未 await 的 Promise
-      '@typescript-eslint/await-thenable': 'error',              // 禁止 await 非 Thenable
-      '@typescript-eslint/no-misused-promises': 'error',         // Promise 位置错误
-      '@typescript-eslint/no-unused-vars': ['error', { argsIgnorePattern: '^_' }],
-      '@typescript-eslint/no-explicit-any': 'warn',             // 逐步消除 any
-      '@typescript-eslint/no-non-null-assertion': 'warn',       // 鼓励非空断言
-
-      // ─── 代码风格 ───
-      '@typescript-eslint/prefer-nullish-coalescing': 'error',   // ?? 替代 ||
-      '@typescript-eslint/prefer-optional-chain': 'error',      // ?. 替代 &&
-      '@typescript-eslint/consistent-type-definitions': ['error', 'interface'],
-      '@typescript-eslint/method-signature-style': ['error', 'property'],
-
-      // ─── React 规则 ───
-      'react-hooks/exhaustive-deps': 'warn',                    // useEffect 依赖检查
-      'react/self-closing-comp': 'warn',                        // 无子元素自闭
-      'react/no-danger': 'error',                               // 禁止 dangerouslySetInnerHTML
-      'react/jsx-no-useless-fragment': 'warn',                  // 禁止无意义的 <> </>
-      'react/no-array-index-key': 'warn',                       // 禁止 index 作为 key
-
-      // ─── 通用 ───
-      'no-console': ['warn', { allow: ['warn', 'error', 'info'] }],
-      eqeqeq: ['error', 'always', { null: 'never' }],          // === 优先
-      'prefer-const': 'error',
-      'no-var': 'error',
-    },
-  },
-])
-```
-
-#### 6.1.3 TypeScript 6 Strict — 类型级约束
-
-```json
-{
-  "compilerOptions": {
-    "strict": true,
-    "noUnusedLocals": false,
-    "noUnusedParameters": false,
-    "noFallthroughCasesInSwitch": true,
-    "noUncheckedSideEffectImports": true,
-    "moduleDetection": "force",
-    "isolatedModules": true
-  }
-}
-```
-
-| 配置 | 说明 |
-|------|------|
-| `strict: true` | 启用所有严格类型检查（`strictNullChecks`、`noImplicitAny` 等） |
-| `isolatedModules: true` | 确保每个文件可独立转译，兼容 Rolldown |
-| `moduleDetection: force` | 所有文件视为模块，避免全局声明冲突 |
-| `noUncheckedSideEffectImports: true` | 禁止未使用的副作用导入 |
-
-额外约束通过 ESLint 补充（`noUnusedLocals` 由 ESLint 接管，避免 tsc 与 Biome 重复）。
-
-#### 6.1.4 后端 (Go) 代码规范
-
-```bash
-go vet ./...          # 静态分析
-# Go 1.26 内置格式化（gofmt 风格）
-```
-
-Go 后端无额外 lint 工具，依赖 Go 官方工具链：`gofmt`（格式化）+ `go vet`（静态分析）。CI 中 `go vet` 作为准入关卡。认证模块 (`internal/auth/service_test.go`) 提供 17 个测试用例覆盖登录/刷新/校验/中间件全流程，CI 中 `go test ./internal/auth/` 阻断失败构建。
-
-##### 安全加固
-
-代码审查后实施的安全加固措施：
-
-| 措施 | 说明 |
-|------|------|
-| **JWT 密钥环境变量化** | `JWT_SECRET` 从环境变量读取，不再硬编码；启动时校验 HMAC 签名算法 |
-| **用户凭据环境变量化** | `AUTH_USERNAME` / `AUTH_PASSWORD` 从环境变量读取 |
-| **CORS 来源可配置** | `CORS_ORIGIN` 环境变量控制，生产环境限制具体域名而非 `*` |
-| **WebSocket 来源校验** | `CheckOrigin` 同样使用 `CORS_ORIGIN`，与 HTTP CORS 一致 |
-| **服务端口可配置** | `PORT` 环境变量读取，`default :8080` |
-| **错误处理规范化** | 移除所有被忽略的 `json.Marshal` / `os.WriteFile` 错误；`log.Fatalf` 改为返回 error |
-| **goroutine 泄漏修复** | `payment.go` 的 ProcessPayment goroutine 通过 context 取消安全退出 |
-| **usedRefreshTokens 限界** | 最多保留 1000 条，超限自动清理最旧记录 |
-
----
-
-### 6.2 代码优化实践
-
-#### 6.2.1 React 19 编译器 — 自动 memo 化
-
-项目中整个组件树受益于 React 19 编译器的自动记忆化。编译期自动为组件推导 props 依赖，props 不变时跳过重渲染：
-
-```typescript
-// 编译前
-function StringField({ schema, value, onChange }) {
-  return <Input value={value} onChange={(e) => onChange(schema.key, e.target.value)} />
-}
-
-// 编译后 — 编译器自动注入 memo，推导依赖: schema, value, onChange
-// 等价于手动 React.memo(StringField)，但零侵入
-```
-
-**效果**：项目中 40+ 组件自动获得跳过重渲染能力，无需手动 `React.memo` / `useMemo` / `useCallback`，减少心智负担约 70%。
-
-#### 6.2.2 闭包陷阱修复 — useRef 持有最新回调
-
-React 的声明式渲染 + 命令式异步操作是闭包 Bug 的高发区。项目采用统一的 `useRef` 持有模式：
-
-```typescript
-// 模式 1：ref 持有最新回调（通用）
-const onUpdateRef = useRef(onUpdate)
-onUpdateRef.current = onUpdate
-
-// 异步回调通过 ref 调用，永远引用最新闭包
-async function uploadChunk(chunk) {
-  const onProgress = (pct) => onUpdateRef.current({ progress: pct })
-  // ...
-}
-
-// 模式 2：generation 计数器（WebSocket 等跨生命周期场景）
-const genRef = useRef(0)
-const connect = () => {
-  const gen = ++genRef.current
-  ws.onmessage = (e) => {
-    if (gen !== genRef.current) return // 过期连接，丢弃
-    handleMessage(e)
-  }
-}
-```
-
-**应用范围**：WebSocket 回调、分片上传进度、表单 onChange 通知，共 10+ 处。
-
-#### 6.2.3 Zustand 精确订阅 — 按 selector 控制重渲染
-
-避免全局状态更新导致无关组件重渲染，每个组件只订阅需要的字段：
-
-```typescript
-// ❌ 错误：整个 store 变化都触发重渲染
-const store = useUploadStore()
-
-// ✅ 正确：只订阅 files，files 不变时跳过重渲染
-const files = useUploadStore((s) => s.files)
-const addFile = useUploadStore((s) => s.addFile)
-```
-
-**效果**：Zustand store 更新时，未订阅该字段的组件零重渲染。
-
-#### 6.2.4 构建优化 — Rolldown + 代码分割 + tsc -b
-
-```bash
-# 构建命令
-npm run build = tsc -b && vite build   # Vite 8 + Rolldown (Rust bundler)
-
-# 构建耗时：约 3.6s（3911 模块）
-```
-
-##### 代码分割策略
-
-**页面级懒加载** — 所有 15 个页面通过 `React.lazy()` 动态导入，每个页面独立 chunk：
-
-```typescript
-// routes/index.tsx — 从静态导入改为懒加载
-const Dashboard = lazy(() => import("../pages/Dashboard.tsx"))
-const AlertWebSocket = lazy(() => import("../pages/AlertWebSocket.tsx"))
-// ... 共 15 个页面
-
-// App.tsx — Suspense 包裹路由
-<Suspense fallback={<Spin />}>
-  <Routes>
-    {routes.map((r) => (
-      <Route key={r.path} path={r.path} element={<r.element />} />
-    ))}
-  </Routes>
-</Suspense>
-```
-
-**Vendor 自定义分割** — 使用 Rolldown `codeSplitting.groups` 按优先级将大型库拆分为独立 chunk，**优先级更高者优先匹配**：
-
-```typescript
-// vite.config.ts — Rolldown codeSplitting + 构建优化
-build: {
-  sourcemap: false,
-  cssCodeSplit: true,
-  cssMinify: true,
-  target: 'es2020',
-  modulePreload: { polyfill: false },
-  chunkSizeWarningLimit: 600,
-  rolldownOptions: {
-    output: {
-      entryFileNames: 'assets/[name]-[hash].js',
-      chunkFileNames: 'assets/[name]-[hash].js',
-      assetFileNames: 'assets/[name]-[hash][extname]',
-      codeSplitting: {
-        groups: [
-          { name: 'vendor-react',  test: /node_modules[\/\\](react|react-dom|react-router|zustand|scheduler)/, priority: 30 },
-          { name: 'antd',          test: /node_modules[\/\\](antd|@ant-design)/, priority: 25 },
-          { name: 'echarts',       test: /node_modules[\/\\]echarts/, priority: 25 },
-          { name: 'gis',           test: /node_modules[\/\\]ol/, priority: 25 },
-          { name: 'form',          test: /node_modules[\/\\](@rjsf|ajv)/, priority: 25 },
-          { name: 'vendor-common', test: /node_modules[\/\\](axios|web-vitals|react-window)/, priority: 20 },
-        ],
-      },
-    },
-  },
-}
-```
-
-**优化前后对比**：
-
-| 指标 | 优化前（单 bundle） | 优化后（代码分割） |
-|------|--------------------|--------------------|
-| **初始加载体积** | **3,034 kB** (单文件) | **~240 kB** (index 7 kB + vendor 232 kB + runtime 1 kB) |
-| 页面级 chunk | 无 | 15 个独立 chunk (1–30 kB/个) |
-| 最大 vendor chunk | 内嵌在 bundle 中 | antd 1.15MB / echarts 1.12MB 独立缓存，仅首次加载 |
-| 构建方式 | Vite 8 (Rolldown Rust bundler) | ✅ 同一构建器 |
-| 构建时间 | 3.67s | 2.38s |
-| 缓存策略 | 任一页面变更→全量缓存失效 | vendor chunk 仅依赖版本号变更，页面 chunk 独立缓存 |
-| 分割 API | 无 | Rolldown `codeSplitting.groups`（按 priority 优先级） |
-
-| 优化手段 | 效果 |
-|----------|------|
-| `tsc -b` 项目引用模式 | 增量编译，仅重检变更文件 |
-| Rolldown (Rust 打包) | 对比 esbuild 快 3–5 倍 |
-| Babel React 编译器 | 构建期注入自动 memo，运行时零开销 |
-| 页面级 `React.lazy()` + `Suspense` | 按需加载，首屏体积减少 **98%** |
-| `codeSplitting.groups` 优先级拆分 | 大型库独立缓存，优先级控制冲突归并 |
-| 按需 import antd 图标 | 避免全量引入，减少 300KB+ 产物 |
-| `sourcemap: false` (生产) | 减少 30–50% 产物体积 |
-| `cssCodeSplit: true` | 页面级 CSS 按需加载 |
-| `cssMinify: true` | esbuild 压缩 CSS，进一步减少 |
-| `target: 'es2020'` | 跳过 ES5 降级，输出更紧凑 |
-| `modulePreload.polyfill: false` | 移除 polyfill 开销 |
-| `[hash]` 文件名 | 内容哈希实现长缓存 |
-
----
-
-### 6.3 CI/CD 流水线 (Turborepo 编排)
-
-```yaml
-# .gitlab-ci.yml 核心阶段 (turbo 并行加速 + 缓存复用)
-stages:
-  - validate  # lint-backend (go vet) + test-backend (go test) + lint/test/typecheck-workspaces (turbo 并行)
-  - build     # build-backend (go build) + build-frontend/ai-demo/interview-docs (turbo --filter)
-  - package   # Docker 多阶段构建 + 推送 Registry
-  - deploy    # helm upgrade --install --wait
-```
-
-流水线包含 4 个阶段 12 个 Job：
-
-| 阶段 | Job | 命令 | 失败阻断 |
-|------|-----|------|----------|
-| validate | lint-backend | `go vet ./...` | ✅ 阻断后续阶段 |
-| validate | test-backend | `go test ./internal/... -v -race` | ✅ 阻断后续阶段 |
-| validate | lint-frontend | `bun run lint` (turbo 三 workspace 并行) | ✅ 阻断后续阶段 |
-| validate | test-frontend | `bun run test` (turbo 并行, 无 build 依赖) | ✅ 阻断后续阶段 |
-| validate | typecheck-workspaces | `bun run typecheck` (turbo 并行, 缓存 .tsbuildinfo) | ✅ 阻断后续阶段 |
-| build | build-backend | `go build -o bin/server ./cmd/server/` | ✅ |
-| build | build-frontend | `bun run build --filter=@interview-demo/frontend` (turbo 缓存) | ✅ |
-| build | build-ai-demo | `bun run build --filter=@interview-demo/ai-demo` (turbo 缓存) | ✅ |
-| build | build-interview-docs | `bun run build --filter=frontend-interview-notes` (turbo 缓存) | ✅ |
-| package | docker-backend | 多阶段构建 backend 镜像 | ✅ |
-| package | docker-frontend | 多阶段构建 frontend 镜像 | ✅ |
-| package | docker-ai-demo | 多阶段构建 ai-demo 镜像 | ✅ |
-| package | docker-interview-docs | 多阶段构建 interview-docs 镜像 | ✅ |
-| deploy | deploy-k8s | `helm upgrade --install --wait` (含 `interviewDocs.image`) | ✅ 回滚 |
-
-### 6.4 依赖管理
-
-| 策略 | 实践 |
-|------|------|
-| 锁定版本 | `package.json` 精确锁定（`^` 仅在主版本内浮动） |
-| 类型安全 | 所有类型包（`@types/*`）均为 `devDependencies` |
-| 最小依赖 | Zustand 5 (1KB) 替代 Redux，无额外状态管理库 |
-| 静态资源 | 前端零运行时依赖（antd 图标按需 import） |
-| Go 依赖 | `go.mod` 仅 3 个直接依赖（gin / gorilla / jwt） |
-
----
-
-
-
-## 七、组件设计亮点
-
-### 7.1 动态表单引擎组件体系
-
-```mermaid
-graph TB
-    subgraph Core["核心文件"]
-        DF["DynamicForm.tsx<br/>容器: 状态管理 + 校验调度 + forwardRef"]
-        REN["Renderer.tsx<br/>递归渲染器: AST 遍历 + 深度保护"]
-        REG["registry.tsx<br/>控件注册表: Map<FieldType, Component>"]
-        TYPES["types.ts<br/>类型定义 + 校验工具 + AJV"]
-    end
-
-    subgraph Fields["字段组件 fields/"]
-        SF["StringField<br/>Input"]
-        NF["NumberField<br/>InputNumber"]
-        SLF["SelectField<br/>Select"]
-        SWF["SwitchField<br/>Switch"]
-        DTF["DateTimeField<br/>DatePicker"]
-        JF["JsonField<br/>Input.TextArea"]
-        AF["ArrayField<br/>动态数组 添加/删除"]
-    end
-
-    DF --> REN --> REG
-    DF --> TYPES
-    REN --> Fields
-    REG -.-> Fields
-```
-
-### 7.2 Zustand Store 体系
-
-```mermaid
-graph LR
-    subgraph Stores["src/stores/"]
-        INDEX["index.ts<br/>桶文件导出"]
-        ALERT["alertStore<br/>WebSocket 告警"]
-        UPLOAD["uploadStore<br/>分片上传 persist"]
-        LRU["lruRouteStore<br/>路由缓存"]
-        REQ["requestLoadingStore<br/>请求 Signal"]
-    end
-
-    INDEX --> ALERT & UPLOAD & LRU & REQ
-```
-
-### 7.3 Web Worker 体系
-
-```mermaid
-graph LR
-    WORKERS["src/utils/"] --> MERGE["merge.worker.ts<br/>分治归并排序"]
-    WORKERS --> DECRYPT["decrypt.worker.ts<br/>AES-GCM 日志解密"]
-```
-
----
-
-## 八、面试高频问题（深度版）
-
-### 8.1 React 核心概念
-
-#### Q1: forwardRef + useImperativeHandle 解决了什么问题？
-
-**答**:
-
-React 默认是**单向数据流**（props 父→子传递）。当子组件内部状态需要被父组件操作时，需要 `forwardRef` + `useImperativeHandle`。
-
-```mermaid
-graph LR
-    subgraph Flow["本项目数据流"]
-        PARENT["JsonSchemaForm<br/>父组件"] -->|"JSON 编辑"| FORM["DynamicForm<br/>子组件"]
-        FORM -->|"forwardRef 暴露<br/>setFormData()"| PARENT
-    end
-
-    subgraph Alt["不这样做会怎样？"]
-        A1["状态提升到父组件<br/>→ 组件不再自洽"]
-        A2["全局 Zustand<br/>→ 过度设计"]
-        A3["key 强制 remount<br/>→ hack，丢失状态"]
-    end
-
-    Flow --> Alt
-```
-
-#### Q2: useRef 和 useState 的本质区别？项目中如何应用？
-
-**答**:
-
-| 特性 | useState | useRef |
-|------|----------|--------|
-| 触发重渲染 | ✅ 是 | ❌ 否 |
-| 值可变性 | 需要 setState | .current 直接修改 |
-| 适用场景 | 需要 UI 更新的状态 | 不需要 UI 更新的持久化数据 |
-| 记忆性 | 每次渲染都是新值 | 跨渲染保持引用 |
-
-**本项目应用**:
-```typescript
-// 1. wsRef — WebSocket 实例 (不触发重渲染)
-const wsRef = useRef<WebSocket | null>(null)
-
-// 2. genRef — generation 计数器 (跨渲染保持)
-const genRef = useRef(0)
-
-// 3. pausedRef — 暂停标志 (命令式控制)
-const pausedRef = useRef(false)
-
-// 4. onChangeRef — 最新回调持有 (闭包陷阱修复)
-const onChangeRef = useRef(onChange)
-onChangeRef.current = onChange
-
-// 5. data — 表单数据 (触发 UI 更新)
-const [data, setData] = useState(initialData)
-```
-
-#### Q3: React 闭包陷阱产生的原因？项目中如何修复？
-
-**答**:
-
-```mermaid
-graph LR
-    subgraph Problem["❌ 产生原因"]
-        P1["函数组件每次渲染<br/>创建新闭包"]
-        P2["useEffect/useCallback<br/>捕获创建时的 state"]
-        P3["异步回调执行时<br/>state 已过期"]
-    end
-
-    subgraph Fix1["🔧 修复模式1: useRef 持有最新回调"]
-        F1A["onUpdateRef.current = onUpdate<br/>每次渲染更新"]
-        F1B["异步回调通过 ref<br/>读取最新值"]
-    end
-
-    subgraph Fix2["🔧 修复模式2: generation 计数器"]
-        F2A["genRef++<br/>每次操作递增"]
-        F2B["回调检查<br/>genRef.current 是否匹配"]
-    end
-
-    subgraph Fix3["🔧 修复模式3: 依赖最小化"]
-        F3A["稳定 key"]
-        F3B["effect 只依赖必要变量"]
-    end
-
-    Problem --> Fix1 & Fix2 & Fix3
-```
-
-### 8.2 动态表单引擎
-
-#### Q1: 什么是递归渲染引擎？如何避免性能问题？
-
-**答**:
-
-递归渲染引擎 = 将 JSON Schema (AST 树) 递归解析为 React 组件树
-
-渲染流程: `renderTabs → renderCard → renderForm → renderLeaf`
-
-```mermaid
-graph TD
-    subgraph ENGINE["递归渲染引擎"]
-        SCHEMA["JSON Schema AST"] --> RT["renderTabs<br/>Ant Design Tabs"]
-        RT --> RC["renderCard<br/>Ant Design Card"]
-        RC --> RF["renderForm<br/>容器 div"]
-        RF --> RL["renderLeaf<br/>查询 registry"]
-        RL --> FIELD["字段组件<br/>StringField/NumberField/..."]
-    end
-
-    subgraph PERF["性能保障"]
-        P1["React 19 自动 memo<br/>编译期推断依赖"]
-        P2["分层隔离<br/>tabs/card/form/leaf<br/>四层互不影响"]
-        P3["深度保护<br/>_depth≤20 + _visitedRefs<br/>防无限递归+循环引用"]
-    end
-
-    ENGINE --> PERF
-```
-
-#### Q2: 为什么选择自定义表单引擎而不是 @rjsf？
-
-**答**:
-
-```mermaid
-graph TD
-    RJSF["@rjsf"] --> R1["开箱即用 👍"]
-    RJSF --> R2["扩展复杂 ❌<br/>自定义控件需了解 Widget/Field 体系"]
-    RJSF --> R3["样式受限 ❌<br/>模板结构固定"]
-
-    CUSTOM["自定义引擎 ✅"] --> C1["完全可控 👍<br/>tabs/card/form 自由布局"]
-    CUSTOM --> C2["条件显隐表达式<br/>运行时解析"]
-    CUSTOM --> C3["四级校验体系<br/>同步/异步/AJV/后端"]
-    CUSTOM --> C4["registerField()<br/>一行注册新字段"]
-
-    RJSF & CUSTOM --> DECISION{"选型决策"}
-    DECISION -->|"灵活性要求高"| WIN["🎯 本项目: 自定义引擎"]
-    DECISION -->|"快速原型"| RJSF
-
-    style CUSTOM fill:#e8f5e9,stroke:#2e7d32
-    style RJSF fill:#fff3e0,stroke:#e65100
-    style WIN fill:#e8f5e9
-```
-
-> 详见「附：面试追问模拟 → 场景5」的 Mermaid 对比图。
-
-### 8.3 WebSocket vs SSE 选型
-
-#### Q1: 什么时候用 SSE，什么时候用 WebSocket？
-
-**答**:
-
-```mermaid
-graph TD
-    CHOICE{"实时通信选型"} -->|"单向推送<br/>服务端→客户端"| SSE["SSE (Server-Sent Events)"]
-    CHOICE -->|"双向通信<br/>客户端↔服务端"| WS["WebSocket"]
-
-    subgraph SSEBOX["SSE 特点"]
-        S1["基于 HTTP<br/>浏览器原生 EventSource"]
-        S2["自动重连 👍"]
-        S3["代码量少 ~20 行"]
-        S4["📋 适合: 日志流<br/>通知推送<br/>状态更新"]
-    end
-
-    subgraph WSBOX["WebSocket 特点"]
-        W1["全双工实时通信"]
-        W2["需要心跳+去重+重连"]
-        W3["代码量 ~80 行"]
-        W4["🔔 适合: 实时告警<br/>聊天<br/>协同编辑"]
-    end
-
-    SSE --> SSEBOX
-    WS --> WSBOX
-    SSEBOX & WSBOX --> DECISION{"本项目方案"}
-    DECISION -->|"日志流 → SSE（单向足够）"| OK["✅ 各尽其用"]
-    DECISION -->|"告警 → WebSocket（需要双向）"| OK
-    DECISION -->|"WebSocket 不可用时<br/>自动降级 SSE/Polling"| OK
-```
-
-### 8.4 Zustand vs Redux vs Context
-
-#### Q1: 为什么选 Zustand 而不是 Redux 或 Context？
-
-**答**:
-
-```mermaid
-graph TD
-    DECISION{"状态管理方案选择"} --> Z["Zustand ~1KB"]
-    DECISION --> R["Redux 生态丰富"]
-    DECISION --> C["Context 内置"]
-
-    subgraph ZS["Zustand ✅ 本项目选择"]
-        Z1["轻量，无 boilerplate"]
-        Z2["内置 persist 持久化"]
-        Z3["按 selector 订阅<br/>不触发无关重渲染"]
-        Z4["适合: 中小型应用<br/>持久化需求"]
-    end
-
-    subgraph RS["Redux"]
-        R1["生态丰富，中间件成熟"]
-        R2["模板代码多<br/>action/reducer/slice"]
-        R3["适合: 大型项目<br/>复杂状态逻辑"]
-    end
-
-    subgraph CS["Context"]
-        C1["React 内置，零依赖"]
-        C2["频繁更新性能不佳<br/>全子树重渲染"]
-        C3["适合: 全局主题<br/>语言/用户信息"]
-    end
-
-    Z --> ZS
-    R --> RS
-    C --> CS
-
-    style ZS fill:#e8f5e9,stroke:#2e7d32
-    style RS fill:#fff3e0,stroke:#e65100
-    style CS fill:#fff3e0,stroke:#e65100
-```
-
-> **本项目选择 Zustand 的原因**: ① 需要 localStorage 持久化 → persist 内置 ② 状态结构简单 → 不需要 Redux 复杂度 ③ 性能要求高 → 按 selector 订阅
-
-### 8.5 大文件断点续传
-
-#### Q1: 为什么分片上传而不是直接上传？
-
-**答**:
-
-```mermaid
-graph LR
-    subgraph CHUNKED["✅ 分片上传"]
-        C1["断点续传<br/>失败只传单分片"]
-        C2["并发控制<br/>滑动窗口 4 路"]
-        C3["进度精确<br/>每分片状态追踪"]
-    end
-
-    subgraph DIRECT["❌ 直接上传"]
-        D1["全量重传<br/>失败=从头再来"]
-        D2["内存暴增<br/>大文件全量加载"]
-        D3["无进度<br/>用户体验差"]
-    end
-
-    CHUNKED -->|"选型结果"| WIN["🎯 本项目选择分片上传"]
-    DIRECT -->|"不适用于大文件"| WIN
-
-    style CHUNKED fill:#e8f5e9
-    style DIRECT fill:#fce4ec
-    style WIN fill:#e3f2fd
-```
-
-#### Q2: 暂停后刷新页面，如何恢复上传？
-
-**答**:
-
-```mermaid
-sequenceDiagram
-    participant User as 用户
-    participant Page as 页面
-    participant LS as localStorage (Zustand persist)
-    participant API as 后端 API
-
-    Page->>LS: Zustand persist 自动反序列化<br/>恢复文件列表
-    Page->>API: GET /api/upload/status/:uploadId
-    API-->>Page: 返回已接收分片索引
-    Page->>Page: 标记 done 分片
-
-    User->>Page: 拖入相同文件
-    Page->>Page: 检测到未完成记录
-    Page-->>User: 显示"续传"按钮 👆
-
-    User->>Page: 点击续传
-    Page->>API: 仅上传 missing 分片
-    API-->>Page: 上传完成 ✅
-```
-
----
-
-## 附：面试追问模拟
-
-### 场景 1：GIS 十万级点位
-
-**Q：十万级点位渲染你是怎么优化的？**
-
-```mermaid
-graph LR
-    RAW["原始数据<br/>100,000 点"] --> BBOX["① BBOX 视口裁剪<br/>只渲染可见区域"]
-    BBOX --> CLUSTER["② Cluster 聚合<br/>距离<40px 聚合为 1 点"]
-    CLUSTER --> CACHE["③ dataCache 缓存<br/>zoom+extent 作为 key"]
-    CACHE --> LAZY["④ moveend 惰性刷新<br/>拖动结束时 RAF 触发"]
-    LAZY --> RESULT["✅ 渲染量 50 点<br/>帧率 60fps"]
-
-    style RAW fill:#fce4ec
-    style RESULT fill:#e8f5e9
-```
-
-> 执行顺序：BBOX（裁剪 60% 数据）→ Cluster（剩下 40% 聚合为 50 点）→ Cache → 惰性渲染
-
-### 场景 2：WebSocket 重连与协议降级
-
-**Q：指数退避 + jitter 为什么重要？**
-
-```mermaid
-graph LR
-    subgraph NOJITTER["❌ 纯指数退避"]
-        N1["所有客户端同时<br/>检测到断线"]
-        N2["同时重连 →<br/>服务端压力尖峰 ⚡"]
-        N3["服务端过载 →<br/>部分连接再断开"]
-    end
-
-    subgraph WITHJITTER["✅ +jitter 随机化"]
-        J1["分散重连时间"]
-        J2["平滑服务端负载"]
-        J3["公式:<br/>base = min(1000×2^attempt, 30000)<br/>jitter = base × (0.8 + random × 0.4)"]
-    end
-
-    NOJITTER -->|"改进"| WITHJITTER
-    style NOJITTER fill:#fce4ec
-    style WITHJITTER fill:#e8f5e9
-```
-
-**Q：为什么要做 WebSocket → SSE → Polling 的三级降级？**
-
-```mermaid
-graph LR
-    subgraph Env["🌐 网络环境问题"]
-        E1["企业内网代理拦截"]
-        E2["Nginx 超时断开"]
-        E3["WebSocket Upgrade 失败"]
-    end
-
-    subgraph Fallback["⬇️ 三级降级策略"]
-        F1["WebSocket ⭐<br/>全双工实时"]
-        F2["SSE<br/>HTTP 长连接<br/>浏览器自动重连"]
-        F3["Polling<br/>setInterval 轮询<br/>所有环境支持"]
-    end
-
-    subgraph UI["🖥️ UI 反馈"]
-        U1["绿色 Tag: WebSocket"]
-        U2["橙色 Tag: SSE 降级"]
-        U3["橙色 Tag: 轮询降级"]
-    end
-
-    Env -->|"WebSocket 失败<br/>重试10次"| F1
-    F1 -->|"MAX_RETRY 耗尽"| F2
-    F2 -->|"HTTP 错误"| F3
-    F1 & F2 & F3 --> UI
-
-    style F1 fill:#e3f2fd,stroke:#1565c0
-    style F2 fill:#fff3e0,stroke:#e65100
-    style F3 fill:#fce4ec,stroke:#c62828
-```
-
-> 面试价值：展示端到端可靠性设计思维，而非仅关注 WebSocket 本身
-
-**Q：背压控制和消息合并解决了什么问题？**
-
-```mermaid
-graph TB
-    subgraph PROBLEM["❌ 没有背压控制"]
-        P1["WebSocket.send()<br/>无节制调用"]
-        P2["bufferedAmount<br/>持续增长 ↑"]
-        P3["内存溢出<br/>延迟增加"]
-    end
-
-    subgraph SOLUTION["✅ 背压控制方案"]
-        S1{"bufferedAmount"}
-        S1 -->|"> 1MB"| Q["排队等待"]
-        S1 -->|"< 256KB"| SEND["恢复发送"]
-        Q -->|"raf 驱动 drain<br/>逐帧检查"| SEND
-    end
-
-    subgraph BATCH["📦 消息合并"]
-        B1["首条消息 → 启动 16ms 定时器"]
-        B2["buffer.size > 64KB → 立即 flush"]
-        B3["降低网络包数量<br/>10~50 倍"]
-    end
-
-    PROBLEM --> SOLUTION
-    PROBLEM --> BATCH
-    style PROBLEM fill:#fce4ec
-    style SOLUTION fill:#e8f5e9
-    style BATCH fill:#e3f2fd
-```
-
-> 面试价值：展示对网络传输底层机制的理解
-
-### 场景 3：双 Token 无感刷新
-
-**Q：Refresh Token Rotation 是什么？为什么需要？**
-
-```mermaid
-sequenceDiagram
-    participant Client as 客户端
-    participant API as API 服务
-    participant DB as usedTokens
-
-    Note over Client,DB: 正常请求
-    Client->>API: GET /api/data<br/>Authorization: Bearer AT1
-    API-->>Client: 200 OK
-
-    Note over Client,DB: Access Token 过期 → 401
-    Client->>API: GET /api/data<br/>Authorization: Bearer AT1(expired)
-    API-->>Client: 401 Unauthorized
-
-    Note over Client,DB: 自动刷新 (Promise gate)
-    Client->>API: POST /api/auth/refresh<br/>X-Refresh-Token: RT1
-    API->>DB: 检查 RT1 是否已用
-    DB-->>API: 未使用 ✅
-    API->>API: 标记 RT1 为已用
-    API-->>Client: { accessToken: AT2, refreshToken: RT2 }
-
-    Note over Client,DB: 用新 Token 重放原请求
-    Client->>API: GET /api/data<br/>Authorization: Bearer AT2
-    API-->>Client: 200 OK ✅
-
-    Note over Client,DB: 攻击者截获 RT1 企图重放
-    alt 重放攻击
-        Client->>API: POST /api/auth/refresh<br/>X-Refresh-Token: RT1(已用)
-        API->>DB: 检查 RT1 是否已用
-        DB-->>API: 已使用 ❌
-        API-->>Client: 403 Forbidden<br/>"Token reused"
-    end
-```
-
-> 核心安全机制：每次刷新同时更换 refreshToken，旧 token 立即失效。即使泄露，攻击者也无法二次使用。
-
-### 场景 4：React 闭包陷阱
-
-**Q：WebSocket 回调中的闭包陷阱是怎么修复的？**
-
-```mermaid
-sequenceDiagram
-    participant C as 组件
-    participant WS as WebSocket
-    participant Handler as 回调函数
-
-    Note over C: 首次连接 gen=1
-    C->>C: genRef = 1
-    C->>WS: connect()
-    WS-->>Handler: onmessage(data)
-
-    Note over C: 组件重新渲染
-    C->>C: genRef 保持为 1
-    Handler->>Handler: genRef.current === 1 → ✅ 处理
-
-    Note over C: 断开重连 gen=2
-    C->>C: genRef = 2
-    C->>WS: connect()
-    WS-->>Handler: onmessage(data)
-    Handler->>Handler: genRef.current === 2 → ✅ 处理
-
-    Note over C: 旧连接回调到达
-    WS-->>Handler: (旧) onmessage(stale data)
-    Handler->>Handler: genRef.current === 2,<br/>但捕获的 gen 是 1<br/>❌ 丢弃!
-
-    Note over C: 通用方案: 所有异步回调 + <br/>跨生命周期操作都建议使用<br/>generation 模式
-```
-
-> generation 计数器确保每次新连接递增 gen，旧连接的回调因 gen 不匹配被丢弃，避免过期数据污染。
-
-### 场景 5：表单引擎 vs @rjsf
-
-**Q：你觉得自定义表单引擎比 @rjsf 好在哪？**
-
-```mermaid
-graph LR
-    subgraph RJSF["@rjsf 通用方案"]
-        R1["开箱即用 ⚡"]
-        R2["社区成熟"]
-        R3["扩展复杂 ❌"]
-        R4["样式受限 ❌"]
-    end
-
-    subgraph CUSTOM["自定义引擎 ✅ 本项目选择"]
-        C1["完全控制渲染流程<br/>tabs/card/form 自定义布局"]
-        C2["条件显隐表达式<br/>运行时解析"]
-        C3["四级校验体系<br/>同步/异步/AJV/后端"]
-        C4["实时 JSON 编辑<br/>双向绑定"]
-        C5["registerField()<br/>一行注册新字段"]
-    end
-
-    RJSF -->|灵活性不足| CHOICE{"选型决策"}
-    CUSTOM -->|架构可控| CHOICE
-    CHOICE --> RESULT["面试场景: 自定义引擎<br/>更能展示架构设计能力"]
-
-    style CUSTOM fill:#e8f5e9,stroke:#2e7d32
-    style RJSF fill:#fff3e0,stroke:#e65100
-```
-
----
-
-> **React 19 内置编译优化**：React 19 编译器自动推断组件的输入依赖，仅在依赖变化时重渲染。`React.memo` / `useMemo` / `useCallback` 大多不再需要手动编写。这与 Vue 3 的模板编译优化异曲同工，但 React 的实现更通用（不依赖模板）。
+**位置**: `packages/shared-monitor/src/` (10 文件)
+
+- 声明式 data-stat 埋点（事件委托 + JSON.parse）
+- 优先级上报队列（HIGH/NORMAL/LOW）
+- sendBeacon → fetch keepalive → XHR sync 降级链
+- 异常全捕获：onerror / unhandledrejection / 资源错误
+- API 监控：Axios 拦截器注入（慢查询 + 异常）
+- 性能采集：Navigation / Resource / Bundle Timing
+- 多级去重：内存 Map 5s + sessionStorage 持久化
+- 柔性降级：`withDegradation`（超时/重试/业务容错）
 
 ---
 
 ### 2.17 共享主题包 (shared-theme) ⭐⭐
 
-**位置**: `packages/shared-theme/` (7 文件)
+**位置**: `packages/shared-theme/src/` (7 文件)
 
-#### 设计目标
+跨应用 dark/light 主题切换统一管理：
 
-消除 3 个应用（frontend / ai-demo / interview-docs）之间重复的主题切换代码，统一 dark/light 主题管理逻辑。
+| App | 接口 | DOM 策略 |
+|-----|------|----------|
+| frontend | `useThemeStore` (Zustand) | `.dark` class |
+| ai-demo | `useThemeStore` (Zustand) | `data-theme` attribute |
+| interview-docs | `useTheme` (hook) | `.dark` class |
 
-#### 实现思路
+新增：`ThemeToggle` 组件 + `useThemeTransition` 动画过渡。
 
-提供两种接口 + 两种 DOM 策略，各应用按需配置：
+---
 
-| 接口 | 适用 | 实现方式 |
-|------|------|----------|
-| `useThemeStore` (Zustand) | frontend, ai-demo | Zustand store + `persist` 中间件 |
-| `useTheme` (React hook) | interview-docs | `useSyncExternalStore` (无外部状态库) |
+## 三、设计模式与架构亮点
 
-| DOM 策略 | 效果 | 应用 |
-|----------|------|------|
-| `class` | `<html class="dark">` | frontend, interview-docs |
-| `attribute` | `<html data-theme="dark">` | ai-demo |
+### 3.1 设计模式应用
 
-#### 核心文件
+| 模式 | 应用场景 |
+|------|----------|
+| 策略模式 | 表单字段渲染 registry.tsx |
+| 递归渲染模式 | JSON Schema → React 组件 |
+| 观察者模式 | 表单数据实时监听 |
+| 命令模式 | 暂停/恢复上传 Promise park |
+| 降级链模式 | 传输层协议降级 WS→SSE→Polling |
+
+### 3.2 状态管理策略
+
+分层按需架构：Zustand 全局状态 → useState 组件状态 → useRef 持久化引用。
+
+### 3.3 统一 HTTP 请求层
+
+**位置**: `src/utils/fetchClient.ts`
+
+- 请求拦截器：自动注入 Bearer Token + 过期主动等待刷新
+- 响应拦截器：401 自动触发无感刷新 + 重放原请求
+- `getErrorMessage()`：统一错误信息提取
+
+---
+
+## 四、React 19 新特性实战应用
+
+### forwardRef + useImperativeHandle
+
+DynamicForm 通过 `forwardRef` 暴露 `setFormData` 方法，JSON 编辑面板可直接写入表单数据。
+
+### React 19 编译器
+
+Babel 插件启用，自动 memo（40+ 组件受益），消除手动 memo/useMemo。
+
+### 闭包陷阱修复
+
+`useRef` 持最新回调 + `useCallback` 稳定引用，结合代际锁（genRef）防止过期回调更新状态。
+
+---
+
+## 五、性能优化策略
+
+| 级别 | 优化 |
+|------|------|
+| 渲染 | RAF 双缓冲、虚拟滚动、display:none 保活 |
+| 计算 | Web Worker 多线程、自适应分区 |
+| 网络 | 滑动窗口并发、指数退避、sendBeacon |
+| 构建 | Rolldown Rust 打包、Vendor Chunk 分割、Tree Shaking |
+
+---
+
+## 六、工程化体系
+
+### 代码规范
+
+- Biome 2.5：2 空格、单引号、必分号、尾逗号、行宽 100
+- TypeScript strict 模式
+- Husky + commitlint conventional commits
+
+### CI/CD
+
+GitHub Actions + GitLab CI，Turborepo 并行缓存加速。
+
+### Docker 多阶段构建
+
+7 阶段构建：frontend-builder / ai-demo-builder / interview-docs-builder / backend-builder / frontend / ai-demo / interview-docs。
+
+---
+
+## 七、组件设计亮点
+
+### 动态表单引擎
+
+微内核架构：4 个核心文件 + 7 个字段组件，策略模式注册表，新增字段类型只需一行代码。
+
+### Zustand Store 模式
+
+7 个 Store 覆盖认证/告警/上传/主题/路由/请求/监控，`persist` 中间件自动序列化。
+
+### Web Worker 管理
+
+3 个 Worker 文件统一管理，Pool 模式复用，Transferable Objects 零拷贝。
+
+---
+
+## 八、面试高频问题（深度版）
+
+### Q1: React 19 中 forwardRef 的使用场景？
+
+DynamicForm 通过 forwardRef + useImperativeHandle 暴露 `setFormData` 方法，父组件通过 ref 直接写入表单数据，实现 JSON 编辑双向绑定。
+
+### Q2: 条件显隐表达式为什么不直接用 eval？
+
+CSP 严格模式下禁止 eval。当前用 `new Function` 但限制了变量名为参数名。替代方案：手写表达式解析器、安全沙箱、预定义条件 DSL。
+
+### Q3: WebSocket vs SSE 的选型依据？
+
+WS 全双工适用高频双向通信（心跳/背压/二进制协议），SSE 单向适用日志流等大流量场景。两者在项目中互补。
+
+### Q4: Zustand 和 Redux 的取舍？
+
+Zustand API 简洁、无 boilerplate、支持 `persist` 中间件、TypeScript 类型推导优秀。适合中小型项目。
+
+### Q5: 位运算权限有什么优缺点？
+
+O(1) 检查、4 字节存储、组合便捷。限制：32 位上限、可读性差。
+
+### Q6: React 19 use() 与 useEffect + fetch 对比？
+
+use() 声明式，Suspense 自动处理加载态，消除 loading 样板代码。useEffect + fetch 命令式，灵活但易出错。
+
+### Q7: Promise park 模式实现原理？
+
+暂停时将上传循环挂起在一个未 resolve 的 Promise 上，恢复时 resolve 该 Promise。
+
+### Q8: 共享主题包的跨应用设计？
+
+统一管理 `configureTheme()` 注入配置（storageKey/DOM 策略），各 app 通过本地 wrapper re-export，实现配置复用。
+
+---
+
+## 附：面试追问模拟
+
+### 场景 1：表单引擎
+
+**Q**: 条件显隐表达式如果涉及到多层嵌套字段（A→B→C），如何避免性能问题？  
+**A**: 缓存表达式解析结果，只在依赖字段变化时重新计算。依赖图拓扑排序确保单向，`maxDepth=5` 防止循环。
+
+### 场景 2：断点续传
+
+**Q**: 如果用户在上传过程中关闭浏览器，如何恢复进度？  
+**A**: Zustand persist 持久化文件元数据，页面加载后 `GET /api/upload/status` 与服务端对账。
+
+### 场景 3：WebSocket 降级
+
+**Q**: WebSocket 降级到 Polling 时，实时性损失多少？  
+**A**: Polling 1s 间隔，理论上最大延迟 1s。WebSocket 毫秒级。实际场景告警聚合 100ms ticker，用户无感知。
+
+### 场景 4：Web Worker
+
+**Q**: Worker 报错如何不影响主流程？  
+**A**: worker.onerror 捕获后 terminate 异常 Worker，创建新 Worker 替补，重新分配任务。
+
+### 场景 5：支付幂等性
+
+**Q**: Idempotency-Key 在分布式系统中如何保证全局唯一？  
+**A**: 前端生成 `idem_timestamp_random` 保证单设备唯一。网关层去重表保证集群内唯一。DB 唯一索引保证最终一致性。
+
+---
+
+## 十、共享包
+
+### shared-theme
 
 | 文件 | 职责 |
 |------|------|
-| `store.ts` | Zustand store + `configureTheme()` 工厂函数注入配置 |
-| `hook.ts` | React hook + `configureThemeHook()` — 使用 `useSyncExternalStore` 订阅 DOM |
-| `dom.ts` | `applyTheme()` / `getInitialTheme()` / `getDOMSnapshot()` / `subscribeToDOM()` |
-| `types.ts` | `ThemeMode` / `ThemeConfig` 类型 |
-| `ThemeToggle.tsx` | 带动画过渡的主题切换开关（`motion` / `framer-motion`） |
-| `transition.tsx` | `useThemeTransition` hook — clip-path 圆形扩散动画 |
+| `types.ts` | ThemeMode、ThemeConfig 类型 |
+| `dom.ts` | DOM 工具函数 |
+| `store.ts` | Zustand store |
+| `hook.ts` | useSyncExternalStore hook |
+| `transition.tsx` | 主题切换动画 |
+| `ThemeToggle.tsx` | 主题切换按钮组件 |
+| `index.ts` | 桶文件导出 |
 
-#### 关键设计
+### shared-monitor
 
-```typescript
-// 各应用通过本地 wrapper 调用 configure 注入配置：
-// apps/frontend/src/stores/themeStore.ts
-import { configureTheme, useThemeStore } from '@interview-demo/shared-theme';
-configureTheme({ storageKey: 'theme-mode', domStrategy: 'class', domTarget: 'dark' });
-export { useThemeStore };
-```
-
-### 2.18 共享监控 SDK (shared-monitor) ⭐⭐⭐
-
-**位置**: `packages/shared-monitor/` (10 文件)
-
-#### 设计目标
-
-构建一个轻量级、可插拔的前端监控 SDK，覆盖**声明式埋点、异常捕获、性能采集、API 监控、Bundle 分析、柔性降级**六大能力，通过 Zustand store 可视化展示。
-
-#### 实现架构
-
-```mermaid
-graph TB
-    subgraph SDK["shared-monitor SDK"]
-        STAT["StatSDK<br/>data-stat 声明式埋点"]
-        ERR["ErrorMonitor<br/>onerror + unhandledrejection"]
-        API["APIMonitor<br/>Axios 拦截器"]
-        PERF["PerformanceMonitor<br/>Resource Timing"]
-        BUNDLE["BundleMonitor<br/>JS/CSS 加载分析"]
-        RM["ReportManager<br/>优先级上报队列"]
-        DEG["withDegradation<br/>柔性降级"]
-    end
-
-    subgraph Store["状态层"]
-        MON["useMonitorStore<br/>Zustand (200 条/类)"]
-    end
-
-    STAT & ERR & API & PERF & BUNDLE --> RM --> MON
-    DEG -->|降级事件| RM
-    MON -->|Dashboard 可视化| UI["MonitorDashboard"]
-```
-
-#### 六大能力
-
-| 模块 | 实现方式 | 关键指标 |
-|------|----------|----------|
-| **StatSDK** | `data-stat` 属性声明式埋点 + `MutationObserver` 自动绑定 | 减少代码侵入 |
-| **ErrorMonitor** | `window.onerror` + `unhandledrejection` + 资源加载错误 | JS 采样率 10%，5s 二级去重 |
-| **APIMonitor** | Axios 响应拦截器，>1s 标记慢查询 | 请求 URL / 耗时 / 状态码 |
-| **PerformanceMonitor** | `performance.getEntriesByType('resource')` 60s 轮询 | DNS/TCP/TTFB/下载耗时 |
-| **BundleMonitor** | `performance.getEntriesByType('resource')` 过滤 JS/CSS | 加载耗时 + 体积推算 |
-| **withDegradation** | 高阶函数包裹：timeout + retry + fallback | 超时/重试耗尽/业务异常三级降级 |
-
-#### ReportManager 优先级队列
-
-```
-sendBeacon (优先) → requestIdleCallback (降级) → 64KB 分片 (大包)
-+ 5s 内存级去重 + sessionStorage 二级去重
-+ 采样率动态调节（满载时自动降采样）
-```
-
-### 2.19 NestJS 后端重构版 ⭐⭐⭐
-
-**位置**: `apps/backend-nest/` (56 TypeScript 文件)
-
-#### 设计目标
-
-用 NestJS 11 完整覆盖 Go 后端的 19 个内部包功能，提供 Swagger UI 文档 + 类型安全的 TypeScript 全栈体验。
-
-#### 架构全景
-
-| 模块 | 文件数 | 端点 | Controller 前缀 |
-|------|--------|------|----------------|
-| auth | 3 | 4 | `/api/auth` |
-| health | 2 | 2 | `/api/health`, `/healthz` |
-| vitals | 3 | 12 | `/api/vitals/*`, `/api/monitor/*`, `/api/telemetry/*` |
-| payment | 3 | 8 | `/api/payments` |
-| upload | 3 | 6 | `/api/upload` |
-| sse | 2 | 1 | `/api/sse` |
-| encrypted-log | 2 | 1 | `/api/sse` |
-| alert | 3 | 1 | `/ws/alerts`, `/api/alerts` |
-| gis | 2 | 1 | `/api/gis` |
-| rbac | 2 | 1 | `/api/rbac` |
-| request-load | 2 | 1 | `/api/request-loading` |
-| lru-cache | 2 | 3 | `/api/services/config/logs` |
-| schema | 3 | 2 | `/api/schema` |
-| chat | 4 | 4 | `/api/chat` |
-| agent | 3 | 6 | `/api/agents`, `/api/mcp` |
-| knowledge | 3 | 10 | `/api/knowledge-base` |
-| memory | 2 | — | 提供 `MemoryService` |
-
-**总计**: 16 模块 / ~67 API 端点 / Swagger UI (`/swagger`)
-
-#### 关键特性
-
-| 特性 | 实现 |
+| 文件 | 职责 |
 |------|------|
-| **Swagger 文档** | `@nestjs/swagger` + `@ApiTags` / `@ApiBearerAuth` / `@ApiOperation` |
-| **JWT 认证** | `JwtAuthGuard` + Bearer Token 提取 + 全局 `AuthMiddleware` 可选 |
-| **全局异常过滤** | `GlobalExceptionFilter` — 统一错误响应格式 |
-| **CORS 中间件** | 白名单配置，允许跨域直连 |
-| **PromptGuard 中间件** | 正则 + 关键词 + 模式匹配检测提示注入，白名单豁免 |
-| **ResponseCache 中间件** | LRU 缓存 + TTL 30s 过期 + Content-Type 智能缓存 |
-| **流式 SSE** | `@Sse()` + RxJS `Subject` + `[DONE]` 标记 + AbortController |
-| **全内存存储** | `Map` / `sync.Map` 替代数据库，演示即用 |
+| `types.ts` | 监控类型 + ReportPriority |
+| `reportManager.ts` | 优先级上报队列 |
+| `statSDK.ts` | 声明式埋点 |
+| `errorMonitor.ts` | 异常全捕获 |
+| `apiMonitor.ts` | Axios API 监控 |
+| `performanceMonitor.ts` | 性能采集 |
+| `bundleMonitor.ts` | Bundle 体积监控 |
+| `store.ts` | Zustand 监控大盘 |
+| `degradation.ts` | 柔性降级 |
+| `index.ts` | 桶文件 + initMonitor() |
 
 ---
 
 ## 十一、面试自我介绍
 
-> 基于本项目总结的 3 分钟自我介绍，覆盖技术栈、项目亮点、个人价值三个维度。
+### 1 分钟版本
 
-### 简洁版（1 分钟）
+"这是一个 React 19 + TypeScript 7 + Go 1.26 的全栈技术演示平台，涵盖 19 个高级技术场景。我独立完成了所有前端架构设计和 Go 后端 API 开发。核心亮点包括递归动态表单引擎、WebSocket 三协议降级传输层、RBAC 位运算权限系统、大文件断点续传、UniPay 支付状态机、AI Agent 六阶段全栈工程化。此外还设计了两个共享包——跨应用主题切换和声明式前端监控 SDK，被三个前端应用复用。"
 
-```text
-面试官您好，我是一名前端工程师，主要技术栈是 React + TypeScript。
+### 3 分钟版本
 
-最近我独立完成了一个全栈演示平台项目，覆盖了 20+ 个高级技术场景：
-实时通信、性能优化、工程架构、AI 后端、支付中台和前端监控六大领域。
+"该项目是一个 Monorepo (Bun + Turborepo) 全栈项目，包含三个前端应用和一个 Go 后端：
 
-项目中有几个我比较自豪的设计：
+- **frontend**：React 19 SPA，16 个技术演示页面（含监控面板），覆盖实时通信、性能优化、工程架构、支付中台四大领域
+- **ai-demo**：@ant-design/x 构建的 AI 全栈演示平台，8 个选项卡覆盖 LLM 对话、RAG 知识库、智能体 Agent、Playground 调试台
+- **interview-docs**：前端知识库文档站点，Markdown 内容，GitHub Pages 部署
+- **backend**：Go 1.26 + Gin，19 个内部包 80+ API
 
-第一，**递归动态表单引擎**。我自研了一套 JSON Schema → React 组件的递归渲染引擎，
-支持条件显隐、字段联动、四级校验体系，比直接用 @rjsf 更灵活可控。
+技术深度方面：
 
-第二，**多协议告警推送**。我设计了一个三级降级传输层，
-WebSocket 不可用时自动降级到 SSE 再到 HTTP Polling，
-确保任何网络环境都能收到数据。
+1. **递归动态表单引擎** — 4 层 AST 递归渲染、7 种字段类型、条件显隐/字段联动/实时 JSON 编辑/四重校验
+2. **WebSocket 传输层** — 多协议降级链、背压控制、消息合并、心跳保活、RAF 双缓冲
+3. **RBAC 位运算权限** — O(1) 位运算、前后端双校验一致性对比
+4. **大文件断点续传** — 代际锁防并发竞态、Promise Park 暂停、SHA-256 校验
+5. **UniPay 支付中台** — 7 状态状态机、Idempotency-Key 四层防御、指数退避重试、T+1 对账
+6. **AI 全栈工程化** — 六阶段渐进式设计，从 LLM 流式对话到生产级中间件和遥测体系
 
-第三，**大文件断点续传**。用 SHA-256 分片校验 + Zustand 持久化，
-支持暂停恢复和刷新后续传，前后端 SHA-256 双重完整性验证。
+工程化方面：Biome 规范、Zustand 状态管理、Web Worker 多线程、Docker/Helm 部署、Turborepo 并行加速。
 
-第四，我设计了两个跨应用共享包：**shared-theme**（统一 dark/light 主题切换管理）和
-**shared-monitor**（声明式埋点 + 异常/性能/API 监控 SDK），并在监控面板中可视化展示。
-同时用 **NestJS 11** 重构了 Go 后端的全部功能，提供 Swagger UI 文档和类型安全的全栈体验。
-
-技术栈方面：前端 React 19 + Ant Design 6 + Zustand 5，
-后端 Go 1.26 + Gin + WebSocket + NestJS 11 重构版，
-共享包 shared-theme（主题切换）+ shared-monitor（前端监控），
-构建用 Vite 8 + Rolldown + Turborepo，部署用 Docker + Helm + K8s。
-
-谢谢！
-```
-
-### 详细版（3 分钟）
-
-```text
-面试官您好，我叫 [姓名]，有 [X] 年前端开发经验，
-主要技术栈是 React + TypeScript，对前端工程化和性能优化有比较深入的实践经验。
-
-最近我独立设计开发了一个全栈技术演示平台项目，
-旨在系统性展示前端领域 20+ 个高级技术场景。
-我负责项目的全部架构设计与编码实现。
-
-我从五个维度来介绍这个项目：
-
-━━━ 第一，实时通信能力 ━━━
-
-我实现了一个多协议告警推送系统，核心是一个三级降级传输层：
-首选 WebSocket 全双工通信，当企业内网屏蔽 WebSocket 时
-自动降级到 SSE（基于 HTTP 长连接），最后保底用 HTTP Polling。
-
-为了实现这个系统，我做了几个关键设计：
-- 统一 Transport 接口抽象，三种传输实现可无缝切换
-- 指数退避 + jitter 重连策略，避免重连风暴
-- 背压控制 + 消息合并，防止内存溢出
-- 二进制协议编码，减少 payload 体积 30%+
-- RAF 双缓冲渲染，保持 60fps 流畅度
-
-同时还有 SSE 日志流（ReadableStream + AbortController）
-和双 Token 无感刷新（Promise gate + Token Rotation），
-构成完整的实时通信能力矩阵。
-
-━━━ 第二，性能优化实践 ━━━
-
-我重点攻克了四个性能瓶颈：
-
-1. Web Worker 分治归并排序：
-   利用 Worker Pool + 自适应分区，将排序计算转移到独立线程，
-   不阻塞主线程 UI 渲染。
-
-2. GIS 十万级点位渲染：
-   四重优化（Cluster 聚合 → BBOX 裁剪 → dataCache 缓存 → 惰性刷新），
-   帧率从 <10fps 提升到 60fps。
-
-3. LRU 路由缓存：
-   用 display:none 保持页面状态，结合写后失效机制保证缓存一致性，
-   限制最多 3 个缓存页面防内存溢出。
-
-4. 十万行日志流解密：
-   生产/消费模式 + RSA 密钥交换 + AES-256-GCM Worker 并行解密 + 虚拟滚动，
-   支持千万级数据量流畅展示。
-
-━━━ 第三，工程架构设计 ━━━
-
-这部分我侧重展示架构设计能力：
-
-1. 递归动态表单引擎：
-   将表单 Schema 抽象为四层 AST 树（tabs → card → form → leaf），
-   用递归渲染器逐层解析，策略模式注册字段组件。
-   支持条件显隐表达式、字段联动、四级校验体系、实时 JSON 编辑双向绑定。
-   新增字段类型只需一行 registerField() 注册。
-
-2. RBAC 位编码权限：
-   用位运算实现 O(1) 权限检查，三层联动（菜单/路由/按钮），
-   6 种权限编码在 1 个 number 中，存储仅 4 字节。
-
-3. 请求加载 Signal + use()：
-    React 19 use() + Suspense + ErrorBoundary 声明式加载，
-    AbortController 精确取消 + 后端 context.Done() 释放，
-    Zustand Store 全生命周期追踪（pending/resolved/rejected/cancelled）。
-
-4. 树形数据操作引擎：
-    递归 CRUD 算法 + dnd-kit 拖拽排序，
-    支持任意层级节点的增删改查。
-
-━━━ 第四/五，AI 后端六阶段模式 ━━━
-
-我独立设计了一套从零到完整的 AI 后端能力矩阵，按六阶段渐进式构建：
-
-1. LLM 流式对话：
-    用 fetch + ReadableStream 实现 SSE 逐 token 流式渲染，
-    支持 OpenAI / DeepSeek / Ollama 多模型切换，
-    `[DONE]` 标记精确控制流结束。
-
-2. 混合 RAG 知识库：
-    BM25 关键词 + Vector 语义混合检索，加权融合排序，
-    支持 PDF/TXT/Markdown 多格式文档上传与智能分块。
-
-3. 智能体 Agent：
-    ReAct（推理 + 行动）循环 SSE 流式输出，
-    工具函数注册表 + Multi-Agent 编排委派，
-    MCP（Model Context Protocol）标准工具协议。
-
-4. Playground 调试台：
-    7 个工具以 Pipeline 模式串联——PromptGuard 注入检测、
-    ResponseCache 缓存、Token 估算、错误分类、上下文管理、
-    数据脱敏、遥测上报，新增工具零侵入。
-
-5. 中间件层：
-    PromptGuard 和 ResponseCache 封装为 Gin HTTP 中间件，
-    20+ 检测模式覆盖常见注入攻击，LRU + TTL 30s 透明缓存。
-
-6. 遥测与监控：
-    Token 用量 / Latency / Cache 命中率 / 错误率实时上报，
-    navigator.sendBeacon 异步推送，ECharts 仪表盘多维可视化。
-
-━━━ 第五/六，支付中台架构 ━━━
-
-我设计了一个统一支付中台 UniPay，展示支付领域的关键技术：
-
-1. 支付状态机（7 种状态 × 6 种驱动力）：
-   用状态转换矩阵管理订单生命周期，乐观锁 version 防并发覆盖，
-   支持异步回调驱动和手动触发。
-
-2. 幂等性防护（Idempotency-Key）：
-   四层纵深防御——前端 Key 生成 → 网关去重 → 业务状态机 → 对账兜底，
-   重复支付率降至 0.001% 以下。
-
-3. 指数退避重试：
-   三次重试间隔 1s/2s/4s，确定性失败策略（前两次失败，第三次成功），
-   失败自动恢复率 95%+。
-
-4. T+1 对账脚本：
-   按 orderNo + channel 唯一键分组去重，重复订单自动退款，
-   后端模拟渠道结算单 + 前端可视化对账流程。
-
-5. 支付安全：
-   RSA 签名验签防回调伪造、金额二次验价防篡改、
-   IP 白名单、防重放攻击。
-
-交互式 Demo 覆盖状态机流转、幂等性测试、重试演示、对账演示和安全检测。
-
-━━━ 技术栈与工程化 ━━━
-
-前端：React 19 + TypeScript 6 + Ant Design 6 + Zustand 5
-      + ECharts 6 + OpenLayers 10.9 + React Router 7
-AI 前端：@ant-design/x (Bubble/Sender/Conversations) + SSE 流式渲染
-构建：Vite 8 + Rolldown (Rust bundler) + Babel React 编译器
-规范：Biome 2.5 + ESLint 9 strictTypeChecked + Husky + lint-staged
-后端（Go）：Go 1.26 + Gin + Gorilla WebSocket + golang-jwt + go-openai
-后端（NestJS）：NestJS 11 + @nestjs/swagger + 16 功能模块 / 67 API
-AI 后端：ReAct Agent + MCP 工具协议 + BM25/Vector 混合 RAG + PromptGuard + ResponseCache
-共享包：shared-theme（跨应用主题切换）+ shared-monitor（声明式监控 SDK）
-部署：Docker 多阶段构建 → Helm Chart → K8s 滚动更新
-
-构建优化方面：代码分割后首屏体积从 3,034 kB 降至 ~240 kB（↓92%），
-20+ 个页面独立 chunk，大型库（antd/echarts）独立缓存，
-构建耗时仅 3.6 秒（3911 模块）。
-
-━━━ 个人价值总结 ━━━
-
-这个项目体现了我的三个核心能力：
-
-1. 架构设计能力：
-   - 从零设计递归表单引擎、多协议传输层、AI 六阶段模式
-   - 两个跨应用共享包（shared-theme、shared-monitor）
-   - NestJS 11 重构 Go 后端 19 个内部包
-   - 合理的技术选型（Zustand vs Redux，自研 vs @rjsf）
-   - 分层、解耦、可扩展的代码组织
-
-2. 深度技术能力：
-   - React 19 编译器 + forwardRef + 闭包陷阱修复
-   - Web Worker 多线程 + 虚拟滚动 + 位运算
-   - WebSocket 背压控制 + Token Rotation + SHA-256 校验
-   - SSE 流式对话 + ReAct Agent + 混合 RAG + MCP 工具协议
-   - 声明式监控 SDK：埋点/异常/性能/API/Bundle 六大能力
-
-3. 工程化意识：
-   - 三层递进式代码约束（Biome → ESLint → TypeScript Strict）
-   - CI/CD 流水线 + Docker/Helm 部署
-   - Husky + lint-staged 自动化检查
-   - Turborepo 编排 4 个前端 workspace + 2 个共享包
-
-以上就是我的项目介绍，感谢您的倾听，期待进一步交流。
-```
-
+所有代码和文档都遵循规范，强调生产级工程实践而非玩具演示。"
