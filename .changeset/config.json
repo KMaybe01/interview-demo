@@ -1,0 +1,19 @@
+{
+  "$schema": "https://unpkg.com/@changesets/config@3.1.4/schema.json",
+  "changelog": [
+    "@changesets/changelog-github",
+    { "repo": "KMaybe01/interview-demo" }
+  ],
+  "commit": false,
+  "fixed": [],
+  "linked": [],
+  "access": "restricted",
+  "baseBranch": "main",
+  "updateInternalDependencies": "patch",
+  "ignore": [
+    "@interview-demo/frontend",
+    "@interview-demo/ai-demo",
+    "@interview-demo/interview-docs",
+    "@interview-demo/backend-nest"
+  ]
+}
