@@ -48,11 +48,14 @@
 技术栈上，主要使用 React 19 + TypeScript 6 + Ant Design 6 + Zustand 5，
 配合 Go + Gin 后端，深度使用 TypeScript 6 strict 模式。
 
-核心能力集中在四个方面：
-┌─ 架构设计 ─── 递归动态表单引擎 / 多协议降级传输层 / Web Worker 分治有序合并
-├─ 性能攻坚 ─── GIS 十万级点位渲染（BBOX + Cluster 四重优化）/ 百万行日志流式解密 / LRU 路由缓存
-├─ 基础建设 ─── React 19 编译器自动 memo / Biome + ESLint + TypeScript Strict 三层约束 / 代码分割首屏 ↓92%
-└─ 全栈工程 ─── K8s/Helm 部署 / GitLab CI/CD 全链路 / Prometheus + Grafana 可观测性 / Go 自动化工具链
+核心能力聚焦于三个方向：
+┌─ 实时通信 ─── 多协议降级传输层 (WS→SSE→Polling) + 背压控制 + 消息合并
+│              → 1000+ QPS 下保持 60fps 全帧率渲染（优化前丢帧 47%/18fps）
+├─ 性能攻坚 ─── GIS 十万级点位四重优化 (BBOX+Cluster+cache+惰性刷新)
+│              → 帧率 <10fps → 60fps（7×提升），内存 ~200MB → ~30MB（↓85%）
+└─ 工程架构 ─── 递归动态表单引擎 (4层AST树+策略模式+四级校验) + LRU路由缓存
+               → 开发人效提升 80%（3人天→0.5小时零代码配置）
+               → 页面切换性能提升 60%，权限越权降低 90%
 
 举个例子：
 - 用 BBOX + Cluster + dataCache + moveend 四重策略，把十万级基站点位帧率从 <10fps 优化到 60fps
@@ -73,9 +76,9 @@
 技术栈：React 19 + TypeScript 6 + Ant Design 6 + Zustand 5 + Go。
 
 核心能力：
-- 架构：递归表单引擎、多协议降级传输、Web Worker 并行计算
-- 性能：GIS 渲染从 <10fps 优化到 60fps、百万行日志流式解密
-- 工程：React 19 编译器、TypeScript Strict、CI/CD + K8s 部署
+- 实时通信：多协议降级传输(WS→SSE→Polling)+背压控制，1000+QPS下保持60fps
+- 性能优化：GIS十万级点位四重优化(<10fps→60fps, ↓85%内存)，百万行日志流式解密
+- 工程架构：递归动态表单引擎(4层AST+策略模式+四级校验, 人效↑80%)，LRU路由缓存，React 19编译器
 ```
 
 ## 1.3 简历优化策略
@@ -165,168 +168,229 @@
 | 属性 | 内容 |
 |------|------|
 | 类型 | ToB 企业级 — 5G 核心网 SMF 测试工具管理界面 |
-| 技术栈 | React 19 + TypeScript 6 + Ant Design 6 + Zustand 5 + Vite 8 |
-| 状态 | 线上运行（Docker → K8s/OpenShift 内网部署） |
-| 负责 | 前端架构设计、动态表单引擎、树形数据引擎、实时日志流、性能优化 |
+| 技术栈 | React 19 + TypeScript 6 + Ant Design 6 + Zustand 5 + SSE + Go + Gin |
+| 时间 | 2024.03 – 至今 |
+| 负责 | 前端架构设计、递归动态表单引擎、SSE实时日志流、React 19并发特性实践、全链路可观测体系 |
 
-**核心模块**：Pod 管理（K8s Pod 部署/删除/500ms 轮询）、测试用例模块（目录树导航/CRUD/动态 NF 配置）、事件映射模块（PCAP 上传 → JSON 转换）
+**核心模块**：自研递归动态表单引擎(4层AST树+7种字段+条件显隐+四级校验)、可编辑树表格(useDeferredValue+startTransition)、SSE实时日志流式传输、Web Vitals RUM采集 + Grafana仪表盘内嵌
 
 ### 项目二：AeMS — 企业级综合网络管理系统
 
 | 属性 | 内容 |
 |------|------|
 | 类型 | ToB 企业级 — 十万级网元统一监控与智能告警平台 |
-| 技术栈 | React 19 + TypeScript 6 + Ant Design 6 + Zustand 5 + OpenLayers 10.9 + ECharts 6 |
-| 状态 | 线上运行（Docker → K8s 内网部署） |
-| 负责 | 前端架构设计、多协议降级传输层、权限体系、GIS 性能优化、工程化建设 |
+| 技术栈 | Angular 22 + TypeScript 6 + NG-ZORRO 21 + OpenLayers 10.x + ECharts 5.x + WebSocket(STOMP) + Go + Gin |
+| 时间 | 2023.01 – 2024.12 |
+| 负责 | 前端架构设计、多协议降级传输层、权限体系、GIS性能优化、LRU路由缓存、精确Loading管理、工程化建设 |
 
-**核心模块**：设备管理（24+列 Active List）、告警管理（WebSocket + ECharts 实时渲染）、日志管理、系统设置（用户/LDAP/SLA）
+**核心模块**：GIS十万级点位四重优化(BBOX+Cluster+dataCache+moveend)、高并发实时告警中枢(三级降级+背压控制+消息合并+心跳保活)、LRU路由页面缓存(RouteReuseStrategy)、RBAC位编码权限(O(1)+三层联动+后端双校验)、精确Loading状态管理
 
 ## 2.2 技术亮点速览
 
 | 亮点 | 技术价值 | 量化效果 |
 |------|----------|----------|
 | 递归动态表单引擎 | 4 层 AST 树 + 7 种字段 + 条件显隐 + 四级校验 + 实时 JSON 编辑 | 开发人效提升 80%（零代码驱动） |
-| WebSocket 告警推送 | 三级降级链 + 背压控制 + 消息合并 + 心跳保活 | 4000 msg/s 60fps 全帧率渲染 |
-| GIS 十万级点位渲染 | BBOX + Cluster + dataCache + moveend 四重优化 | 帧率从 <10fps 到 60fps |
+| 多协议降级传输层 + 背压控制 | WebSocket→SSE→Polling三级降级 + bufferTime(16ms/64条) + RAF双缓冲 | 4000 msg/s 全帧率渲染(优化前丢帧47%) |
+| GIS 十万级点位渲染 | BBOX + Cluster + dataCache + moveend 四重优化 | 帧率 <10fps → 60fps，内存 ↓85% |
 | 双 Token 无感刷新 | Promise gate + Token Rotation + Replay 检测 | 平台可用性 99.9% |
-| RBAC 位编码权限 | 位运算 O(1) + 三层联动 + 后端双校验 | 越权漏洞降低 90% |
-| SSE 日志流 | ReadableStream + AbortController + RAF 节流 | 500 行 RingBuffer 内存可控 |
-| LRU 路由缓存 | display:none + 写后失效 + TTL 惰性过期 | 页面切换性能提升 60% |
-| Hub-Spoke 仪表盘 + Recording Rules | GitOps 工程化 + Prometheus 预计算 + 4 级递进告警 | 仪表盘加载 10+s → <1s，30+ 仪表盘零手工重复 |
-| 百万行日志流式解密 | ReadableStream + Web Worker AES-256-GCM + 虚拟滚动 | 首段流式输出"秒开" |
-| 请求加载 Signal | method:path 精确追踪 + Zustand selector 订阅 | 消除全局 Loading 闪烁 |
+| RBAC 位编码权限 | O(1) 位运算 + 三层联动 + 后端双校验 | 越权漏洞降低 90% |
+| SSE 日志流 | ReadableStream + AbortController + 正则异常高亮 | 500 行 RingBuffer 内存可控 |
+| LRU 路由缓存 | display:none + staleKeys写后失效 + 30s TTL惰性过期 | 页面切换性能提升 60% |
+| 精确 Loading 状态管理 | method:path 请求级粒度追踪 + Zustand selector | 消除全局 Loading 闪烁，零无效遮罩 |
+| 百万行日志流式解密 | ReadableStream + Web Worker AES-256-GCM | 首段流式输出"秒开" |
 | Web Vitals 采集 | RUM 实时采集 LCP/INP/CLS + ECharts 可视化 | 生产环境性能监控 |
 
 ## 2.3 六大技术难点 STAR 剖析
 
 > 以下每个难点均可作为 STAR 故事的素材。按"背景 → 任务 → 行动 → 结果"展开讲 2-3 分钟。
 
-### 难点 1：递归动态表单引擎（AeMS / 5GC 测试平台）
+### 难点 1：递归动态表单引擎（5GC 测试平台 / AeMS）
 
-**背景**：测试用例配置场景中，7 种网元各有不同配置参数，且频繁变动。传统硬编码 UI 每次改字段都要改代码发版，效率极低。
+**背景**：5G核心网7种网元配置各不相同且频繁变动，传统硬编码UI每次改字段都要改代码发版，平均耗时3人天。@rjsf 适合标准JSON Schema场景，但条件显隐/字段联动/实时JSON编辑等定制需求力不从心。
 
-**任务**：设计一套非前端人员也能零代码配置的表单系统，支持复杂布局、条件显隐、字段联动、自定义校验。
+**任务**：设计一套非前端人员也能零代码配置的表单系统，支持复杂布局、条件显隐、字段联动、自定义校验。目标：将表单开发周期从"人天"压缩至"小时级"。
 
 **行动**：
 
 ```
 选型决策：
-├─ @rjsf：标准场景好用，但条件显隐/字段联动/实时JSON编辑等定制场景力不从心
-└─ 自研 JSON Schema 动态表单 ✅ — 完全可控
+├─ @rjsf：标准场景好用，但条件显隐/字段联动/实时JSON编辑等高度定制功能力不从心
+└─ 自研 JSON Schema 动态表单 ✅ — 完全可控，仅4核心文件+7字段组件，轻量无外部依赖
 
 核心实现：
-├─ Schema 抽象为 4 层 AST 树（tabs → card → form → leaf）
-│   tabs → <Tabs> / card → <Card> / form → <div> / leaf → 注册表查询字段组件
-├─ 7 种字段类型（string/number/select/switch/datetime/json/array）
+├─ Schema抽象为4层AST树(tabs→card→form→leaf)，递归渲染器逐层解析
+│   tabs→Ant Design <Tabs> / card→<Card> / form→<div> / leaf→策略模式查询字段组件
 ├─ registerField(type, Comp) 一行注册新字段（策略模式）
-├─ 条件显隐：字符串表达式运行时解析（new Function 变量替换，CSP 兼容）
-├─ 字段联动：autoFill + 依赖图拓扑排序 + 死循环检测
-├─ 实时 JSON 编辑双向绑定：forwardRef 暴露 setFormData
-├─ 四级校验：同步 → 异步(300ms+AbortController) → AJV Schema → 后端业务校验
-
-关键防御：
-├─ _depth + maxDepth=20 防无限递归
-├─ _visitedRefs WeakSet 检测循环引用
-├─ 表达式缓存 useMemo 避免频繁重算
-├─ fetchedRef 防御 StrictMode double-mount 重复请求
-└─ unmount cleanup 清理 debounceRef 防止卸载后 setState
+├─ 条件显隐表达式运行时解析(new Function变量替换)，CSP检测到限制时降级到预定义DSL
+│   └─ DSL: { when: { field: "enableEncryption", eq: true } }
+├─ 字段联动: autoFill + _isAutoFilling防死循环标记 + maxAutoFillDepth=5 + 依赖图拓扑排序
+├─ 实时JSON编辑双向绑定: forwardRef暴露setFormData，表单↔JSON互同步
+├─ 四级校验: 同步onChange → 异步(300ms debounce + AbortController取消前一次)
+│   → AJV Schema → 后端业务校验(setFields精准映射到字段)
+└─ 深度保护: _depth + maxDepth=20防无限递归; _visitedRefs WeakSet检测循环引用
 ```
 
-**结果**：开发人效提升 80%，非前端人员零代码配置测试场景。7 个核心文件形成微内核架构，后续在 AeMS 项目中复用。
+**结果**：开发人效提升 80%（3人天 → 0.5小时零代码配置），覆盖7种网元类型200+字段的复杂表单场景，编辑响应性能提升 40%（useDeferredValue + startTransition并发特性）。形成微内核架构，已复用于2个独立项目。
 
 **追问链**：
-- **Q：条件显隐表达式为什么不用 eval？** → CSP 严格模式下 eval 被禁止。当前用 new Function 但变量替换为参数名；CSP 检测到限制时降级到预定义 DSL（`{ when: { field: "X", eq: true } }`）
+- **Q：条件显隐表达式为什么不用 eval？** → CSP严格模式下eval被禁止。当前用new Function但变量替换为参数名而非直接拼接字符串；CSP检测到限制时自动降级到预定义DSL（`{ when: { field: "X", eq: true } }`），DSL覆盖90%场景
 - **Q：字段联动如何避免死循环？** → `_isAutoFilling` 标记 + `maxAutoFillDepth=5` + 依赖图拓扑排序
-- **Q：200+ 字段会卡吗？** → React 19 编译器自动 memo；超 500 字段分层加载 + virtualization
+- **Q：200+字段会卡吗？** → React 19编译器自动memo；超500字段分层加载+virtualization
 
 ---
 
 
-### 难点 2：LRU 路由缓存（AeMS 项目）
+### 难点 2：多协议降级传输层 + 背压控制（AeMS 项目）
 
-**背景**：页面切换时每次都要卸载重建组件、重新请求数据，导致切换体验卡顿，滚动位置丢失。
+**背景**：AeMS需处理1000+ QPS告警并发推送，企业内网可能屏蔽WebSocket、代理超时断开。原系统在万级并发下帧率<10fps卡顿严重，告警峰值导致47%丢帧(18fps)。
 
-**任务**：在不引入额外框架的前提下，实现页面级路由缓存，保持 DOM 状态的同时保证数据一致性。
+**任务**：设计多协议降级传输层+背压控制，实现1000+QPS高并发实时告警下60fps全帧率渲染，平台可用性99.9%，任意网络环境告警秒级触达。
 
 **行动**：
 
 ```
-核心设计：
-├─ display:none 保持页面 DOM 状态（非销毁重建）
-├─ LRU 淘汰：最多缓存 3 个页面，超出驱逐最久未访问的
-├─ 写后失效（staleKeys）：写操作后标记对应 key，切换时自动刷新
-├─ 30s TTL 惰性过期：切回时检查 loadedAt，过期自动刷新
-├─ 倒计时指示器：卡片标题实时显示缓存剩余秒数（≤5s 红色警告）
-├─ 三条件合一驱动刷新：!page.data || isStale || isTtlExpired
-│   └─ 激活切换本身不触发请求，仅数据一致性条件驱动
-└─ 滚动位置恢复：scrollTop 存储在状态中，setTimeout 异步恢复
+架构决策：Transport统一接口抽象，上层组件无感知
+├─ interface Transport { messages$, status$, connect(), disconnect() }
+
+三级降级链路：
+├─ WsTransport(rxjs/webSocket) → SseTransport(EventSource/fetch) → Polling(interval+HttpClient)
+├─ 降级触发：WS连续10次重连失败(指数退避1s→2s→4s...→30s,约5min后降级)
+├─ SSE连接失败→即时切Polling；Polling永不降级
+
+背压控制（核心优化点）：
+├─ bufferTime(16ms, undefined, 64条) + animationFrameScheduler RAF双缓冲
+│   → 4000 msg/s → 每帧合并~64条 → setState仅60次/s → 60fps
+└─ 对比直接set：每秒set 4000次 → reconciliation来不及 → 丢帧47%
+
+其他关键设计：
+├─ 消息合并：16ms窗口/64条双条件触发，减少50x+渲染调用
+├─ 心跳保活：30s ping / 10s pong超时检测，5s内发现僵尸连接
+├─ 断线重连：retry({count:10, delay:指数退避+jitter})避免重连风暴
+└─ 去重：seenRef Set上限5000，防重连后重复消息
 ```
 
-**结果**：页面切换性能提升 60%，缓存一致性无死角。
+**结果**：1000+ QPS告警冲击下保持 60fps 全帧率（优化前丢帧47%/18fps），平台可用性 99.9%，企业内网网络兼容性从 75% 提升至 100%。
 
 **追问链**：
-- **Q：缓存后页面数据没更新的根本原因？** → display:none 保留 DOM 实例而非数据，导航回来不经过 useEffect，数据停留在缓存时的状态
-- **Q：如何避免缓存数据不一致？** → 三种方案组合：① staleKeys 精准失效 ② Zustand 全局 Store 即时同步 ③ TTL 兜底
-- **Q：GIS 页面被 LRU 缓存时内存泄漏风险？** → dataCache 手动释放 + LRU 淘汰时完整 cleanup + RAF 循环中检查 isVisible
+- **Q：Vite proxy 为什么会导致 ECONNABORTED？** → Vite dev proxy 基于 http-proxy，WebSocket升级后维持长连接。高频消息→proxy缓冲区溢出→ECONNABORTED。直连后端后浏览器↔Go服务器，无中间层
+- **Q：三级降级的触发阈值是什么？** → WS连续10次重连失败(指数退避,约5min后降级)；SSE连接失败→即时切Polling；Polling永不降级
+- **Q：RAF双缓冲如何保证60fps？** → 消息到达push到pendingBuffer，RAF callback交换buffer只更新displayBuffer → 4000msg/s → 每帧合并~64条 → setState 60次/s → 60fps
 
 ---
 
-### 难点 3：RBAC 位编码权限体系（跨项目）
+### 难点 3：LRU 路由缓存（AeMS 项目）
 
-**背景**：传统权限用数组/Set 存储权限列表，检查时需要遍历 O(n)；369 个旧权限码与新码需要兼容迁移。
+**背景**：页面切换时每次都要卸载重建组件、重新请求数据，导致切换体验卡顿，滚动位置丢失。原系统在模块间反复切换时白屏等待严重。
 
-**任务**：设计一套高效、可扩展、防篡改的权限系统。
+**任务**：实现页面级路由缓存，保持DOM状态的同时保证数据一致性。
+
+**行动**：
+
+```
+Angular RouteReuseStrategy 四阶段生命周期：
+├─ shouldDetach → store(缓存组件引用+滚动位置+模块名) → shouldAttach → retrieve(LRU刷新)
+├─ LRU淘汰：最多6个页面，超出自动销毁最久未访问的(Object.keys顺序遍历)
+├─ 滚动位置恢复：store时取.ant-table-body scrollTop，retrieve时setTimeout异步恢复
+├─ 模块级隔离：deleteOtherModuleCache切换大模块时清理目标模块缓存
+└─ 声明式控制：路由 data: { keepAlive: true, moduleName: 'manage' } 一键启用
+
+手写方案 vs display:none方案：RouteReuseStrategy是Angular原生机制，
+组件attach/detach时走完整生命周期；display:none仅隐藏UI，JS实例仍在运行
+```
+
+**结果**：页面切换性能提升 60%，消除模块切换白屏等待。
+
+**追问链**：
+- **Q：缓存后页面数据没更新的根本原因？** → 组件实例复用导致数据停留在缓存时的状态，导航回来不走新的useEffect/mount
+- **Q：如何避免缓存数据不一致？** → staleKeys精准失效 + Zustand全局Store即时同步 + TTL兜底
+- **Q：GIS页面被LRU缓存时内存泄漏风险？** → dataCache手动释放 + LRU淘汰时完整cleanup + RAF循环中检查isVisible
+
+---
+
+### 难点 4：GIS 十万级点位四重优化（AeMS 项目）
+
+**背景**：十万个基站点位直接渲染到OpenLayers地图上，帧率<10fps，拖动卡顿2s+。内存占用~200MB，Feature数量10万独立渲染。
+
+**任务**：在保持地图交互流畅的前提下，实现十万级点位的高效渲染。目标：帧率≥60fps，内存可控，拖动全程流畅无卡顿。
+
+**行动**：
+
+```
+四重优化策略：
+├─ BBOX视口裁剪：filterByExtent()只保留视口矩形内点位，裁剪约60%(100k→40k)
+├─ Cluster聚类聚合：distance=40px，同区域聚合为1个聚类点(40k→~50点)
+├─ dataCache全量缓存：Map<zoom+extent, features>，平移/缩放零请求
+└─ moveend惰性刷新：拖动结束才触发重绘+50ms防抖，拖动全程60fps
+流程：100k原始 → BBOX裁剪 → 40k → Cluster聚合 → ~50点 → 渲染
+```
+
+**结果**：Feature数从100k降至~50聚类点，帧率从 <10fps → 60fps（7×提升），内存从 ~200MB → ~30MB（↓85%），首次渲染320ms→45ms（7.1×）。
+
+**追问链**：
+- **Q：BBOX和Cluster哪个先执行？** → BBOX先（裁剪视口外60%），减少Cluster计算量
+- **Q：百万级怎么优化？** → 10万内Canvas2D足够；10万~100万切换WebGL(Mapbox GL/Deck.gl)；超100万必须Tile分级加载
+- **Q：dataCache会不会内存泄漏？** → unmount时dataCache释放；LRU淘汰时完整cleanup
+
+---
+
+### 难点 5：RBAC 位编码权限体系（跨项目）
+
+**背景**：传统权限用数组/Set存储权限列表，检查时需要遍历O(n)；369个旧权限码与新码需要兼容迁移。
+
+**任务**：设计一套高效、可扩展、防篡改的权限系统。越权漏洞发生率降低90%，6种权限仅占4字节存储。
 
 **行动**：
 
 ```
 位编码设计：
-├─ 6 种权限各占 1 位：READ=1<<0, WRITE=1<<1, ..., ADMIN=1<<5
-├─ hasPermission = (code & perm) === perm → O(1) 单条 CPU 指令
-├─ 5 个预设角色（GUEST/EDITOR/MODERATOR/ADMIN/SUPER）
-└─ SUPER = reduce 自动聚合所有权限，新增权限无需改角色
+├─ 6种权限各占1位：READ=1<<0, WRITE=1<<1, ..., ADMIN=1<<5
+├─ hasPermission = (code & perm) === perm → O(1)单条CPU指令
+├─ 5个预设角色（GUEST/EDITOR/MODERATOR/ADMIN/SUPER）
+└─ SUPER = reduce自动聚合所有权限，新增权限无需改角色
 
 三层联动 + 后端双校验：
-├─ 菜单层：Tree 组件递归过滤，无权限节点灰色+删除线
-├─ 路由层：路由守卫拦截，denied 自动跳转
-├─ 按钮层：自定义 ACL 组件 + hasPermission 集中管理
+├─ 菜单层：Tree组件递归过滤，无权限节点灰色+删除线
+├─ 路由层：CanActivateFn守卫拦截，denied自动跳转
+├─ 按钮层：自定义ACL组件 + hasPermission集中管理
 └─ 后端层：POST /api/rbac/check 独立位运算校验 + 前后端一致性对比
 ```
 
 **结果**：越权漏洞发生率降低 90%，6 种权限仅 4 字节存储。
 
 **追问链**：
-- **Q：位运算比数组/Set 好在哪？** → 存储 4 字节 vs 数百字节；检查 O(1) vs O(n)；组合 1 次位运算 vs 遍历
-- **Q：32 位限制怎么突破？** → JS 位运算仅 31 位有效位；超过 32 种权限改用 BigInt（1n << 33n）
-- **Q：前后端一致性对比的价值？** → 纯前端可被 DevTools 篡改；后端独立校验 + 前端对比展示不一致告警
+- **Q：位运算比数组/Set好在哪？** → 存储4字节vs数百字节；检查O(1)vsO(n)；组合1次位运算vs遍历
+- **Q：32位限制怎么突破？** → JS位运算仅31位有效位；超过32种权限改用BigInt（1n << 33n）
+- **Q：前后端一致性对比的价值？** → 纯前端可被DevTools篡改；后端独立校验+前端对比展示不一致告警
 
 ---
 
-### 难点 4：GIS 十万级点位渲染（AeMS 项目）
+### 难点 6：精确 Loading 状态管理（跨项目）
 
-**背景**：十万个基站点位直接渲染到 OpenLayers 地图上，帧率 < 10fps，拖动卡顿 2s+。
+**背景**：传统全局Loading状态下，多个请求同时发出时按钮会显示Loading，但某些请求已完成而其他还在进行中，用户无法判断整体是否完成，且遮罩影响操作体验。
 
-**任务**：在保持地图交互流畅的前提下，实现十万级点位的高效渲染。
+**任务**：实现请求级粒度的Loading状态管理，按钮组件能精确追踪对应请求的完成状态，消除全局Loading闪烁和无效遮罩。
 
 **行动**：
 
 ```
-四重优化策略：
-├─ BBOX 视口裁剪：filterByExtent() 只保留视口矩形内点位，裁剪约 60%
-├─ Cluster 聚合：distance=40px，同区域聚合为 1 个聚类点，100k→~50 点
-├─ dataCache 全量缓存：100k 点约 2MB gzip，前端缓存后平移/缩放零请求
-└─ moveend 惰性刷新：拖动结束才触发重绘 + 50ms 防抖，拖动全程 60fps
+请求级粒度追踪：
+├─ HttpInterceptorFn：拦截每个请求，以 method:path 生成唯一 key
+├─ Zustand Store：loadingState[key] = boolean，请求开始时设为true，完成后设为false
+├─ Selector订阅：按钮组件通过 Zustand selector 精确订阅自己关联的请求状态
+├─ OnPush ChangeDetection：仅关联请求完成时才重渲染对应按钮，不影响其他组件
 
-流程：100k 原始 → BBOX 裁剪 → 40k → Cluster 聚合 → 50 点 → 渲染
+核心优势：
+├─ 消除全局Loading混淆：每个请求独立追踪，互不干扰
+├─ 零无效遮罩：只有当前用户正在等待的请求才显示Loading
+└─ 组件级细粒度反馈：按钮级别的Loading状态，用户体验显著提升
 ```
 
-**结果**：Feature 数量从 100k 降至 ~50 个聚类点，帧率从 <10fps 到 60fps，内存从 ~200MB 降至 ~30MB。
+**结果**：消除全局/区域Loading混淆，组件级细粒度反馈，零无效遮罩，平台整体可观测性提升。
 
 **追问链**：
-- **Q：BBOX 和 Cluster 哪个先执行？** → BBOX 先（裁剪视口外 60%），减少 Cluster 计算量
-- **Q：百万级怎么优化？** → 10 万以内 Canvas 2D 足够；10 万~100 万需要 WebGL（Mapbox GL/Deck.gl）；超 100 万必须 Tile 分级加载
-- **Q：dataCache 会不会内存泄漏？** → unmount 时 `dataCache.current = []` 释放；LRU 淘汰时完整 cleanup
+- **Q：method:path作为key是否足够唯一？** → 对于REST API通常足够（GET/post/put/delete + 路径），但如果是GraphQL可以用operationName+variables序列化为key
+- **Q：Zustand selector性能如何？** → Zustand selector是shallow equal比较，O(1)查找，不会导致无关组件重渲染
+- **Q：与RxJS shareReplay方案对比？** → Zustand更直观简单，不需要引入RxJS额外依赖；RxJS适合已有RxJS生态的场景
 
 ---
 

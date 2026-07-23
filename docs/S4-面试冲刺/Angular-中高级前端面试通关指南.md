@@ -50,21 +50,22 @@
 技术栈上，主要使用 Angular 22 + TypeScript 6 + NG-ZORRO 21 + NgRx，
 配合 Go + Gin 后端，深度使用 TypeScript strict 模式 + Angular ESLint 规范。
 
-核心能力集中在五个方面：
-┌─ 架构设计 ─── 递归动态表单引擎 / 装饰器声明式 API 层 / @axyom-ui 组件库
-├─ 性能攻坚 ─── GIS 十万级点位渲染（BBOX + Cluster 四重优化）/ LRU 路由缓存（RouteReuseStrategy）
-├─ 基础建设 ─── Angular 22 Signals 响应式 + RouteReuseStrategy / Biome + ESLint + TypeScript Strict 三层约束 / 代码分割首屏 ↓92%
-├─ 组件库建设 ─── Angular 22 + Signals + NG-ZORRO 搭建 @axyom-ui/table + @axyom-ui/form
-└─ 全栈工程 ─── K8s/Helm 部署 / GitLab CI/CD 全链路 / Prometheus + Grafana 可观测性 / Go 自动化工具链
+核心能力聚焦于三个方向：
+┌─ 实时通信 ─── 多协议降级传输层 (WS→SSE→Polling) + 背压控制 + 消息合并
+│              → 1000+ QPS 下保持 60fps 全帧率渲染（优化前丢帧 47%/18fps）
+├─ 性能攻坚 ─── GIS 十万级点位四重优化 (BBOX+Cluster+cache+惰性刷新)
+│              → 帧率 <10fps → 60fps（7×提升），内存 ~200MB → ~30MB（↓85%）
+└─ 工程架构 ─── 递归动态表单引擎 (4层AST树+策略模式+四级校验) + LRU路由缓存
+               → 开发人效提升 80%（3人天→0.5小时零代码配置）
+               → 页面切换性能提升 60%，权限越权降低 90%
 
 举个例子：
-- 用 BBOX 视口裁剪 + Cluster 聚合 + dataCache 全量缓存 + moveend 惰性刷新四重策略，把十万级基站点位帧率从 <10fps 优化到 60fps（Angular + OpenLayers）
-- 设计装饰器声明式 API 层（@GET/@POST/@PATH/@BODY/@QUERY），消除 200+ 个接口的样板代码（Angular BaseApi + Proxy 代理）
+- 用 BBOX + Cluster + dataCache + moveend 四重策略，把十万级 GIS 点位帧率从 <10fps 优化到 60fps（Angular + OpenLayers）
+- 自研 JSON Schema 递归动态表单引擎(4层AST树+7种字段+条件显隐+字段联动)，开发人效提升 80%
 
-此外，我也设计了多协议降级传输层（WebSocket → SSE → Polling），
-背压控制 + 消息合并 + 心跳保活，4000 msg/s 全帧率渲染。
+此外，我也设计了多协议降级传输层（WebSocket → SSE → Polling 三级降级），`bufferTime(16ms/64条)` + RAF 双缓冲，4000 msg/s 全帧率渲染；以及内部组件库 @axyom-ui（表格代码减少 80%），以 ng-packagr Library 发布 + GitLab CI 条件触发全自动流水线。
 
-未来方向，我希望往前端方向深入，持续在实时通信与性能优化领域深耕。
+**差异化优势**：React 19 + Angular 22 双栈，能根据项目规模和技术遗产灵活选型；全栈思维——从 Biome → ESLint → TS Strict 三层约束到 K8s 部署，独立完成全链路。
 ```
 
 ### 1 分钟版本（精简）
@@ -75,11 +76,11 @@
 
 技术栈：Angular 22 + TypeScript 6 + NG-ZORRO 21 + NgRx + Go。
 
-核心能力：
-- 架构：递归表单引擎、装饰器声明式 API 层、@axyom-ui 组件库
-- 性能：GIS 渲染从 <10fps 优化到 60fps、LRU 路由缓存
-- 工程：Signals + RouteReuseStrategy、HttpInterceptor 体系、CI/CD + K8s 部署
-- 组件库：Signals 声明式表格、配置驱动动态表单、注册表模式
+ 核心能力：
+ - 架构：递归动态表单引擎、@axyom-ui 组件库
+ - 性能：GIS 渲染从 <10fps 优化到 60fps、LRU 路由缓存
+ - 工程：Signals + RouteReuseStrategy、HttpInterceptorFn 体系、CI/CD + K8s 部署
+ - 组件库：Signals 声明式表格、配置驱动动态表单、注册表模式
 ```
 
 ## 1.3 简历优化策略
@@ -169,11 +170,11 @@
 | 属性 | 内容 |
 |------|------|
 | 类型 | ToB 企业级 — 十万级网元统一监控与智能告警平台 |
-| 技术栈 | Angular 22 + TypeScript 6 + NG-ZORRO 21 + NgRx + OpenLayers + ECharts |
+| 技术栈 | Angular 22 + TypeScript 6 + NG-ZORRO 21 + OpenLayers 10.x + ECharts 5.x + WebSocket(STOMP) + Go + Gin |
 | 状态 | 线上运行（Docker → K8s 内网部署） |
-| 负责 | 前端架构设计、多协议降级传输层（RxJS WebSocket）、RBAC 权限体系、GIS 性能优化、LRU 路由缓存 |
+| 负责 | 前端架构设计、多协议降级传输层、RBAC权限体系、GIS性能优化、LRU路由缓存、精确Loading管理、工程化建设 |
 
-**核心模块**：设备管理（24+列 Active List）、告警管理（RxJS WebSocket + ECharts 实时渲染）、日志管理、系统设置（用户/LDAP/SLA）、GIS 十万级点位四重优化
+**核心模块**：GIS 十万级点位四重优化(BBOX+Cluster+dataCache+moveend) ⭐、高并发实时告警中枢(三级降级+背压控制+消息合并+心跳保活) ⭐、LRU 路由页面缓存(RouteReuseStrategy)、RBAC 位编码权限(O(1)检查+三层联动+后端双校验)、精确 Loading 状态管理(请求级粒度追踪)、Hub-Spoke 仪表盘 + Recording Rules 预计算
 
 ### 项目二：@axyom-ui — 企业级内部组件库
 
@@ -181,113 +182,64 @@
 |------|------|
 | 类型 | ToB 企业级 — 基于 Angular 22 的企业级内部组件库 |
 | 技术栈 | Angular 22 + TypeScript 6 + NG-ZORRO 21 + RxJS 7 + ng-packagr + Vitest |
-| 状态 | 线上运行（GitLab NPM Registry 私有发布） |
+| 状态 | 线上运行（GitLab NPM Registry 私有发布，复用 5+ 内部项目） |
 | 负责 | 组件库整体架构设计、表格组件核心引擎、表单框架五层架构、工程化建设 |
 
-**核心模块**：@axyom-ui/table（Signals 响应式表格、三态分页、TemplateRef 注册表插槽、列拖拽）、@axyom-ui/form（配置驱动动态表单、五层架构、注册表模式动态分发、20 种组件类型、10 种自定义验证器）
+**核心模块**：@axyom-ui/table（Signals响应式+三态分页+TemplateRef注册表插槽+列拖拽+列显隐持久化）⭐、@axyom-ui/form（配置驱动+五层架构+注册表模式动态分发+20种组件类型+10种验证器）⭐、GitLab CI 条件触发(test→build→npm publish自动化)
 
 ## 2.2 技术亮点速览
 
 | 亮点 | 技术价值 | 量化效果 |
 |------|----------|----------|
-| 动态表单引擎（ControlValueAccessor） | 4 层 AST 树 + 7 种字段 + 条件显隐 + 四级校验 + 实时 JSON 编辑 | 开发人效提升 80%（零代码驱动） |
+| 递归动态表单引擎（5GC/AeMS项目） | 4 层 AST 树 + 策略模式注册表 + 四级校验 + 条件显隐(CSP降级DSL) + 字段联动(拓扑排序) | 开发人效提升 80%（3人天→0.5小时零代码配置），复用于2个独立项目 |
 | @axyom-ui/table 声明式表格 | Angular 22 Signals + 三态分页 + TemplateRef 注册表 + 列拖拽 + 列显隐持久化 | 表格用户代码量减少 80% |
-| @axyom-ui/form 配置驱动表单 | 五层架构 + 注册表模式 + 20 种组件类型 + 10 种验证器 + NgComponentOutlet | 表单开发人效提升 80% |
-| RxJS WebSocket 告警推送 | 三级降级链 + 背压控制 + 消息合并 + 心跳保活 | 4000 msg/s 60fps 全帧率渲染 |
-| GIS 十万级点位渲染 | BBOX + Cluster + dataCache + moveend 四重优化 | 帧率从 <10fps 到 60fps |
-| 双 Token 无感刷新（HttpInterceptor） | Observable gate + Token Rotation + Replay 检测 | 平台可用性 99.9% |
-| RBAC 位编码权限 | 位运算 O(1) + 三层联动 + 后端双校验 | 越权漏洞降低 90% |
-| SSE 日志流（RxJS） | Observable + AbortController + 节流 | 500 行 RingBuffer 内存可控 |
-| 路由复用策略（RouteReuseStrategy） | Angular RouteReuseStrategy + 写后失效 + TTL + LRU 淘汰 | 页面切换性能提升 60% |
+| @axyom-ui/form 配置驱动表单框架 | 五层架构 + 注册表模式 + 20 种组件类型 + 10 种验证器 + NgComponentOutlet | 表单开发人效提升 80% |
+| 多协议降级传输层 + 背压控制 | WebSocket→SSE→Polling 三级降级 + bufferTime(16ms/64条) + animationFrameScheduler RAF | 1000+ QPS 下 60fps 全帧率，平台可用性 99.9% |
+| GIS 十万级点位四重优化 | BBOX 视口裁剪 + Cluster 聚合 + dataCache 全量缓存 + moveend 惰性刷新 | 帧率 <10fps → 60fps（7×），内存 ~200MB → ~30MB（↓85%） |
+| 双 Token 无感刷新（HttpInterceptorFn） | RxJS Observable gate + Token Rotation + Replay 检测 | 平台可用性 99.9% |
+| RBAC 位编码权限体系 | 位运算 O(1) + 菜单/路由/按钮三层联动 + 后端 API 双校验 | 越权漏洞降低 90%，6 种权限仅占 4 字节 |
+| SSE 日志流式传输 | Observable + AbortController + 正则异常高亮 | 500 行 RingBuffer 内存可控 |
+| LRU 路由页面缓存 | RouteReuseStrategy 四阶段生命周期 + LRU淘汰(最多6) + staleKeys写后失效 + TTL惰性过期(30s) | 页面切换性能提升 60% |
+| 精确 Loading 状态管理 | HttpInterceptorFn 方法-路径动态标记 + Signal驱动OnPush精准更新 | 消除全局/区域Loading混淆，零无效遮罩 |
 | Hub-Spoke 仪表盘 + Recording Rules | GitOps 工程化 + Prometheus 预计算 + 4 级递进告警 | 仪表盘加载 10+s → <1s，30+ 仪表盘零手工重复 |
-| 百万行日志流式解密 | ReadableStream + Web Worker AES-256-GCM + 虚拟滚动 | 首段流式输出"秒开" |
-| NgRx Signal Store | 方法-路径匹配追踪 + 精确 selector 订阅 | 消除全局 Loading 闪烁 |
-| Web Vitals 采集 | RUM 实时采集 LCP/INP/CLS + ECharts 可视化 | 生产环境性能监控 |
+| Web Worker 分治有序合并 | WorkerPool(parallel) + transferable objects零拷贝 + 有序(seq号排队)合并 | 25MB 级日志首段"秒开"，主线程零阻塞 |
 
 ## 2.3 八大技术难点 STAR 剖析
 
 > 以下每个难点均可作为 STAR 故事的素材。按"背景 → 任务 → 行动 → 结果"展开讲 2-3 分钟。
 
-### 难点 1：动态表单引擎（ControlValueAccessor 模式）
+### 难点 1：递归动态表单引擎 — 5GC/AeMS 项目
 
-**背景**：测试用例配置场景中，7 种网元各有不同配置参数且频繁变动。传统硬编码模板每次改字段都要改代码发版，效率极低。Angular 模板驱动的静态表单无法满足动态 Schema 渲染需求。
+**背景**：5G核心网7种网元配置各不相同，频繁变动。传统硬编码模板每次改字段都要改代码发版，平均耗时3人天。@rjsf 适合标准JSON Schema场景，但条件显隐/字段联动/实时JSON编辑等定制需求力不从心。
 
-**任务**：设计一套非前端人员也能零代码配置的表单系统，支持复杂布局、条件显隐、字段联动、自定义校验。
+**任务**：设计一套非前端人员也能零代码配置的表单系统，支持复杂布局、条件显隐、字段联动、自定义校验。将表单开发周期从"人天"压缩至"小时级"。
 
 **行动**：
 
 ```
 选型决策：
-├─ 模板驱动表单：静态绑定，无法动态生成控件
-├─ Angular Reactive Forms：支持动态表单，但复杂的递归渲染需要结合 ControlValueAccessor
-└─ 自研 ControlValueAccessor 表单引擎 ✅ — 复用 Angular 表单体系，完全可控
-
-核心实现：
-├─ Schema 抽象为 4 层 AST 树（tabs → card → form → leaf）
-│   tabs → <nz-tab-group> / card → <nz-card> / form → <div> / leaf → ControlValueAccessor 组件
-├─ 7 种字段类型（string/number/select/switch/datetime/json/array）
-├─ 自定义 ControlValueAccessor 实现：writeValue() / registerOnChange() / registerOnTouched()
-├─ registerField(type, Comp) 一行注册新字段（策略模式）
-├─ FormGroup 动态构建：根据 Schema 递归生成 FormGroup + FormControl
-├─ 条件显隐：字符串表达式解析，调用 FormControl.enable()/disable() + Validators
-├─ 字段联动：valueChanges Observable 监听 + 依赖图拓扑排序 + 死循环检测
-├─ 实时 JSON 编辑双向绑定：Angular 双向绑定驱动
-├─ 四级校验：同步 Validators → 异步 AsyncValidator → AJV Schema → 后端业务校验
-
-关键防御：
-├─ _depth + maxDepth=20 防无限递归
-├─ _visitedRefs WeakSet 检测循环引用
-├─ valueChanges 防抖 + distinctUntilChanged 避免频繁触发
-├─ OnPush ChangeDetection 确保仅变化字段重渲染
-└─ ngOnDestroy 清理所有 valueChanges 订阅
+├─ 自研 JSON Schema 动态表单 ✅ — 完全可控
+│   对比 @rjsf/Formily：自研仅4个核心文件+7字段组件，轻量无外部依赖
+├─ Schema抽象为4层AST树(tabs→card→form→leaf)，递归渲染器逐层解析
+│   tabs→Ant Design <nz-tab-group> / card→<nz-card> / form→<div> / leaf→策略模式查询字段组件
+├─ registerField(type, Comp) 一行注册新字段(策略模式)
+├─ 条件显隐表达式运行时解析(new Function变量替换)，CSP检测到限制时降级到预定义DSL
+│   预定义DSL: { when: { field: "enableEncryption", eq: true } }
+├─ 字段联动: autoFill + _isAutoFilling防死循环标记 + maxAutoFillDepth=5 + 依赖图拓扑排序
+├─ 四级校验: 同步onChange → 异步(300ms debounce + AbortController取消前一次)
+│   → AJV Schema → 后端业务校验(setFields精准映射到字段)
+└─ 深度保护: _depth + maxDepth=20防无限递归; _visitedRefs WeakSet检测循环引用
 ```
 
-**结果**：开发人效提升 80%，非前端人员零代码配置测试场景。7 个核心文件形成微内核架构，后续在 AeMS 项目中复用。
-
-**追问链**：
-- **Q：ControlValueAccessor 和自定义 FormControl 的区别？** → CVA 让自定义组件融入 Angular 表单体系，支持 ngModel/formControlName 绑定、Validator 集成、touched/dirty 状态同步
-- **Q：字段联动如何避免死循环？** → `_isAutoFilling` 标记 + `maxAutoFillDepth=5` + 依赖图拓扑排序；联动时暂停 valueChanges 监听
-- **Q：200+ 字段会卡吗？** → OnPush CD 确保无关字段不重渲染；超 500 字段分层加载 + 虚拟滚动
+**结果**：开发人效提升 80%（3人天 → 0.5小时零代码配置）；覆盖7种网元类型200+字段的复杂表单场景；已复用于2个独立项目。
 
 ---
 
-### 难点 2：Web Worker 分治有序合并（AeMS 项目）
+### 难点 2：LRU 路由缓存策略 — AeMS 项目
 
-**背景**：25MB 级加密日志文件需要 RSA/AES-256-GCM 解密，单线程解密会阻塞 UI，用户等待时间过长。
+**背景**：页面切换时每次都要卸载重建组件、重新请求数据，导致切换体验卡顿，滚动位置丢失。原系统在模块间反复切换时白屏等待严重。
 
-**任务**：实现百万行加密日志的快速解密，首段流式输出让用户无需等待全量完成。
-
-**行动**：
-
-```
-三阶段策略：
-├─ 自适应分区：首段 2000 行快速展示（小分区），其余均匀分配 → 并行处理
-├─ Worker Pool 并行：poolSize = navigator.hardwareConcurrency
-│   ├─ 空闲 Worker → 直接分配，全部繁忙 → 排队等待
-│   └─ Transferable Objects 零拷贝传输大数组
-├─ 有序合并：Worker 提交时带 seq 序号，主线程按序保序
-│   └─ 顺序到达直接输出，乱序到达暂存缓冲区，等待前序完成
-└─ 流式输出：首段小分区快速首屏，后续批量输出
-
-容错设计：
-├─ worker.onerror 捕获异常 → terminate() 销毁 → 创建新 Worker 替补
-└─ 8 个 Worker 坏 1 个 → 剩下 7 个多分担，影响仅 ~14%
-```
-
-**结果**：25MB 级日志并行解密，首段流式输出实现"秒开"体验，主线程零阻塞。
-
-**追问链**：
-- **Q：Worker Pool 为什么限制数量？** → `hardwareConcurrency` 最优值，超出导致上下文切换开销 > 并行收益
-- **Q：Worker 出错怎么保证整体不出错？** → try-catch + terminate 异常 Worker + 创建替补重分配
-- **Q：postMessage 传输大数组会不会卡？** → structured clone 8MB 约 10-15ms；超 50MB 改用 Transferable Objects
-
----
-
-### 难点 3：路由复用策略（AeMS 项目）
-
-**背景**：Angular 默认的路由切换会销毁当前组件，重新创建新的组件实例，导致页面滚动位置丢失、数据需要重新加载，频繁切换时体验差。
-
-**任务**：在 Angular 框架内实现页面级路由缓存，保持组件状态的同时保证数据一致性。
+**任务**：实现页面级路由缓存，保持DOM状态的同时保证数据一致性，页面切换性能提升。
 
 **行动**：
 
@@ -298,32 +250,74 @@
 │   ├─ shouldAttach：目标路由是否有缓存
 │   ├─ retrieve：从缓存中获取组件
 │   └─ store：缓存当前组件实例
-├─ LRU 淘汰：最多缓存 3 个页面，超出驱逐最久未访问的
+├─ LRU 淘汰：最多缓存 6 个页面，超出自动销毁最久未访问的(Object.keys顺序遍历)
+├─ 滚动位置恢复：store时取.ant-table-body的scrollTop，retrieve时setTimeout异步恢复
+├─ 模块级隔离：切换大模块(如Setting→Manage)时清理目标模块缓存
 ├─ 写后失效（staleKeys）：写操作后标记对应 key，切换时自动刷新
 ├─ 30s TTL 惰性过期：切回时检查 loadedAt，过期自动刷新
 ├─ 倒计时指示器：卡片标题实时显示缓存剩余秒数（≤5s 红色警告）
 ├─ 三条件合一驱动刷新：!page.loaded || isStale || isTtlExpired
 │   └─ 激活切换本身不触发请求，仅数据一致性条件驱动
-└─ 滚动位置恢复：Router 的 scrollPositionRestoration 结合自定义逻辑
-
-NgRx Store 管理：
-├─ 缓存页面列表、staleKeys、滚动位置统一存储在 Store
-├─ Effect 监听写操作，dispatch markStale 动作
-└─ Selector 精确订阅，仅缓存页面变化时通知
+└─ 手写方案 vs display:none方案：RouteReuseStrategy是Angular原生机制，
+   组件attach/detach时走完整生命周期；display:none仅隐藏UI，JS实例仍在运行
 ```
 
-**结果**：页面切换性能提升 60%，缓存一致性无死角。
-
-**追问链**：
-- **Q：RouteReuseStrategy 和 display:none 方案的区别？** → RouteReuseStrategy 是 Angular 原生机制，组件在 attach/detach 时走完整生命周期；display:none 仅隐藏 UI，JS 实例仍在运行
-- **Q：如何避免缓存数据不一致？** → 三种方案组合：① staleKeys 精准失效 ② NgRx Store 即时同步 ③ TTL 兜底
-- **Q：GIS 页面被缓存时内存泄漏风险？** → ngOnDestroy 释放 dataCache + OpenLayers map.setTarget(null) 断开 DOM 绑定 + LRU 淘汰时完整 cleanup
+**结果**：页面切换性能提升 60%，消除模块切换白屏等待。
 
 ---
 
-### 难点 4：RBAC 位编码权限体系（跨项目）
+### 难点 3：多协议降级传输层 + 背压控制 — AeMS 项目
 
-**背景**：传统权限用数组/Set 存储权限列表，检查时需要遍历 O(n)；369 个旧权限码与新码需要兼容迁移。
+**背景**：AeMS需处理1000+ QPS告警并发推送，企业内网可能屏蔽WebSocket、代理超时断开。原系统在万级并发下帧率<10fps卡顿严重；告警峰值导致47%丢帧(18fps)。
+
+**任务**：设计多协议降级传输层+背压控制，实现1000+QPS高并发实时告警下60fps全帧率渲染，平台可用性99.9%，任意网络环境告警秒级触达。
+
+**行动**：
+
+```
+架构决策：Transport统一接口抽象，上层组件无感知
+├─ interface Transport<T> { messages$, status$, connect(), disconnect() }
+├─ 三级降级链路：WsTransport(rxjs/webSocket) → SseTransport(EventSource/fetch) → Polling(interval+HttpClient)
+│   降级触发：WS连续10次重连失败(指数退避1s→2s→4s...→30s,约5min后降级)
+│   SSE连接失败→即时切Polling；Polling永不降级
+├─ 背压控制：bufferTime(16ms, undefined, 64条) + animationFrameScheduler RAF双缓冲
+│   4000 msg/s → 每帧合并~64条 → setState仅60次/s → 60fps
+│   对比直接set：每秒set 4000次 → reconciliation来不及 → 丢帧47%
+├─ 消息合并：16ms窗口/64条双条件触发，减少50x+渲染调用
+├─ 心跳保活：30s ping / 10s pong超时检测，5s内发现僵尸连接
+├─ 断线重连：retry({count:10, delay:指数退避+jitter})避免重连风暴
+├─ 去重：seenRef Set上限5000，防重连后重复消息
+└─ 生命周期管理：takeUntilDestroyed()组件销毁自动退订
+```
+
+**结果**：1000+ QPS 告警冲击下保持 **60fps 全帧率**（优化前 47%丢帧/18fps）；平台可用性 **99.9%**；任意网络环境告警秒级触达。
+
+---
+
+### 难点 4：GIS 十万级点位四重优化 — AeMS 项目
+
+**背景**：十万个基站点位直接渲染到OpenLayers地图上，帧率<10fps，拖动卡顿2s+。内存占用~200MB，Feature数量10万独立渲染。
+
+**任务**：在保持地图交互流畅的前提下，实现十万级点位的高效渲染。目标：帧率≥60fps，内存可控，拖动全程流畅无卡顿。
+
+**行动**：
+
+```
+四重优化策略：
+├─ BBOX视口裁剪：filterByExtent()只保留视口矩形内点位，裁剪约60%(100k→40k)
+├─ Cluster聚类聚合：distance=40px，同区域聚合为1个聚类点(40k→~50点)
+├─ dataCache全量缓存：Map<zoom+extent, features>，平移/缩放零请求
+└─ moveend惰性刷新：拖动结束才触发重绘+50ms防抖，拖动全程60fps
+流程：100k原始 → BBOX裁剪 → 40k → Cluster聚合 → ~50点 → 渲染
+```
+
+**结果**：Feature数从100k降至~50聚类点（↓2000×），帧率从 **<10fps → 60fps**（7×提升），内存从 **~200MB → ~30MB**（↓85%），拖动流畅无卡顿。
+
+---
+
+### 难点 5：RBAC位编码权限体系 — 跨项目
+
+**背景**：传统权限用数组/Set存储权限列表，检查时需要遍历O(n)；369个旧权限码与新码需要兼容迁移。
 
 **任务**：设计一套高效、可扩展、防篡改的权限系统。
 
@@ -331,194 +325,138 @@ NgRx Store 管理：
 
 ```
 位编码设计：
-├─ 6 种权限各占 1 位：READ=1<<0, WRITE=1<<1, ..., ADMIN=1<<5
-├─ hasPermission = (code & perm) === perm → O(1) 单条 CPU 指令
-├─ 5 个预设角色（GUEST/EDITOR/MODERATOR/ADMIN/SUPER）
-└─ SUPER = reduce 自动聚合所有权限，新增权限无需改角色
+├─ 6种权限各占1位：READ=1<<0, WRITE=1<<1, ..., ADMIN=1<<5
+├─ hasPermission = (code & perm) === perm → O(1)单条CPU指令
+├─ SUPER = reduce自动聚合所有权限，新增权限无需改角色
 
-Angular 三层联动 + 后端双校验：
-├─ 菜单层：Angular *ngIf 指令 + 自定义结构指令（*aclHasPermission）递归过滤
-├─ 路由层：Angular Route Guard（CanActivate/CanActivateChild）拦截
-├─ 按钮层：自定义 *aclHasPermission 结构指令 + NgRx selector 集中管理
-└─ 后端层：POST /api/rbac/check 独立位运算校验 + 前后端一致性对比
+树形常量树 → 自动权限码映射：
+├─ ROLE常量树，每层M值拼接为完整权限码（如311=cell>active>EXPORT）
+├─ 树形深度约束+M值编码，确保每个节点有唯一编码
+├─ old_role.ts包含369个旧权限码映射，ROLE_LIST自动合并新旧映射
+├─ getLeafNodesWithPath递归遍历，将权限管理从"人工配置"升级为"代码生成"
 
-NgRx Store 管理：
-├─ AuthStore：存 roleCode、permissions、user info
-├─ Effect：登录时获取权限、角色切换时触发后端校验
-└─ Selector：hasPermission(code, required) 供各组件直接使用
+Angular三层联动 + 后端双校验：
+├─ 菜单层：*ngIf指令 + 自定义结构指令(*aclHasPermission)递归过滤
+├─ 路由层：CanActivateFn守卫拦截
+├─ 按钮层：ButtonGroupComponent的action数组声明acl属性，ACLService.can()集中校验
+└─ 后端层：POST /api/rbac/check独立位运算校验 + 前后端一致性对比
 ```
 
-**结果**：越权漏洞发生率降低 90%，6 种权限仅 4 字节存储。
+**结果**：越权漏洞发生率降低 **90%**；6种权限仅占 **4字节**存储。
 
 **追问链**：
-- **Q：位运算比数组/Set 好在哪？** → 存储 4 字节 vs 数百字节；检查 O(1) vs O(n)；组合 1 次位运算 vs 遍历
-- **Q：32 位限制怎么突破？** → JS 位运算仅 31 位有效位；超过 32 种权限改用 BigInt（1n << 33n）
-- **Q：Angular 中自定义结构指令和 *ngIf 的区别？** → 结构指令可以封装完整的权限判断逻辑，并且复用；利用 Angular 的 microsyntax（*aclHasPermission="['READ', 'WRITE']"）简洁易用
-- **Q：前后端一致性对比的价值？** → 纯前端可被 DevTools 篡改；后端独立校验 + 前端对比展示不一致告警
+- **Q：位运算比数组/Set好在哪？** → 存储4字节vs数百字节；检查O(1)vsO(n)；组合1次位运算vs遍历
+- **Q：32位限制怎么突破？** → JS位运算仅31位有效位；超过32种权限改用BigInt（1n << 33n）
+- **Q：Angular中自定义结构指令和*ngIf的区别？** → 结构指令可以封装完整的权限判断逻辑，并且复用；利用microsyntax (*aclHasPermission="['READ', 'WRITE']")简洁易用
+- **Q：前后端一致性对比的价值？** → 纯前端可被DevTools篡改；后端独立校验+前端对比展示不一致告警
 
 ---
 
-### 难点 5：Signals 响应式表格架构 — @axyom-ui/table
+### 难点 6：Signals响应式表格架构 — @axyom-ui/table
 
-**背景**：企业内部多个 Angular 项目存在大量重复的表格业务逻辑，每个项目都需单独封装分页/排序/选择等功能，维护成本高、开发效率低。
+**背景**：企业内部多个Angular项目存在大量重复的表格业务逻辑，每个项目都需单独封装分页/排序/选择等功能，平均每个页面200+行重复代码。
 
-**任务**：设计一套基于 Angular 22 Signals 的企业级声明式表格组件库，支持分页/排序/选择/树形/虚拟滚动按需开启，消除重复模板代码。
+**任务**：设计一套基于Angular 22 Signals的企业级声明式表格组件库，消除重复模板代码。
 
 **行动**：
 
 ```
-Signals 响应式架构：
-├─ signal() 管理分页/排序/选中行等 UI 状态，computed 自动追踪依赖图
-├─ model() 实现父子组件双向绑定，子组件可主动更新父组件分页和选中状态
-├─ Set 信号管理展开行/加载行状态，rowChecked computed 生成 Set 实现 O(1) 查重
-└─ 对比 RxJS：Signal 同步推送、自动追踪依赖、无需 subscribe/unsubscribe
+Signals响应式架构：
+├─ signal()管理分页/排序/选中行等UI状态，computed自动追踪依赖图
+├─ model()实现父子组件双向绑定，子组件可主动更新父组件分页和选中状态
+├─ Set信号管理展开行/加载行状态，rowChecked computed生成Set<string|number>实现O(1)查重
+└─ 对比RxJS：Signal同步推送、自动追踪依赖、无需subscribe/unsubscribe；RxJS保留给列拖拽事件流
 
 三态分页设计：
-├─ 前端分页：frontPagination=true, pageSize!=0 → 本地 data 信号排序分片
-├─ 后端分页：frontPagination=false, pageSize!=0 → page model 双向绑定通知父组件发 HTTP
+├─ 前端分页：frontPagination=true, pageSize!=0 → 本地data信号排序分片
+├─ 后端分页：frontPagination=false, pageSize!=0 → page model双向绑定通知父组件发HTTP
 ├─ 不分页：pageSize=0 → 隐藏分页栏，全量数据展示
 └─ 排序策略自动适配：后端排序首次设置排序重置页码，已有排序时切换列保持当前页码
 
-TemplateRef 注册表插槽：
-├─ AxyomRowSource 作为中央注册表，AxyomRowDirective 在 ngOnInit 注册 TemplateRef
-├─ { host: true } DI 隔离确保每个表格实例拥有独立注册表
-├─ CellComponent 根据列配置的 render 属性查询注册表，ngTemplateOutlet 渲染
-└─ 重复 key 防御性检查，编译时即报错
+TemplateRef注册表插槽：
+├─ AxyomRowSource作为中央注册表，AxyomRowDirective在ngOnInit注册TemplateRef
+├─ {host:true} DI隔离确保每个表格实例拥有独立注册表，避免模板冲突
+├─ CellComponent根据列配置的render属性查询注册表，ngTemplateOutlet渲染
+└─ 重复key防御性检查，编译时即报错
 
-列拖拽 + 列显隐持久化：
-├─ DragColumnDirective 通过 fromEvent 管理 mousedown→mousemove→mouseup 事件链
-├─ DragColumnService BehaviorSubject 作为状态总线广播列宽变化
-├─ cache input 启用 localStorage 缓存，cachePrefix 防 key 冲突
-└─ takeUntilDestroyed 安全清理，CSS user-select:none 防止拖拽文字选中
+列拖拽调整宽度：
+├─ DragColumnDirective在ngAfterViewInit通过setTimeout延迟等待DOM渲染
+├─ 动态创建<i>元素作为拖拽手柄，fromEvent管理mousedown→mousemove→mouseup事件链
+├─ DragColumnService BehaviorSubject作为状态总线广播列宽变化
+└─ takeUntilDestroyed安全清理，CSS user-select:none防止拖拽文字选中
 ```
 
-**结果**：表格用户代码量减少 80%（最简 cols+rows 两个入参），声明式 API + 渐进增强按需无缝开启。
-
-**追问链**：
-- **Q：Signal 和 BehaviorSubject 在表格场景中怎么分工？** → Signal 适合 UI 状态（同步、细粒度、自动追踪），BehaviorSubject 保留给事件流（列拖拽广播、异步数据流）
-- **Q：三态分页如何保证排序正确性？** → 前端分页时 data 信号排序分片；后端分页时排序参数由父组件通过 model() 接收，重置页码后发 HTTP
+**结果**：表格业务代码量减少 **80%**（每页面减少200+行），复用5+内部项目。
 
 ---
 
-### 难点 6：配置驱动动态表单框架 — @axyom-ui/form
+### 难点 7：配置驱动表单框架 — @axyom-ui/form
 
-**背景**：Angular 项目中表单开发重复模板代码多，手写 FormGroup/FormControl、校验逻辑、条件显隐等需要大量样板代码，开发效率低。
+**背景**：Angular项目中表单开发重复模板代码多，手写FormGroup/FormControl、校验逻辑、条件显隐等需要大量样板代码，开发效率低。
 
-**任务**：设计一套基于 Angular 22 的配置驱动型动态表单框架，五层架构 + 注册表模式，支持运行时动态组件分发。
+**任务**：设计一套基于Angular 22的配置驱动型动态表单框架，五层架构+注册表模式，支持运行时动态组件分发。
 
 **行动**：
 
 ```
 五层架构设计：
-├─ 基础设施层：提供 10 种自定义验证器（IP/URL/手机号/身份证/BigInt/跨字段联动等）
-├─ 基类层：BaseInf 泛型工具类型实现"必填 key + 可选配置"模式
-├─ 组件层：20 种内置组件类型，单行 register() 快速扩展
-├─ 调度层：FormUnitRegistryService 运行时动态组件分发
-└─ 容器层：FormModal/DynamicModalService 统一弹窗服务
+├─ 基础设施层：提供10种自定义验证器（IP/URL/手机号/身份证/BigInt/跨字段联动等）
+├─ 基类层：BaseInf泛型工具类型实现"必填key+可选配置"模式
+├─ 组件层：20种内置组件类型，单行register()快速扩展
+├─ 调度层：FormUnitRegistryService运行时动态组件分发(NgComponentOutlet)
+└─ 容器层：DynamicModalService统一弹窗服务，AXYOM_FORM_CONFIG InjectionToken全局配置注入
 
-动态组件渲染引擎：
-├─ NgComponentOutlet + FormUnitRegistryService 实现运行时动态组件分发
-├─ computed 缓存 inputs 对象，避免每次变更检测重新创建
-├─ isView 为 true 时所有字段自动转为只读 ViewUnitComponent，一键切换视图模式
-└─ 优雅降级：未知 type 自动回退到 string 类型
+TypeScript类型安全配置推断：
+├─ type BaseInf<T, R={key:string}> = Omit<Partial<Omit<T,keyofR>> & R, 'controlType'|'control'|'view'>
+├─ new StringUnit({key:'name'})只需传入key，其他属性可选
+└─ controlType/control/view等库内部属性编译时自动排除
 
-TypeScript 类型安全配置推断：
-├─ BaseInf<T, R> 泛型实现"必填 key + 可选配置"完整类型推导
-├─ Omit/Partial/交叉类型组合推导配置对象类型
-└─ controlType/control/view 等库内部属性编译时自动排除
-
-条件显示与 FormControl 动态管理：
-├─ display 支持布尔值（静态）和函数（动态）两种策略
-├─ form.addControl/removeControl 动态管理 FormControl，隐藏时不参与校验
-├─ form.getRawValue() 获取所有值（含 disabled），确保条件变化时数据不丢失
-└─ 再次 addControl 时 control 保留原值和验证状态
+条件显示与FormControl动态管理：
+├─ display支持布尔值（静态）和函数（动态）两种策略
+├─ form.addControl/removeControl动态管理FormControl，隐藏时不参与校验
+├─ form.getRawValue()获取所有值（含disabled），确保条件变化时数据不丢失
+└─ 再次addControl时control保留原值和验证状态
 
 跨字段联动验证：
-├─ 闭包中 subscribe 标识实现一次性延迟订阅，避免依赖循环
-├─ 目标字段变化时触发自身 updateValueAndValidity，避免死锁
-└─ 支持 equalTo/notEqualTo/laterTo 等多种联动验证器
-
-弹层扩展体系：
-├─ DialogModal/FormModal 配置类，Loading 信号自动管理
-├─ AXYOM_FORM_CONFIG InjectionToken 全局配置注入
-├─ mergeDefault 分层合并：实例值 > 全局配置 > 内置默认值
-└─ Observable 回调失败不关闭弹窗，显示错误信息
+├─ 闭包中subscribe标识实现一次性延迟订阅，避免依赖循环
+├─ 目标字段变化时触发自身updateValueAndValidity，避免循环调用
+└─ 支持equalTo/notEqualTo/laterTo等多种联动验证器
 ```
 
-**结果**：表单开发人效提升 80%（配置类替代手写模板代码），五层架构每层都有明确替换边界。
-
-**追问链**：
-- **Q：NgComponentOutlet 和 *ngComponentOutlet 的区别？** → NgComponentOutlet 是类名导入，*ngComponentOutlet 是模板语法；配合 Injector.create 可动态注入不同服务实例
-- **Q：跨字段验证如何避免循环调用？** → 闭包中一次性延迟订阅 + 防循环标记，目标字段变化触发自身 updateValueAndValidity 而非源字段
+**结果**：表单开发人效提升 **80%**（配置驱动替代手写模板）。
 
 ---
 
-### 难点 7：Hub-Spoke 仪表盘 + Recording Rules 预计算（AeMS 项目）
+### 难点 8：Hub-Spoke仪表盘 + Recording Rules 预计算 — Prometheus/Grafana
 
-**背景**：30+ 个网元各有独立 Prometheus 仪表盘，手工维护成本高、加载慢（10s+），新增网元需要手工复制配置。
+**背景**：30+个网元各有独立Prometheus仪表盘，手工维护成本高、加载慢（10s+），新增网元需要手工复制配置。
 
-**任务**：设计 GitOps 驱动的 Hub-Spoke 仪表盘架构，实现零手工复制、秒级加载。
+**任务**：设计GitOps驱动的Hub-Spoke仪表盘架构，实现零手工复制、秒级加载。
 
 **行动**：
 
 ```
-Hub-Spoke 仪表盘架构：
-├─ Hub（主仪表盘）：展示全局概览（所有 NF 汇总），标签导航下钻
-├─ Spoke（NF 详情）：每个 NF 自动生成独立详情仪表盘
-├─ 单一数据源原则：JSON 源文件是唯一人工维护文件，ConfigMap 和 CR 全部自动生成
-└─ 新增 NF 自动获得导航，零手工复制
+Hub-Spoke仪表盘架构：
+├─ Hub（主仪表盘）：展示全局概览（所有NF汇总），标签导航下钻
+├─ Spoke（NF详情）：每个NF自动生成独立详情仪表盘
+├─ 单一数据源原则：JSON源文件是唯一人工维护文件，ConfigMap和CR全部自动生成
+└─ 新增NF自动获得导航，零手工复制
 
-Recording Rules 预计算：
-├─ 将复杂 PromQL 预计算结果写入 TSDB，O(n²) → O(1) 查询
-├─ 本质：用 10% 额外存储换 10 倍查询性能
-└─ 仪表盘加载从 10+ 秒降至 <1 秒
+Recording Rules预计算：
+├─ 将复杂PromQL预计算结果写入TSDB，O(n²) → O(1)查询
+├─ 本质：用10%额外存储换10倍查询性能
+└─ 仪表盘加载从10+秒降至<1秒
 
-4 级递进告警 + 双层告警：
+4级递进告警 + 双层告警：
 ├─ Info → Warning → Critical → Emergency 逐级升级
-├─ for: 10m 防瞬态抖动，避免告警风暴
-└─ 覆盖 12 个网元关键指标
+├─ for: 10m防瞬态抖动，避免告警风暴
+└─ 覆盖12个网元关键指标
 
-5 层 CI 验证：
-├─ catalog 冲突检测 → verify-resources → 语法校验 → 二进制检测 → 打包发布
-└─ git push 即部署，可审计可回滚
+5层CI验证：catalog冲突检测 → verify-resources → 语法校验 → 二进制检测 → 打包发布
+git push即部署，可审计可回滚
 ```
 
-**结果**：30+ 仪表盘零手工重复，加载从 10+s → <1s，告警误报率大幅降低。
-
-**追问链**：
-- **Q：Recording Rules 和 Grafana 自带的 caching 有什么区别？** → Recording Rules 在 TSDB 层面预计算，查询时直接读结果；Grafana caching 是 UI 层缓存，数据量大的查询仍需等待
-- **Q：GitOps 工作流中，ConfigMap 变更如何触发 Prometheus 重新加载？** → Helm upgrade 更新 ConfigMap + Prometheus sidecar 检测变更自动 reload
-
----
-
-### 难点 8：GIS 十万级点位渲染（AeMS 项目）
-
-**背景**：十万个基站点位直接渲染到 OpenLayers 地图上，帧率 < 10fps，拖动卡顿 2s+。
-
-**任务**：在保持地图交互流畅的前提下，实现十万级点位的高效渲染。
-
-**行动**：
-
-```
-四重优化策略：
-├─ BBOX 视口裁剪：filterByExtent() 只保留视口矩形内点位，裁剪约 60%
-├─ Cluster 聚合：distance=40px，同区域聚合为 1 个聚类点，100k → ~50 点
-├─ dataCache 全量缓存：100k 点约 2MB gzip，前端缓存后平移/缩放零请求
-└─ moveend 惰性刷新：拖动结束才触发重绘 + 50ms 防抖，拖动全程 60fps
-
-流程：100k 原始 → BBOX 裁剪 → 40k → Cluster 聚合 → 50 点 → 渲染
-```
-
-**结果**：Feature 数量从 100k 降至 ~50 个聚类点，帧率从 <10fps 到 60fps，内存从 ~200MB 降至 ~30MB。
-
-**追问链**：
-- **Q：BBOX 和 Cluster 哪个先执行？** → BBOX 先（裁剪视口外 60%），减少 Cluster 计算量
-- **Q：百万级怎么优化？** → 10 万以内 Canvas 2D 足够；10 万~100 万需要 WebGL（Mapbox GL/Deck.gl）；超 100 万必须 Tile 分级加载
-- **Q：dataCache 会不会内存泄漏？** → ngOnDestroy 时 dataCache 释放 + LRU 淘汰时完整 cleanup + OpenLayers 资源释放
-
----
-
-### 难点 9：多协议降级传输层 + 异步导出轮询（AeMS 项目）
+**结果**：30+仪表盘零手工重复，加载从10+s → <1s，告警误报率大幅降低。
 
 **背景**：AeMS 平台需要处理 1000+ QPS 的告警并发推送，企业内网可能屏蔽 WebSocket、代理超时断开。同时，导出 10 万条告警数据时后端异步生成文件，前端需要轮询状态并下载。核心目标：**任何网络环境下都能拿到数据，且实时性尽量高**。
 
