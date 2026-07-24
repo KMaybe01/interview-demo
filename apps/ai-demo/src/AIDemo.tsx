@@ -33,6 +33,7 @@ const KnowledgeBase = lazy(() => import('./components/KnowledgeBase.tsx'));
 const Models = lazy(() => import('./components/Models.tsx'));
 const Playground = lazy(() => import('./components/Playground.tsx'));
 const Plugins = lazy(() => import('./components/Plugins.tsx'));
+const AISDKDemoLazy = lazy(() => import('./components/AISDKDemo.tsx'));
 
 function TabFallback() {
   return (
@@ -68,6 +69,7 @@ interface NavItem {
 const NAV_ITEMS: NavItem[] = [
   { path: '/', icon: <DashboardOutlined />, label: '控制台' },
   { path: '/chat', icon: <MessageOutlined />, label: 'AI 聊天' },
+  { path: '/aisdk-demo', icon: <RobotOutlined />, label: 'AI SDK Demo' },
   { path: '/knowledge', icon: <BookOutlined />, label: '知识库' },
   { path: '/models', icon: <AppstoreOutlined />, label: '模型管理' },
   { path: '/agents', icon: <RobotOutlined />, label: '智能体' },
@@ -184,6 +186,7 @@ export default function AIDemo() {
                 <Routes>
                   <Route path="/" element={<DashboardLazy onNavigate={handleNavigate} />} />
                   <Route path="/chat" element={<Chat />} />
+                  <Route path="/aisdk-demo" element={<AISDKDemoLazy />} />
                   <Route path="/knowledge" element={<KnowledgeBase />} />
                   <Route path="/models" element={<Models />} />
                   <Route path="/agents" element={<Agents />} />

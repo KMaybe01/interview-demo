@@ -114,7 +114,7 @@ export default function Chat() {
   const [agents, setAgents] = useState<Agent[]>([]);
   const [selectedAgentId, setSelectedAgentId] = useState('');
   const [models, setModels] = useState<Model[]>([]);
-  const [selectedModel, setSelectedModel] = useState('gemini-2.5-flash');
+  const [selectedModel, setSelectedModel] = useState('agnes-2.0-flash');
   const [streamingContent, setStreamingContent] = useState('');
   const [maskPIIEnabled, setMaskPIIEnabled] = useState(false);
   const [sidebarCollapsed, setSidebarCollapsed] = useState(true);
@@ -151,10 +151,8 @@ export default function Chat() {
       setModels(modelRes.models || []);
       setAgents(agentRes.agents || []);
       if (modelRes.models?.length > 0) {
-        const geminiModel = modelRes.models.find((m: Model) =>
-          m.id.toLowerCase().includes('gemini'),
-        );
-        setSelectedModel(geminiModel?.id || modelRes.models[0].id);
+        const agnesModel = modelRes.models.find((m: Model) => m.id.toLowerCase().includes('agnes'));
+        setSelectedModel(agnesModel?.id || modelRes.models[0].id);
       }
     } catch {
       // ignore

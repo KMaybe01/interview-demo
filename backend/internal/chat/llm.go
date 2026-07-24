@@ -24,6 +24,18 @@ func NewLLMService(apiKey string) *LLMService {
 	}
 }
 
+// NewAgnesLLMService 创建一个指向 Agnes AI OpenAI 兼容端点的 LLMService。
+// Base URL: https://apihub.agnes-ai.com/v1
+func NewAgnesLLMService(apiKey string) *LLMService {
+	config := openai.DefaultConfig(apiKey)
+	config.BaseURL = "https://apihub.agnes-ai.com/v1"
+	client := openai.NewClientWithConfig(config)
+
+	return &LLMService{
+		client: client,
+	}
+}
+
 // NewGeminiLLMService 创建一个指向 Gemini OpenAI 兼容端点的 LLMService。
 // Gemini 的 OpenAI 兼容端点: https://generativelanguage.googleapis.com/v1beta/openai/
 // 认证方式与 OpenAI 相同 (Authorization: Bearer <apiKey>)。

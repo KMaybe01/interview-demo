@@ -23,6 +23,7 @@ type AgentExecutor interface {
 type Handler struct {
 	llmService       *LLMService
 	geminiLLMService *LLMService
+	agnesLLMService  *LLMService
 	memoryService    *memory.Service
 	ragService       *knowledge.RAGService
 	lookupAgent      func(id string) AgentExecutor
@@ -50,9 +51,18 @@ func (h *Handler) SetGeminiLLMService(svc *LLMService) {
 	h.geminiLLMService = svc
 }
 
+// SetAgnesLLMService 设置 Agnes AI LLM 服务
+func (h *Handler) SetAgnesLLMService(svc *LLMService) {
+	h.agnesLLMService = svc
+}
+
 // selectLLMService 根据模型名称选择 LLM 服务
 func (h *Handler) selectLLMService(modelName string) *LLMService {
-	if h.geminiLLMService != nil && strings.Contains(strings.ToLower(modelName), "gemini") {
+	lower := strings.ToLower(modelName)
+	if h.agnesLLMService != nil && strings.Contains(lower, "agnes") {
+		return h.agnesLLMService
+	}
+	if h.geminiLLMService != nil && strings.Contains(lower, "gemini") {
 		return h.geminiLLMService
 	}
 	return h.llmService

@@ -408,6 +408,15 @@ func DefaultModelManager() *ModelManager {
 	})
 
 	manager.RegisterModel(&ModelConfig{
+		ID:          "agnes-2.0-flash",
+		Provider:    ProviderOpenAI,
+		ModelName:   "agnes-2.0-flash",
+		MaxTokens:   8192,
+		Temperature: 0.7,
+		Timeout:     30 * time.Second,
+	})
+
+	manager.RegisterModel(&ModelConfig{
 		ID:          "gemini-2.5-flash",
 		Provider:    ProviderGemini,
 		ModelName:   "gemini-2.5-flash",

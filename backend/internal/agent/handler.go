@@ -134,13 +134,16 @@ func (h *Handler) ExecuteAgent(c *gin.Context) {
 	}
 
 	var req struct {
-		Input string `json:"input" binding:"required"`
+		Input        string   `json:"input" binding:"required"`
+		EnabledTools []string `json:"enabled_tools"`
 	}
 
 	if err := c.ShouldBindJSON(&req); err != nil {
 		c.JSON(http.StatusBadRequest, gin.H{"error": "请求参数错误"})
 		return
 	}
+
+	agent.SetEnabledTools(req.EnabledTools)
 
 	response, err := agent.Execute(context.Background(), req.Input)
 	if err != nil {
@@ -183,13 +186,16 @@ func (h *Handler) ExecuteAgentStream(c *gin.Context) {
 	}
 
 	var req struct {
-		Input string `json:"input" binding:"required"`
+		Input        string   `json:"input" binding:"required"`
+		EnabledTools []string `json:"enabled_tools"`
 	}
 
 	if err := c.ShouldBindJSON(&req); err != nil {
 		c.JSON(http.StatusBadRequest, gin.H{"error": "请求参数错误"})
 		return
 	}
+
+	agent.SetEnabledTools(req.EnabledTools)
 
 	c.Header("Content-Type", "text/event-stream")
 	c.Header("Cache-Control", "no-cache")

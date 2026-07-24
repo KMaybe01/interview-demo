@@ -72,6 +72,8 @@ func main() {
 	llmService := chat.NewLLMService(apiKey)
 	geminiApiKey := os.Getenv("GEMINI_API_KEY")
 	geminiLLMService := chat.NewGeminiLLMService(geminiApiKey)
+	agnesApiKey := os.Getenv("AGNES_API_KEY")
+	agnesLLMService := chat.NewAgnesLLMService(agnesApiKey)
 	memoryService := memory.NewService()
 	ragService := knowledge.NewRAGService()
 	chunkerManager := knowledge.NewChunkerManager()
@@ -105,6 +107,7 @@ func main() {
 		},
 	)
 	chatHandler.SetGeminiLLMService(geminiLLMService)
+	chatHandler.SetAgnesLLMService(agnesLLMService)
 	knowledgeHandler := knowledge.NewHandler(ragService, chunkerManager, embeddingService, vectorDB)
 	modelHandler := chat.NewModelHandler(modelManager)
 

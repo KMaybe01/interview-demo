@@ -25,6 +25,7 @@ type Tool struct {
 	Name        string                 `json:"name"`
 	Description string                 `json:"description"`
 	Parameters  map[string]interface{} `json:"parameters"`
+	Keywords    []string               `json:"-"`
 	Function    func(ctx context.Context, input string) (string, error)
 }
 
@@ -72,6 +73,28 @@ func (a *Agent) RegisterTool(tool Tool) {
 	a.mu.Lock()
 	defer a.mu.Unlock()
 	a.Tools = append(a.Tools, tool)
+}
+
+func (a *Agent) SetEnabledTools(names []string) {
+	a.mu.Lock()
+	defer a.mu.Unlock()
+
+	if len(names) == 0 {
+		return
+	}
+
+	enabled := make(map[string]bool, len(names))
+	for _, name := range names {
+		enabled[name] = true
+	}
+
+	filtered := make([]Tool, 0, len(names))
+	for _, t := range a.Tools {
+		if enabled[t.Name] {
+			filtered = append(filtered, t)
+		}
+	}
+	a.Tools = filtered
 }
 
 func (a *Agent) Execute(ctx context.Context, input string) (string, error) {
@@ -139,7 +162,7 @@ func (a *Agent) executeReAct(ctx context.Context, input string) (string, error) 
 
 func (a *Agent) executeFunctionCalling(ctx context.Context, input string) (string, error) {
 	for _, tool := range a.Tools {
-		if strings.Contains(input, tool.Name) || strings.Contains(input, tool.Description) {
+		if toolMatchesInput(tool, input) {
 			result, err := tool.Function(ctx, input)
 			if err != nil {
 				return fmt.Sprintf("工具执行失败: %v", err), nil
@@ -158,10 +181,25 @@ func (a *Agent) generateThought(input string, state *State) string {
 	return "我已经收集了足够的信息，现在可以给出最终答案。"
 }
 
+func toolMatchesInput(tool Tool, input string) bool {
+	lower := strings.ToLower(input)
+
+	if strings.Contains(lower, strings.ToLower(tool.Name)) {
+		return true
+	}
+
+	for _, kw := range tool.Keywords {
+		if strings.Contains(lower, strings.ToLower(kw)) {
+			return true
+		}
+	}
+
+	return false
+}
+
 func (a *Agent) selectTool(thought, input string) (string, string) {
 	for _, tool := range a.Tools {
-		if strings.Contains(input, tool.Name) ||
-			strings.Contains(strings.ToLower(input), strings.ToLower(tool.Name)) {
+		if toolMatchesInput(tool, input) {
 			return tool.Name, input
 		}
 	}
@@ -326,6 +364,10 @@ func (a *Agent) executeReActStream(ctx context.Context, input string, events cha
 
 func (a *Agent) executeFunctionCallingStream(ctx context.Context, input string, events chan<- StepEvent) {
 	for _, tool := range a.Tools {
+		if !toolMatchesInput(tool, input) {
+			continue
+		}
+
 		events <- StepEvent{
 			Type:    "thought",
 			Step:    0,
@@ -530,39 +572,107 @@ func NewToolCallingAgent(llmService *chat.LLMService) *ToolCallingAgent {
 		llmService: llmService,
 	}
 
-	toolAgent.RegisterTool(Tool{
-		Name:        "calculator",
-		Description: "数学计算器",
-		Parameters: map[string]interface{}{
-			"expression": map[string]interface{}{
-				"type":        "string",
-				"description": "数学表达式",
-			},
-		},
-		Function: toolAgent.calculator,
-	})
-
-	toolAgent.RegisterTool(Tool{
-		Name:        "weather",
-		Description: "查询天气",
-		Parameters: map[string]interface{}{
-			"city": map[string]interface{}{
-				"type":        "string",
-				"description": "城市名称",
-			},
-		},
-		Function: toolAgent.getWeather,
-	})
+	registerDefaultTools(agent)
 
 	return toolAgent
 }
 
-func (a *ToolCallingAgent) calculator(ctx context.Context, input string) (string, error) {
+func calculatorTool(ctx context.Context, input string) (string, error) {
 	return fmt.Sprintf("计算结果: %s = 42", input), nil
 }
 
-func (a *ToolCallingAgent) getWeather(ctx context.Context, input string) (string, error) {
+func weatherTool(ctx context.Context, input string) (string, error) {
 	return fmt.Sprintf("%s 当前天气: 晴, 温度: 25°C", input), nil
+}
+
+func webSearchTool(ctx context.Context, input string) (string, error) {
+	return fmt.Sprintf("搜索 %s 的结果: 共找到 5 条相关结果（模拟数据）", input), nil
+}
+
+func databaseQueryTool(ctx context.Context, input string) (string, error) {
+	return fmt.Sprintf("执行 SQL 查询: %s\n返回 3 条记录（模拟数据）", input), nil
+}
+
+func fileReadTool(ctx context.Context, input string) (string, error) {
+	return fmt.Sprintf("读取文件 %s 成功\n文件内容: Hello, World!（模拟数据）", input), nil
+}
+
+func codeRunnerTool(ctx context.Context, input string) (string, error) {
+	return "执行代码完成\n输出: Hello from code runner!\n（模拟执行环境）", nil
+}
+
+var defaultToolDefs = []struct {
+	Name        string
+	Description string
+	Keywords    []string
+	Function    func(ctx context.Context, input string) (string, error)
+}{
+	{
+		Name: "calculator", Description: "数学计算器",
+		Keywords: []string{"计算", "加", "减", "乘", "除", "数学", "+", "-", "*", "/"},
+		Function: calculatorTool,
+	},
+	{
+		Name: "weather", Description: "查询天气",
+		Keywords: []string{"天气", "温度", "下雨", "晴", "阴", "雪"},
+		Function: weatherTool,
+	},
+	{
+		Name: "web-search", Description: "搜索互联网获取信息",
+		Keywords: []string{"搜索", "查找", "查询", "互联网", "百度", "谷歌", "搜一下"},
+		Function: webSearchTool,
+	},
+	{
+		Name: "database", Description: "执行数据库查询",
+		Keywords: []string{"数据库", "SQL", "查询", "数据"},
+		Function: databaseQueryTool,
+	},
+	{
+		Name: "file-read", Description: "读取文件内容",
+		Keywords: []string{"文件", "读取", "阅读", "打开", "查看文件"},
+		Function: fileReadTool,
+	},
+	{
+		Name: "code-runner", Description: "运行 Python/JS 代码",
+		Keywords: []string{"代码", "运行", "执行", "python", "javascript", "js"},
+		Function: codeRunnerTool,
+	},
+}
+
+func registerDefaultTools(a *Agent) {
+	for _, def := range defaultToolDefs {
+		a.RegisterTool(Tool{
+			Name:        def.Name,
+			Description: def.Description,
+			Parameters:  map[string]interface{}{},
+			Keywords:    def.Keywords,
+			Function:    def.Function,
+		})
+	}
+}
+
+func (a *ToolCallingAgent) calculator(ctx context.Context, input string) (string, error) {
+	return calculatorTool(ctx, input)
+}
+
+func (a *ToolCallingAgent) getWeather(ctx context.Context, input string) (string, error) {
+	return weatherTool(ctx, input)
+}
+
+func (a *ToolCallingAgent) webSearch(ctx context.Context, input string) (string, error) {
+	return webSearchTool(ctx, input)
+}
+
+func (a *ToolCallingAgent) databaseQuery(ctx context.Context, input string) (string, error) {
+	return databaseQueryTool(ctx, input)
+}
+
+func (a *ToolCallingAgent) fileRead(ctx context.Context, input string) (string, error) {
+	return fileReadTool(ctx, input)
+}
+
+func (a *ToolCallingAgent) codeRunner(ctx context.Context, input string) (string, error) {
+	return codeRunnerTool(ctx, input)
 }
 
 type Factory struct {
@@ -578,16 +688,22 @@ func NewFactory(llmService *chat.LLMService, ragService *knowledge.RAGService) *
 }
 
 func (f *Factory) CreateAgent(agentType Type, name string) *Agent {
+	var a *Agent
+
 	switch agentType {
 	case TypeReAct:
-		return NewAgent(name, TypeReAct)
+		a = NewAgent(name, TypeReAct)
 	case TypeFunction:
-		return NewToolCallingAgent(f.llmService).Agent
+		a = NewToolCallingAgent(f.llmService).Agent
+		return a
 	case TypeMulti:
-		return NewAgent(name, TypeMulti)
+		a = NewAgent(name, TypeMulti)
 	default:
-		return NewAgent(name, TypeReAct)
+		a = NewAgent(name, TypeReAct)
 	}
+
+	registerDefaultTools(a)
+	return a
 }
 
 func (f *Factory) CreateRAGAgent() *RAGAgent {

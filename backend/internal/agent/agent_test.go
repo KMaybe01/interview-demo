@@ -248,8 +248,8 @@ func TestNewToolCallingAgent(t *testing.T) {
 	if a == nil {
 		t.Fatal("expected non-nil ToolCallingAgent")
 	}
-	if len(a.Tools) != 2 {
-		t.Fatalf("expected 2 tools, got %d", len(a.Tools))
+	if len(a.Tools) != 6 {
+		t.Fatalf("expected 6 tools, got %d", len(a.Tools))
 	}
 }
 
