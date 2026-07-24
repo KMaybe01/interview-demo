@@ -135,26 +135,40 @@ graph TD
 | **Agentic RAG** | 用 Agent 编排多步检索+工具调用+推理 | 复杂任务规划 | 引入 ReAct 循环，管理 Tool Registry |
 
 ```typescript
-// Corrective RAG 核心实现
-async function correctiveRAG(query: string) {
-  const docs = await retrieve(query);
-  const relevanceScore = await evaluateRelevance(query, docs);
+// Corrective RAG 核心实现 — 使用 LangChain.js Runnable 组合
+import { ChatPromptTemplate } from '@langchain/core/prompts';
+import { RunnableLambda, RunnableSequence } from '@langchain/core/runnables';
+import { VectorStoreManager } from './vector-store';
 
-  if (relevanceScore > 0.7) {
-    return generate(query, docs);                      // ✔ 高质量 → 直接生成
-  } else if (relevanceScore > 0.3) {
-    const rewritten = await rewriteQuery(query, docs); // 🔄 中等 → 重写查询
-    const newDocs = await retrieve(rewritten);
-    return generate(query, newDocs);
-  } else {
-    return generate(query);                             // ✗ 低质量 → 放弃检索
+export class CorrectiveRAG {
+  private vectorStore: VectorStoreManager;
+  
+  async query(query: string): Promise<{ answer: string; sources: any[] }> {
+    const docs = await this.vectorStore.search(query, 5);
+    const relevanceScore = docs.length > 0 ? docs[0].score : 0;
+
+    if (relevanceScore > 0.7) {
+      return this.generate(query, docs);                      // ✔ 高质量 → 直接生成
+    } else if (relevanceScore > 0.3) {
+      const rewritten = await this.rewriteQuery(query, docs); // 🔄 中等 → 重写查询
+      const newDocs = await this.vectorStore.search(rewritten, 5);
+      return this.generate(query, newDocs);
+    } else {
+      return this.generateDirect(query);                       // ✗ 低质量 → 放弃检索
+    }
   }
-}
 
-async function evaluateRelevance(query: string, docs: string[]): Promise<number> {
-  // 需要 @langchain/community cross-encoder 模型 (如 HuggingFaceCrossEncoder)
-  const scores = await Promise.all(docs.map(d => crossEncoder(query, d)));
-  return Math.max(...scores);
+  private async rewriteQuery(original: string, docs: any[]): Promise<string> {
+    // 让 LLM 根据相关文档改写查询，聚焦关键信息
+    const prompt = ChatPromptTemplate.fromTemplate(`
+      以下检索结果相关性不足。请根据已有文档线索，改写用户查询以提高召回率：
+      用户原始问题：{question}
+      相关文档摘要（部分匹配）：{context}
+      输出改写后的查询（仅返回一句话）：
+    `);
+    // 实际使用 LangChain ChatOpenAI 执行，此处省略 LLM 调用细节
+    return `${original} 补充上下文`;
+  }
 }
 ```
 
@@ -183,19 +197,26 @@ graph LR
 | **适用场景** | 事实问答、文档摘要 | 复杂关系推理、报告生成 |
 
 ```typescript
-// GraphRAG 检索实现
+// GraphRAG 检索实现 — 概念演示
+// 生产环境推荐：neo4j-js + @langchain/community/vectorstores/PineconeStore
 interface Entity { name: string; type: string; embedding: number[] }
-interface Relation { source: Entity; target: Entity; label: string }
+interface Relation { source: string; target: string; label: string }
 
 class GraphRAG {
+  // ① 向量检索初始实体
+  // ② 遍历知识图谱扩展相关节点（需集成 Neo4j/Neo4j.js）
+  // ③ 将子图序列化为文本上下文
   async retrieve(query: string): Promise<string[]> {
     const queryEmb = await embed(query);
-    // ① 向量检索实体
     const entities = await vectorSearch(queryEmb, { collection: 'entities', topK: 5 });
-    // ② 图遍历：从命中实体出发，沿关系扩展到 2 跳
-    const subgraph = await this.traverse(entities.map(e => e.name), 2);
-    // ③ 将子图序列化为文本上下文
-    return subgraph.map(e => `${e.name} --[${e.label}]--> ${e.target}`);
+    
+    // 图遍历示意 — 实际需调用 Neo4j GraphQL API
+    // const subgraph = await this.neo4j.query(
+    //   `MATCH (e:Entity {name: $name})-[:RELATED*1..2]-(related) 
+    //    RETURN related.name, related.label`
+    // );
+    
+    return entities.map(e => `${e.name} (${e.type})`);
   }
 }
 ```

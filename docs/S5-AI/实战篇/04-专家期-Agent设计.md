@@ -516,8 +516,7 @@ class DebateAgent {
     const analysis = await this.judgeModel.invoke(`
       以下 ${responses.length} 个 AI 对同一问题的回答：
 
-      ${responses.map((r, i) => `Agent ${i}: ${r}`).join('
-')}
+      ${responses.map((r, i) => `Agent ${i}: ${r}`).join('\n')}
 
       它们是否达成一致？如果一致，总结答案；否则说明分歧点。
     `);
@@ -670,8 +669,7 @@ class AgentTracer {
       ├─ 💭 Thought: ${step.thought}
       ├─ 🔧 Action: ${step.action}(${JSON.stringify(step.actionInput)})
       └─ 👁 Observation: ${step.observation.slice(0, 100)}...
-    `).join('
-');
+    `).join('\n');
   }
 
   // 导出为 OpenTelemetry Span 用于监控
