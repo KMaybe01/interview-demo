@@ -13,7 +13,6 @@
   "ignore": [
     "@interview-demo/frontend",
     "@interview-demo/ai-demo",
-    "@interview-demo/interview-docs",
-    "@interview-demo/backend-nest"
+    "@interview-demo/interview-docs"
   ]
 }

@@ -68,27 +68,6 @@
       }
     },
     {
-      "includes": ["apps/backend-nest/**"],
-      "javascript": {
-        "parser": {
-          "unsafeParameterDecoratorsEnabled": true
-        }
-      },
-      "linter": {
-        "rules": {
-          "correctness": {
-            "noUnusedFunctionParameters": "off"
-          },
-          "style": {
-            "useImportType": "off"
-          },
-          "suspicious": {
-            "noExplicitAny": "off"
-          }
-        }
-      }
-    },
-    {
       "includes": ["apps/interview-docs/**"],
       "linter": {
         "rules": {

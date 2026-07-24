@@ -54,20 +54,7 @@ bun install          # 只能用 bun, 不能用 npm（从根目录安装所有 w
 | `cd apps/interview-docs && bun run build` | `tsc -p tsconfig.app.json --noEmit && tsc -p tsconfig.node.json --noEmit && vite build && node gen-version.mjs` |
 | `cd apps/interview-docs && bun run lint` | `bunx biome check --write .` |
 
-`apps/backend-nest/`（NestJS 11 后端 — 重构版，功能完整覆盖 Go backend）：
-
-| 命令 | 说明 |
-|------|------|
-| `bun run --cwd apps/backend-nest dev` | NestJS 启动 (:8080, Swagger: `/swagger`) |
-| `bun run --cwd apps/backend-nest build` | `nest build` |
-| `bun run --cwd apps/backend-nest start:prod` | `node dist/main` (生产) |
-| `bun run --cwd apps/backend-nest lint` | `bunx biome check --write src/` |
-| `bun run --cwd apps/backend-nest test` | `vitest run` |
-| `bun run --cwd apps/backend-nest typecheck` | `tsc -b --noEmit` |
-
-也可直接 `cd apps/backend-nest` 后执行上述命令。Swagger UI 启动后访问 `http://localhost:8080/swagger`。
-
-`backend/`（原始 Go backend，保留不删）：
+`backend/`（Go backend）：
 
 ```bash
 go run ./cmd/server/          # Gin :8080
@@ -81,7 +68,7 @@ go test ./internal/... -v
 - **认证守卫**: `apps/frontend/src/components/AuthGuard.tsx` 保护除 `/login` 外的所有路由
 - **状态管理**: Zustand store 位于 `apps/frontend/src/stores/`，通过 `apps/frontend/src/stores/index.ts` 桶文件导出
 - **API 客户端**: `apps/frontend/src/utils/fetchClient.ts` (Axios，自动注入 Bearer Token，401 自动刷新 + 请求重放)
-- **后端**: NestJS 11 (`apps/backend-nest/`) + 原始 Go backend (`backend/`，保留不删) — NestJS 重构版完整覆盖 Go 19 个内部包功能，全内存存储，Swagger UI
+- **后端**: Go backend (`backend/`) — 19 个内部包覆盖认证、支付、表单、GIS、上传、监控等全部 API 需求
 - **前端知识库**: `apps/interview-docs/` — React 19 文档站点，Markdown 内容，GitHub Pages 部署
 - **AI Demo**: `apps/ai-demo/` — 独立项目，6 选项卡 AI 演示（聊天/知识库/模型/智能体/插件/控制台）
 - **共享主题包**: `packages/shared-theme/` — 统一管理 dark/light 主题切换，提供 Zustand store（`useThemeStore`）和 React hook（`useTheme`）两种接口，支持 `class`/`attribute` 两种 DOM 策略
