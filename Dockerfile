@@ -1,7 +1,7 @@
 # Stage 1: Build frontend
 FROM oven/bun:1.3 AS frontend-builder
 WORKDIR /app
-COPY package.json ./
+COPY package.json bun.lock ./
 COPY packages/shared-theme/package.json ./packages/shared-theme/
 COPY packages/shared-monitor/package.json ./packages/shared-monitor/
 COPY apps/frontend/package.json ./apps/frontend/
@@ -15,7 +15,7 @@ RUN bun run build
 # Stage 2: Build ai-demo
 FROM oven/bun:1.3 AS ai-demo-builder
 WORKDIR /app
-COPY package.json ./
+COPY package.json bun.lock ./
 COPY packages/shared-theme/package.json ./packages/shared-theme/
 COPY apps/ai-demo/package.json ./apps/ai-demo/
 RUN bun install
@@ -27,7 +27,7 @@ RUN bun run build
 # Stage 3: Build interview-docs
 FROM oven/bun:1.3 AS interview-docs-builder
 WORKDIR /app
-COPY package.json ./
+COPY package.json bun.lock ./
 COPY packages/shared-theme/package.json ./packages/shared-theme/
 COPY apps/interview-docs/package.json ./apps/interview-docs/
 RUN bun install

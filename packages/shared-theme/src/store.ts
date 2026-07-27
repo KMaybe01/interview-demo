@@ -12,10 +12,10 @@ let _config: Required<ThemeConfig> = { ...DEFAULT_CONFIG };
 const initialMode = getInitialTheme(_config);
 applyTheme(initialMode, _config);
 
-export const useThemeStore = create<ThemeState>((set) => ({
+export const useThemeStore = create<ThemeState>((set: (partial: ThemeState | Partial<ThemeState> | ((state: ThemeState) => ThemeState | Partial<ThemeState>)) => void) => ({
   mode: initialMode,
   toggle: () => {
-    set((s) => {
+    set((s: ThemeState) => {
       const next: ThemeMode = s.mode === 'light' ? 'dark' : 'light';
       localStorage.setItem(_config.storageKey, next);
       applyTheme(next, _config);

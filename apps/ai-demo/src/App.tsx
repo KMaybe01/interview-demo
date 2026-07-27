@@ -1,12 +1,18 @@
 import { StyleProvider } from '@ant-design/cssinjs';
+import type { ThemeMode } from '@interview-demo/shared-theme';
 import { ThemeToggle, useThemeTransition } from '@interview-demo/shared-theme';
 import { App as AntApp, ConfigProvider, theme } from 'antd';
 import zhCN from 'antd/locale/zh_CN';
 import AIDemo from './AIDemo.tsx';
 import { useThemeStore } from './stores/themeStore.ts';
 
+interface ThemeStoreState {
+  mode: ThemeMode;
+  toggle: () => void;
+}
+
 function App() {
-  const mode = useThemeStore((s) => s.mode);
+  const mode = useThemeStore((s: ThemeStoreState) => s.mode);
 
   return (
     <ConfigProvider
@@ -28,8 +34,8 @@ function App() {
 
 function ThemedLayout() {
   const { token } = theme.useToken();
-  const mode = useThemeStore((s) => s.mode);
-  const toggleTheme = useThemeStore((s) => s.toggle);
+  const mode = useThemeStore((s: ThemeStoreState) => s.mode);
+  const toggleTheme = useThemeStore((s: ThemeStoreState) => s.toggle);
   const { handleToggleTheme, transitionOverlay } = useThemeTransition(mode, toggleTheme, {
     darkBg: '#141414',
     lightBg: '#ffffff',
