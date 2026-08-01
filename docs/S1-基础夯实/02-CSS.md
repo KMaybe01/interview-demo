@@ -4808,3 +4808,1027 @@ if (saved) {
   document.documentElement.setAttribute('data-theme', 'dark');
 }
 ```
+
+---
+
+# 📖 进阶补充：玩转 CSS 艺术之美
+
+> 📚 **本章内容**综合参考自掘金小册《玩转CSS艺术之美》（JowayYoung 著），通过「概念、技巧、场景三合一」的方式深化浏览器渲染原理、回流重绘、格式化上下文、CSS 函数/变量、背景遮罩、阴影滤镜、变换动画与纯 CSS 实战，帮助构建完整的 CSS 知识体系。
+
+---
+
+## 📖 七、浏览器渲染原理
+
+> 💡 **要点：** 浏览器由渲染引擎（内核）决定 CSS 的解析与渲染方式，五大内核为 Blink、Webkit、Gecko、Presto、Trident；渲染过程遵循「解析文件 → 绘制图层 → 合成图层」的关键渲染路径
+
+### 1️⃣ 浏览器组成与历史
+
+**浏览器**指显示万维网上的媒体信息（文字、图像、音频、视频等）和处理用户交互操作的软件，由地址栏、菜单栏、标签栏、窗口栏、状态栏组成。
+
+**世界五大浏览器：** Chrome、Safari、Firefox、Opera、IExplorer/Edge
+
+| 时间 | 事件 |
+| ---- | ---- |
+| 1993 | NCSA 发布 Mosaic 浏览器 |
+| 1994 | 网景发布 Navigator（市场份额一度达 86%） |
+| 1995 | 微软发布 IExplorer，掀起浏览器大战 |
+| 2003 | 苹果发布 Safari |
+| 2008 | 谷歌发布 Chrome |
+| 2015 | Edge 逐步取代 IExplorer 在 Windows 上的位置 |
+
+### 2️⃣ 渲染引擎（浏览器内核）
+
+**渲染引擎**又名**浏览器内核**，负责对网页语法解析并渲染成一张可视化页面，是浏览器最核心最重要的部分。不同内核对网页语法的解析不同，因此同一网页语法在不同内核浏览器中的渲染效果可能不同，这就是常说的**浏览器差异性**。
+
+```mermaid
+flowchart TD
+    A["世界五大浏览器内核"] --> B["Blink"]
+    A --> C["Webkit"]
+    A --> D["Gecko"]
+    A --> E["Presto"]
+    A --> F["Trident"]
+
+    B --> B1["Chrome 28+ / Opera 15+<br/>谷歌 + 欧朋合作自研"]
+    C --> C1["Chrome 1~28 / Safari<br/>苹果自研，是 Blink 的原型"]
+    D --> D1["Firefox<br/>网景自研"]
+    E --> E1["Opera 7~14<br/>渲染性能极致但牺牲兼容性，已废弃"]
+    F --> F1["IExplorer 4+ / Edge 前期<br/>微软自研，包含在 Windows 中称霸多年"]
+```
+
+### 3️⃣ 关键渲染路径
+
+**关键渲染路径**指浏览器从最初接收请求得到 HTML、CSS、JS 等资源，然后解析、构建、渲染、布局、绘制、合成，到最后呈现在用户眼前界面的整个过程。
+
+```mermaid
+flowchart LR
+    A["Bytes 字节"] --> B["Characters 字符"]
+    B --> C["Tokens 标签"]
+    C --> D["Nodes 节点"]
+    D --> E["DOM/CSSOM 树"]
+    E --> F["Render Tree 渲染树"]
+    F --> G["Layout 布局（回流）"]
+    G --> H["Paint 绘制（重绘）"]
+    H --> I["Composite 合成"]
+```
+
+**构建过程要点：**
+- **DOM 树**：HTML 解析器将 HTML 解析成 DOM 树，过程为读取字节 → 转成字符 → 确定标签 → 转成节点 → 构建 DOM 树
+- **CSSOM 树**：CSS 解析器将 CSS 解析成 CSSOM 树，与 DOM 树的构建过程完全一致
+- **渲染树**：渲染引擎将 DOM 树和 CSSOM 树合并生成渲染树，只渲染需显示的节点及其样式
+- **关键点**：DOM 树、CSSOM 树和渲染树的构建**无先后条件与先后顺序**，会交叉并行构建，形成一边加载、一边解析、一边渲染的工作现象
+
+### 4️⃣ 渲染阻塞
+
+当 HTML 解析器遇到 `<script>` 时会**立即阻塞 DOM 树的构建**，将控制权移交给 JS 引擎，运行完毕后才恢复构建。其根本原因在于：**JS 操作 DOM 后，浏览器无法预测未来 DOM 的具体内容**，为防止无效操作和节省资源，只能阻塞 DOM 树的构建。
+
+### 5️⃣ CSS 兼容性处理
+
+**Caniuse**（https://caniuse.com/）是查询 CSS/JS 特性在各种浏览器中兼容性的权威工具。
+
+**三大处理方法：**
+
+1. **磨平浏览器默认样式**：使用 `normalize.css` 或自定义 `reset.css`。注意避免使用 `*` 通配符初始化（有执行性能问题）
+
+```css
+/* 不推荐：* 通配符有性能问题 */
+* { margin: 0; padding: 0; }
+```
+
+2. **插入浏览器私有属性**：兼容性写法放前面，标准写法放最后。浏览器解析时若标准属性无法使用，则使用当前浏览器对应的私有属性
+
+```css
+/* Chrome、Safari、New Opera、New Edge */
+-webkit-transform: translate(10px, 10px);
+/* Firefox */
+-moz-transform: translate(10px, 10px);
+/* IExplorer、Old Edge */
+-ms-transform: translate(10px, 10px);
+/* Old Opera */
+-o-transform: translate(10px, 10px);
+/* 标准写法放最后 */
+transform: translate(10px, 10px);
+```
+
+> 🔧 **自动化工具：** 构建时接入 `postcss-loader` + `postcss-preset-env`（内置 autoprefixer），它会依据 Caniuse 提供的数据对代码里的 CSS3 属性批量添加私有属性
+
+3. **CSS Hack**：针对不同浏览器编写不同 CSS（如 IE 条件注释、`*property`、`_property`），不推荐学习使用，了解即可。注意它不符合雅虎军规的 `Avoid CSS Expressions`
+
+---
+
+## 📖 八、回流重绘与性能优化
+
+> 💡 **要点：** 回流（重排）是几何属性需改变的渲染，重绘是更改外观属性而不影响几何属性的渲染；**回流必定引发重绘，重绘不一定引发回流**
+
+### 1️⃣ 属性分类
+
+推荐查询 CssTriggers（https://csstriggers.com/）查看每个属性在渲染过程中发生了什么影响了什么。
+
+| 类型 | 包含属性 | 改变后触发 |
+| ---- | ---- | ---- |
+| **几何属性** | 布局：`display` `float` `position` `list` `table` `flex` `columns` `grid`；尺寸：`margin` `padding` `border` `width` `height` | **回流** |
+| **外观属性** | 界面：`appearance` `outline` `background` `mask` `box-shadow` `box-reflect` `filter` `opacity` `clip`；文字：`text` `font` `word` | **重绘** |
+
+**直观理解（星巴克排队）：**
+- **回流**：有人插队，后面的人都要重新排队 → 几何属性变了，重新排队
+- **重绘**：队伍里一位妹纸换了发色更漂亮了，其余人位置顺序不变 → 外观属性变了，不用重新排队
+
+### 2️⃣ 触发回流重绘的场景
+
+- 改变窗口大小
+- 修改盒模型
+- 增删样式
+- 重构布局
+- 重设尺寸
+- 改变字体
+- 改动文字
+
+### 3️⃣ 减少回流重绘的七大策略
+
+| 策略 | 说明 |
+| ---- | ---- |
+| 使用 `transform` 代替 `top` | `top` 是几何属性会引发回流；`transform: translate3d()` 只引发重绘且间接启动 GPU 加速 |
+| 使用 `visibility: hidden` 替换 `display: none` | DN 不占空间、触发回流重绘；VH 占空间、只触发重绘 |
+| 避免使用 Table 布局 | 很小的改动可能造成整个 `<table>` 回流，可用 `<ul>/<li>/<span>` 代替 |
+| 避免样式层级过多 | 浏览器从右到左匹配查找，建议 CSS 规则保持在 3 层左右 |
+| 将频繁回流/重绘的节点设置为图层 | 用 `<video>`/`<iframe>` 或 `will-change` 创建新图层，隔离渲染行为 |
+| 动态改变类名而不修改样式 | 收集确认最终更换的类名集合，一次性替换（类似 `classList`） |
+| 避免在循环中读取 DOM | 在循环外使用变量保存不会变化的 DOM 映射值 |
+
+```javascript
+// ❌ 循环内每次读取 DOM 都会触发回流
+for (let i = 0; i < 10000; i++) {
+  const top = document.getElementById("css").style.top;
+}
+
+// ✅ 循环外保存不变的 DOM 映射值
+const top = document.getElementById("css").style.top;
+for (let i = 0; i < 10000; i++) {
+  console.log(top);
+}
+```
+
+### 4️⃣ 属性排序规范
+
+**属性排序**指按照预设规范排列 CSS 属性。调查显示约 58% 的开发者按类型排序。推荐顺序：**布局 → 尺寸 → 界面 → 文字 → 交互**（从外到里，几何属性在前）。
+
+```mermaid
+flowchart LR
+    A["属性排序"] --> B["布局<br/>display/position/flex..."]
+    B --> C["尺寸<br/>margin/padding/border/width..."]
+    C --> D["界面<br/>background/outline/filter..."]
+    D --> E["文字<br/>font/text/color..."]
+    E --> F["交互<br/>transform/transition/animation..."]
+```
+
+**为何 `display` 放首位？** `display` 决定了节点的开始状态（有还是无）。若先声明 `width` 再声明 `display:inline`，行内元素无法显式声明宽高，`width` 就白写了。
+
+**排序优点：** 防止属性重复编写、可快速定位问题代码、可快速在脑海里构思节点、提高代码的可读性和可维护性。
+
+**工具：** CSScomb（VSCode 插件）可配置一键自动排序属性，且属性排序并不会影响样式的功能和性能。
+
+---
+
+## 📖 九、视觉格式化模型与格式化上下文
+
+> 💡 **要点：** 视觉格式化模型规定节点在页面中的排版；格式化上下文决定渲染区域里节点的排版、关系和相互作用，最重要的是 BFC 与 IFC
+
+### 1️⃣ 视觉格式化模型
+
+**视觉格式化模型**指在视觉媒体上处理和显示文档而使用的计算规则，规定节点在页面中的排版。
+
+### 2️⃣ 块级元素 vs 行内元素
+
+当节点的 `display` 声明为 `block/list-item/table/flex/grid` 时被标记为**块级元素**；声明为 `inline/inline-block/inline-table/inline-flex/inline-grid` 时被标记为**行内元素**。
+
+| 对比项 | 块级元素 | 行内元素 |
+| ---- | ---- | ---- |
+| 占位表现 | 默认独占一行，宽度为父元素 100% | 默认不独占一行（一行可多个），宽度随内容撑开 |
+| 边距/宽高 | 可声明边距、填充、宽高 | 可声明水平边距和填充，**不可**声明垂直边距和宽高 |
+| 包含关系 | 可包含块级元素和行内元素 | 可包含行内元素，**不能**包含块级元素 |
+
+**匿名盒：** 浏览器自动生成的补充性盒。如 `<p>我是<span>JowayYoung</span>，我的公众号是<span>IQ前端</span></p>` 中，「我是」和「，我的公众号是」会生成匿名行内盒。
+
+### 3️⃣ 格式化上下文四兄弟
+
+**格式化上下文**指决定渲染区域里节点的排版、关系和相互作用的渲染规则。
+
+| 上下文 | 缩写 | 版本 | 声明 |
+| ---- | ---- | ---- | ---- |
+| 块格式化上下文 | BFC | CSS2 | 块级盒子容器 |
+| 行内格式化上下文 | IFC | CSS2 | 行内盒子容器 |
+| 弹性格式化上下文 | FFC | CSS3 | 弹性盒子容器 |
+| 格栅格式化上下文 | GFC | CSS3 | 格栅盒子容器 |
+
+#### BFC（块格式化上下文）
+
+**BFC 是页面上一个独立且隔离的渲染区域**，容器里的子节点不会在布局上影响到外面的节点，反之亦然。
+
+**规则：**
+- 子节点在垂直方向按顺序放置
+- 相邻节点 margin 重叠，以最大 margin 为合并值
+- 每个节点的 margin 与父节点边接触（即使处于浮动）
+- BFC 区域不会与同级浮动区域重叠
+- BFC 是一个隔离且不受外界影响的独立容器
+- 计算 BFC 高度时其浮动子节点也参与计算
+
+**成因：**
+- 根节点 `html`
+- `overflow: !visible`（`hidden` / `auto` / `scroll`）
+- `float: left/right`
+- `position: absolute/fixed`
+- `display: inline-block/table-cell/table-caption/flex/inline-flex`
+
+**margin 折叠计算：**
+- 两个盒子相邻边 margin 都为正值 → 取最大值
+- 都为负值 → 取最小值，两者互相重合
+- 一正一负 → 取两者相加值，若结果为负则重合
+
+#### IFC（行内格式化上下文）
+
+**规则：**
+- 节点在水平方向按顺序放置
+- 节点无法指定宽高，margin 和 padding 水平方向有效垂直方向无效
+- 节点在垂直方向以不同形式对齐
+- 节点宽度由包含块和浮动决定，高度由行高决定
+
+**成因：** 行内元素 `display:inline[-x]`、声明 `line-height`、声明 `vertical-align`、声明 `font-size`
+
+#### FFC / GFC
+
+声明 `display: flex/inline-flex` 生成 FFC 独立容器；声明 `display: grid/inline-grid` 生成 GFC 独立容器，均主要用于响应式布局。GFC 类似 `<table>` 的二维表格，但有更丰富的属性控制行列、对齐以及更精细的渲染语义。
+
+### 4️⃣ 文档流与脱流
+
+**文档流**指节点在排版布局过程中默认使用从左往右从上往下的流式排列方式。
+
+**三大微观现象：**
+- **空白折叠**：HTML 中换行编写行内元素，排版会出现 5px 空隙。解法：紧密连接节点 / `margin-left: -5px` / 使用 Flex 居中
+- **高矮不齐**：行内元素统一以底边垂直对齐
+- **自动换行**：排版若一行无法完成则换行接着排版
+
+**脱流文档流**（两种方式）：
+
+| 方式 | 特点 |
+| ---- | ---- |
+| `float: left/right` | **自身脱流但文本不脱流**（文字环绕效果原理：节点脱流后文本认同其占据空间并围绕它布局） |
+| `position: absolute/fixed` | **自身及其文本一起脱流**。`absolute` 相对往上遍历第一个 `position: relative` 的祖先定位，无则相对 `<body>`；`fixed` 相对浏览器窗口 |
+
+### 5️⃣ 显隐影响全景
+
+| 写法 | 占空间 | 可点击 |
+| ---- | ---- | ---- |
+| `visibility: hidden` | 是 | 否 |
+| `display: none` | 否 | 否（可访问 DOM） |
+| `opacity: 0` | 是 | 是 |
+| `position: absolute; opacity: 0` | 否 | 是 |
+| `position: relative; z-index: -1` | 是 | 否 |
+| `position: absolute; z-index: -1` | 否 | 否 |
+
+---
+
+## 📖 十、CSS 函数计算
+
+> 💡 **要点：** 从 W3C 文档发现 CSS 总共存在约 86 个可用函数，涵盖颜色、属性、数学、背景、滤镜、图像、变换、缓动八大类；只要带有 `()` 的属性值都是函数
+
+### 1️⃣ 函数分类全景
+
+| 分类 | 函数 |
+| ---- | ---- |
+| 颜色函数 | `rgb()` `rgba()` `hsl()` `hsla()` `color()` |
+| 属性函数 | `attr()` `var()` |
+| 数学函数 | `clamp()` `counter()` `counters()` `calc()` `max()` `min()` |
+| 背景函数 | `url()` `element()` `image-set()` `linear-gradient()` `radial-gradient()` `conic-gradient()` 及 repeating-* |
+| 滤镜函数 | `blur()` `brightness()` `contrast()` `drop-shadow()` `grayscale()` `hue-rotate()` `invert()` `opacity()` `saturate()` `sepia()` |
+| 图像函数 | `circle()` `ellipse()` `inset()` `path()` `polygon()` |
+| 变换函数 | `matrix()` `matrix3d()` `perspective()` `rotate()` `scale()` `skew()` `translate()` 及 3d 变体 |
+| 缓动函数 | `cubic-bezier()` `steps()` |
+
+### 2️⃣ 颜色函数
+
+- **rgb()/rgba()**：R 红、G 绿、B 蓝，A 表示透明度。`rgba()` 的透明度**不会**应用到子节点上，而 `opacity` 的透明度会应用到子节点上
+- **hsl()/hsla()**：H 色相（`deg`，`0/360` 红、`120` 绿、`240` 蓝）、S 饱和度（`%`）、L 亮度（`%`）。HSL 是将 RGB 在圆柱坐标系中标记的表示法，比笛卡尔坐标系的 RGB 更直观
+
+> ⚠️ **注意：** 饱和度和亮度即使为 `0` 也得写成 `0%`，否则整个函数都会失效
+
+### 3️⃣ 属性函数
+
+**attr()**：返回节点属性，通常结合伪元素的 `content` 使用，兼容性好。
+
+```html
+<h1 class="hello" data-name="玩转CSS的艺术之美"></h1>
+```
+
+```css
+h1::before { content: attr(class); }      /* hello */
+h1::after { content: attr(data-name); }   /* 玩转CSS的艺术之美 */
+```
+
+**var()**：引用自定义属性，详见第十一章。
+
+### 4️⃣ 数学函数
+
+**calc()**：动态计算单位，`数值、长度、角度、时间、百分比` 都能作为参数。
+
+- 四则运算：只能使用 `+ - * /`
+- **每个运算符号必须用空格间隔**，否则浏览器直接忽略该属性
+- 可混合不同计量单位动态计算
+
+```css
+/* 解决 SPA 路由切换时因有无滚动条导致的页面抖动 */
+.elem {
+  padding-right: calc(100vw - 100%);
+}
+
+/* 移动端自适应根字体（设计图 750px，DPR 2） */
+html {
+  font-size: calc(100vw / 7.5);
+}
+```
+
+**min()/max()/clamp()**：
+
+```css
+/* 内容宽度自适应且最大不超过 1200px，一行完成 */
+.elem { width: min(1200px, 100%); }
+
+/* 节点宽度在 100~300px 间随视窗变化 */
+.elem { width: clamp(100px, 25vw, 300px); }
+```
+
+> 💡 **记忆技巧：** `max()` 名称是最大值但实质是限制最大值，`min()` 反之。`clamp(min, val, max)` 等价于 `max(min, min(val, max))`，妥妥的响应式函数
+
+**counter()/counters()**：返回计数器迭代值，必须结合伪元素 `content` 使用，配合 `counter-reset`（重置）和 `counter-increment`（累加）。
+
+```css
+ul { counter-reset: index; }
+li { counter-increment: index; }
+li::before { content: counter(index)"、"; }
+```
+
+### 5️⃣ 图形函数 clip-path
+
+`clip-path` 创建只有节点部分区域可显示的剪切区域，可用 `circle()`、`ellipse()`、`polygon()` 等图形函数裁剪。
+
+```css
+.triangle { clip-path: polygon(50% 0%, 0% 100%, 100% 100%); }
+.ellipse { clip-path: ellipse(40% 50% at 50% 50%); }
+.circle { clip-path: circle(50% at 50% 50%); }
+.rhombus { clip-path: polygon(50% 0%, 100% 50%, 50% 100%, 0% 50%); }
+.star {
+  clip-path: polygon(50% 0%, 61% 35%, 98% 35%, 68% 57%, 79% 91%,
+                     50% 70%, 21% 91%, 32% 57%, 2% 35%, 39% 35%);
+}
+.trapezoid { clip-path: polygon(20% 0%, 80% 0%, 100% 100%, 0% 100%); }
+.parallelogram { clip-path: polygon(25% 0%, 100% 0%, 75% 100%, 0% 100%); }
+```
+
+> 🔧 **工具推荐：** Clippy（https://bennettfeely.com/clippy）轻松绘制各种裁剪路径。**限制：** `clip-path` 只能裁剪折线形成的图形，不能裁剪曲线形成的图形
+
+---
+
+## 📖 十一、CSS 变量实战
+
+> 💡 **要点：** CSS 变量（自定义属性）由 `--var` 和函数 `var()` 组成，作用域为当前节点块作用域及其子节点块作用域，是 CSS 与 JS 通讯的桥梁
+
+### 1️⃣ 变量基础
+
+- 声明：`--变量名`
+- 读取：`var(--变量名, 默认值)`
+- 类型：普通（只能作属性值）、字符（与字符串拼接 `"Hello, "var(--name)`）、数值（使用 `calc()` 与单位连用 `var(--width) * 10px`）
+- 作用域：在**当前节点块作用域**及其**子节点块作用域**下有效
+- JS 操作：`getPropertyValue()` 读取、`setProperty()` 设置、`removeProperty()` 删除
+
+**与 Sass/Less 变量相比的优势：**
+- 浏览器原生特性，无需经过任何转译可直接运行
+- DOM 对象一员，极大便利了 CSS 与 JS 间的联系（如换肤：`document.body.style.setProperty("--bg-color", v)`）
+
+### 2️⃣ 条形加载条（List 集合场景）
+
+每条线条只有 `animation-delay` 不同，用变量让每个子元素拥有自己的作用域：
+
+```html
+<ul class="strip-loading">
+  <li style="--line-index: 1"></li>
+  <li style="--line-index: 2"></li>
+  <li style="--line-index: 3"></li>
+</ul>
+```
+
+```css
+.strip-loading {
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  width: 200px;
+  height: 200px;
+}
+.strip-loading li {
+  --time: calc(var(--line-index) * 200ms);
+  width: 6px;
+  height: 30px;
+  border-radius: 3px;
+  background-color: #f66;
+  animation: beat 1.5s ease-in-out var(--time) infinite;
+}
+.strip-loading li + li { margin-left: 5px; }
+
+@keyframes beat {
+  0%, 100% { transform: scaleY(1); }
+  50% { transform: scaleY(.5); }
+}
+```
+
+> 💡 **效果：** 将原来逐个编写 `:nth-child(n)` 的 41 行代码缩减到 27 行。调整动画时间差只需改 `200ms` 一个值，无需修改每个 `:nth-child(n)`。注意变量在 `.strip-loading` 块作用域下调用 `--line-index` 是无效的（不在该作用域）
+
+### 3️⃣ 标签导航（JS 控制变量）
+
+在 `<ul>` 上定义 `--tab-index`，点击时通过 JS 只改变量即可移动 `<ul>`，不操作 DOM：
+
+```css
+ul {
+  --tab-index: 0;
+  --tab-width: calc(var(--tab-count) * 100%);
+  --tab-move: calc(var(--tab-index) / var(--tab-count) * -100%);
+  display: flex;
+  flex-wrap: nowrap;
+  width: var(--tab-width);
+  height: 100%;
+  transform: translate3d(var(--tab-move), 0, 0);
+  transition: all 300ms;
+}
+```
+
+```javascript
+// 点击 Tab 时仅修改变量，实现不操作 DOM 移动 <ul> 显示指定 Tab
+ul.style.setProperty("--tab-index", index);
+```
+
+### 4️⃣ 悬浮跟踪按钮
+
+通过 JS 将鼠标偏移量赋值给 `--x`、`--y`，用径向渐变实现跟踪光晕：
+
+```css
+.btn::before {
+  --size: 0;
+  position: absolute;
+  left: var(--x);
+  top: var(--y);
+  width: var(--size);
+  height: var(--size);
+  background-image: radial-gradient(circle closest-side, #09f, transparent);
+  content: "";
+  transform: translate3d(-50%, -50%, 0);
+  transition: width 200ms ease, height 200ms ease;
+}
+.btn:hover::before { --size: 400px; }
+```
+
+```javascript
+btn.addEventListener("mousemove", (e) => {
+  // offsetX/offsetY 是相对父节点区域左上角的偏移量
+  e.target.style.setProperty("--x", `${e.offsetX}px`);
+  e.target.style.setProperty("--y", `${e.offsetY}px`);
+});
+```
+
+---
+
+## 📖 十二、背景与遮罩
+
+> 💡 **要点：** background 与 mask 是格式和用法大部分相似的兄弟属性；渐变三大函数 linear-gradient / radial-gradient / conic-gradient 让代码渲染渐变成为可能
+
+### 1️⃣ background 属性连写
+
+子属性连写顺序（CSS2 推荐）：`color image repeat attachment position/size`
+
+```css
+/* 简写 */
+.elem {
+  background-color: #f66;
+  background-image: url("./img.png");
+  background-repeat: no-repeat;
+  background-position: center;
+  background-size: 100px 100px;
+}
+
+/* 连写（position 和 size 之间用 / 衔接） */
+.elem {
+  background: #f66 url("./img.png") no-repeat center/100px 100px;
+}
+```
+
+> ⚠️ **注意：** `origin` 和 `clip` 不能加入属性连写中，因为其取值一致，有些浏览器无法区分它们的取值
+
+### 2️⃣ 渐变三大函数
+
+| 渐变 | 语法 | 形状 |
+| ---- | ---- | ---- |
+| 线性渐变 | `linear-gradient(direction, color-stop)` | 直线 |
+| 径向渐变 | `radial-gradient(shape size at position, color-stop)` | 圆形/椭圆形 |
+| 锥形渐变 | `conic-gradient(color-stop)` | 圆锥体 |
+
+```css
+/* 线性渐变：方向关键字需用 to xxx */
+.elem { background-image: linear-gradient(to bottom, #f66, #66f); }
+.elem { background-image: linear-gradient(135deg, #f66, #f90, #3c9, #09f, #66f); }
+
+/* 径向渐变 */
+.elem { background-image: radial-gradient(100px 100px, #f66, #66f); }
+
+/* 锥形渐变：无方向参数，从 0deg（向上）沿顺时针旋转 */
+.elem { background-image: conic-gradient(#f66, #66f); }
+```
+
+**线性渐变角度对照：** `0deg = to top`、`90deg = to right`、`180deg = to bottom`、`270deg = to left`。CSS 的方向顺序都符合**上右下左**规则（类似 `padding: 10px 20px 30px 40px`）。
+
+> ⚠️ **注意：** 千万不要使用单独的方向关键字（`left`、`right`、`top`、`bottom`），Safari 相对其他浏览器对这些关键字的解释可能不同
+
+### 3️⃣ 多重背景
+
+```css
+.spliced-bg {
+  background-image: url(bg1), url(bg2);
+  background-repeat: no-repeat, no-repeat;
+  background-position: left, right;
+  background-size: auto 200px, auto 200px;
+}
+```
+
+> 💡 **要点：** 声明顺序靠前的背景图像层叠等级较高。叠加背景图像时，靠前的尽量使用 `png` 格式，否则可能遮挡靠后的背景图像
+
+### 4️⃣ background-clip: text 镂空文本
+
+`background-clip` 在 `Webkit内核` 中还可裁剪到文本与内容的交界处，使背景只作用于文本中：
+
+```css
+.hollow-text {
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  height: 200px;
+  background: #000 url(mountain.jpg) no-repeat center top/auto 300px;
+  background-clip: text;
+  color: transparent;
+  font-size: 80px;
+  font-weight: bold;
+}
+```
+
+### 5️⃣ 渐变实战场景
+
+**渐变背景**（背景定位左右徘徊产生动态渐变）：
+
+```css
+.gradient-bg {
+  background: linear-gradient(135deg, #f66, #f90, #3c9, #09f, #66f) left center/400% 400%;
+  animation: move 10s infinite;
+}
+@keyframes move {
+  0%, 100% { background-position-x: left; }
+  50% { background-position-x: right; }
+}
+```
+
+**渐变文本**：
+
+```css
+.gradient-text {
+  background-image: linear-gradient(90deg, #f66, #f90);
+  background-clip: text;
+  color: transparent;
+  animation: hue 5s linear infinite;
+}
+@keyframes hue {
+  to { filter: hue-rotate(-1turn); }
+}
+```
+
+**方格背景**（多重渐变拼接）：
+
+```css
+.square-bg {
+  width: 500px;
+  height: 300px;
+  background-image:
+    linear-gradient(45deg, #eee 25%, transparent 25%, transparent 75%, #eee 75%),
+    linear-gradient(45deg, #eee 25%, transparent 25%, transparent 75%, #eee 75%);
+  background-position: 0 0, 20px 20px;
+  background-size: 40px 40px;
+}
+```
+
+**彩色饼图**（conic-gradient 控制色标区间）：
+
+```css
+.pie-chart {
+  border-radius: 100%;
+  width: 300px;
+  height: 300px;
+  background-image: conic-gradient(
+    #f66 0 25%, #66f 25% 30%, #f90 30% 55%, #09f 55% 70%, #3c9 70% 100%
+  );
+}
+```
+
+### 6️⃣ mask 遮罩
+
+`mask` 子属性大部分与 `background` 一致（`mask-image` `mask-repeat` `mask-position` `mask-size` `mask-origin` `mask-clip` 等），作用是**镂空背景**：`background-clip: text` 针对文本，`mask` 针对图像。
+
+```css
+div {
+  background: url(mask-bg) no-repeat center/cover;
+  mask: url(logo.png) center/cover;
+  animation: move 10s infinite;
+}
+```
+
+> ⚠️ **注意：** 要让 `mask` 生效，节点的背景必须使用透明格式的图像，用该图像的透明区域遮挡背景
+
+---
+
+## 📖 十三、阴影与滤镜
+
+> 💡 **要点：** 阴影三剑客为 box-shadow、text-shadow、drop-shadow()；滤镜 filter 可复现 Instagram 等图像滤镜效果
+
+### 1️⃣ 阴影三剑客的使用场景
+
+| 场景 | 使用 |
+| ---- | ---- |
+| 想要盒子轮廓产生阴影 | `box-shadow` |
+| 想要文本轮廓产生阴影 | `text-shadow` |
+| 想要透明图像的非透明部分轮廓产生阴影 | `filter: drop-shadow()` |
+
+```
+box-shadow: offset-x offset-y blur spread color position
+text-shadow: offset-x offset-y blur color
+drop-shadow(offset-x, offset-y, blur, color)
+```
+
+### 2️⃣ box-shadow 技巧
+
+**定向阴影**（`spread` 取 `blur` 的负值抵消扩散）：
+
+```css
+.left { box-shadow: -10px 0 5px -5px #f66; }   /* 向左 */
+.right { box-shadow: 10px 0 5px -5px #f66; }   /* 向右 */
+.up { box-shadow: 0 -10px 5px -5px #f66; }     /* 向上 */
+.down { box-shadow: 0 10px 5px -5px #f66; }    /* 向下 */
+/* 多方向可结合多重阴影 */
+.left-up { box-shadow: -10px 0 5px -5px #f66, 0 -10px 5px -5px #f66; }
+```
+
+**模拟边框**（阴影不影响布局、不触发滚动条）：
+
+```css
+.shadow { box-shadow: 0 0 0 10px #f66; }  /* 相当于 10px 实色边框，可结合 border-radius 变圆角 */
+```
+
+**聚焦区域**（`spread` 延长到 9999px 覆盖整个页面，形成高亮蒙层）：
+
+```css
+i {
+  position: absolute;
+  width: 100px;
+  height: 50px;
+  border-radius: 100%;
+  box-shadow: 0 0 0 9999px rgba(0, 0, 0, .5);
+}
+```
+
+### 3️⃣ filter 滤镜函数
+
+| 函数 | 作用 | 取值 |
+| ---- | ---- | ---- |
+| `blur()` | 模糊 | 长度，越大越模糊 |
+| `brightness()` | 亮度 | `0` = 全黑，`100%` = 原图 |
+| `contrast()` | 对比度 | `0` = 全黑，`100%` = 原图 |
+| `drop-shadow()` | 阴影 | 同阴影参数 |
+| `grayscale()` | 灰度 | `100%` = 全灰 |
+| `hue-rotate()` | 色相旋转 | `0~360deg` |
+| `invert()` | 反相 | `100%` = 完全反转 |
+| `opacity()` | 透明度 | `0` = 透明，`100%` = 原图 |
+| `saturate()` | 饱和度 | `0` = 完全不饱和 |
+| `sepia()` | 褐色 | `100%` = 褐色 |
+
+**悼念模式：** 一行代码全站灰度，声明到 `<html>` 上：
+
+```html
+<html style="filter: grayscale(1)">
+```
+
+> ⚠️ **注意坑：** 节点声明不为 `none` 的 `filter` 时，若自身及其后代节点声明了 `position: absolute/fixed`，会为其创建一个新容器，使这些定位节点的定位基准相对这个新容器进行，导致布局排版错乱。解决办法：把 `filter` 声明到 `<html>` 上
+
+---
+
+## 📖 十四、变换与动画
+
+> 💡 **要点：** transform 多值执行顺序本质是矩阵相乘；GPU 硬件加速可通过 `translate3d(0,0,0)` 或 `will-change` 开启；动画分为关键帧动画（连续）和逐帧动画（断续）
+
+### 1️⃣ 2D/3D 变换
+
+`transform-style` 在父节点声明，控制 2D/3D 切换：`flat`（所有变换在平面呈现，默认）、`preserve-3d`（所有变换在空间呈现）。
+
+| 变换函数 | 2D | 3D |
+| ---- | ---- | ---- |
+| 位移 | `translate(x, y)` | `translate3d(x, y, z)` |
+| 缩放 | `scale(x, y)` | `scale3d(x, y, z)` |
+| 扭曲 | `skew(x, y)`（仅 2D） | - |
+| 旋转 | `rotate()` | `rotate3d(x, y, z, a)` |
+| 视距 | - | `perspective()` |
+
+**GPU 硬件加速模式：**
+
+```css
+.elem { transform: translate3d(0, 0, 0); }
+/* 或 */
+.elem { transform: translateZ(0); }
+/* 更推荐：will-change 提前告知浏览器 */
+.elem { will-change: transform; }
+```
+
+> ⚠️ **GPU 加速缺陷：** 多个绝对定位节点同时声明 `translate3d()` 后可能凭空消失。避免对节点及其父节点声明 `absolute/fixed`，且将 `translate3d()` 节点控制在 6 个以下，或用 `will-change` 代替
+
+### 2️⃣ transform 多值执行顺序
+
+正确理解是**从左到右**，但要注意坐标轴是否发生了变化（**缩放和旋转都能让坐标轴发生变化**）：
+
+```css
+/* 先右移 150px，坐标轴不变，再旋转 45deg */
+.transform-1 { transform: translate(150px, 0) rotate(45deg); }
+
+/* 先旋转 45deg，坐标轴跟着旋转 45deg，再沿旋转后的坐标轴右移 150px */
+.transform-2 { transform: rotate(45deg) translate(150px, 0); }
+```
+
+> 💡 **分析顺序：** 优先考虑坐标轴的变化，先分析出前后「缩放旋转」的变化，再分析出前后「位移扭曲」的变化
+
+### 3️⃣ perspective 与 perspective()
+
+| 写法 | 使用位置 |
+| ---- | ---- |
+| `perspective` | 舞台节点（变换节点的父节点）上 |
+| `transform: perspective()` | 当前变换节点上，可与其他变换函数一起使用 |
+
+值越小，用户与空间 Z 轴距离越近，视觉效果越强；值越大距离越远，视觉效果越弱。
+
+### 4️⃣ transition 过渡
+
+| 子属性 | 作用 |
+| ---- | ---- |
+| `transition-property` | 过渡属性（`all` / `none` / 指定属性） |
+| `transition-duration` | 过渡时间 |
+| `transition-timing-function` | 缓动函数 |
+| `transition-delay` | 时延 |
+
+**缓动函数（贝塞尔曲线）：**
+- `ease`：逐渐变慢 = `cubic-bezier(.25,.1,.25,1)`（默认）
+- `linear`：匀速 = `cubic-bezier(0,0,1,1)`
+- `ease-in`：加速 = `cubic-bezier(.42,0,1,1)`
+- `ease-out`：减速 = `cubic-bezier(0,0,.58,1)`
+- `ease-in-out`：先加速后减速 = `cubic-bezier(.42,0,.58,1)`
+
+> ⚠️ **注意：** `duration` 和 `delay` 都是时间。`transition` 中出现两个时间值时，第一个解析为 `duration`，第二个解析为 `delay`；出现一个时间值时解析为 `duration`。通过 `mousemove` 等高频事件赋值的属性若声明 `transition` 会因延缓变更过程导致卡顿，应避免
+
+> 🔧 **工具推荐：** CubicBezier（https://cubic-bezier.com/）可视化调制缓动函数
+
+### 5️⃣ animation 动画
+
+两种动画类型：
+- **关键帧动画**：在时间轴的关键帧上绘制关键状态并自动过渡成连续片段（`@keyframes`）
+- **逐帧动画**：在时间轴的每一帧上绘制不同内容断续播放（`steps()`，可认为是 GIF）
+
+`animation-fill-mode` 取值：`none`（默认）/ `backwards`（在时延内或动画开始前应用开始属性）/ `forwards`（动画结束后保持最后一个属性）/ `both`（前向和向后填充都应用）
+
+**@keyframes 注意事项：** 关键帧取值必须是 `from`、`to` 或 `Percentage`。`from` 可用 `0%` 代替，`to` 可用 `100%` 代替。`0%` 的 `%` 不能省略，否则关键帧解析失败。后面声明的关键帧状态会覆盖前面的。
+
+**自动打字器**（逐帧动画 + ch 单位）：
+
+```css
+.auto-typing {
+  overflow: hidden;
+  border-right: 1px solid transparent;
+  width: 53ch;                    /* 等宽字体 52 个 + 1 个光标 */
+  font-family: Consolas, Monaco, monospace;
+  white-space: nowrap;
+  animation:
+    typing 5s steps(53) backwards,
+    caret 500ms steps(1) forwards;
+}
+
+@keyframes caret {
+  50% { border-right-color: currentColor; }
+}
+@keyframes typing {
+  from { width: 0; }
+}
+```
+
+> 💡 **要点：** `ch` 是等宽字体的特有长度单位（`0` 的宽度），一个等宽字体就是 `1ch`。打字器宽度从 `0px` 增到等宽字体指定个数 `nch`，配合 `steps()` 逐帧切换实现打字效果
+
+### 6️⃣ 动感心形（transform 补位）
+
+**补位**指实现效果的最终位置还差一点距离，通过 `margin` 或 `transform: translate()` 补充完整。单个 `<div>` 结合两个伪元素错位叠加：
+
+```css
+.heart-shape {
+  position: relative;
+  width: 200px;
+  height: 200px;
+  background-color: #f66;
+  transform: rotate(45deg);
+}
+.heart-shape::before,
+.heart-shape::after {
+  position: absolute;
+  left: 0;
+  top: 0;
+  border-radius: 100%;
+  width: 100%;
+  height: 100%;
+  background-color: #f66;
+  content: "";
+}
+.heart-shape::before { transform: translateX(-50%); }
+.heart-shape::after { transform: translateY(-50%); }
+```
+
+### 7️⃣ 内容翻转（scale 负值）
+
+```css
+.x-axis { transform: scale(1, -1); }    /* 水平翻转 */
+.y-axis { transform: scale(-1, 1); }    /* 垂直翻转 */
+.reverse { transform: scale(-1, -1); }  /* 倒序翻转 */
+```
+
+---
+
+## 📖 十五、纯 CSS 实战大操作
+
+> 💡 **要点：** 综合运用 :hover、:checked、+/~、:valid/:invalid、:placeholder-shown、CSS 变量等技巧，实现看似只能由 JS 才能实现的效果。核心思想：**能使用 CSS 实现的效果都优先使用 CSS**
+
+### 1️⃣ 手风琴（:hover）
+
+鼠标悬浮某个部分时扩张并挤压旁边的部分：
+
+```css
+.accordion {
+  display: flex;
+  width: 600px;
+  height: 200px;
+}
+.accordion li {
+  flex: 1;
+  cursor: pointer;
+  transition: all 300ms;
+}
+.accordion li:hover {
+  flex: 2;
+  background-color: #ccc;
+}
+```
+
+### 2️⃣ 折叠面板（:checked + ~ + max-height）
+
+`<input>` 和 `<article>` 成为同胞元素且 `<input>` 放最前面，用 `+`/`~` 在触发 `:checked` 时带动 `<article>` 进入选中状态：
+
+```html
+<div class="accordion">
+  <input id="collapse1" type="checkbox" hidden>
+  <article>
+    <label for="collapse1">列表1</label>
+    <p>内容1<br>内容2<br>内容3</p>
+  </article>
+</div>
+```
+
+```css
+.accordion p {
+  overflow: hidden;
+  max-height: 0;
+  transition: all 500ms;
+}
+.accordion input:nth-child(1):checked ~ article:nth-of-type(1) p {
+  max-height: 600px;   /* 高度不固定时用 max-height 而非 height */
+}
+```
+
+> 💡 **关键点：** 折叠内容高度不固定时不能声明 `height: auto`（`height` 从 `0` 到 `auto` 无过渡效果），应使用 `max-height: 0 → max-height: 1000px` 配合 `transition`，并声明 `overflow: hidden`
+
+### 3️⃣ 登录注册模块（:checked + ~ + :focus + :valid）
+
+**模块切换**（radio + label 关联，`hidden` 隐藏 input）：
+
+```css
+.auth-form {
+  display: flex;
+  width: 200%;
+  transition: all 300ms cubic-bezier(.4, .4, .25, 1.35);
+}
+#login-btn:checked ~ .auth-form { transform: translate(0, 0); }
+#logon-btn:checked ~ .auth-form { transform: translate(-50%, 0); }
+```
+
+**表单校验**（仅聚焦时才触发校验，避免初始化时误报）：
+
+```css
+input:focus:valid { border-color: #09f; }
+input:focus:invalid { border-color: #f66; }
+
+/* 有内容就无占位 → 上浮标签 */
+input:not(:placeholder-shown) + label {
+  height: 30px;
+  opacity: 1;
+}
+```
+
+> 💡 **要点：** 若直接声明 `input:valid` 和 `input:invalid`，页面初始化后或输入框内容为空时都会触发 `:invalid`，所以在前面加 `:focus` 表示聚焦时才触发。`:placeholder-shown` 判断占位显示，`:not(:placeholder-shown)` 判断已有内容
+
+### 4️⃣ 放大镜（变量 + calc）
+
+**event 八种偏移量辨析：**
+
+| 偏移量 | 相对基准 |
+| ---- | ---- |
+| `screenX/screenY` | 屏幕区域左上角 |
+| `pageX/pageY` | 网页区域左上角 |
+| `clientX/clientY` | 浏览器可视区域左上角 |
+| `offsetX/offsetY` | 父节点区域左上角（放大镜需求最符合） |
+
+```javascript
+magnifier.addEventListener("mousemove", (e) => {
+  e.target.style.setProperty("--x", `${e.offsetX}px`);
+  e.target.style.setProperty("--y", `${e.offsetY}px`);
+});
+```
+
+```css
+.magnifier::before {
+  --size: 0;
+  position: absolute;
+  left: var(--x);
+  top: var(--y);
+  width: var(--size);
+  height: var(--size);
+  border-radius: 100%;
+  box-shadow: 1px 1px 3px rgba(0, 0, 0, .5);
+  content: "";
+  will-change: left, top;
+  transform: translate(-50%, -50%);
+}
+.magnifier:hover::before { --size: 100px; }
+```
+
+**偏移量公式（放大倍率 2 倍，放大镜宽高 100px）：**
+
+```css
+/* 水平偏移 = 放大镜宽度 / 倍率 - offsetX * 倍率 */
+$scale-x: calc(var(--size) / 2 - 2 * var(--x));
+$scale-y: calc(var(--size) / 2 - 2 * var(--y));
+/* background: url(img) no-repeat $scale-x $scale-y / 200% 200%; */
+```
+
+### 5️⃣ 滚动渐变背景（scrollTop + 变量）
+
+```javascript
+main.addEventListener("scroll", (e) => {
+  const top = e.target.scrollTop;
+  if (top <= 250) {
+    bg.style.setProperty("--scrolly", 250 - top);
+  } else {
+    bg.style.setProperty("--scrolly", 0);
+  }
+});
+```
+
+```css
+.dynamic-bg {
+  --scrolly: 250;
+}
+.dynamic-bg header {
+  --size: calc(1500px - var(--scrolly) * 2px);
+  --ratio: calc(50% - var(--scrolly) / 20 * 1%);
+  --theta: calc(var(--scrolly) * 2deg);
+  width: var(--size);
+  height: var(--size);
+  border-radius: var(--ratio);
+  filter: hue-rotate(var(--theta));
+}
+```
+
+> 💡 **要点：** 将鼠标/滚动的参数（偏移量、scrollTop）赋值到变量上，让样式随着参数的变化而变化，即可开发出「动画关联」和「事件响应」
+
+---
+
+## 🔧 附录：CSS 学习工具网站
+
+| 工具 | 用途 |
+| ---- | ---- |
+| Caniuse | CSS/JS 特性浏览器兼容性查询 |
+| CssTriggers | 查看属性在渲染过程中触发了什么 |
+| CubicBezier | 可视化调制贝塞尔缓动函数 |
+| Clippy | 可视化绘制 clip-path 裁剪路径 |
+| CSSgram | 用 filter 复现 Instagram 图像滤镜 |
+| Flexbox | 可视化查看 Flex 各属性表现 |
+| StatCounter | 浏览器市场份额统计 |
+| CodePen | 在线代码演示与源码分享 |
+
