@@ -151,7 +151,7 @@ build-interview-docs:
   variables:
     VITE_BASE_PATH: "/${CI_PROJECT_NAME}/"
   script:
-    - bun install --frozen-lockfile && bun run build --filter=frontend-interview-notes
+    - bun install --frozen-lockfile && bun run build --filter=@interview-demo/interview-docs
   artifacts:
     paths:
       - apps/interview-docs/dist
