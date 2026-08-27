@@ -1,0 +1,56 @@
+name: Deploy Interview Docs
+
+on:
+  push:
+    branches: [main]
+    paths:
+      - 'apps/interview-docs/**'
+      - '.github/workflows/deploy-interview-docs.yml'
+  workflow_dispatch:
+
+concurrency:
+  group: pages-interview-docs
+  cancel-in-progress: false
+
+permissions:
+  contents: read
+  pages: write
+  id-token: write
+
+env:
+  BUN_VERSION: '1.3'
+
+jobs:
+  build:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v5
+      - uses: oven-sh/setup-bun@v2
+        with:
+          bun-version: ${{ env.BUN_VERSION }}
+      - name: Cache bun dependencies
+        uses: actions/cache@v5
+        with:
+          path: ~/.bun/install/cache
+          key: ${{ runner.os }}-bun-monorepo-${{ hashFiles('bun.lock') }}
+          restore-keys: |
+            ${{ runner.os }}-bun-monorepo-
+      - run: bun install --frozen-lockfile
+      - run: bun run build --filter=@interview-demo/interview-docs
+        env:
+          VITE_BASE_PATH: /${{ github.event.repository.name }}/
+      - name: Upload Pages artifact
+        uses: actions/upload-pages-artifact@v3
+        with:
+          path: apps/interview-docs/dist
+
+  deploy:
+    needs: build
+    runs-on: ubuntu-latest
+    environment:
+      name: github-pages
+      url: ${{ steps.deployment.outputs.page_url }}
+    steps:
+      - name: Deploy to GitHub Pages
+        id: deployment
+        uses: actions/deploy-pages@v4
