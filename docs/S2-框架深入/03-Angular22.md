@@ -5223,31 +5223,684 @@ export class AuthGuard {
 > ```
 > **最佳实践：** 组件内用 Signal，跨组件/HTTP 用 Observable，通过 RxJS Interop 桥接。
 
-### Q7：Angular 如何处理表单？Reactive Forms vs Template-driven？
+### Q7：Angular 三种表单方案全面对比（Signal Forms / Reactive Forms / Template-driven）
 
-| 维度 | Reactive Forms | Template-driven Forms |
-|------|---------------|---------------------|
-| **数据模型** | 显式 `FormGroup` | 隐式（模板绑定） |
-| **可测试性** | ✅ 优秀 | ❌ 困难 |
-| **灵活性** | ✅ 高（动态增减控件） | ⚠️ 有限 |
-| **验证** | 代码中定义 | 模板指令 |
-| **复杂场景** | ✅ 推荐 | ❌ 不推荐 |
+#### 一、三种方案 12 维度对比表
+
+| 维度 | Signal Forms（v22 稳定） | Reactive Forms（v2+） | Template-driven Forms（v2+） |
+|------|------------------------|----------------------|---------------------------|
+| **数据模型** | `signal<T>()` 可写信号 | `FormGroup` / `FormControl` 显式声明 | `ngModel` + 模板变量隐式绑定 |
+| **类型安全** | ✅ 编译期强推导，无需手动泛型 | ✅ 泛型 `FormGroup<T>` 手动声明 | ❌ 运行时，模板类型检查弱 |
+| **验证方式** | `required()` / `email()` 函数式 | `Validators.required` 装饰器式 | 模板指令 `required` / `email` |
+| **测试性** | ✅ 优秀，信号易 mock | ✅ 优秀，FormBuilder 可注入 | ❌ 困难，依赖模板渲染 |
+| **动态表单** | ✅ 信号数组驱动 | ✅ `FormArray` 运行时增减 | ⚠️ 有限，需自定义 Directive |
+| **异步验证** | ✅ `validateHttp()` 内置取消 | ✅ `AsyncValidatorFn` + Observable | ⚠️ 需 Directive 桥接 |
+| **学习曲线** | 🟢 低（信号 + 函数式） | 🟡 中（FormBuilder + 状态机） | 🟢 低（模板声明式） |
+| **Bundle 体积** | 小（无额外运行时） | 中（~15KB ReactiveFormsModule） | 中（~15KB FormsModule） |
+| **SSR 支持** | ✅ 信号天然序列化 | ✅ `FormGroup.value` 可序列化 | ⚠️ ngModel 需额外处理 |
+| **Signal 响应式集成** | ✅ 原生（form model 就是 signal） | ⚠️ 需 `toSignal()` 桥接 | ❌ 完全不兼容 |
+| **依赖注入** | ✅ form model 可注入 | ⚠️ FormBuilder 需注入 | ❌ 不涉及 DI |
+| **推荐度** | ✅ Angular 22 新项目首选 | ✅ 旧项目 / 复杂场景 | ⚠️ 仅简单表单 |
+
+#### 二、各方案完整代码示例
+
+**① Signal Forms（Angular 22 推荐）**
 
 ```typescript
-// ✅ Reactive Forms（推荐）
-@Component({})
-export class LoginFormComponent {
-  form = new FormGroup({
-    email: new FormControl('', [Validators.required, Validators.email]),
-    password: new FormControl('', [Validators.required, Validators.minLength(6)]),
-  })
+import { Component, signal } from '@angular/core';
+import { form, formField, required, email, minLength, validate, submit } from '@angular/forms/signals';
+
+interface LoginData {
+  email: string;
+  password: string;
+}
+
+@Component({
+  selector: 'app-login-signal',
+  imports: [FormField],
+  template: `
+    <form (submit)="onSubmit($event)">
+      <label>
+        邮箱
+        <input type="email" [formField]="loginForm.email" />
+      </label>
+      @if (loginForm.email().touched() && loginForm.email().invalid()) {
+        <p class="error">{{ loginForm.email().errors()[0].message }}</p>
+      }
+
+      <label>
+        密码
+        <input type="password" [formField]="loginForm.password" />
+      </label>
+      @if (loginForm.password().touched() && loginForm.password().invalid()) {
+        <p class="error">{{ loginForm.password().errors()[0].message }}</p>
+      }
+
+      <button type="submit" [disabled]="loginForm().invalid()">登录</button>
+    </form>
+  `,
+})
+export class LoginSignalComponent {
+  loginModel = signal<LoginData>({ email: '', password: '' });
+
+  loginForm = form(this.loginModel, (schemaPath) => {
+    required(schemaPath.email, { message: '邮箱不能为空' });
+    email(schemaPath.email, { message: '请输入有效邮箱' });
+    required(schemaPath.password, { message: '密码不能为空' });
+    minLength(schemaPath.password, 8, { message: '密码至少8位' });
+  });
+
+  onSubmit(event: Event) {
+    event.preventDefault();
+    submit(this.loginForm, async () => {
+      console.log('提交:', this.loginModel());
+    });
+  }
+}
+```
+
+**② Reactive Forms（传统推荐）**
+
+```typescript
+import { Component, inject } from '@angular/core';
+import { ReactiveFormsModule, FormBuilder, Validators, AbstractControl, ValidationErrors } from '@angular/forms';
+
+@Component({
+  selector: 'app-login-reactive',
+  imports: [ReactiveFormsModule],
+  template: `
+    <form [formGroup]="loginForm" (ngSubmit)="onSubmit()">
+      <input formControlName="email" placeholder="邮箱" />
+      @if (loginForm.controls.email.invalid && loginForm.controls.email.touched) {
+        <span class="error">请输入有效邮箱</span>
+      }
+
+      <input formControlName="password" type="password" placeholder="密码" />
+      @if (loginForm.controls.password.invalid && loginForm.controls.password.touched) {
+        <span class="error">密码至少8位</span>
+      }
+
+      <button type="submit" [disabled]="loginForm.invalid">登录</button>
+    </form>
+  `,
+})
+export class LoginReactiveComponent {
+  private fb = inject(NonNullableFormBuilder);
+
+  loginForm = this.fb.group({
+    email: ['', [Validators.required, Validators.email]],
+    password: ['', [Validators.required, Validators.minLength(8)]],
+  });
 
   onSubmit() {
-    if (this.form.valid) {
-      this.auth.login(this.form.value)
+    if (this.loginForm.valid) {
+      console.log('提交:', this.loginForm.getRawValue());
     }
   }
 }
+```
+
+**③ Template-driven Forms（简单场景）**
+
+```typescript
+import { Component } from '@angular/core';
+import { FormsModule } from '@angular/forms';
+
+@Component({
+  selector: 'app-login-template',
+  imports: [FormsModule],
+  template: `
+    <form #loginForm="ngForm" (ngSubmit)="onSubmit(loginForm.value)">
+      <input
+        type="email"
+        name="email"
+        placeholder="邮箱"
+        [(ngModel)]="model.email"
+        required
+        email
+        #emailField="ngModel"
+      />
+      @if (emailField.invalid && emailField.touched) {
+        <div class="error">请输入有效邮箱</div>
+      }
+
+      <input
+        type="password"
+        name="password"
+        placeholder="密码"
+        [(ngModel)]="model.password"
+        required
+        minlength="8"
+      />
+
+      <button [disabled]="!loginForm.valid">登录</button>
+    </form>
+  `,
+})
+export class LoginTemplateComponent {
+  model = { email: '', password: '' };
+
+  onSubmit(value: any) {
+    console.log('提交:', value);
+  }
+}
+```
+
+#### 三、应用场景决策树
+
+```
+选择 Angular 表单方案
+│
+├─ Angular 22 新项目？
+│  └─ ✅ Signal Forms（推荐首选）
+│
+├─ 简单表单（< 5 个字段，无动态逻辑）？
+│  └─ ✅ Template-driven Forms
+│
+├─ 复杂表单（嵌套/动态/跨字段验证）？
+│  └─ ✅ Reactive Forms 或 Signal Forms
+│
+├─ 需要与 Signal 状态管理集成？
+│  └─ ✅ Signal Forms
+│
+├─ 旧项目迁移 / 已有大量 Reactive Forms 代码？
+│  └─ ✅ Reactive Forms（渐进式迁移）
+│
+├─ 需要运行时动态增减字段？
+│  └─ ✅ Reactive Forms (FormArray) 或 Signal Forms (信号数组)
+│
+└─ 需要复杂异步验证（用户名查重、手机号验证）？
+   └─ ✅ Signal Forms (validateHttp) 或 Reactive Forms (AsyncValidatorFn)
+```
+
+#### 四、注意事项与常见陷阱
+
+**Signal Forms：**
+- `formField` 指令是**必需的**，不要直接在模板中读写 signal — 它负责绑定 touched/dirty/blur 等交互状态
+- `submit()` 会自动 markAllAsTouched，不需要手动调用
+- 跨字段验证中 `valueOf()` 是同步读取其他字段值，不要在里面做异步操作
+- 与旧 `ReactiveFormsModule` 混用时，确保不在同一字段上同时使用 `[formField]` 和 `formControlName`
+
+**Reactive Forms：**
+- `patchValue()` vs `setValue()`：patchValue 部分更新，setValue 必须传完整结构
+- `valueChanges` 订阅必须在 `ngOnDestroy` 或 `takeUntilDestroyed` 中取消，否则内存泄漏
+- `FormArray` 的 `push()`/`removeAt()` 不会触发父 FormGroup 的脏状态更新，需要手动调用 `markAsDirty()`
+- `nonNullable` 选项可避免 `FormControl<string | null>` 的类型推导问题，Angular 14+ 推荐使用 `NonNullableFormBuilder`
+
+**Template-driven Forms：**
+- 懒加载模块中使用 ngModel 必须导入 `FormsModule`，否则编译不报错但运行时无绑定
+- `ngModel` 在异步更新（setTimeout/Promise）后不会自动触发变更检测，需手动 `ChangeDetectorRef.markForCheck()`
+- 模板驱动表单的验证器是**指令形式**，自定义验证器需要创建 Directive，比 Reactive Forms 麻烦得多
+- `#emailField="ngModel"` 导出的模板变量只能在**同级或后续元素**中访问，不能跨层级
+
+#### 五、面试八股文（10 题）
+
+### Q25：Signal Forms 与 Reactive Forms 的核心区别？Angular 为什么要推出 Signal Forms？
+
+**核心区别：**
+
+| 维度 | Signal Forms | Reactive Forms |
+|------|-------------|---------------|
+| 数据源 | `signal<T>()` — 可写信号 | `FormGroup` — 不可变对象 |
+| 更新机制 | Signal set/update → 触发精确视图更新 | FormGroup.setValue → 触发变更检测 |
+| 模板绑定 | `[formField]="form.email"` | `[formGroup]="form"` + `formControlName` |
+| 状态管理 | 信号原生（computed/linkedSignal） | Observable（valueChanges/statusChanges） |
+
+**推出原因：**
+```
+Angular 的演进路线：
+  Zone.js（隐式） → Signals（显式响应式） → Signal Forms（表单也响应式）
+
+Signal Forms 解决的问题：
+  1. Reactive Forms 与 Signal 状态管理割裂（需要 toSignal 桥接）
+  2. FormGroup 的 valueChanges 是 Observable，需要订阅管理
+  3. 类型推导需要手动泛型声明，不够简洁
+  4. 动态表单的 FormArray 操作复杂
+```
+
+**面试追问：** *Signal Forms 能完全替代 Reactive Forms 吗？*
+> 目前不能。Signal Forms 的 `validateHttp()` 等 API 仍在演进中，且第三方库（如 Angular Material 的 mat-form-field）对 Reactive Forms 的支持更成熟。Angular 22 推荐新项目用 Signal Forms，旧项目渐进式迁移。
+
+### Q26：模板驱动表单为什么不适合复杂场景？底层脏检查机制是什么？
+
+**不适合复杂场景的原因：**
+```
+1. 验证逻辑在模板中 → 难以复用、难以测试
+2. 数据模型隐式（ngModel 绑定） → 无法在组件外访问/操作
+3. 自定义验证器需要 Directive → 开发成本高
+4. 动态表单需要手动操作模板 → 不够灵活
+5. 依赖 Zone.js 变更检测 → 性能不如 Signal
+```
+
+**底层脏检查机制：**
+```
+ngModel 工作流程：
+  1. 用户输入 → input 事件触发
+  2. ngModel 指令拦截事件 → 更新内部 FormControl
+  3. FormControl 的 valueChanges 发出新值
+  4. Zone.js 拦截 input 事件 → 触发变更检测
+  5. Angular 遍历组件树 → 更新模板绑定值
+
+问题：
+  - 每次用户输入都触发全量变更检测
+  - 模板中的验证器每次检测都重新执行
+  - 大表单 + 频繁输入 → 性能瓶颈
+```
+
+**面试追问：** *模板驱动表单中的 `ngModelChange` 和 `(input)` 事件有什么区别？*
+> `ngModelChange` 是 Angular 输出事件，在 ngModel 内部更新后触发，值已经是 Angular 处理过的。`(input)` 是原生 DOM 事件，值需要从 `$event.target.value` 手动获取。模板驱动表单推荐用 `ngModelChange`，因为它保证值已经过 Angular 表单管道处理。
+
+### Q27：Angular 表单的 touched/dirty/pristine/untouched 四种状态的区别？实际业务中如何使用？
+
+**四种状态定义：**
+
+| 状态 | 含义 | 触发时机 |
+|------|------|---------|
+| `pristine` | 用户**未修改**过值 | 初始状态，值变化后变为 false |
+| `dirty` | 用户**已修改**过值 | 任何值变化（包括代码调用 setValue） |
+| `untouched` | 控件**未被聚焦过** | 初始状态，blur 后变为 false |
+| `touched` | 控件**已被聚焦过** | focus → blur 后变为 true |
+
+**关键区别：**
+```
+pristine/dirty  → 追踪"值是否被修改"
+untouched/touched → 追踪"用户是否交互过"
+
+场景：
+  用户聚焦邮箱输入框但没改值 → touched=true, dirty=false
+  用户改了邮箱值 → dirty=true, touched 取决于是否 blur 过
+```
+
+**业务使用模式：**
+```typescript
+// ❌ 错误：一进来就显示所有错误
+@if (form.invalid) { <span class="error">...</span> }
+
+// ✅ 正确：只在用户交互后显示错误
+@if (form.invalid && form.touched) { <span class="error">...</span> }
+
+// ✅ 只在用户修改后显示错误（更严格）
+@if (form.invalid && form.dirty) { <span class="error">...</span> }
+
+// ✅ 提交时强制显示所有错误
+this.form.markAllAsTouched();
+```
+
+**面试追问：** *`markAllAsTouched()` 和 `markAsDirty()` 的区别？什么时候用哪个？*
+> `markAllAsTouched()` 遍历所有子控件，将 touched 设为 true — 用于**提交时强制显示所有验证错误**。`markAsDirty()` 只影响当前控件 — 用于**手动标记某个控件已被修改**。提交表单用 `markAllAsTouched()`，自定义场景用 `markAsDirty()`。
+
+### Q28：如何在 Angular 中实现跨字段验证？三种方案分别怎么做？
+
+**场景：** 密码确认 — `confirmPassword` 必须与 `password` 相同。
+
+**方案一：Signal Forms**
+
+```typescript
+import { form, formField, required, validate } from '@angular/forms/signals';
+
+const passwordModel = signal({ password: '', confirmPassword: '' });
+const passwordForm = form(passwordModel, (schemaPath) => {
+  required(schemaPath.password);
+  required(schemaPath.confirmPassword);
+
+  validate(schemaPath.confirmPassword, ({ value, valueOf }) => {
+    if (value() !== valueOf(schemaPath.password)) {
+      return { kind: 'mismatch', message: '两次密码不一致' };
+    }
+    return null;
+  });
+});
+```
+
+**方案二：Reactive Forms**
+
+```typescript
+// 方式 A：组级 validator
+form = this.fb.group({
+  password: ['', Validators.required],
+  confirmPassword: ['', Validators.required],
+}, {
+  validators: (group: AbstractControl): ValidationErrors | null => {
+    const password = group.get('password')?.value;
+    const confirm = group.get('confirmPassword')?.value;
+    return password === confirm ? null : { passwordMismatch: true };
+  }
+});
+
+// 方式 B：字段级 validator（更灵活）
+confirmPassword: ['', [
+  Validators.required,
+  (control: AbstractControl): ValidationErrors | null => {
+    const password = control.root.get('password')?.value;
+    return control.value === password ? null : { mismatch: true };
+  }
+]]
+```
+
+**方案三：Template-driven Forms**
+
+```typescript
+// 需要创建 Directive
+@Directive({
+  selector: '[appPasswordMatch]',
+  providers: [{
+    provide: NG_VALIDATORS,
+    useExisting: PasswordMatchDirective,
+    multi: true,
+  }]
+})
+export class PasswordMatchDirective implements Validator {
+  validate(control: AbstractControl): ValidationErrors | null {
+    const password = control.root.get('password')?.value;
+    return control.value === password ? null : { mismatch: true };
+  }
+}
+// 模板中：[(ngModel)]="model.confirmPassword" appPasswordMatch
+```
+
+**对比：** Signal Forms 最简洁，Reactive Forms 其次，Template-driven 最繁琐。
+
+### Q29：动态表单（运行时增减字段）如何实现？FormArray vs Signal 数组？
+
+**场景：** 订单表单，用户可以动态添加/删除商品项。
+
+**方案一：Reactive Forms (FormArray)**
+
+```typescript
+@Component({
+  imports: [ReactiveFormsModule],
+  template: `
+    <form [formGroup]="orderForm">
+      <div formArrayName="items">
+        @for (item of items().controls; track $index; let i = $index) {
+          <div [formGroupName]="i">
+            <input formControlName="product" placeholder="商品名" />
+            <input formControlName="quantity" type="number" />
+            <button type="button" (click)="removeItem(i)">删除</button>
+          </div>
+        }
+      </div>
+      <button type="button" (click)="addItem()">添加商品</button>
+    </form>
+  `,
+})
+export class OrderReactiveComponent {
+  private fb = inject(NonNullableFormBuilder);
+
+  orderForm = this.fb.group({
+    items: this.fb.array([this.createItem()]),
+  });
+
+  get items() { return this.orderForm.controls.items; }
+
+  createItem() {
+    return this.fb.group({
+      product: ['', Validators.required],
+      quantity: [1, [Validators.required, Validators.min(1)]],
+    });
+  }
+
+  addItem() { this.items.push(this.createItem()); }
+  removeItem(i: number) { this.items.removeAt(i); }
+}
+```
+
+**方案二：Signal Forms（信号数组驱动）**
+
+```typescript
+@Component({
+  imports: [FormField],
+  template: `
+    <form (submit)="onSubmit($event)">
+      @for (item of orderModel().items; track $index; let i = $index) {
+        <div>
+          <input [formField]="orderForm.items[i].product" placeholder="商品名" />
+          <input [formField]="orderForm.items[i].quantity" type="number" />
+          <button type="button" (click)="removeItem(i)">删除</button>
+        </div>
+      }
+      <button type="button" (click)="addItem()">添加商品</button>
+    </form>
+  `,
+})
+export class OrderSignalComponent {
+  orderModel = signal({ items: [{ product: '', quantity: 1 }] });
+
+  orderForm = form(this.orderModel, (schemaPath) => {
+    // 对每个 item 应用验证
+  });
+
+  addItem() {
+    this.orderModel.update(m => ({
+      ...m,
+      items: [...m.items, { product: '', quantity: 1 }],
+    }));
+  }
+
+  removeItem(i: number) {
+    this.orderModel.update(m => ({
+      ...m,
+      items: m.items.filter((_, idx) => idx !== i),
+    }));
+  }
+}
+```
+
+**对比：** FormArray 有丰富的 API（push/removeAt/moveControl），Signal 数组更直观但需要手动管理不可变更新。
+
+### Q30：asyncValidator 与 debounceTime 结合使用的最佳实践？如何避免请求风暴？
+
+**问题：** 用户快速输入时，每次值变化都触发异步验证请求 → 请求风暴。
+
+**方案一：Reactive Forms（管道防抖）**
+
+```typescript
+@Component({...})
+export class RegisterComponent {
+  private fb = inject(NonNullableFormBuilder);
+  private http = inject(HttpClient);
+
+  form = this.fb.group({
+    username: ['', {
+      nonNullable: true,
+      validators: [Validators.required, Validators.minLength(3)],
+      asyncValidators: [this.uniqueUsername()],
+    }],
+  });
+
+  // 异步验证器：Angular 内置 debounce
+  private uniqueUsername(): AsyncValidatorFn {
+    return (control) => {
+      return control.valueChanges.pipe(
+        debounceTime(400),
+        distinctUntilChanged(),
+        switchMap(name =>
+          this.http.get<{ taken: boolean }>(`/api/check-username?u=${name}`)
+        ),
+        map(res => res.taken ? { usernameTaken: true } : null),
+        takeUntilDestroyed(),
+      );
+    };
+  }
+}
+```
+
+**方案二：Signal Forms（内置防抖）**
+
+```typescript
+const signupModel = signal({ username: '' });
+const signupForm = form(signupModel, (schemaPath) => {
+  validateHttp(schemaPath.username, {
+    request: ({ value }) => `/api/check-username?u=${value()}`,
+    debounce: 400,  // 内置防抖
+    onSuccess: (res: { taken: boolean }) =>
+      res.taken ? { kind: 'taken', message: '用户名已被占用' } : null,
+  });
+});
+```
+
+**避免请求风暴的关键：**
+```
+1. debounceTime(300-500ms) — 等用户停止输入再发请求
+2. distinctUntilChanged() — 相同值不重复请求
+3. switchMap — 新请求自动取消旧请求
+4. takeUntilDestroyed — 组件销毁时取消未完成的请求
+5. Signal Forms 的 validateHttp 内置了以上全部
+```
+
+### Q31：Signal Forms 中 `formField` 指令的工作原理是什么？它如何实现双向绑定？
+
+**工作原理：**
+
+```
+formField 指令职责：
+  1. 读取 formField 绑定的 FieldTree（如 form.email）
+  2. 监听 DOM input 事件 → 更新 signal model 值
+  3. 监听 blur 事件 → 标记 field 为 touched
+  4. 监听 signal 值变化 → 更新 DOM input 的 value
+  5. 管理 disabled/readonly/hidden 状态绑定
+
+双向绑定流程：
+  用户输入 → (input) 事件 → formField 更新 signal → signal 值变化
+  → effect/computed 重新执行 → 视图更新（但 input value 不变，避免光标跳动）
+```
+
+**与 ngModel 的区别：**
+
+| 维度 | formField 指令 | ngModel |
+|------|--------------|---------|
+| 数据源 | Signal (writable) | 普通变量 |
+| 更新机制 | Signal set → 精确视图更新 | Zone.js → 全量变更检测 |
+| 状态管理 | touched/dirty/disabled 由指令管理 | ngModel 状态指令管理 |
+| 自定义控件 | 支持 ControlValueAccessor | 支持 ControlValueAccessor |
+
+**面试追问：** *`formField` 指令如何处理自定义组件（如日期选择器、下拉框）？*
+> 与 ngModel 一样，自定义控件实现 `ControlValueAccessor` 接口（writeValue / registerOnChange / registerOnTorch），formField 指令会自动识别并绑定。Angular 22 的 signal-based ControlValueAccessor 正在设计中，未来会提供更简洁的 API。
+
+### Q32：模板驱动表单中 `ngModel` 和 `FormControl` 是什么关系？为什么说它们是"同一个底层"？
+
+**关系图：**
+
+```
+Template-driven Forms                Reactive Forms
+       │                                   │
+       ▼                                   ▼
+    ngModel                           FormControl
+  (指令形式)                          (类形式)
+       │                                   │
+       └───────────┬───────────────────────┘
+                   │
+                   ▼
+            AbstractControl
+          （共同的基类）
+```
+
+**ngModel 本质：**
+```typescript
+// ngModel 是一个指令，内部创建了 FormControl
+@Directive({
+  selector: '[ngModel]',
+  providers: [{
+    provide: ControlContainer,
+    useExisting: NgForm,
+  }]
+})
+export class NgModel implements ControlValueAccessor {
+  // 内部创建 FormControl 实例
+  private control = new FormControl();
+
+  // 用户输入时
+  writeValue(value: any) {
+    this.control.setValue(value);  // 调用 FormControl.setValue
+  }
+
+  // 值变化时通知父表单
+  emitChangeEvent() {
+    this.form.form.updateValueAndValidity();
+  }
+}
+```
+
+**同一个底层的证据：**
+```
+1. ngModel 内部创建 FormControl 实例
+2. 模板驱动表单的验证器（required/email）最终调用的是 FormControl 的验证逻辑
+3. 模板驱动表单的 valid/invalid 状态来自 FormControl.statusChanges
+4. 两种表单都继承 AbstractControl，共享相同的状态模型
+```
+
+**面试追问：** *为什么 Angular 要提供两种不同的 API 来做同一件事？*
+> 设计哲学不同。Template-driven Forms 面向"模板思维"的开发者 — 声明式、简单、学习成本低。Reactive Forms 面向"代码思维"的开发者 — 显式、可测试、适合复杂场景。底层共享 AbstractControl 是为了代码复用和一致性。
+
+### Q33：Angular 22 表单如何处理 SSR 场景？三种方案的 SSR 差异？
+
+**SSR 核心问题：** 表单状态在服务端创建，需要序列化到 HTML，客户端 hydrate 时恢复。
+
+**三种方案的 SSR 差异：**
+
+| 维度 | Signal Forms | Reactive Forms | Template-driven |
+|------|-------------|---------------|-----------------|
+| 状态序列化 | ✅ signal value 可直接 JSON.stringify | ✅ form.getRawValue() 可序列化 | ⚠️ ngModel 状态在指令中，需额外处理 |
+| 客户端恢复 | ✅ signal.hydrate() | ✅ form.reset(initialValue) | ❌ 需重新渲染模板 |
+| 验证状态 | ✅ 信号天然序列化 | ⚠️ status 不可序列化（需重建） | ❌ 验证状态丢失 |
+| 推荐度 | ✅ 最佳 | ✅ 良好 | ⚠️ 需注意 |
+
+**最佳实践：**
+```typescript
+// 1. 组件级：延迟初始化（避免 SSR/CSR 不一致）
+@Component({
+  template: `
+    @if (isBrowser) {
+      <form [formGroup]="form">...</form>
+    }
+  `
+})
+export class FormComponent {
+  isBrowser = isPlatformBrowser(inject(PLATFORM_ID));
+  form = inject(FormBuilder).group({ /* ... */ });
+}
+
+// 2. 使用 Angular 22 的 increment hydration
+// SSR 输出的 HTML 包含表单状态，客户端 hydrate 时自动恢复
+```
+
+### Q34：如何选择 Angular 表单方案？给出从"登录页"到"复杂配置页"的选型建议？
+
+**按复杂度选型：**
+
+```
+场景 1：登录页（2 个字段，简单验证）
+  → ✅ Template-driven Forms 或 Signal Forms
+  → 原因：字段少、验证简单、上手快
+
+场景 2：用户资料编辑页（5-10 个字段，嵌套对象）
+  → ✅ Signal Forms 或 Reactive Forms
+  → 原因：需要类型安全、嵌套 FormGroup、跨字段验证
+
+场景 3：动态配置表单（字段数量运行时变化，如问卷系统）
+  → ✅ Reactive Forms (FormArray) 或 Signal Forms (信号数组)
+  → 原因：需要运行时增减字段、动态验证规则
+
+场景 4：支付表单（金额验证、异步验证、幂等性控制）
+  → ✅ Reactive Forms 或 Signal Forms
+  → 原因：需要 asyncValidator、防重复提交、复杂状态管理
+
+场景 5：企业后台配置面板（20+ 字段，条件显示，联动逻辑）
+  → ✅ Signal Forms
+  → 原因：linkedSignal 天然支持字段联动、computed 支持条件显示
+
+场景 6：现有 Angular 15 项目迁移
+  → ✅ Reactive Forms（保持兼容，渐进式迁移）
+  → 原因：已有大量 Reactive Forms 代码，迁移成本最低
+```
+
+**决策口诀：**
+```
+新项目首选 Signal Forms
+简单表单 Template-driven
+复杂表单 Reactive 或 Signal
+旧项目迁移 Reactive Forms
+动态表单看字段数量：少用 Signal 数组，多用 FormArray
 ```
 
 ### Q8：Angular 中如何防止内存泄漏？最佳实践？
