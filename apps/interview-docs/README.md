@@ -11,6 +11,7 @@ React 19 文档站点，使用 Vite 8 构建，部署在 GitHub Pages。
 - **内容**: Markdown (Vite raw glob import)
 - **渲染**: react-markdown + remark-gfm + highlight.js
 - **虚拟滚动**: IntersectionObserver 分片渲染（大文档仅渲染视口附近区块）
+- **目录高亮**: IntersectionObserver scroll-spy，滚动时自动高亮当前章节
 - **图表**: Mermaid (lazy loaded)
 - **代码质量**: Biome, TypeScript strict mode
 
@@ -39,7 +40,7 @@ src/
 │   ├── MermaidDiagram.tsx    # Mermaid 图表（lazy loaded）
 │   ├── HeroCanvas.tsx        # 首页粒子动画
 │   ├── HomePage.tsx          # 首页
-│   ├── Outline.tsx           # 文档目录/大纲
+│   ├── Outline.tsx           # 文档目录/大纲（scroll-spy 高亮）
 │   ├── UpdateNotification.tsx # 版本更新提示
 │   └── ErrorBoundary.tsx     # 错误边界
 ├── hooks/useTheme.ts         # 主题切换（useSyncExternalStore，基于 @interview-demo/shared-theme hook）

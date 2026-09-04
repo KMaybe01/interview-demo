@@ -745,6 +745,14 @@ pre:hover .code-copy-btn {
   background: var(--c-bg-soft);
 }
 
+.outline-item--active {
+  color: var(--c-brand);
+  background: var(--c-bg-soft);
+  font-weight: 600;
+  border-left: 2px solid var(--c-brand);
+  padding-left: 10px;
+}
+
 /* ── Markdown content ── */
 .markdown-body {
   line-height: 1.8;

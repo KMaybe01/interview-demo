@@ -72,6 +72,7 @@ go test ./internal/... -v
 - **前端知识库**: `apps/interview-docs/` — React 19 文档站点，Markdown 内容，GitHub Pages 部署
 - **AI Demo**: `apps/ai-demo/` — 独立项目，6 选项卡 AI 演示（聊天/知识库/模型/智能体/插件/控制台）
 - **共享主题包**: `packages/shared-theme/` — 统一管理 dark/light 主题切换，提供 Zustand store（`useThemeStore`）和 React hook（`useTheme`）两种接口，支持 `class`/`attribute` 两种 DOM 策略
+- **共享监控包**: `packages/shared-monitor/` — 前端性能监控 SDK，提供 API 监控、Bundle 监控、错误监控、性能监控、上报管理器 + Zustand store 和降级策略
 
 ## 代码规范
 
@@ -291,6 +292,7 @@ export { useThemeStore };
 
 ## 注意事项
 
+- **Pre-commit hook**: `go vet` + `go build` 在前端检查**之前**运行 — Go 代码编译失败会阻塞所有提交
 - commitlint 配置在根 `commitlint.config.cjs`，作为全局 devDependencies 管理
 - `backend/Makefile` **不存在**于仓库中
 - **Monorepo**: 使用 Bun workspaces + Turborepo 管理，根 `package.json` 定义 `apps/*`、`packages/*` 工作区，`turbo.json` 配置编排管道
