@@ -1,36 +1,38 @@
 # 🟠 AI SDK 数据连接与聊天
 
 > 📖 **本文档为《AI 前端开发体系化学习指南》的专题文档**
-> 完整指南请查看：[学习指南总览](./index.md)
+> 完整指南请查看：[学习指南总览](../index.md)
 
 ---
 
-> 🎯 **学习目标**：掌握 Vercel AI SDK (`ai` v7) 的核心 API——从多模型 Provider 连接，到流式生成、结构化输出、Tool Calling，再到 React UI Hook 和 UIMessageStream 协议，打通"数据接入 → 模型调用 → 前端展示"全链路。
+> 🎯 **学习目标**：掌握 Vercel AI SDK（**v7**）的核心 API——从多模型 Provider 连接，到流式生成、结构化输出、Tool Calling、Agent 循环，再到 React UI Hook 与 UIMessageStream 协议，打通「数据接入 → 模型调用 → 前端展示」全链路。
 
 ### 💡 你将学到
-- Provider 多模型连接（OpenAI / Anthropic / Google）的统一接口
-- `generateText` 同步生成与 `streamText` 流式生成的使用场景
-- `Output.object()` / `Output.array()` / `Output.choice()` 结构化数据生成
-- Tool Calling 完整流程（`tool()` + `inputSchema` + `execute` + `stopWhen`）
-- React 客户端 `useChat` Hook 与 Transport 配置
-- `UIMessageStream` 协议（`createUIMessageStream` + `createUIMessageStreamResponse`）
-- 消息格式转换（`convertToModelMessages` + `pruneMessages`）
-- Provider Options 和各模型特有参数
-- 实用工具（`smoothStream` / `generateId` / `createIdGenerator`）
+- Provider 多模型连接的统一接口（含 AI Gateway 与自定义兼容端点）
+- `generateText` 同步生成与 `streamText` 流式生成的取舍
+- `Output.object()` 结构化数据生成（以及为什么不再用 `generateObject`）
+- Tool Calling 完整流程：`tool()` + `inputSchema` + `contextSchema` + `stopWhen`
+- Agent 循环：`ToolLoopAgent`、工具审批、超时、`WorkflowAgent` 持久化
+- React 客户端 `useChat` Hook 与 `DefaultChatTransport` 配置
+- `UIMessageStream` 协议与消息格式转换 `convertToModelMessages`
+- AI SDK 7 新增：`reasoning`、`uploadFile` / `uploadSkill`、MCP Apps、Realtime、Telemetry
 
 ### 🔗 前置知识
 - 完成 [🟢 阶段一：入门期 - AI 聊天室](./01-入门期-AI聊天室.md)
-- 熟悉 React Hooks（useState, useEffect）
+- 熟悉 React Hooks（`useState` / `useEffect`）
 - 了解 Zod 基础用法
 
 ### 📚 核心能力指标
-- [ ] 使用统一接口连接多种 LLM Provider
-- [ ] 实现同步/流式文本生成
-- [ ] 使用 Zod Schema 获取类型安全的结构化 JSON 输出
-- [ ] 定义并执行 Tool Calling（含多步调用控制）
-- [ ] 用 `useChat` 构建生产级 React 聊天界面
-- [ ] 实现 UIMessageStream 服务端响应
-- [ ] 正确处理消息格式转换
+- [ ] 使用统一接口连接多种 LLM Provider，并支持运行时切换
+- [ ] 实现同步/流式文本生成，并读取性能指标
+- [ ] 使用 Zod Schema 获取类型安全的结构化输出
+- [ ] 定义并执行 Tool Calling，设置正确的停止条件与超时
+- [ ] 用 `useChat` 构建生产级 React 聊天界面（含中断、重试、错误态）
+- [ ] 用 `ToolLoopAgent` 构建带工具审批的 Agent
+- [ ] 接入 Telemetry，能回答「这次请求花了多少 token、卡在哪一步」
+
+> ⚠️ **版本基线**：本文基于 **AI SDK 7**（2026-06 发布）。本仓库 `apps/ai-demo` 依赖 `ai@^7`。
+> 从 v6 升级请优先跑官方 codemod：`npx @ai-sdk/codemod v7`。
 
 ---
 
@@ -40,49 +42,57 @@
 
 **💡 Vercel AI SDK 是全栈 TypeScript AI 开发工具包**
 
-它提供了一套**统一的 API** 连接不同的 LLM 提供商（OpenAI、Anthropic、Google、DeepSeek 等），同时在客户端提供 React Hooks 快速构建聊天 UI。
+它提供了一套**统一的 API** 连接不同的 LLM 提供商（OpenAI、Anthropic、Google、Mistral、xAI 等），
+同时在客户端提供 React Hooks 快速构建聊天 UI。
 
 ```mermaid
 graph TB
     subgraph Client["前端 (React)"]
-        A1[useChat Hook] --> A2[UI 渲染]
-        A1 --> A3[fetch → /api/chat]
+        A1["useChat + DefaultChatTransport"] --> A2["渲染 message.parts"]
+        A1 --> A3["HTTP → /api/chat"]
     end
 
     subgraph Server["服务端 Route Handler"]
-        B1[streamText / generateText] --> B2[Provider 路由]
+        B1["streamText / generateText"] --> B2["ToolLoopAgent"]
+        B2 --> B3["Provider 适配层"]
     end
 
     subgraph Providers["LLM Providers"]
-        C1[OpenAI GPT-5]
-        C2[Anthropic Claude Sonnet]
-        C3[Google Gemini]
-        C4[DeepSeek]
+        C1[OpenAI]
+        C2[Anthropic]
+        C3[Google]
+        C4[xAI / Mistral]
+        C5[OpenAI 兼容端点: Ollama / vLLM]
     end
 
     A3 --> B1
-    B2 --> C1
-    B2 --> C2
-    B2 --> C3
-    B2 --> C4
+    B3 --> C1
+    B3 --> C2
+    B3 --> C3
+    B3 --> C4
+    B3 --> C5
 ```
 
 **为什么用 AI SDK 而不是直接调 OpenAI API？**
 
 | 维度 | 直接调 API | 使用 AI SDK |
 |:---|:---|:---|
-| **多模型切换** | 需手写抽象层 | 一行换 model |
-| **流式响应** | 手动解析 SSE/NDJSON | 内置 streamText + UIMessageStream |
-| **React 集成** | 手动管理状态 | useChat Hook 统一管理 |
-| **结构化输出** | 自行解析+校验 JSON | Output.object() + Zod 自动校验 |
-| **Tool Calling** | 手动编排循环 | tool() + 自动多步循环 |
-| **消息格式** | 各模型不同 | convertToModelMessages 自动适配 |
+| **多模型切换** | 需手写抽象层 | 一行换 `model` |
+| **流式响应** | 手动解析 SSE | `streamText` + `toUIMessageStreamResponse()` |
+| **React 集成** | 手动管理状态机 | `useChat` 提供 `status` / 乐观 UI / 中断 |
+| **结构化输出** | 自行解析 + 校验 JSON | `Output.object()` + Zod 自动校验 |
+| **Tool Calling** | 手动编排循环 | `tool()` + `ToolLoopAgent` + `stopWhen` |
+| **消息格式** | 各模型不同 | `convertToModelMessages()` 统一适配 |
 
-> ⚠️ **版本说明**：本文基于 AI SDK v7（2026+）。v7 的关键变化：
-> - `@ai-sdk/react` 成为独立包（不再藏在 `ai/react` 子路径中）
-> - 流式协议统一为 **UIMessageStream**
-> - `streamText().onFinish()` 被弃用，改用 `onEnd` 回调
-> - `toUIMessageStreamResponse()` 替代旧的 `toDataStreamResponse()`
+> ⚠️ **v6 → v7 的关键变化**（迁移时最容易踩的坑）：
+> - `@ai-sdk/react` 是独立包，不再从 `ai/react` 子路径导入（v5 起已移除）
+> - 消息从 `content: string` 改为 **`parts: UIMessagePart[]`**
+> - `toDataStreamResponse()` → **`toUIMessageStreamResponse()`**
+> - `convertToCoreMessages()` → **`convertToModelMessages()`**
+> - `useChat({ api })` → **`useChat({ transport: new DefaultChatTransport({ api }) })`**
+> - `isLoading` → **`status`**（`'ready' \| 'submitted' \| 'streaming' \| 'error'`）
+> - 独立的 `generateObject` / `streamObject` **已废弃**，改用 `generateText` / `streamText` + `output`
+> - 新增 `reasoning`、工具上下文、工具审批、`WorkflowAgent`、`registerTelemetry()`
 
 ---
 
@@ -90,58 +100,57 @@ graph TB
 
 **🔌 统一接口，一个 Provider = 一行代码**
 
-AI SDK 通过独立的 provider 包连接不同 LLM，所有 provider 暴露相同的 `LanguageModel` 接口。
-
 ```bash
-# 📦 安装核心包 + Provider
-npm install ai @ai-sdk/react
-npm install @ai-sdk/openai      # OpenAI
-npm install @ai-sdk/anthropic   # Anthropic
-npm install @ai-sdk/google      # Google Gemini
-npm install @ai-sdk/deepseek    # DeepSeek
+# 核心包 + React Hooks
+bun add ai @ai-sdk/react zod
+
+# Provider（按需安装）
+bun add @ai-sdk/openai      # OpenAI
+bun add @ai-sdk/anthropic   # Anthropic
+bun add @ai-sdk/google      # Google
+bun add @ai-sdk/mistral     # Mistral
+bun add @ai-sdk/xai         # xAI
+
+# 可观测（可选，见 11.10）
+bun add @ai-sdk/otel
 ```
 
 ```typescript
-// lib/ai/providers.ts — 统一导出所有 Provider
-import { openai } from '@ai-sdk/openai';
+// lib/ai/providers.ts — 按「能力」而非「厂商」命名模型
 import { anthropic } from '@ai-sdk/anthropic';
+import { createOpenAI } from '@ai-sdk/openai';
 import { google } from '@ai-sdk/google';
-import { deepseek } from '@ai-sdk/deepseek';
+import type { LanguageModel } from 'ai';
 
-// 🤖 按能力命名的模型实例
 export const models = {
-  fast:        openai('gpt-5-chat-latest'),     // 日常对话、快速响应
-  reasoning:   anthropic('claude-opus-4-8'),     // 深度推理、复杂分析
-  creative:    anthropic('claude-sonnet-5'),     // 创意写作、长文生成
-  vision:      openai('gpt-5'),                  // 视觉理解
-  multimodal:  google('gemini-2.5-flash'),       // 多模态
-  costEffective: openai('gpt-5-nano'),           // 低成本批量任务
-};
+  // 日常对话：追求首字延迟与成本
+  fast: google('gemini-3.5-flash'),
+  // 深度推理：配合 reasoning: 'high'
+  reasoning: anthropic('claude-sonnet-4-6'),
+  // 编码 Agent：结构化输出与工具调用最稳
+  coding: 'openai/gpt-5',
+} satisfies Record<string, LanguageModel | string>;
 
-// 🔄 运行时动态选择模型
-export function getModel(taskType: 'quick' | 'complex' | 'creative'): ReturnType<typeof openai> | any {
-  switch (taskType) {
-    case 'quick':    return models.fast;
-    case 'complex':  return models.reasoning;
-    case 'creative': return models.creative;
-    default:         return models.fast;
-  }
+export function getModel(task: keyof typeof models) {
+  return models[task];
 }
 
-// 🏗️ 自定义 OpenAI 兼容端点（如本地 Ollama）
-import { createOpenAI } from '@ai-sdk/openai';
-const ollama = createOpenAI({
-  baseURL: 'http://localhost:11434/v1',
-  name: 'ollama',
+// 🏗️ 自定义 OpenAI 兼容端点（本地 Ollama / 内网 vLLM / 任意网关）
+const local = createOpenAI({
+  baseURL: process.env.LOCAL_BASE_URL ?? 'http://localhost:11434/v1',
+  name: 'local',
 });
-export const localModel = ollama.chat('qwen2.5:7b');
+
+export const localModel = local.chat(process.env.LOCAL_MODEL ?? 'qwen2.5:7b');
 ```
 
-> 💡 **选型建议**：
-> - 日常对话 → `gpt-5-chat-latest`（快、便宜、质量好）
-> - 深度推理 → `claude-opus-4-8` / `o4-mini`
-> - 创意写作 → `claude-sonnet-5`
-> - 低成本批量 → `gpt-5-nano`
+> 💡 **选型原则**
+> 1. **用 AI Gateway 做统一入口**：把模型路由、缓存、重试、限流收敛到网关，
+>    业务代码只写 `'openai/gpt-5'` 这类字符串，换厂商不改代码。
+> 2. **字符串模型 ID 可用**：AI SDK 支持 `model: 'google/gemini-3.5-flash'`
+>    这种字符串写法，配合 Gateway 时更灵活。
+> 3. **型号与价格以官方为准**：模型代次与定价变化极快，本文档不列出价格表，
+>    请把厂商定价页作为唯一事实来源。
 
 ---
 
@@ -149,60 +158,63 @@ export const localModel = ollama.chat('qwen2.5:7b');
 
 **⚡ 一次性获取完整回答（非流式）**
 
-适用于：后端服务间调用、短答案生成、需要完整响应后再处理的场景。
+适用于：后端任务、批量处理、短答案、需要在拿到完整结果后再做分支判断的场景。
 
 ```typescript
 // app/api/generate/route.ts
-import { generateText, Output } from 'ai';
 import { openai } from '@ai-sdk/openai';
-import { z } from 'zod';
+import { generateText } from 'ai';
 
 export async function POST(req: Request) {
-  const { prompt } = await req.json();
+  const { prompt } = (await req.json()) as { prompt: string };
 
-  // ✅ 同步生成：等待完整响应后返回
   const result = await generateText({
-    model: openai('gpt-5-chat-latest'),
-    instructions: '你是一个简洁专业的 AI 助手。',
+    model: openai('gpt-5-mini'),
+    system: '你是一个简洁专业的 AI 助手。',
     prompt,
-    temperature: 0.7,
-    maxOutputTokens: 1024,
-    abortSignal: req.signal,  // 🛑 支持请求取消
+
+    // 🧠 AI SDK 7：统一的推理档位，自动映射到各家原生参数
+    //    OpenAI → reasoning.effort；Anthropic → thinking budget；Google → thinkingBudget
+    reasoning: 'medium',
+
+    // ⏱️ AI SDK 7：细粒度超时（防止 provider 开流不发数据 / 工具挂死）
+    timeout: {
+      totalMs: 60_000,
+      stepMs: 10_000,
+      chunkMs: 2_000,
+    },
+
+    abortSignal: req.signal, // 🛑 支持请求取消
+
+    // 🔭 生命周期事件（计费、审计、调试都靠它）
+    onStart({ callId, modelId }) {
+      console.log('[ai] start', { callId, modelId });
+    },
+    onEnd({ callId, usage, finishReason }) {
+      console.log('[ai] end', { callId, finishReason, totalTokens: usage.totalTokens });
+    },
   });
 
-  // 📤 返回完整文本 + 使用统计 + 元信息
   return Response.json({
-    text: result.text,                   // 最终生成的文本
-    usage: result.usage,                 // { inputTokens, outputTokens, totalTokens }
-    finishReason: result.finishReason,   // 'stop' | 'length' | 'content-filter' | 'tool-calls'
-    toolCalls: result.toolCalls,         // 工具调用（如果有）
-    toolResults: result.toolResults,
-    steps: result.steps,                 // 每步详情（含性能指标）
+    text: result.text,                 // 最终生成的文本
+    usage: result.usage,               // { inputTokens, outputTokens, totalTokens, ... }
+    finishReason: result.finishReason, // 'stop' | 'length' | 'content-filter' | 'tool-calls' | 'error'
+    steps: result.steps,               // 每一步的详情（含工具调用与性能指标）
   });
 }
 ```
 
-```mermaid
-sequenceDiagram
-    participant Client as 💻 前端
-    participant Server as 🖥️ API Route
-    participant LLM as 🤖 OpenAI API
-
-    Client->>Server: POST /api/generate (prompt)
-    Server->>LLM: generateText 请求
-    Note over LLM: 等待模型生成全部内容...
-    LLM-->>Server: 完整文本响应
-    Server-->>Client: JSON { text, usage, ... }
-```
-
 **对比流式：**
 
-| 特性 | generateText | streamText |
+| 特性 | `generateText` | `streamText` |
 |:---|:---|:---|
-| 延迟 | 首字 ≈ 完字（3-30s） | 首字 < 1s，逐字渲染 |
+| 首字延迟 | 等于全文完成时间（数秒～数十秒） | 通常 < 1s，逐 token 渲染 |
 | 内存 | 占用较高（缓存全文） | 较低（边生成边消费） |
-| 可中断 | ✅ AbortController | ✅ AbortController |
-| 适用场景 | 后端任务、短答案 | 聊天界面、长回答 |
+| 可中断 | ✅ `AbortSignal` | ✅ `AbortSignal` / `stop()` |
+| 适用场景 | 后端任务、批处理、短答案 | 聊天界面、长回答、Agent 过程展示 |
+
+> **经验法则**：面向用户的界面一律 `streamText`；后台流水线一律 `generateText`。
+> 反过来用会在用户体验或成本上付出代价。
 
 ---
 
@@ -212,964 +224,861 @@ sequenceDiagram
 
 ```typescript
 // app/api/chat/route.ts
-import { streamText, smoothStream, pruneMessages } from 'ai';
 import { openai } from '@ai-sdk/openai';
+import { convertToModelMessages, stepCountIs, streamText, type UIMessage } from 'ai';
 
 export const maxDuration = 60;
 
 export async function POST(req: Request) {
-  const { messages }: { messages: any[] } = await req.json();
+  const { messages }: { messages: UIMessage[] } = await req.json();
 
   const result = streamText({
-    model: openai('gpt-5-chat-latest'),
-    // 📨 将 UI 消息格式转为模型消息格式（详见 11.9）
-    messages: await convertToModelMessages(messages),
-    instructions: `你是一个专业的 AI 助手。请用简洁准确的语言回答问题。`,
-    temperature: 0.7,
-    maxOutputTokens: 4096,
+    model: openai('gpt-5-mini'),
 
-    // ⏱️ 平滑流式输出（模拟人类打字速度）
+    // 📨 UI 消息 → 模型消息（同步函数，不需要 await，详见 11.9）
+    messages: convertToModelMessages(messages),
+
+    system: '你是一个专业的 AI 助手。请用简洁准确的语言回答问题。',
+
+    // ⏱️ 平滑流式输出（按中文词粒度分块，避免逐字抖动）
     experimental_transform: smoothStream({
-      delayInMs: 10,            // 每个 token 间隔 ms
-      chunking: new Intl.Segmenter('zh-CN', { granularity: 'word' }), // 中文分词
+      delayInMs: 10,
+      chunking: new Intl.Segmenter('zh-CN', { granularity: 'word' }),
     }),
 
+    // 🛑 有工具时必须设置停止条件，否则模型可能无限循环烧钱
+    stopWhen: stepCountIs(5),
+
     // 🎣 生命周期回调
-    onChunk({ chunk }) {
-      if (chunk.type === 'text-delta') {
-        // 每收到一段文本 delta
-      }
-      if (chunk.type === 'tool-call') {
-        console.log(`调用工具: ${chunk.toolName}`);
-      }
-    },
     onError({ error }) {
-      console.error('流式错误:', error);
+      console.error('[ai] stream error', error);
     },
-    onEnd({ text, totalUsage, finishReason }) {
-      // 📊 生成完成后：写入数据库、更新 Token 计数
-      console.log(`✅ 完成: 输入 ${totalUsage.inputTokens}, 输出 ${totalUsage.outputTokens}`);
+    onFinish({ usage, finishReason }) {
+      // 落库 / 计费 / 上报
+      console.log('[ai] finish', { finishReason, totalTokens: usage.totalTokens });
     },
   });
 
-  // 📡 方案 A（推荐）：直接返回 UIMessageStream 响应
   return result.toUIMessageStreamResponse();
 }
 ```
 
-**streamText 返回的 Promise 属性**
+> 别忘了把 `smoothStream` 加进 import：
+> `import { convertToModelMessages, smoothStream, stepCountIs, streamText, type UIMessage } from 'ai';`
 
-当流结束后，以下属性会自动 resolve：
-
-| 属性 | 类型 | 说明 |
-|:---|:---|:---|
-| `result.text` | `string` | 最终生成的完整文本 |
-| `result.content` | `ContentPart[]` | 所有步骤的内容数组（text/toolCall/toolResult） |
-| `result.usage` | `LanguageModelUsage` | 最后一步的 token 用量 |
-| `result.totalUsage` | `LanguageModelUsage` | 所有步骤的累计用量 |
-| `result.finishReason` | `string` | 结束原因 |
-| `result.toolCalls` | `ToolCall[]` | 所有工具调用 |
-| `result.toolResults` | `ToolResult[]` | 所有工具结果 |
-| `result.steps` | `StepResult[]` | 每步详情（含性能指标） |
-| `result.finalStep` | `StepResult` | 最后一步 |
-
-**生命周期回调全景**
+**读取性能指标（AI SDK 7）**
 
 ```typescript
-const result = streamText({
-  model: openai('gpt-5'),
-  prompt,
+const result = streamText({ model: openai('gpt-5'), prompt: '写一段产品介绍' });
 
-  // ─── 阶段生命周期 ───
-  onStart({ modelId, provider }) {
-    console.log(`[${provider}/${modelId}] 开始生成`);
-  },
-  onStepStart({ stepNumber, modelId, messages }) {
-    console.log(`第 ${stepNumber} 步开始 (${modelId})`);
-  },
-  onStepEnd({ stepNumber, finishReason, usage, performance }) {
-    console.log(`第 ${stepNumber} 步完成: ${finishReason}, ${usage.totalTokens} tokens`);
-  },
-  onEnd({ text, totalUsage, finishReason }) {
-    console.log(`全部完成: ${finishReason}`);
-  },
-
-  // ─── 调用级生命周期 ───
-  onLanguageModelCallStart({ modelId, messageCount }) {
-    console.log(`模型调用开始: ${modelId}, ${messageCount} 条消息`);
-  },
-  onLanguageModelCallEnd({ modelId, finishReason, content }) {
-    console.log(`模型调用完成: ${modelId}, ${content.length} 个内容块`);
-  },
-
-  // ─── 工具执行生命周期 ───
-  onToolExecutionStart({ toolCall }) {
-    console.log(`执行工具: ${toolCall.toolName}`);
-  },
-  onToolExecutionEnd({ toolCall, toolExecutionMs, toolOutput }) {
-    if (toolOutput.type === 'tool-error') {
-      console.error(`工具执行失败: ${toolOutput.error}`);
-    } else {
-      console.log(`工具完成: ${toolCall.toolName} (${toolExecutionMs}ms)`);
-    }
-  },
-});
-```
-
-**stream 迭代消费**
-
-```typescript
-for await (const part of result.stream) {
-  switch (part.type) {
-    case 'start':               console.log('流开始'); break;
-    case 'start-step':          console.log(`新步骤 #${part.stepNumber}`); break;
-    case 'text-start':          console.log('文本开始'); break;
-    case 'text-delta':          process.stdout.write(part.text); break;
-    case 'text-end':            console.log('\n文本结束'); break;
-    case 'reasoning-start':     console.log('[推理开始]'); break;
-    case 'reasoning-delta':     process.stdout.write(part.text); break;
-    case 'reasoning-end':       console.log('[推理结束]'); break;
-    case 'tool-call':           console.log(`工具: ${part.toolName}`, part.input); break;
-    case 'tool-input-start':    console.log(`工具输入开始: ${part.toolName}`); break;
-    case 'tool-input-delta':    process.stdout.write(part.delta); break;
-    case 'tool-input-end':      console.log('工具输入结束'); break;
-    case 'tool-result':         console.log(`工具结果: ${part.toolName}`, part.output); break;
-    case 'finish-step':         console.log(`步骤结束: ${part.finishReason}`); break;
-    case 'finish':              console.log('全部完成'); break;
-    case 'error':               console.error('错误'); break;
-  }
+for await (const chunk of result.textStream) {
+  process.stdout.write(chunk);
 }
-```
 
-**流转换（Transform）**
-
-`experimental_transform` 允许在流输出前进行处理：
-
-```typescript
-import { streamText, smoothStream } from 'ai';
-
-const result = streamText({
-  model: openai('gpt-5'),
-  messages,
-  experimental_transform: smoothStream({
-    delayInMs: 10,
-    chunking: new Intl.Segmenter('zh-CN', { granularity: 'word' }),
-  }),
+const { performance } = await result.finalStep;
+console.log({
+  responseTimeMs: performance.responseTimeMs,       // 总耗时
+  timeToFirstOutputMs: performance.timeToFirstOutputMs, // 首字延迟（TTFO）
+  outputTokensPerSecond: performance.outputTokensPerSecond, // 输出速度
 });
 ```
 
-自定义转换示例（将输出转大写）：
-
-```typescript
-import { streamText, type TextStreamPart, type ToolSet } from 'ai';
-
-const upperCaseTransform =
-  <TOOLS extends ToolSet>() =>
-  ({ stopStream }: { tools: TOOLS; stopStream: () => void }) =>
-    new TransformStream<TextStreamPart<TOOLS>, TextStreamPart<TOOLS>>({
-      transform(chunk, controller) {
-        // 对 text-delta 做转换，其他类型透传
-        controller.enqueue(
-          chunk.type === 'text-delta'
-            ? { ...chunk, text: chunk.text.toUpperCase() }
-            : chunk,
-        );
-      },
-    });
-
-const result = streamText({
-  model: openai('gpt-5'),
-  messages,
-  experimental_transform: upperCaseTransform(),
-});
-```
+> 💡 **前端视角**：`timeToFirstOutputMs` 就是用户感知的「点了多久才出字」。
+> 它是聊天体验的头号指标，比总耗时更值得进监控面板。
 
 ---
 
 ### 11.5 Structured Output — 结构化数据生成
 
-**📋 用 Zod 定义 Schema，让模型输出类型安全的结构化数据**
+**📐 让模型直接吐出符合 Zod Schema 的 JSON**
 
-> ⚠️ v7 中结构化输出已整合到 `generateText` 和 `streamText` 的 `output` 属性中，不再有独立的 `generateObject` / `streamObject` API。
+AI SDK 7 推荐用 `generateText` / `streamText` 的 `output` 参数配合 `Output.*()`。
+**独立的 `generateObject` / `streamObject` 已废弃**，新代码不要再使用。
 
 ```typescript
-import { generateText, streamText, Output } from 'ai';
-import { z } from 'zod';
 import { openai } from '@ai-sdk/openai';
+import { Output, generateText } from 'ai';
+import { z } from 'zod';
 
-// 🏷️ 定义输出结构
-const WeatherSchema = z.object({
-  location: z.string().describe('城市名称'),
-  temperature: z.number().describe('温度（摄氏度）'),
-  condition: z.enum(['晴', '多云', '阴', '雨', '雪']),
-  humidity: z.number().min(0).max(100),
+const RecipeSchema = z.object({
+  title: z.string().describe('菜名'),
+  servings: z.number().int().min(1).describe('份数'),
+  ingredients: z.array(
+    z.object({
+      name: z.string(),
+      amount: z.string().describe('带单位的用量，如 "200g"'),
+    }),
+  ),
+  steps: z.array(z.string()).min(1),
+  tags: z.array(z.string()).max(5),
 });
 
-// ========== 方式一：generateText 同步获取结构化输出 ==========
-const { output } = await generateText({
-  model: openai('gpt-5-chat-latest'),
-  output: Output.object({
-    schema: WeatherSchema,
-  }),
-  prompt: '查询北京的天气',
-  temperature: 0,  // 结构化输出设 0 提高稳定性
+const { output, usage } = await generateText({
+  model: openai('gpt-5-mini'),
+  output: Output.object({ schema: RecipeSchema }),
+  system: '你是专业菜谱作者。所有字段用中文。',
+  prompt: '给我一份番茄炒蛋的做法',
 });
 
-console.log(output.location);     // "北京"
-console.log(output.temperature);  // 22
+// output 已通过 Zod 校验，类型是 z.infer<typeof RecipeSchema>
+console.log(output.title, output.ingredients.length);
 ```
 
-```typescript
-// ========== 方式二：streamText 流式获取结构化输出 ==========
-const { partialOutputStream } = streamText({
-  model: openai('gpt-5-chat-latest'),
-  output: Output.object({
-    schema: z.object({
-      title: z.string(),
-      summary: z.string(),
-      tags: z.array(z.string()),
-    }),
-  }),
-  prompt: '总结今天的新闻',
-});
+**三种输出形态**
 
-// 🌊 增量输出：每次新 token 到达时返回当前已解析的部分对象
-for await (const partial of partialOutputStream) {
-  console.log(partial); // { title: "今天", summary: "", tags: [] }
-                        //      ↓
-                        //      { title: "今天的", summary: "Today was", tags: [] }
-                        //      ↓
-                        //      { title: "今天的新闻", summary: "Today was a good day.", tags: ["news"] }
+| 形态 | 用法 | 场景 |
+|:---|:---|:---|
+| `Output.object({ schema })` | 单个对象 | 表单预填、实体抽取、配置生成 |
+| `Output.array({ element })` | 数组 | 批量抽取（如从文档抽 N 条记录） |
+| `Output.choice({ options })` | 枚举 | 分类、路由、情感判定 |
+
+**流式结构化输出到 UI**
+
+前端用 `experimental_useObject`（React）：
+
+```tsx
+'use client';
+import { experimental_useObject as useObject } from '@ai-sdk/react';
+
+export function RecipeView() {
+  const { object, submit, isLoading, error, stop } = useObject({
+    api: '/api/recipe',
+    schema: RecipeSchema,
+  });
+
+  return (
+    <div>
+      <button onClick={() => submit('番茄炒蛋')} disabled={isLoading}>
+        生成菜谱
+      </button>
+      {isLoading && <button onClick={stop}>停止</button>}
+      {/* object 是 Partial<Recipe>，边生成边渲染 */}
+      <h3>{object?.title ?? '生成中…'}</h3>
+      <ul>
+        {object?.ingredients?.map((ing, i) => (
+          <li key={i}>
+            {ing?.name} — {ing?.amount}
+          </li>
+        ))}
+      </ul>
+      {error && <p className="text-red-600">{error.message}</p>}
+    </div>
+  );
 }
 ```
 
-```typescript
-// ========== Output.array() — 数组输出 ==========
-const { output: articles } = await generateText({
-  model: openai('gpt-5-chat-latest'),
-  output: Output.array({
-    element: z.object({
-      title: z.string(),
-      url: z.string().url(),
-      score: z.number(),
-    }),
-  }),
-  prompt: '列出今天 Top 5 的科技新闻',
-});
-// 类型: Array<{ title: string; url: string; score: number }>
-```
-
-```typescript
-// ========== Output.choice() — 枚举选择 ==========
-const { output: sentiment } = await generateText({
-  model: openai('gpt-5-chat-latest'),
-  output: Output.choice(['positive', 'neutral', 'negative']),
-  prompt: '判断这句话的情感："今天的天气真不错！"',
-});
-// 类型: 'positive' | 'neutral' | 'negative'
-```
-
-```typescript
-// ========== Output.json() — 自由 JSON（无 Schema 校验）==========
-const { output: arbitraryJson } = await generateText({
-  model: openai('gpt-5-chat-latest'),
-  output: Output.json(),
-  prompt: '返回用户画像 JSON',
-});
-// 类型: unknown，需自行校验
-```
-
-**结构化输出与 Tool Calling 结合**
-
-```typescript
-import { generateText, Output, tool, isStepCount } from 'ai';
-import { z } from 'zod';
-import { openai } from '@ai-sdk/openai';
-
-const { output } = await generateText({
-  model: openai('gpt-5-chat-latest'),
-  tools: {
-    weather: tool({
-      description: '获取指定城市的天气',
-      inputSchema: z.object({ city: z.string() }),
-      execute: async ({ city }) => ({ temp: 22, condition: '晴' }),
-    }),
-  },
-  output: Output.object({
-    schema: z.object({
-      summary: z.string(),
-      recommendation: z.string(),
-    }),
-  }),
-  stopWhen: isStepCount(5),  // 确保有足够步骤完成工具调用 + 输出
-  prompt: '我今天应该穿什么？',
-});
-```
-
-> ⚠️ **结构化输出步骤消耗**：生成结构化输出本身也算一步。使用 `stopWhen` 时需留出余量。
+> ⚠️ **注意**：流式结构化输出过程中 `object` 是**部分对象**，
+> 所有字段都要做可选处理（`?.` 或默认值），否则渲染中途会崩。
 
 ---
 
 ### 11.6 Tool Calling — 工具调用
 
-**🛠️ 让 LLM 调用外部函数 / API**
+**🔧 让模型「动手」：查天气、搜数据库、发请求**
+
+一次工具调用会经过四阶段生命周期：
+
+```mermaid
+sequenceDiagram
+    participant M as 🤖 模型
+    participant SDK as AI SDK
+    participant T as 🛠️ 你的 execute()
+
+    M->>SDK: 1. 发出 tool-call part（名称 + 参数 + toolCallId）
+    SDK->>SDK: 2. 用 Zod 校验参数
+    alt 校验失败
+        SDK-->>M: InvalidToolInputError → 重新提示
+    else 校验通过
+        SDK->>T: 3. 调用 execute(参数, { context })
+        T-->>SDK: 返回值或抛错
+        SDK-->>M: 4. tool-result part（按 toolCallId 配对）
+        M->>M: 决定继续调工具 or 输出最终回答
+    end
+```
 
 ```typescript
-import { generateText, tool, isStepCount } from 'ai';
-import { z } from 'zod';
 import { openai } from '@ai-sdk/openai';
+import { stepCountIs, streamText, tool, type ToolLoopAgent } from 'ai';
+import { z } from 'zod';
 
 const weatherTool = tool({
-  description: '搜索指定城市的实时天气信息',
+  // 📝 description 写给「模型」看，不是写给人看
+  //    写成触发条件，而不是实现机制
+  description: '当用户询问某个城市当前或近期的天气时使用。无法回答训练数据之外的实时信息时也必须调用。',
   inputSchema: z.object({
-    city: z.string().describe('城市名称，如"北京"、"上海"'),
+    city: z.string().describe('城市名，如 "杭州"'),
     unit: z.enum(['celsius', 'fahrenheit']).default('celsius'),
   }),
   execute: async ({ city, unit }) => {
-    // 🔌 调用真实 API
-    const res = await fetch(`/api/weather?city=${city}&unit=${unit}`);
+    const res = await fetch(
+      `https://api.weather.example.com/current?city=${encodeURIComponent(city)}&unit=${unit}`,
+      { signal: AbortSignal.timeout(5000) },
+    );
+    if (!res.ok) throw new Error(`天气服务返回 ${res.status}`);
     return res.json();
   },
 });
 
-const calcTool = tool({
-  description: '执行数学计算表达式',
-  inputSchema: z.object({
-    expression: z.string().describe('数学表达式，如 "2+2*3"'),
-  }),
-  execute: async ({ expression }) => {
-    // ✅ 安全执行：使用 mathjs 替代 new Function()
-    const math = await import('mathjs');
-    return String(math.evaluate(expression));
-  },
-});
-```
+export async function POST(req: Request) {
+  const { messages } = await req.json();
 
-**多步 Tool Calling（AI SDK 自动处理 ReAct 循环）**
+  const result = streamText({
+    model: openai('gpt-5-mini'),
+    messages: convertToModelMessages(messages),
+    tools: { weather: weatherTool },
 
-```typescript
-const result = await generateText({
-  model: openai('gpt-5-chat-latest'),
-  messages,
-  instructions: '你是智能助手，可以使用工具回答用户问题。',
+    // 🛑 必须有停止条件！默认安全上限是 stepCountIs(20)，但仍建议显式声明
+    stopWhen: stepCountIs(5),
+  });
 
-  // 🧰 注册工具列表
-  tools: { weatherTool, calcTool },
-
-  // 🛑 停止条件：默认 isStepCount(1)，设为 >1 允许多步
-  stopWhen: isStepCount(5),
-});
-
-// 📊 访问所有步骤的工具调用和结果
-for (const step of result.steps) {
-  console.log(`步骤 ${step.stepNumber}: 调用了 ${step.toolCalls.length} 个工具`);
-  console.log('文本:', step.text);
+  return result.toUIMessageStreamResponse();
 }
 ```
 
-```mermaid
-sequenceDiagram
-    participant User as 👤 用户
-    participant SDK as ⚙️ AI SDK
-    participant LLM as 🤖 模型
-    participant Tools as 🛠️ 工具
+**四类工具形态**
 
-    User->>SDK: "北京天气如何？能帮我算一下汇率吗？"
-    SDK->>LLM: 发送消息 + 工具定义
-    LLM-->>SDK: toolCall: weatherTool({city:"北京"})
-    SDK->>Tools: 执行 weatherTool
-    Tools-->>SDK: {"temp": 22, "condition": "晴"}
-    SDK->>LLM: 返回工具结果
-    LLM-->>SDK: toolCall: calcTool({expression:"1美元=?人民币"})
-    SDK->>Tools: 执行 calcTool
-    Tools-->>SDK: "7.25"
-    SDK->>LLM: 返回工具结果
-    LLM-->>SDK: 最终回复
-    SDK-->>User: "北京今天晴，22°C。1美元≈7.25人民币。"
-```
+| 形态 | 实现方式 | 场景 |
+|:---|:---|:---|
+| **服务端工具** | `tool({ inputSchema, execute })` | 检索、数据库查询、内部 API（约 80% 的工具） |
+| **客户端工具** | 服务端声明 schema，浏览器端执行并回写结果 | 需要浏览器上下文：读剪贴板、开标签页、调钱包 |
+| **需审批的工具** | `toolApproval` + `addToolResult` | 花钱、删除、写库等高风险操作 |
+| **长耗时工具** | 返回 jobId，webhook/轮询后续恢复 | 超过函数超时（~30s）的任务：生图、批量查询 |
 
-**Tool Choice 控制**
+**错误分类（不要一律 catch 成 Error）**
+
+| 错误类型 | 含义 | 典型原因 |
+|:---|:---|:---|
+| `NoSuchToolError` | 模型调了不存在的工具 | system prompt 没说清可用工具 |
+| `InvalidToolInputError` | 参数没通过 Zod 校验 | schema 描述有歧义，或模型太小 |
+| `ToolCallRepairError` | SDK 自动修复畸形调用也失败 | 模型输出不稳定 |
+| `execute` 抛出的错误 | 你的业务代码失败 | 下游服务异常；会以 tool-error part 回传，模型可自行恢复 |
+
+> 💡 **写 description 的三条规则**
+> 1. 写成**触发条件**（"当…时使用"），而不是实现机制（"调用 XX API"）
+> 2. 参数名要有语义（`searchQuery` 而非 `q`），必填项尽量少
+> 3. 避免可被任意填充的可选自由文本字段
+
+---
+
+### 11.6.1 ToolLoopAgent — Agent 循环（AI SDK 7）
+
+过去要在 AI SDK 上手写多步循环，现在有了一等公民的原语。
+**这也是不再需要为「Agent 抽象」引入 LangChain 的主要原因。**
 
 ```typescript
-// 🔒 强制模型必须调用某个工具
-await generateText({
-  model: openai('gpt-5'),
-  tools: { weatherTool },
-  toolChoice: { type: 'tool', toolName: 'weatherTool' },
-  prompt: '查天气',
+import { anthropic } from '@ai-sdk/anthropic';
+import { Experimental_Agent as Agent, stepCountIs, tool } from 'ai';
+import { z } from 'zod';
+
+const agent = new Agent({
+  model: anthropic('claude-sonnet-4-6'),
+  instructions: '你是一个严谨的研究助手。证据不足时主动说明，不要编造。',
+  tools: {
+    search: tool({
+      description: '当问题无法从已有知识回答时使用，检索公开信息。',
+      inputSchema: z.object({ query: z.string() }),
+      execute: async ({ query }) => searchWeb(query),
+    }),
+    finalize: tool({
+      description: '当你已收集到足够信息、准备给出最终结论时调用。',
+      inputSchema: z.object({ summary: z.string() }),
+      execute: async ({ summary }) => summary,
+    }),
+  },
+  // 任一条件满足即停止：最多 10 轮，或模型显式调用 finalize
+  stopWhen: [stepCountIs(10), hasToolCall('finalize')],
+});
+
+const { text, steps } = await agent.generate({ prompt: '对比三家云厂商的 Serverless 方案' });
+```
+
+**工具上下文：把密钥限定给单个工具**
+
+第三方工具不应该拿到全部上下文。AI SDK 7 用 `contextSchema` 做隔离：
+
+```typescript
+const weatherTool = tool({
+  description: '…',
+  inputSchema: z.object({ city: z.string() }),
+  contextSchema: z.object({ apiKey: z.string() }),
+  execute: async (input, { context: { apiKey } }) => {
+    // 这里只能拿到 apiKey，拿不到其他工具的上下文
+    return fetchWeather(input.city, apiKey);
+  },
+});
+
+const agent = new Agent({
+  model,
+  tools: { weather: weatherTool },
+  toolsContext: { weather: { apiKey: process.env.WEATHER_API_KEY! } },
 });
 ```
 
-**Tool Approval（Human-in-the-Loop）**
+**工具审批（HITL）**
 
 ```typescript
-// 🔐 敏感操作需用户批准
-const result = await generateText({
-  model: openai('gpt-5'),
-  tools: { deleteFile },
+const agent = new Agent({
+  model,
+  tools: { deleteUser, refund },
   toolApproval: {
-    deleteFile: 'user-approval',  // 执行前需人工确认
+    deleteUser: 'user-approval', // 必须人工确认
+    refund: async ({ input }) => {
+      // 也可写成函数：自动通过 / 自动拒绝 / 转人工
+      return input.amount < 100 ? { approved: true } : { approved: false, reason: '金额过大' };
+    },
   },
-  prompt: '删除 uploads/temp.pdf',
 });
-
-// 检查是否有需要审批的工具调用
-for (const part of result.content) {
-  if (part.type === 'tool-approval-request' && !part.isAutomatic) {
-    console.log(`需要审批: ${part.approvalId}`);
-    console.log(`工具: ${part.toolCall.toolName}`);
-    // 展示给用户确认...
-  }
-}
 ```
 
-**Dynamic Approval（根据参数动态决定是否需要审批）**
+前端在渲染到 `tool-call` part 时弹确认卡片，用户确认后通过 `addToolResult` 回写，Agent 循环继续。
+高风险场景可开启 **HMAC 签名的审批**，防止伪造确认。
+
+**超时与持久化**
 
 ```typescript
-const paymentTool = tool({
-  description: '处理支付',
-  inputSchema: z.object({ amount: z.number(), recipient: z.string() }),
-  execute: async ({ amount, recipient }) => { /* ... */ },
-});
-
+// 超时：total / step / chunk / tool 四个维度
 await generateText({
-  model: openai('gpt-5'),
-  tools: { paymentTool },
-  toolApproval: {
-    paymentTool: async ({ amount }) =>
-      amount > 1000 ? 'user-approval' : undefined,  // 大额才需审批
+  model,
+  tools: { weather, slowApi },
+  timeout: {
+    totalMs: 60_000,
+    stepMs: 10_000,
+    chunkMs: 2_000,   // 2 秒无 chunk 即中断
+    toolMs: 5_000,    // 所有工具的默认值
+    tools: { weatherMs: 3_000, slowApiMs: 10_000 }, // 单工具覆盖
   },
-  prompt: '给张三转账 1500 元',
+  prompt: '旧金山天气如何？',
 });
+// 超时以 TimeoutError 抛出，并沿流协议传播中断原因
 ```
 
-**工具调用错误处理**
-
 ```typescript
-try {
-  const result = await generateText({ model, tools, prompt });
-} catch (error) {
-  // NoSuchToolError: 模型调用了未注册的工具
-  // InvalidToolInputError: 模型传入的参数不符合 Schema
+// 持久化执行：跨进程重启 / 部署 / 等待人工审批
+import { WorkflowAgent } from '@ai-sdk/workflow';
 
-  if (NoSuchToolError.isInstance(error)) {
-    console.log('未注册工具:', error.toolName);
-  } else if (InvalidToolInputError.isInstance(error)) {
-    console.log('参数校验失败:', error.message);
-  }
-}
-```
-
-**Tool Execution 回调**
-
-```typescript
-const result = await generateText({
-  model: openai('gpt-5'),
-  tools: { weatherTool },
-  onToolExecutionStart({ toolCall }) {
-    console.log(`🔧 开始执行: ${toolCall.toolName}`);
-  },
-  onToolExecutionEnd({ toolCall, toolExecutionMs, toolOutput }) {
-    if (toolOutput.type === 'tool-error') {
-      console.error(`❌ ${toolCall.toolName} 失败:`, toolOutput.error);
-    } else {
-      console.log(`✅ ${toolCall.toolName} 完成 (${toolExecutionMs}ms)`);
-    }
-  },
+const durableAgent = new WorkflowAgent({
+  model,
+  tools,
+  runtimeContext: { userId: 'u_123' },
 });
+// 一个 run 可以跨越多次调用：等待审批数小时后回来继续执行
 ```
 
 ---
 
 ### 11.7 useChat — React 客户端 Hook
 
-**🪝 一行接入完整聊天状态管理**
+**⚛️ 客户端聊天状态的一切**
 
 ```tsx
-// components/Chat.tsx
 'use client';
-
 import { useChat } from '@ai-sdk/react';
-import { Bubble, Sender } from '@ant-design/x';
-import ReactMarkdown from 'react-markdown';
+import { DefaultChatTransport } from 'ai';
+import { useState } from 'react';
 
 export default function Chat() {
+  const [input, setInput] = useState('');
+
   const {
-    messages,       // 📨 消息列表（UIMessage[]）
-    input,          // ⌨️ 输入框值
-    handleSubmit,   // 🚀 提交消息
-    handleInputChange, // ✏️ 输入变化
-    isLoading,      // ⏳ 是否正在生成
-    stop,           // 🛑 停止生成
-    error,          // ❌ 错误
-    append,         // ➕ 直接追加消息
-    setMessages,    // 📝 手动设置消息
-    addToolOutput,  // 🔧 添加工具结果（配合 onToolCall 使用）
+    messages,
+    sendMessage,
+    status,        // 'ready' | 'submitted' | 'streaming' | 'error'
+    error,
+    stop,          // 中断当前生成
+    regenerate,    // 重试最后一条
+    setMessages,   // 高级用法：编辑并重发、服务端灌历史
   } = useChat({
-    api: '/api/chat',
-
-    // 🎣 生命周期
-    onError: (err) => console.error('💥 错误:', err),
-    onFinish: ({ message, finishReason }) => {
-      console.log(`✅ 完成: ${message.id}, 原因: ${finishReason}`);
-    },
-    onToolCall: ({ toolCall }) => {
-      console.log(`🔧 工具: ${toolCall.toolName}`, toolCall.input);
-      // 如需手动执行工具，调用 addToolOutput(...)
-    },
-
-    // 🚚 Transport 配置（自定义请求逻辑）
-    transport: {
-      // 自定义请求构造（可加鉴权头、注入 userId 等）
-      postMessage: async ({ messages: uiMessages, sendMessageExtras }) => {
-        const response = await fetch('/api/chat', {
-          method: 'POST',
-          headers: {
-            Authorization: `Bearer ${getToken()}`,
-            'Content-Type': 'application/json',
-          },
-          body: JSON.stringify({
-            messages: uiMessages,
-            ...sendMessageExtras,
-          }),
-        });
-        if (!response.ok) throw new Error(`HTTP ${response.status}`);
-        return response.body!;
-      },
-    },
+    transport: new DefaultChatTransport({ api: '/api/chat' }),
   });
+
+  const busy = status === 'submitted' || status === 'streaming';
 
   return (
     <div className="flex flex-col h-screen">
-      {/* 💬 消息列表 */}
-      <Bubble.List
-        className="flex-1 overflow-y-auto"
-        items={messages.map(m => ({
-          key: m.id,
-          role: m.role === 'user' ? 'user' : 'ai',
-          content: m.role === 'assistant' ? (
-            <ReactMarkdown>{m.parts.map((p, i) =>
-              p.type === 'text' ? p.text : ''
-            ).join('')}</ReactMarkdown>
-          ) : m.parts.filter(p => p.type === 'text').map(p => p.text).join(''),
-        }))}
-        loading={isLoading}
-      />
+      <div className="flex-1 overflow-y-auto">
+        {messages.map((m) => (
+          <div key={m.id}>
+            <strong>{m.role === 'user' ? '我' : 'AI'}</strong>
+            {/*
+              ⚠️ 消息是 parts 数组，不是 content 字符串。
+              只渲染 text 会让工具调用、推理过程对用户在视觉上"消失"。
+            */}
+            {m.parts.map((part, i) => {
+              switch (part.type) {
+                case 'text':
+                  return <Markdown key={i}>{part.text}</Markdown>;
 
-      {/* ⌨️ 输入区域 */}
-      <Sender
-        value={input}
-        onChange={handleInputChange}
-        onSubmit={handleSubmit}
-        loading={isLoading}
-        onStop={stop}
-        placeholder="输入你的问题..."
-      />
+                case 'reasoning':
+                  return (
+                    <details key={i} className="text-gray-500">
+                      <summary>思考过程</summary>
+                      <pre>{part.text}</pre>
+                    </details>
+                  );
+
+                case 'tool-call':
+                  return (
+                    <div key={i} className="border rounded p-2 my-1">
+                      调用工具 <code>{part.toolName}</code>
+                      <pre>{JSON.stringify(part.input, null, 2)}</pre>
+                    </div>
+                  );
+
+                case 'tool-result':
+                  return (
+                    <div key={i} className="text-sm text-gray-600">
+                      工具返回：<pre>{JSON.stringify(part.output, null, 2)}</pre>
+                    </div>
+                  );
+
+                case 'source':
+                  return (
+                    <a key={i} href={part.url} className="text-blue-600">
+                      来源：{part.title ?? part.url}
+                    </a>
+                  );
+
+                default:
+                  return null;
+              }
+            })}
+          </div>
+        ))}
+
+        {error && (
+          <div className="text-red-600">
+            请求失败。<button onClick={() => regenerate()}>重试</button>
+          </div>
+        )}
+      </div>
+
+      <form
+        onSubmit={(e) => {
+          e.preventDefault();
+          if (!input.trim() || busy) return;
+          sendMessage({ text: input });
+          setInput('');
+        }}
+      >
+        <input value={input} onChange={(e) => setInput(e.target.value)} placeholder="输入消息…" />
+        {busy ? (
+          <button type="button" onClick={stop}>停止</button>
+        ) : (
+          <button type="submit">发送</button>
+        )}
+      </form>
     </div>
   );
 }
 ```
 
-**useChat 核心 API 速查**
+**`useChat` 返回值速查**
 
-| 属性/方法 | 类型 | 说明 |
+| 字段 / 方法 | 说明 |
+|:---|:---|
+| `messages` | `UIMessage[]`，每条含 `id` / `role` / `parts` |
+| `status` | `'ready' \| 'submitted' \| 'streaming' \| 'error'` |
+| `sendMessage(msg, opts?)` | 发送新消息（内部做乐观插入，失败自动回滚） |
+| `regenerate(opts?)` | 重生成最后一条助手消息 |
+| `stop()` | 中断生成 |
+| `setMessages()` | 直接改消息数组（编辑重发、灌历史用，尽量少用） |
+| `error` | 最后一次错误对象 |
+| `clearError()` | 清除错误态 |
+
+**消息 parts 的五种类型**
+
+| `part.type` | 内容 | 前端职责 |
 |:---|:---|:---|
-| `messages` | `UIMessage[]` | 当前消息列表（含 parts） |
-| `input` | `string` | 输入框的值 |
-| `isLoading` | `boolean` | 是否正在等待响应 |
-| `error` | `Error \| undefined` | 错误信息 |
-| `status` | `'submitted'\|'streaming'\|'ready'\|'error'` | 当前状态 |
-| `handleSubmit()` | `() => void` | 提交当前输入 |
-| `handleInputChange()` | `(e) => void` | 输入框 onChange handler |
-| `stop()` | `() => void` | 中止当前流式生成 |
-| `append(msg)` | `(msg) => Promise<void>` | 直接追加消息（跳过表单） |
-| `regenerate()` | `() => Promise<void>` | 重新生成最后一条助手消息 |
-| `clearError()` | `() => void` | 清除错误 |
-| `resumeStream()` | `() => void` | 恢复被中断的流 |
-| `addToolOutput()` | `({ tool, toolCallId, output }) => void` | 添加工具执行结果 |
-| `setMessages()` | `(msgs) => void` | 直接设置消息（本地不触发 API） |
+| `text` | 自然语言输出 | Markdown 渲染 + 代码高亮 |
+| `reasoning` | 推理链（开启 reasoning 时） | 折叠展示，别默认展开刷屏 |
+| `tool-call` | `{ toolName, input, toolCallId }` | 展示「正在调用 XX」，高风险时弹审批 |
+| `tool-result` | `{ toolCallId, output }` | 按 `toolCallId` 与调用配对展示 |
+| `source` | 引用来源 | 渲染 citation 链接 |
 
-**➕ 使用 append 实现复杂交互**
-
-```tsx
-function ChatWithCode() {
-  const { messages, append, isLoading } = useChat({ api: '/api/chat' });
-
-  const runCode = async (code: string) => {
-    // 注入系统指令到对话上下文
-    await append({
-      role: 'user',
-      content: `请运行以下代码并解释输出：\n\`\`\`javascript\n${code}\n\`\`\``,
-    });
-  };
-
-  return (
-    <div>
-      <CodeBlock onRun={runCode} />
-      <MessageList messages={messages} isLoading={isLoading} />
-    </div>
-  );
-}
-```
+> 💡 **最佳实践**
+> - **不要自己写乐观插入**：`sendMessage` 已内置，重复实现会导致消息闪现/重复。
+> - **把 `messages` 当只读**：渲染期修改会破坏流式重组。
+> - **历史消息用 `initialMessages` 灌入**，而不是 `setMessages` 手动塞。
+> - **`status` 而非布尔 loading**：`submitted`（已发送未出首字）和 `streaming`（已出首字）
+>   应该给用户不同的反馈，这是一个常被忽略的体验细节。
 
 ---
 
 ### 11.8 UIMessageStream 协议
 
-**🔌 统一的前端流式通信协议（AI SDK v6/v7）**
+**📡 服务端往前端推的 SSE 协议**
 
-AI SDK v6 引入的 UIMessageStream 协议取代了旧版 DataStream，与 AG-UI、CopilotKit 等其他前端框架互通。
+`toUIMessageStreamResponse()` 产出的就是 UIMessageStream：`text` 增量、
+`tool-call`、`tool-result`、`reasoning` 片段都走同一条流，用**可辨识的事件类型**区分。
+你不需要手写解析——`useChat` 原生消费。
 
-**服务端：推荐写法（toUIMessageStreamResponse）**
+**什么时候需要手写流？** 当你想在一条流里夹带**自定义数据**（进度、引用、Agent 步骤）：
 
 ```typescript
 // app/api/chat/route.ts
-import { streamText, convertToModelMessages } from 'ai';
 import { openai } from '@ai-sdk/openai';
+import { createUIMessageStream, createUIMessageStreamResponse, streamText } from 'ai';
 
 export async function POST(req: Request) {
-  const { messages }: { messages: any[] } = await req.json();
+  const { messages } = await req.json();
 
-  const result = streamText({
-    model: openai('gpt-5-chat-latest'),
-    messages: await convertToModelMessages(messages),
-    instructions: '你是一个专业的 AI 助手。',
-    temperature: 0.7,
-  });
-
-  // 📡 一行返回流式响应
-  return result.toUIMessageStreamResponse();
-}
-```
-
-**服务端：精细控制（createUIMessageStreamResponse）**
-
-```typescript
-import {
-  streamText,
-  convertToModelMessages,
-  toUIMessageStream,
-  createUIMessageStreamResponse,
-} from 'ai';
-import { openai } from '@ai-sdk/openai';
-
-export async function POST(req: Request) {
-  const { messages }: { messages: any[] } = await req.json();
-
-  return createUIMessageStreamResponse({
+  const stream = createUIMessageStream({
     execute: async ({ writer }) => {
-      // 🔧 先写一条自定义 data 部分
-      writer.write({
-        type: 'data-start',
-        id: 'status',
-        data: { phase: 'starting' },
-      });
+      // 1️⃣ 自定义数据 part：前端用同类型接收
+      writer.write({ type: 'data-progress', data: { stage: '检索知识库', percent: 10 } });
 
-      // 🌊 合并 streamText 的输出
       const result = streamText({
-        model: openai('gpt-5-chat-latest'),
-        messages: await convertToModelMessages(messages),
-        instructions: '你是一个专业的 AI 助手。',
+        model: openai('gpt-5-mini'),
+        messages: convertToModelMessages(messages),
       });
 
-      writer.merge(toUIMessageStream({ stream: result.stream }));
+      // 2️⃣ 把模型流合并进 UI 流
+      writer.merge(result.toUIMessageStream());
 
-      // ✨ 流结束后写一条 data 部分
-      writer.write({
-        type: 'data-start',
-        id: 'final-status',
-        data: { phase: 'completed' },
-      });
+      writer.write({ type: 'data-progress', data: { stage: '完成', percent: 100 } });
     },
-    onError: (error) => `生成出错: ${error.message}`,
+    onError: (error) => `流处理失败：${error instanceof Error ? error.message : String(error)}`,
   });
+
+  return createUIMessageStreamResponse({ stream });
 }
 ```
 
-**UIMessageStream 协议格式（NDJSON）**
+前端接收自定义 part：
 
-```text
-// 每条消息以 \n 分隔（Newline Delimited JSON）
-// 文本增量
-{"id":"msg_1","part":{"type":"text-delta","text":"你"}}
-{"id":"msg_1","part":{"type":"text-delta","text":"好"}}
-{"id":"msg_1","part":{"type":"text-delta","text":"！"}}
-// 状态标记
-{"id":"msg_1","part":{"type":"text-end"},"role":"assistant"}
-```
-
-**客户端消费 UIMessageStream**
-
-```typescript
-import { readUIMessageStream, parseUIMessageStream, toAssistantResponse } from 'ai';
-
-async function consumeChatStream(response: Response): Promise<string> {
-  // 方案 A：逐部分迭代
-  for await (const part of readUIMessageStream(response.body!)) {
-    if (part.type === 'text-delta') {
-      process.stdout.write(part.text);
-    }
+```tsx
+{message.parts.map((part, i) => {
+  if (part.type === 'data-progress') {
+    return <ProgressBar key={i} {...part.data} />;
   }
-
-  // 方案 B：解析为完整 UIMessage
-  const messages = await parseUIMessageStream(response.body!);
-
-  // 方案 C：提取最终文本
-  const responseText = toAssistantResponse(response.body!);
-}
+  // …其他 part
+})}
 ```
 
-```mermaid
-sequenceDiagram
-    participant Client as 💻 浏览器
-    participant Server as 🖥️ Next.js Route
-    participant Stream as ⚡ streamText
-    participant LLM as 🤖 Model API
-
-    Client->>Server: POST /api/chat
-    Server->>Stream: createUIMessageStreamResponse
-    Stream->>LLM: streamText().execute()
-    loop 逐 Token 流式返回
-        LLM-->>Stream: Token Chunk
-        Stream->>Stream: 序列化为 NDJSON
-    end
-    Stream-->>Client: application/x.ndjson Stream
-    Client->>Client: parseUIMessageStream() → 渲染
-```
+> ⚠️ 协议帧格式由 SDK 内部定义，**不要手写解析或伪造帧结构**。
+> 想扩展就用 `createUIMessageStream` 的自定义 data part，这是官方支持的扩展点。
 
 ---
 
 ### 11.9 消息格式转换
 
-**🔄 UI 消息 ↔ 模型消息的桥梁**
-
-前端 `useChat` 管理的消息（`UIMessage`）包含 UI 扩展字段（如 `parts`），而 LLM API 需要的是 `ModelMessage`。AI SDK 提供转换工具自动处理。
+**🔄 UI 消息 ↔ 模型消息**
 
 ```typescript
-import {
-  convertToModelMessages,
-  pruneMessages,
-  smoothStream,
-} from 'ai';
+import { convertToModelMessages, type UIMessage } from 'ai';
 
-// ========================================
-// 场景 1: 前端 → 服务端（UIMessage → ModelMessage）
-// ========================================
-// useChat 管理的是 UIMessage 格式
-// 发送到 API Route 时用 convertToModelMessages 转换
-const result = streamText({
-  model: openai('gpt-5'),
-  // convertToModelMessages 接受 useChat 返回的 UIMessage[]
-  messages: await convertToModelMessages(uiMessages),
-});
-
-// ========================================
-// 场景 2: 消息截断优化（去掉中间轮次的 tool calls）
-// ========================================
-const prunedMessages = pruneMessages({
-  messages,  // ModelMessage[]
-  reasoning: 'all',               // 移除所有推理内容
-  toolCalls: 'before-last-message', // 除最后一轮外移除所有工具调用
-  emptyMessages: 'remove',        // 移除内容为空的消息
-});
-
-// ========================================
-// 场景 3: 组合使用 — 截断 + 平滑 + 流式
-// ========================================
-const result = streamText({
-  model: openai('gpt-5'),
-  messages: pruneMessages({
-    messages: modelMessages,
-    toolCalls: 'before-last-2-messages', // 保留最近两轮工具调用
-  }),
-  experimental_transform: smoothStream({
-    delayInMs: 10,
-    chunking: new Intl.Segmenter('zh-CN', { granularity: 'word' }),
-  }),
-});
+// 前端传来的 UIMessage[]（含 text / file / image 等多种 part）
+// → 模型能理解的 ModelMessage[]
+const modelMessages = convertToModelMessages(uiMessages); // 同步函数，无需 await
 ```
 
-**ModelMessage 基本类型**
+```mermaid
+graph LR
+    A["UIMessage[]<br/>{ id, role, parts[] }"] -->|convertToModelMessages| B["ModelMessage[]<br/>{ role, content[] }"]
+    B --> C["streamText / generateText"]
+    C -->|toUIMessageStreamResponse| D["SSE 流"]
+    D -->|useChat 解析| A
+```
 
-| 类型 | 字段 | 说明 |
-|:---|:---|:---|
-| `system` | `{ role: 'system'; content: string }` | 系统指令 |
-| `user` | `{ role: 'user'; content: string \| Part[] }` | 用户消息（可含图片/文件） |
-| `assistant` | `{ role: 'assistant'; content: string \| Part[] }` | 助手回复（可含推理/工具调用） |
-| `tool` | `{ role: 'tool'; content: ToolResultPart[] }` | 工具执行结果 |
+**上下文裁剪**：长会话直接全量发送会快速吃满上下文窗口并放大成本。
+常见做法（按侵入性从低到高）：
+
+```typescript
+// 方案 1：滑动窗口 + 保留 system（最简单，先用这个）
+function slidingWindow(messages: UIMessage[], keep = 20): UIMessage[] {
+  return messages.slice(-keep);
+}
+
+// 方案 2：旧消息摘要化 —— 用小模型压缩后作为一条 system/assistant 消息前置
+async function summarizeOld(messages: UIMessage[], model: LanguageModel) {
+  const old = messages.slice(0, -10);
+  if (old.length === 0) return null;
+
+  const { text } = await generateText({
+    model,
+    system: '把以下对话压缩为要点摘要，保留所有事实、数字与用户偏好。',
+    prompt: old.map((m) => `${m.role}: ${JSON.stringify(m.parts)}`).join('\n'),
+  });
+  return text;
+}
+```
+
+> 💡 **Context Engineering 提醒**：裁剪不是「砍得越狠越好」。
+> 用户刚提到的约束、工具返回的引用、格式要求，被裁掉会直接导致质量塌方。
+> 建议优先级：**system 指令 > 最近 N 轮 > 工具结果引用 > 历史摘要**。
 
 ---
 
-### 11.10 Provider Options — 各模型特有参数
+### 11.10 Provider Options 与可观测性
 
-**🎛️ 针对不同 Provider 的精细化控制**
+**🎛️ 厂商特有参数**
 
-AI SDK 支持通过 `providerOptions` 传入各模型的专属参数：
+AI SDK 7 把「推理强度」统一成了 `reasoning`，但各家的原生旋钮仍可通过 `providerOptions` 访问：
 
 ```typescript
-import { streamText } from 'ai';
-import { openai } from '@ai-sdk/openai';
 import { anthropic } from '@ai-sdk/anthropic';
+import { generateText } from 'ai';
 
-// ========== OpenAI 特有选项 ==========
-streamText({
-  model: openai('gpt-5'),
-  messages,
-  providerOptions: {
-    openai: {
-      // 🆔 用户级 ID（用于审计和反馈收集）
-      user: 'user_123',
-      // 📦 Logprobs：获取 token 级别概率
-      logprobs: true,
-      top_logprobs: 5,
-      // 🧪 并行工具调用
-      parallelToolCalls: false,
-      // 🎯 服务等级
-      serviceTier: 'flex',  // 'auto' | 'flex'(便宜50%) | 'priority'(更快)
-    },
-  },
-});
+// ✅ 推荐：统一档位（AI SDK 自动映射到各家原生参数）
+await generateText({ model, prompt, reasoning: 'high' });
 
-// ========== Anthropic 特有选项 ==========
-streamText({
-  model: anthropic('claude-sonnet-5'),
-  messages,
+// 需要精细控制时才用 providerOptions
+await generateText({
+  model: anthropic('claude-sonnet-4-6'),
+  prompt,
   providerOptions: {
     anthropic: {
-      // 🔄 Thinking block 预算（推理模式）
-      thinking: { type: 'enabled', budget_in_tokens: 1024 },
-      // 📜 临时内容：暂存但不出现在后续上下文中
-      transient: ['system', 'user'],
+      thinking: { type: 'enabled', budgetTokens: 16_000 },
+      // 长 system prompt 建议开启 prompt caching
     },
   },
 });
 ```
 
+| Provider | 推理参数 | 说明 |
+|:---|:---|:---|
+| Anthropic | `thinking: { type, budgetTokens }` | 扩展思考，按 token 预算 |
+| OpenAI | `reasoningEffort: 'low' \| 'medium' \| 'high'` | 推理档位 |
+| Google | `thinkingConfig: { thinkingBudget }` | token 上限，0 表示关闭 |
+
+**Telemetry：一次注册，全局生效**
+
+AI SDK 7 把遥测收敛为「应用启动时注册一次」，不再需要给每个调用挂回调：
+
+```typescript
+// instrumentation.ts
+import { registerTelemetry } from 'ai';
+import { OpenTelemetry } from '@ai-sdk/otel';
+
+registerTelemetry(new OpenTelemetry());
+```
+
+```typescript
+// 业务代码只需声明 functionId
+const result = await generateText({
+  model: 'google/gemini-3.5-flash',
+  prompt: '写一个关于猫的短故事',
+  telemetry: { functionId: 'story-agent' },
+});
+```
+
+也可以直接订阅 Node.js tracing channel：
+
+```typescript
+// instrumentation.ts
+import { AI_SDK_TELEMETRY_TRACING_CHANNEL, type TelemetryTracingChannelMessage } from 'ai';
+import { tracingChannel } from 'node:diagnostics_channel';
+
+tracingChannel(AI_SDK_TELEMETRY_TRACING_CHANNEL).subscribe({
+  start(message) {
+    const { type, event } = message as TelemetryTracingChannelMessage;
+    console.log(`[ai] ${type} started`, event);
+  },
+  asyncEnd(message) {
+    console.log(`[ai] ${(message as TelemetryTracingChannelMessage).type} completed`);
+  },
+});
+```
+
+一次 trace 会覆盖：根 generation、每次模型调用、每个 step、工具执行、embedding、
+reranking、usage、错误，以及选中的 runtime / tool context。
+官方集成：Datadog、Langfuse、Braintrust、Raindrop、Sentry、Laminar、LangSmith。
+
+> 📌 **最小可用可观测清单**（上线前至少要有这 5 个指标）：
+> TTFO（首字延迟）、输出 tokens/s、每次会话总成本、工具失败率、`finishReason` 分布。
+
 ---
 
-### 11.11 实用工具
-
-**🧰 AI SDK 内置工具函数集合**
+### 11.11 实用工具与 AI SDK 7 新增能力
 
 ```typescript
 import {
-  smoothStream,            // 平滑流式输出
-  pruneMessages,           // 消息截断优化
-  generateId,              // 生成唯一 ID
-  createIdGenerator,       // 自定义 ID 生成器
-  toUIMessageStream,       // streamText → UIMessage stream
-  toTextStream,            // streamText → 纯文本流
+  smoothStream,        // 平滑流式分块
+  generateId,          // 生成消息 ID
+  createIdGenerator,   // 带前缀的 ID 生成器
+  stepCountIs,         // 按步数停止
+  hasToolCall,         // 按「调用了某工具」停止
+  isToolUIPart,        // 判断 part 是否为工具相关
 } from 'ai';
+```
 
-// ========================================
-// 1. generateId — 生成唯一消息 ID
-// ========================================
-import { generateId, createIdGenerator } from 'ai';
+**AI SDK 7 新增能力一览**
 
-// 默认生成器：随机字符串
-const messageId = generateId();
-// 输出: "cm3w7h0mr000001l8dqe4tgzs"
+| 能力 | API | 用途 |
+|:---|:---|:---|
+| **文件一次上传，多次引用** | `uploadFile({ api, data, filename })` | 大 PDF/图片/Dataset 只传一次，后续调用传引用 |
+| **Skill 一次上传** | `uploadSkill({ api, files, displayTitle })` | 配合 provider 容器环境复用技能 |
+| **MCP Apps** | `experimental_MCPAppRenderer` | 在会话内渲染 MCP Server 返回的沙箱化 UI |
+| **终端 UI** | `runAgentTUI({ agent })` from `@ai-sdk/tui` | 不写前端就能交互式调试 Agent |
+| **复用成熟 Harness** | `HarnessAgent({ harness, sandbox, ... })` | 用统一接口跑 Claude Code / Codex / Pi |
+| **Realtime 语音** | `experimental_useRealtime` | 浏览器直连 WebSocket 语音会话 |
+| **视频生成** | `experimental_generateVideo` | fal / Google Veo / Replicate |
+| **沙箱** | `SandboxSession` | 工具里跑 shell/文件/代码的可移植执行环境 |
 
-// 自定义前缀生成器
-const myId = createIdGenerator({
-  prefix: 'ai',
-  length: 16,
-})();
-// 输出: "ai_x7y8z9a1b2c3d4e5"
+**文件一次上传示例**
 
-// ========================================
-// 2. pruneMessages — 智能截断消息
-// ========================================
-import { pruneMessages } from 'ai';
+```typescript
+import { readFileSync } from 'node:fs';
+import { openai } from '@ai-sdk/openai';
+import { streamText, uploadFile } from 'ai';
 
-const trimmed = pruneMessages({
-  messages: modelMessages,
-  reasoning: 'all',                          // 移除所有推理内容
-  toolCalls: 'before-last-message',          // 只保留最后一轮的工具调用
-  emptyMessages: 'remove',                   // 移除内容为空的消息
+const { providerReference } = await uploadFile({
+  api: openai.files(),
+  data: readFileSync('./photo.png'),
+  filename: 'photo.png',
 });
-
-// 高级用法：按工具逐个控制
-const trimmedCustom = pruneMessages({
-  messages: modelMessages,
-  toolCalls: [
-    { type: 'all', tools: ['calculator'] },     // 移除所有计算器调用
-    { type: 'before-last-2-messages' },          // 默认策略
-  ],
-});
-
-// ========================================
-// 3. smoothStream — 平滑流式输出
-// ========================================
-import { streamText, smoothStream } from 'ai';
 
 const result = streamText({
-  model: openai('gpt-5'),
-  messages,
-  experimental_transform: smoothStream({
-    // ⏱️ 均匀分发 token，消除突发延迟
-    delayInMs: 10, // 每个 chunk 延迟 ms（越小越快，默认 10）
-
-    // 📝 分词策略（中文推荐使用 Intl.Segmenter）
-    chunking: new Intl.Segmenter('zh-CN', { granularity: 'word' }),
-    // 可选: 'word'（默认英文单词） | 'line'（按行） | RegExp | Intl.Segmenter
-  }),
+  model: openai.responses('gpt-5.5'),
+  messages: [
+    {
+      role: 'user',
+      content: [
+        { type: 'text', text: '描述你在这张图里看到的内容。' },
+        { type: 'file', mediaType: 'image', data: providerReference }, // 传引用，不传字节
+      ],
+    },
+  ],
 });
+```
+
+**MCP Apps 渲染**
+
+```tsx
+import { experimental_MCPAppRenderer as MCPAppRenderer } from '@ai-sdk/react';
+import { isToolUIPart } from 'ai';
+
+{
+  messages.map((message) =>
+    message.parts.map((part) =>
+      isToolUIPart(part) ? (
+        <MCPAppRenderer
+          key={part.toolCallId}
+          part={part}
+          sandbox={{ url: '/mcp-app-sandbox', className: 'h-96 w-full' }}
+          loadResource={(app) => fetch(`/api/mcp-apps?uri=${app.resourceUri}`)}
+          handlers={{ allowedTools: ['refreshDashboard'] }}
+        />
+      ) : null,
+    ),
+  );
+}
+```
+
+**终端调试 Agent**（不写一行前端代码）
+
+```typescript
+// dev.ts
+import { runAgentTUI } from '@ai-sdk/tui';
+await runAgentTUI({ agent });
 ```
 
 ---
 
-## 🏗️ 完整实战示例：多 Provider 聊天应用
+## 🏗️ 完整实战示例：带工具审批的多 Provider 聊天应用
+
+**目录结构**
+
+```
+app/
+  api/chat/route.ts        # 流式聊天 + 工具
+  page.tsx
+components/
+  Chat.tsx                 # useChat + parts 渲染
+lib/ai/
+  providers.ts             # 模型注册表
+  tools.ts                 # 工具定义
+instrumentation.ts         # registerTelemetry
+```
+
+**1. 模型注册表** `lib/ai/providers.ts`
 
 ```typescript
-// app/api/chat/route.ts — 完整的服务端实现
-import {
-  streamText,
-  smoothStream,
-  createIdGenerator,
-  generateText,
-} from 'ai';
-import { openai } from '@ai-sdk/openai';
 import { anthropic } from '@ai-sdk/anthropic';
+import { google } from '@ai-sdk/google';
+import type { LanguageModel } from 'ai';
+
+export const registry = {
+  fast: google('gemini-3.5-flash'),
+  smart: anthropic('claude-sonnet-4-6'),
+} satisfies Record<string, LanguageModel>;
+
+export function pick(complexity: 'fast' | 'smart') {
+  return registry[complexity];
+}
+```
+
+**2. 工具定义** `lib/ai/tools.ts`
+
+```typescript
+import { tool } from 'ai';
+import { z } from 'zod';
+
+export const searchKb = tool({
+  description: '当用户问题涉及产品文档、内部知识时使用。',
+  inputSchema: z.object({ query: z.string().describe('检索关键词') }),
+  contextSchema: z.object({ kbId: z.string() }),
+  execute: async ({ query }, { context }) => {
+    const res = await fetch(`${process.env.KB_ENDPOINT}/search`, {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({ kbId: context.kbId, query, topK: 5 }),
+      signal: AbortSignal.timeout(5000),
+    });
+    if (!res.ok) throw new Error(`知识库检索失败：${res.status}`);
+    return res.json();
+  },
+});
+
+// 🚨 高风险操作：写库，必须人工审批
+export const createTicket = tool({
+  description: '当用户明确要求创建工单时调用。创建前必须获得用户确认。',
+  inputSchema: z.object({
+    title: z.string(),
+    priority: z.enum(['low', 'medium', 'high']),
+  }),
+  execute: async ({ title, priority }) => {
+    const res = await fetch(`${process.env.TICKET_ENDPOINT}/tickets`, {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({ title, priority }),
+    });
+    if (!res.ok) throw new Error(`工单创建失败：${res.status}`);
+    return res.json();
+  },
+});
+```
+
+**3. 路由** `app/api/chat/route.ts`
+
+```typescript
+import { convertToModelMessages, smoothStream, stepCountIs, streamText, type UIMessage } from 'ai';
+import { pick } from '@/lib/ai/providers';
+import { createTicket, searchKb } from '@/lib/ai/tools';
 
 export const maxDuration = 60;
 
 export async function POST(req: Request) {
-  const {
-    messages,
-    model = 'fast',       // 'fast' | 'smart' | 'creative'
-  }: { messages: any[]; model?: string } = await req.json();
-
-  // 🎯 动态选择模型
-  const modelMap: Record<string, ReturnType<typeof openai> | any> = {
-    fast:      openai('gpt-5-chat-latest'),
-    smart:     anthropic('claude-opus-4-8'),
-    creative:  anthropic('claude-sonnet-5'),
+  const { messages, complexity = 'fast' } = (await req.json()) as {
+    messages: UIMessage[];
+    complexity?: 'fast' | 'smart';
   };
 
-  const selectedModel = modelMap[model] || modelMap.fast;
-
   const result = streamText({
-    model: selectedModel,
-
-    // 🔄 消息格式转换 + 流式优化
-    messages: await convertToModelMessages(messages),
-
-    instructions: `你是由 AI SDK 驱动的智能助手。
-使用与用户相同的语言回答。回答应当精确、有用、友好。`,
-
-    temperature: 0.7,
-    maxOutputTokens: 4096,
-
-    // ⏱️ 平滑流式输出
+    model: pick(complexity),
+    messages: convertToModelMessages(messages),
+    system: '你是客服助手。回答必须基于知识库检索结果；不确定时说明并建议转人工。',
+    tools: { searchKb, createTicket },
+    toolsContext: { searchKb: { kbId: process.env.KB_ID! } },
+    stopWhen: stepCountIs(5),
+    timeout: { totalMs: 60_000, stepMs: 15_000, chunkMs: 3_000 },
     experimental_transform: smoothStream({
-      delayInMs: 10,
+      delayInMs: 12,
       chunking: new Intl.Segmenter('zh-CN', { granularity: 'word' }),
     }),
-
-    // 🎣 回调
-    onEnd({ text, totalUsage }) {
-      console.log(`[${model}] Done: ${totalUsage.outputTokens} output tokens`);
+    onFinish({ usage, finishReason }) {
+      // 落库 / 计费 / 上报
+      console.log({ finishReason, totalTokens: usage.totalTokens });
     },
   });
 
@@ -1177,13 +1086,160 @@ export async function POST(req: Request) {
 }
 ```
 
+**4. 客户端** `components/Chat.tsx`
+
+```tsx
+'use client';
+import { useChat } from '@ai-sdk/react';
+import { DefaultChatTransport, isToolUIPart } from 'ai';
+import { useState } from 'react';
+
+export default function Chat() {
+  const [input, setInput] = useState('');
+  const { messages, sendMessage, status, stop, error, regenerate, addToolResult } = useChat({
+    transport: new DefaultChatTransport({ api: '/api/chat' }),
+  });
+
+  const busy = status === 'submitted' || status === 'streaming';
+
+  return (
+    <div className="flex flex-col h-screen max-w-3xl mx-auto">
+      <div className="flex-1 overflow-y-auto p-4 space-y-4">
+        {messages.map((m) => (
+          <div key={m.id}>
+            {m.parts.map((part, i) => {
+              if (part.type === 'text') {
+                return <p key={i} className="whitespace-pre-wrap">{part.text}</p>;
+              }
+
+              // 🚨 高风险工具：渲染审批卡片
+              if (isToolUIPart(part) && part.toolName === 'createTicket') {
+                return (
+                  <div key={i} className="border-l-4 border-amber-500 bg-amber-50 p-3 rounded">
+                    <p>即将创建工单：{JSON.stringify(part.input)}</p>
+                    <button
+                      onClick={() =>
+                        addToolResult({
+                          tool: 'createTicket',
+                          toolCallId: part.toolCallId,
+                          output: { approved: true },
+                        })
+                      }
+                    >
+                      确认创建
+                    </button>
+                    <button
+                      onClick={() =>
+                        addToolResult({
+                          tool: 'createTicket',
+                          toolCallId: part.toolCallId,
+                          output: { approved: false, reason: '用户取消' },
+                        })
+                      }
+                    >
+                      取消
+                    </button>
+                  </div>
+                );
+              }
+
+              if (part.type === 'tool-call') {
+                return <p key={i} className="text-sm text-gray-500">调用 {part.toolName}…</p>;
+              }
+              if (part.type === 'tool-result') {
+                return (
+                  <pre key={i} className="text-xs bg-gray-50 p-2 rounded">
+                    {JSON.stringify(part.output, null, 2)}
+                  </pre>
+                );
+              }
+              return null;
+            })}
+          </div>
+        ))}
+
+        {error && (
+          <div className="text-red-600">
+            出错了。<button onClick={() => regenerate()}>重试</button>
+          </div>
+        )}
+      </div>
+
+      <form
+        className="p-4 flex gap-2"
+        onSubmit={(e) => {
+          e.preventDefault();
+          if (!input.trim() || busy) return;
+          sendMessage({ text: input });
+          setInput('');
+        }}
+      >
+        <input
+          className="flex-1 border rounded px-3 py-2"
+          value={input}
+          onChange={(e) => setInput(e.target.value)}
+          placeholder="描述你的问题…"
+        />
+        {busy ? (
+          <button type="button" onClick={stop}>停止</button>
+        ) : (
+          <button type="submit">发送</button>
+        )}
+      </form>
+    </div>
+  );
+}
+```
+
+**5. 可观测** `instrumentation.ts`
+
+```typescript
+import { registerTelemetry } from 'ai';
+import { OpenTelemetry } from '@ai-sdk/otel';
+
+registerTelemetry(new OpenTelemetry());
+```
+
+---
+
+## ✅ 自检清单
+
+上线前逐项确认：
+
+- [ ] 每个带 `tools` 的调用都设置了 `stopWhen`
+- [ ] 每个用户侧调用都设置了 `timeout`（至少 `totalMs` + `chunkMs`）
+- [ ] 前端渲染覆盖了全部 5 种 part，而不是只渲染 `text`
+- [ ] 高风险工具配了 `toolApproval`
+- [ ] `messages` 未经裁剪不会无限增长
+- [ ] 已接入 Telemetry，能看到 TTFO / tokens / 成本 / 工具失败率
+- [ ] 密钥只放在服务端，第三方工具通过 `contextSchema` 隔离
+
 ---
 
 ## 📎 延伸阅读
 
-| 文档 | 内容 | 相关章节 |
+- [🟢 阶段一：入门期 - AI 聊天室](./01-入门期-AI聊天室.md)
+- [🟡 阶段二：进阶期 - RAG 应用](./02-进阶期-RAG应用.md)
+- [🔵 阶段四：专家期 - Agent 设计](./04-专家期-Agent设计.md)
+- [🟣 阶段六：前沿技术与生态](./06-前沿技术与生态.md)（MCP / MCP Apps / A2A）
+- [学习指南总览](../index.md)
+
+---
+
+## 🚨 常见错误速查
+
+| 症状 | 原因 | 修复 |
 |:---|:---|:---|
-| [🟢 阶段一：入门期](./01-入门期-AI聊天室.md) | AI 聊天室基础 | 流式传输、上下文管理 |
-| [🔵 阶段二：进阶期](./02-进阶期-RAG应用.md) | RAG 知识库 | 向量检索、混合检索 |
-| [🔴 阶段四：专家期](./04-专家期-Agent设计.md) | Agent 设计 | Tool Calling、ReAct Loop |
-| [🛠️ 开发实战](./08-开发实战与架构指南.md) | 全栈架构 | Provider 适配、降级链 |
+| `useChat` 拿不到 `input` / `handleInputChange` | 用了 v4 的 API | 自己 `useState` 管输入，用 `sendMessage({ text })` |
+| 消息内容拿不到，打印 `message.content` 是 undefined | v5+ 改为 `parts` | 遍历 `message.parts`，按 `part.type` 分发 |
+| 工具调用了但界面上什么都没有 | 渲染循环只处理了 `text` | 补上 `tool-call` / `tool-result` 分支 |
+| Agent 一直跑停不下来 | 没有停止条件 | 加 `stopWhen: stepCountIs(N)` |
+| 账单暴涨 | 同上 + 上下文无裁剪 | 停止条件 + 滑动窗口 / 摘要 |
+| `generateObject` 告警 | 已废弃 | 改用 `generateText` + `output: Output.object({ schema })` |
+| 导入 `@ai-sdk/react` 报找不到模块 | 只装了 `ai` | `bun add @ai-sdk/react` |
+| 流式输出一个字一个字抖 | 没做平滑分块 | 加 `experimental_transform: smoothStream({ chunking })` |
+
+---
+
+> 📅 **最后更新**：2026-09 · 对齐 **AI SDK 7** / MCP 规范 **2026-07-28**
+> 模型型号与价格请以各厂商官方定价页为准。
