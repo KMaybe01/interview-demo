@@ -4962,7 +4962,7 @@ export class PerformanceService {
 
 ---
 
-## 🔴 Angular 22 面试题（21题）
+## 🔴 Angular 22 面试题（35题）
 
 
 ### Q1：Angular 的变更检测机制是什么？Zone.js 和 Signals 有什么区别？
@@ -5435,7 +5435,7 @@ export class LoginTemplateComponent {
 
 #### 五、面试八股文（10 题）
 
-### Q25：Signal Forms 与 Reactive Forms 的核心区别？Angular 为什么要推出 Signal Forms？
+### Q8：Signal Forms 与 Reactive Forms 的核心区别？Angular 为什么要推出 Signal Forms？
 
 **核心区别：**
 
@@ -5461,7 +5461,7 @@ Signal Forms 解决的问题：
 **面试追问：** *Signal Forms 能完全替代 Reactive Forms 吗？*
 > 目前不能。Signal Forms 的 `validateHttp()` 等 API 仍在演进中，且第三方库（如 Angular Material 的 mat-form-field）对 Reactive Forms 的支持更成熟。Angular 22 推荐新项目用 Signal Forms，旧项目渐进式迁移。
 
-### Q26：模板驱动表单为什么不适合复杂场景？底层脏检查机制是什么？
+### Q9：模板驱动表单为什么不适合复杂场景？底层脏检查机制是什么？
 
 **不适合复杂场景的原因：**
 ```
@@ -5490,7 +5490,7 @@ ngModel 工作流程：
 **面试追问：** *模板驱动表单中的 `ngModelChange` 和 `(input)` 事件有什么区别？*
 > `ngModelChange` 是 Angular 输出事件，在 ngModel 内部更新后触发，值已经是 Angular 处理过的。`(input)` 是原生 DOM 事件，值需要从 `$event.target.value` 手动获取。模板驱动表单推荐用 `ngModelChange`，因为它保证值已经过 Angular 表单管道处理。
 
-### Q27：Angular 表单的 touched/dirty/pristine/untouched 四种状态的区别？实际业务中如何使用？
+### Q10：Angular 表单的 touched/dirty/pristine/untouched 四种状态的区别？实际业务中如何使用？
 
 **四种状态定义：**
 
@@ -5529,7 +5529,7 @@ this.form.markAllAsTouched();
 **面试追问：** *`markAllAsTouched()` 和 `markAsDirty()` 的区别？什么时候用哪个？*
 > `markAllAsTouched()` 遍历所有子控件，将 touched 设为 true — 用于**提交时强制显示所有验证错误**。`markAsDirty()` 只影响当前控件 — 用于**手动标记某个控件已被修改**。提交表单用 `markAllAsTouched()`，自定义场景用 `markAsDirty()`。
 
-### Q28：如何在 Angular 中实现跨字段验证？三种方案分别怎么做？
+### Q11：如何在 Angular 中实现跨字段验证？三种方案分别怎么做？
 
 **场景：** 密码确认 — `confirmPassword` 必须与 `password` 相同。
 
@@ -5600,7 +5600,7 @@ export class PasswordMatchDirective implements Validator {
 
 **对比：** Signal Forms 最简洁，Reactive Forms 其次，Template-driven 最繁琐。
 
-### Q29：动态表单（运行时增减字段）如何实现？FormArray vs Signal 数组？
+### Q12：动态表单（运行时增减字段）如何实现？FormArray vs Signal 数组？
 
 **场景：** 订单表单，用户可以动态添加/删除商品项。
 
@@ -5688,7 +5688,7 @@ export class OrderSignalComponent {
 
 **对比：** FormArray 有丰富的 API（push/removeAt/moveControl），Signal 数组更直观但需要手动管理不可变更新。
 
-### Q30：asyncValidator 与 debounceTime 结合使用的最佳实践？如何避免请求风暴？
+### Q13：asyncValidator 与 debounceTime 结合使用的最佳实践？如何避免请求风暴？
 
 **问题：** 用户快速输入时，每次值变化都触发异步验证请求 → 请求风暴。
 
@@ -5748,7 +5748,7 @@ const signupForm = form(signupModel, (schemaPath) => {
 5. Signal Forms 的 validateHttp 内置了以上全部
 ```
 
-### Q31：Signal Forms 中 `formField` 指令的工作原理是什么？它如何实现双向绑定？
+### Q14：Signal Forms 中 `formField` 指令的工作原理是什么？它如何实现双向绑定？
 
 **工作原理：**
 
@@ -5777,7 +5777,7 @@ formField 指令职责：
 **面试追问：** *`formField` 指令如何处理自定义组件（如日期选择器、下拉框）？*
 > 与 ngModel 一样，自定义控件实现 `ControlValueAccessor` 接口（writeValue / registerOnChange / registerOnTorch），formField 指令会自动识别并绑定。Angular 22 的 signal-based ControlValueAccessor 正在设计中，未来会提供更简洁的 API。
 
-### Q32：模板驱动表单中 `ngModel` 和 `FormControl` 是什么关系？为什么说它们是"同一个底层"？
+### Q15：模板驱动表单中 `ngModel` 和 `FormControl` 是什么关系？为什么说它们是"同一个底层"？
 
 **关系图：**
 
@@ -5832,7 +5832,7 @@ export class NgModel implements ControlValueAccessor {
 **面试追问：** *为什么 Angular 要提供两种不同的 API 来做同一件事？*
 > 设计哲学不同。Template-driven Forms 面向"模板思维"的开发者 — 声明式、简单、学习成本低。Reactive Forms 面向"代码思维"的开发者 — 显式、可测试、适合复杂场景。底层共享 AbstractControl 是为了代码复用和一致性。
 
-### Q33：Angular 22 表单如何处理 SSR 场景？三种方案的 SSR 差异？
+### Q16：Angular 22 表单如何处理 SSR 场景？三种方案的 SSR 差异？
 
 **SSR 核心问题：** 表单状态在服务端创建，需要序列化到 HTML，客户端 hydrate 时恢复。
 
@@ -5864,7 +5864,7 @@ export class FormComponent {
 // SSR 输出的 HTML 包含表单状态，客户端 hydrate 时自动恢复
 ```
 
-### Q34：如何选择 Angular 表单方案？给出从"登录页"到"复杂配置页"的选型建议？
+### Q17：如何选择 Angular 表单方案？给出从"登录页"到"复杂配置页"的选型建议？
 
 **按复杂度选型：**
 
@@ -5903,7 +5903,7 @@ export class FormComponent {
 动态表单看字段数量：少用 Signal 数组，多用 FormArray
 ```
 
-### Q8：Angular 中如何防止内存泄漏？最佳实践？
+### Q18：Angular 中如何防止内存泄漏？最佳实践？
 
 | 方案 | 适用场景 | 代码量 |
 |------|---------|--------|
@@ -5935,7 +5935,7 @@ export class SimpleComponent {
 }
 ```
 
-### Q9：Angular 19+ 的 `resource()` 和 `httpResource()` 是什么？
+### Q19：Angular 19+ 的 `resource()` 和 `httpResource()` 是什么？
 
 ```typescript
 const userId = signal(1)
@@ -5975,7 +5975,7 @@ const userResource = httpResource<User>(() => `/api/users/${userId()}`)
 > ```
 > **是否完全移除装饰器：** Angular 团队计划逐步"缩减装饰器使用范围"，但不会完全移除。`@Component`/@Directive/@Injectable 作为框架核心元数据标记将继续存在。Angular 22 新增的编译时宏（如 `input()`/`output()`/`viewChild()`）表明"从装饰器向函数式 API 迁移"是长期趋势。
 
-### Q10：Angular 22 Zoneless 模式下如何迁移？
+### Q20：Angular 22 Zoneless 模式下如何迁移？
 
 **迁移四步骤：**
 
@@ -6004,7 +6004,7 @@ const data = httpResource(() => '/api/data')
 - `NgZone` API 的使用（`onStable`、`runOutsideAngular`）
 - 第三方库依赖 Zone.js 的自动检测
 
-### Q11：Angular 的 AOT 和 JIT 编译有什么区别？
+### Q21：Angular 的 AOT 和 JIT 编译有什么区别？
 
 | 维度 | JIT（Just-in-Time） | AOT（Ahead-of-Time） |
 |------|-------------------|---------------------|
@@ -6019,7 +6019,7 @@ const data = httpResource(() => '/api/data')
 - 减少 bundle 体积（无需在浏览器中编译模板）
 - 更快的首次渲染（无需等待编译）
 
-### Q12：Angular 中如何实现跨组件通信？
+### Q22：Angular 中如何实现跨组件通信？
 
 | 方式 | 适用范围 | 方向 |
 |------|---------|------|
@@ -6048,7 +6048,7 @@ export class AnyComponent {
 }
 ```
 
-### Q13：如何优化大型 Angular 应用的性能？
+### Q23：如何优化大型 Angular 应用的性能？
 
 ```
 📦 构建优化
@@ -6079,7 +6079,7 @@ export class AnyComponent {
 
 ---
 
-### Q14：Standalone 组件 vs NgModule 有什么区别？
+### Q24：Standalone 组件 vs NgModule 有什么区别？
 
 | 维度 | Standalone | NgModule |
 |------|-----------|----------|
@@ -6089,7 +6089,7 @@ export class AnyComponent {
 | 推荐度 | ✅ Angular 17+ 推荐 | ⚠️ 旧项目兼容 |
 | 适用场景 | 新项目 | 遗留项目 |
 
-### Q15：纯管道 vs 非纯管道的区别？
+### Q25：纯管道 vs 非纯管道的区别？
 
 - **纯管道**：只在输入值变化时重新计算（通过引用比较），性能好
 - **非纯管道**：每次变更检测都重新计算，性能较差
@@ -6099,7 +6099,7 @@ export class AnyComponent {
 @Pipe({ name: 'impure', pure: false }) // 非纯管道
 ```
 
-### Q16：Angular 模块加载方式有哪些？
+### Q26：Angular 模块加载方式有哪些？
 
 ```
 Eager（立即加载）: 在 AppModule 中直接导入 → 包含在初始 Bundle 中
@@ -6107,7 +6107,7 @@ Lazy（懒加载）: loadChildren / loadComponent → 按需加载代码块
 Preload（预加载）: PreloadAllModules → 在初始加载后后台加载
 ```
 
-### Q17：Angular 有哪些跨平台能力？
+### Q27：Angular 有哪些跨平台能力？
 
 ```
 Web        → @angular/platform-browser
@@ -6118,7 +6118,7 @@ Desktop    → Electron + Angular
 PWA        → @angular/service-worker
 ```
 
-### Q18：Angular 变更检测与 React 的区别？
+### Q28：Angular 变更检测与 React 的区别？
 
 | 维度 | Angular | React |
 |------|---------|-------|
@@ -6147,7 +6147,7 @@ function MyComponent() {
 }
 ```
 
-### Q19：Angular DI 与 React Context 的区别？
+### Q29：Angular DI 与 React Context 的区别？
 
 | 维度 | Angular DI | React Context |
 |------|-----------|---------------|
@@ -6162,7 +6162,7 @@ function MyComponent() {
 **关键差异：** Angular DI 是框架级基础设施，内建分层注入器和可选修饰符，适合大型企业级应用的依赖管理。React Context 本质是组件树上的值传递机制，适合中浅层级的共享状态，深层嵌套时性能问题较明显。
 
 
-### Q20：Angular Zone.js → Signals 迁移深度分析
+### Q30：Angular Zone.js → Signals 迁移深度分析
 
 **Zone.js 原理：**
 ```
@@ -6215,7 +6215,7 @@ signal(0) → .get() → track 当前 effect
 > **解决方案：** `NgZone.run()` 手动触发、迁移到 Signals 模式、或 `ChangeDetectorRef.markForCheck()`。
 
 
-### Q21：Angular Signals 与 Vue 3 Signals 的区别？
+### Q31：Angular Signals 与 Vue 3 Signals 的区别？
 
 | 维度 | Angular Signals | Vue 3 Signals |
 |------|----------------|---------------|
@@ -6225,7 +6225,7 @@ signal(0) → .get() → track 当前 effect
 | **生态整合** | RxJS 深度整合 | 独立生态 |
 
 
-### 21. Token 刷新拦截器（完整实现）
+### Q32：Token 刷新拦截器（完整实现）
 
 ```ts
 @Injectable()
@@ -6329,7 +6329,7 @@ sequenceDiagram
 
 ---
 
-### 22. Angular DI 原理深度
+### Q33：Angular DI 原理深度
 
 #### 分层注入器
 
@@ -6469,7 +6469,7 @@ const routes = [
 
 ---
 
-### 23. takeUntilDestroyed 防止内存泄漏（Angular 22+）
+### Q34：takeUntilDestroyed 防止内存泄漏（Angular 22+）
 
 Angular 22+ 推荐使用 `takeUntilDestroyed`，基于 `DestroyRef`，无需手动管理 `Subject` 和 `ngOnDestroy`。
 
@@ -6527,7 +6527,7 @@ flowchart LR
 
 ---
 
-### 24. Angular 20+ 新特性一览
+### Q35：Angular 20+ 新特性一览
 
 | 特性 | 描述 | 版本 |
 |------|------|------|
