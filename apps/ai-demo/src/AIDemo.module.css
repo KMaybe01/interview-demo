@@ -8,7 +8,7 @@
 }
 
 [data-theme="dark"] .container {
-  background: var(--header-bg, #141414);
+  background: var(--header-bg, #000000);
 }
 
 .sidebar {
@@ -130,7 +130,7 @@
 }
 
 [data-theme="dark"] .content {
-  background: var(--header-bg, #141414);
+  background: var(--header-bg, #000000);
 }
 
 ::-webkit-scrollbar {
