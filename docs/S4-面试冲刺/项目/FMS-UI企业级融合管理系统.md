@@ -122,13 +122,13 @@
 │                                                                             │
 │  ┌─────────────────────────────────────────────────────────────────────┐   │
 │  │                      表现层 (UI Layer)                               │   │
-│  │  Angular 20.3 + TypeScript 5.9 + Ng-Zorro 20.4 + @axyom-ui          │   │
-│  │  ECharts 5.x + OpenLayers 8.x + AntV G6 4.x                         │   │
+│  │  Angular 22.0 + TypeScript 6.0 + Ng-Zorro 22.0 + @axyom-ui          │   │
+│  │  ECharts 5.x + OpenLayers 10.x + AntV G6 4.x                         │   │
 │  └─────────────────────────────────────────────────────────────────────┘   │
 │                              │                                              │
 │  ┌─────────────────────────────────────────────────────────────────────┐   │
 │  │                      框架层 (Framework)                               │   │
-│  │  Angular 20.3 (Standalone + Signals + 声明式控制流)                   │   │
+│  │  Angular 22.0 (Standalone默认 + Signals + 声明式控制流)               │   │
 │  │  @axyom-ui: decorator-driven API、ACL、Form、Table                    │   │
 │  └─────────────────────────────────────────────────────────────────────┘   │
 │                              │                                              │
@@ -200,10 +200,10 @@
 | 维度 | 数量 | 说明 |
 |------|------|------|
 | **功能模块** | 8个 | Dashboard / SCM / AeMS / FMS / GW / FIS / FISP / FFS |
-| **页面组件** | 60+ | 覆盖所有功能模块路由 |
-| **共享组件** | 14个 | CardComponent、ButtonGroupComponent等 |
-| **API服务** | 40+ | 装饰器驱动的声明式HTTP服务 |
-| **DTO模型** | 19+ | 各业务域数据类型定义 |
+| **页面组件** | ~173 | 覆盖所有功能模块路由（完全Standalone） |
+| **共享组件** | 11个 | CardComponent、ButtonGroupComponent等 |
+| **API服务** | 58个 | 装饰器驱动的声明式HTTP服务 |
+| **DTO模型** | 55个 | 各业务域数据类型定义 |
 | **工具函数** | 8+ | 去重、日期格式化、排序、表单重置等 |
 | **路由路径** | 60+ | Hash路由，Standalone懒加载 |
 | **第三方依赖** | 20+ | Angular生态核心库 |
@@ -260,14 +260,15 @@ export const RedirectGuard: CanActivateChildFn = (route, state) => {
 | **ACL三级权限体系** | 菜单过滤+路由守卫+模板指令三层控制 | ⭐⭐⭐ |
 | **Pagination\<T\>泛型基类** | 10+列表统一分页/搜索/过滤逻辑 | ⭐⭐ |
 | **精确Loading管理** | 请求级粒度追踪，消除全局闪烁 | ⭐⭐ |
-| **Signal响应式状态** | 全组件Signal驱动，OnPush变更检测 | ⭐⭐ |
+| **Signal响应式状态** | 全组件Signal驱动，60+ signal声明 | ⭐⭐ |
+| **Signal-based输入输出** | input()/output()信号化组件API，28处使用 | ⭐⭐ |
 | **OSM地图BBOX裁剪** | 视口裁剪+聚合，十万设备→百级点位 | ⭐⭐⭐ |
-| **Standalone懒加载** | 8大模块独立懒加载，Tree-shaking更优 | ⭐⭐ |
+| **Standalone默认化** | Angular 22零NgModule，完全独立组件 | ⭐ |
 | **函数式拦截器/守卫** | HttpInterceptorFn + CanActivateFn 简洁语法 | ⭐ |
-| **自定义表单单元** | MacUnitComponent / DateExtraUnitComponent | ⭐⭐ |
+| **linkedSignal派生状态** | 可写派生信号，响应源信号变化自动重置 | ⭐⭐ |
 | **全局主题切换** | 6种主题色动态切换，NG-ZORRO品牌色 | ⭐⭐ |
 | **异步导出轮询** | RxJS expand/takeWhile 流式轮询+浏览器下载 | ⭐⭐ |
-| **Ace/Monaco/JSON编辑器** | 3种编辑器适配不同场景 | ⭐⭐ |
+| **跨标签页认证同步** | BroadcastChannel API实现多标签页状态一致 | ⭐⭐ |
 | **批量任务管理** | 动态条件渲染、多策略执行结果查看 | ⭐⭐⭐ |
 | **AntV G6拓扑视图** | 集群拓扑可视化，力导向图布局 | ⭐⭐ |
 
@@ -313,14 +314,14 @@ export const RedirectGuard: CanActivateChildFn = (route, state) => {
 
 | 层级 | 技术选型 | 关键版本 |
 |------|----------|----------|
-| 框架 | Angular (Standalone + Signals + 声明式控制流) | 20.3 |
-| UI | Ng-Zorro + @axyom-ui 自研组件库 (theme/acl/form/table) | 20.4 |
+| 框架 | Angular (Standalone默认 + Signals + 声明式控制流) | 22.0 |
+| UI | Ng-Zorro + @axyom-ui 自研组件库 (theme/acl/form/table) | 22.0 |
 | 图表 | ECharts (按需引入 Bar/Pie/Line/Tree) + AntV G6 | 5.x / 4.x |
-| 地图 | OpenLayers + GeoServer WMS | 8.x |
-| 状态管理 | Angular Signals (signal/computed) + @axyom-ui/acl | — |
+| 地图 | OpenLayers + GeoServer WMS | 10.x |
+| 状态管理 | Angular Signals (signal/computed/linkedSignal) + @axyom-ui/acl | — |
 | 路由 | Hash 策略 + Standalone 懒加载 | — |
 | 样式 | Less + BEM 命名规范 | — |
-| 构建 | Angular CLI + pnpm | 20.x |
+| 构建 | Angular CLI + bun | 22.x |
 | 工程化 | ESLint + Prettier + Husky + lint-staged | — |
 
 ### 1.2 模块规模统计
@@ -328,14 +329,14 @@ export const RedirectGuard: CanActivateChildFn = (route, state) => {
 | 模块 | 页面数 | 子路由模块 | API 服务数 |
 |------|--------|-----------|------------|
 | dashboard (仪表盘) | 1 | 5+ 子组件 | 2 (DashboardService, MapService) |
-| cell-manage (SCM基站) | 12 | 12个懒加载子模块 | 8 (NeGroup, NeModel, Alarm, Config, Profile, Provision, Bulk, Report) |
-| aems-manage (AeMS集群) | 4 | 4个懒加载子模块 | 4 (Cluster, Config, Alarm, Data) |
-| fms-manage (FMS主控) | 8 | 6个懒加载子模块 | 32 (fms/ 目录下全部) |
-| gw-manage (GW网关) | 5 | 3个懒加载子模块 | 4 (GwService, Switchover等) |
-| fis-manage (FIS代理) | 2 | — | 4 (FisService等) |
-| fis-proxy (FISP代理) | 2 | — | 2 (FisProxyService等) |
+| cell-manage (SCM基站) | 12 | 12个懒加载子模块 | 25+ (scm/ 目录下全部) |
+| aems-manage (AeMS集群) | 4 | 4个懒加载子模块 | 3 (Cluster, Config, Data) |
+| fms-manage (FMS主控) | 8 | 6个懒加载子模块 | 10+ (fms/ 目录下全部) |
+| gw-manage (GW网关) | 5 | 3个懒加载子模块 | 5 (GwService, Config, Dscp, Topology, Vnf) |
+| fis-manage (FIS代理) | 2 | — | 2 (FisService, FisForwardService) |
+| fis-proxy (FISP代理) | 2 | — | 2 (FisProxyService, FispService) |
 | ffs-manage (FFS文件) | 1 | — | 1 (FfsService) |
-| **合计** | **35+** | **25+ 懒加载模块** | **40+** |
+| **合计** | **~173组件** | **30+ 路由文件** | **58** |
 
 ### 1.3 数据流全链路
 
@@ -994,11 +995,11 @@ export const authInterceptor: HttpInterceptorFn = (req, next) => {
 
 ---
 
-## 四、Angular 20 新特性实战应用
+## 四、Angular 22 新特性实战应用
 
 ### 4.1 Signals 状态管理
 
-**应用场景**: 全组件的状态管理
+**应用场景**: 全组件的状态管理（60+ signal声明）
 
 ```typescript
 // 1. signal() — 响应式状态
@@ -1012,11 +1013,62 @@ readonly filteredRows = computed(() => {
   if (!keyword) return this.rows();
   return tableFilter(keyword, this.rows(), this.cols());
 });
+
+// 3. effect() — 响应式副作用（10+处使用）
+effect(() => {
+  console.log('Rows changed:', this.rows().length);
+});
+
+// 4. untracked() — 防止信号依赖追踪（29处使用）
+effect(() => {
+  const current = this.selected();
+  untracked(() => {
+    this.otherSignal.set(current.length);
+  });
+});
 ```
 
-### 4.2 声明式控制流
+### 4.2 Signal-based 输入输出（Angular 19+/22）
 
-**应用场景**: 模板中的条件渲染和列表渲染
+**应用场景**: 组件API信号化（28处 input()，2处 output()）
+
+```typescript
+// Signal-based inputs — 响应式属性输入
+@Component({...})
+export class SidebarComponent {
+  isCollapsed = input(false);                    // 可选输入
+  title = input.required<string>();              // 必填输入
+}
+
+// Signal-based outputs — 事件输出
+@Component({...})
+export class IframeWindowComponent {
+  closeWindow = output<void>();                  // 关闭事件
+}
+
+// 使用方：信号自动追踪
+@if (!sidebar.isCollapsed()) {
+  <div class="sidebar-content">...</div>
+}
+```
+
+### 4.3 linkedSignal 派生状态（Angular 22 实验性）
+
+**应用场景**: 可写派生信号，源信号变化时自动重置
+
+```typescript
+// SearchCardComponent — 展开状态随初始值变化自动重置
+expandForm = linkedSignal(() => this.initCollapse());
+
+// 特点：
+// 1. 读取时返回源信号的值
+// 2. 写入时可以覆盖值
+// 3. 源信号变化时自动重置为源值
+```
+
+### 4.4 声明式控制流（完全迁移）
+
+**应用场景**: 模板中的条件渲染和列表渲染（零遗留 *ngIf/*ngFor）
 
 ```html
 @if (isLoading()) {
@@ -1030,6 +1082,8 @@ readonly filteredRows = computed(() => {
           <td>{{ item.neName }}</td>
           <td>{{ item.status === 1 ? 'Online' : 'Offline' }}</td>
         </tr>
+      } @empty {
+        <tr><td colspan="99">No data</td></tr>
       }
     </tbody>
   </nz-table>
@@ -1042,29 +1096,41 @@ readonly filteredRows = computed(() => {
 }
 ```
 
-### 4.3 Standalone 组件 + 懒加载
+### 4.5 Standalone 默认化（Angular 22）
+
+**关键变化**: Angular 22 中 Standalone 是默认行为，无需显式声明
 
 ```typescript
-// 组件自包含，无需 NgModule
+// Angular 22 — 无需 standalone: true（已是默认值）
 @Component({
   selector: 'app-active-list',
-  standalone: true,
-  imports: [CommonModule, NzTableModule, NzButtonModule, ...],
+  // standalone: true,  // ← 不再需要！
+  imports: [NzTableModule, NzButtonModule, ...],
   templateUrl: './active-list.component.html',
-  changeDetection: ChangeDetectionStrategy.OnPush,
 })
 export class ActiveListComponent extends Pagination<NeTree> {
   // ...
 }
 
-// 懒加载路由配置
-{
-  path: 'scm',
-  loadChildren: () => import('./routes/cell-manage/routes'),
+// 整个项目零 NgModule，完全独立组件
+```
+
+### 4.6 afterNextRender 生命周期（Angular 19+）
+
+**应用场景**: 首次渲染后执行DOM操作，解耦ngOnInit
+
+```typescript
+// Pagination<T> 基类 — 首次渲染后自动刷新
+export abstract class Pagination<T = unknown> {
+  constructor() {
+    afterNextRender(() => {
+      this.refresh();  // 仅在首次渲染后触发，避免SSR问题
+    });
+  }
 }
 ```
 
-### 4.4 函数式守卫和拦截器
+### 4.7 函数式守卫和拦截器
 
 ```typescript
 // 函数式路由守卫
@@ -1087,16 +1153,40 @@ export const loadingInterceptor: HttpInterceptorFn = (req, next) => {
 };
 ```
 
-### 4.5 takeUntilDestroyed + destroyRef
+### 4.8 takeUntilDestroyed + DestroyRef
 
 ```typescript
-// 组件销毁时自动取消订阅
+// 组件销毁时自动取消订阅（41处使用）
 readonly #destroyRef = inject(DestroyRef);
 
 constructor() {
   interval(60000).pipe(
     takeUntilDestroyed(this.#destroyRef),
   ).subscribe(() => this.refresh());
+}
+
+// 或简写形式（无需显式传参）
+interval(60000).pipe(
+  takeUntilDestroyed(),
+).subscribe(() => this.refresh());
+```
+
+### 4.9 BroadcastChannel 跨标签页同步
+
+**应用场景**: 多标签页登录状态一致
+
+```typescript
+// AuthService — 跨标签页认证同步
+private authChannel = new BroadcastChannel('auth-sync');
+
+login(credentials) {
+  // 登录成功后通知其他标签页
+  this.authChannel.postMessage({ type: 'LOGIN', user });
+}
+
+logout() {
+  // 登出时同步其他标签页
+  this.authChannel.postMessage({ type: 'LOGOUT' });
 }
 ```
 
@@ -1294,7 +1384,7 @@ EXPOSE 80
 
 #### Q1: 请介绍项目的整体架构设计
 
-**答：** 四层架构 — API 层 (40+ 个装饰器声明式 HTTP 服务) → Core 层 (Auth/Menu/Loading/Theme 全局服务 + 拦截器/守卫) → Routes 层 (8 大功能模块，Standalone 懒加载) → Share 层 (14 个可复用组件)。关键决策：Angular 20 Signals + OnPush 全组件响应式、@axyom-ui 装饰器驱动的 API 抽象、ACL 三级权限体系。
+**答：** 四层架构 — API 层 (58 个装饰器声明式 HTTP 服务) → Core 层 (Auth/Menu/Loading/Theme 全局服务 + 拦截器/守卫) → Routes 层 (8 大功能模块，Standalone 懒加载) → Share 层 (11 个可复用组件)。关键决策：Angular 22 Signals + OnPush 全组件响应式、@axyom-ui 装饰器驱动的 API 抽象、ACL 三级权限体系。
 
 #### Q2: ACL 三级权限体系如何实现？
 
@@ -1314,9 +1404,9 @@ EXPOSE 80
 
 **答：** 导出请求返回 requestId → `mergeMap` 展平为轮询流 → `expand` 递归展开 → `timer(2000)` 2 秒间隔 → `takeWhile` 控制终止。`downloadFile` 通过 `<a>` 标签触发浏览器下载，零内存占用。
 
-#### Q6: Angular 20 新特性在项目中的应用？
+#### Q6: Angular 22 新特性在项目中的应用？
 
-**答：** ① `signal/computed` Signal 状态管理；② `@if/@for/@switch` 声明式控制流；③ Standalone 组件 + `loadChildren` 懒加载；④ `CanActivateFn` / `HttpInterceptorFn` 函数式守卫和拦截器；⑤ `takeUntilDestroyed(destroyRef)` 内置销毁管理；⑥ `OnPush` 变更检测。
+**答：** ① `signal/computed/effect` Signal 状态管理（60+声明）；② `@if/@for/@switch` 声明式控制流（完全迁移，零遗留）；③ Standalone 默认化（零 NgModule）；④ `input()/output()` Signal-based 输入输出（28处）；⑤ `linkedSignal` 可写派生信号；⑥ `afterNextRender` 首次渲染后生命周期；⑦ `CanActivateFn` / `HttpInterceptorFn` 函数式守卫和拦截器；⑧ `takeUntilDestroyed()` 内置销毁管理（41处）；⑨ `BroadcastChannel` 跨标签页认证同步。
 
 ### 8.3 性能优化类
 
@@ -1324,7 +1414,7 @@ EXPOSE 80
 
 **答：** 三级优化：① BBOX 视口裁剪只渲染可见区域设备；② 聚合点合并同 Market 同状态设备；③ `moveend` 懒刷新避免拖拽过程中频繁重绘。OpenLayers `calculateExtent()` + `toLonLat()` 实现坐标转换和裁剪。
 
-#### Q8: 如何保证 40+ 个 API 服务的一致性？
+#### Q8: 如何保证 58 个 API 服务的一致性？
 
 **答：** ① 统一继承 `@axyom-ui/theme` 的 `BaseApi`，使用相同装饰器体系；② 每个 API 模块有独立目录定义接口；③ `api/readme.md` 规范目录结构和命名；④ 装饰器 URL 模板 + 参数绑定保证类型安全。
 
@@ -1340,16 +1430,16 @@ EXPOSE 80
 | 4 | 精确 Loading | HttpInterceptor、Signal | `core/service/loading.service.ts` |
 | 5 | 十万级设备地图 | BBOX 裁剪、聚合、WMS | `routes/dashboard/osm-map/` |
 | 6 | 函数式拦截器/守卫 | HttpInterceptorFn、CanActivateFn | `core/interceptor/`、`core/guard/` |
-| 7 | 异步导出轮询 | expand/takeWhile、流式下载 | `share/common/download-file.ts` |
-| 8 | 多主题动态切换 | ThemeService、NG-ZORRO CSS变量 | `core/service/theme.service.ts` |
-| 9 | 自定义表单单元 | FormUnitRegistry、MAC输入 | `share/form/` |
+| 7 | Signal-based 输入输出 | input()、output()、信号化API | 各组件 |
+| 8 | linkedSignal 派生状态 | 可写派生、源信号重置 | `share/component/search-card/` |
+| 9 | 多主题动态切换 | ThemeService、NG-ZORRO CSS变量 | `core/service/theme.service.ts` |
 | 10 | AntV G6 拓扑视图 | 力导向图、集群拓扑 | `routes/dashboard/topology/` |
-| 11 | 全局搜索防抖 | AutoComplete、SessionStorage中转 | `layout/header/` |
+| 11 | 跨标签页认证同步 | BroadcastChannel、多标签页一致 | `core/service/auth.service.ts` |
 | 12 | 批量任务管理 | 动态表单、多任务类型 | `routes/cell-manage/bulk-operate/` |
-| 13 | 节点监控倒计时 | interval + signal 精确计时 | `routes/monitor/node/` |
+| 13 | afterNextRender | 首次渲染后、解耦ngOnInit | `share/common/page.ts` |
 | 14 | 三色编辑器体系 | Ace/Monaco/JSON Editor | 各配置模块 |
 | 15 | Blob 错误处理 | FileReader + Blob→JSON | `core/interceptor/auth.interceptor.ts` |
-| 16 | LDAP 认证集成 | LDAP 配置、登录切换 | `core/service/auth.service.ts` |
+| 16 | untracked 副作用 | 防止依赖追踪、effect优化 | 各组件（29处） |
 | 17 | Profile 参数管理 | 参数文件 + 任务下发 | `routes/cell-manage/cell-profile/` |
 | 18 | ODF 文件全生命周期 | 预检→实施→结果 | `routes/cell-manage/file-manage/` |
 | 19 | Slave 实例隔离 | SlaveGuard 检测 + 跳转 | `core/guard/slave.gurad.ts` |
@@ -1357,4 +1447,4 @@ EXPOSE 80
 
 ---
 
-*文档生成时间：2026-06-03 | 代码版本：v20.0.0 | 总行数：1600+*
+*文档生成时间：2026-06-03 | 代码版本：v22.0.0 | 总行数：1600+*
