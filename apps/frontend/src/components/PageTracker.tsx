@@ -1,5 +1,5 @@
 import { useEffect, useRef } from 'react';
-import { useLocation } from 'react-router-dom';
+import { useLocation } from 'react-router';
 import { routes } from '../routes';
 import { http } from '../utils/fetchClient.ts';
 import { getVitalsSnapshot } from '../utils/vitalsSnapshot.ts';

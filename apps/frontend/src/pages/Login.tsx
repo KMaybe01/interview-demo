@@ -2,7 +2,7 @@ import { LockOutlined, SafetyOutlined, UserOutlined } from '@ant-design/icons';
 import { Alert, Button, Card, Form, Input, message, Typography } from 'antd';
 import { motion } from 'motion/react';
 import { useCallback, useEffect, useRef, useState } from 'react';
-import { useNavigate, useSearchParams } from 'react-router-dom';
+import { useNavigate, useSearchParams } from 'react-router';
 import GridDistortion from '../components/GridDistortion.tsx';
 import { useAuthStore } from '../stores';
 import { getErrorMessage, http } from '../utils/fetchClient.ts';

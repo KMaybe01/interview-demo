@@ -1,7 +1,7 @@
 import { App as AntApp, ConfigProvider, Spin, theme } from 'antd';
 import { AnimatePresence } from 'motion/react';
 import { Suspense } from 'react';
-import { Route, Routes, useLocation } from 'react-router-dom';
+import { Route, Routes, useLocation } from 'react-router';
 import AuthGuard from './components/AuthGuard.tsx';
 import PageTracker from './components/PageTracker.tsx';
 import PageTransition from './components/PageTransition.tsx';

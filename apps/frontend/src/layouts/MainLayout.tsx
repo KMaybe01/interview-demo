@@ -2,7 +2,7 @@ import { LogoutOutlined, UserOutlined } from '@ant-design/icons';
 import { ThemeToggle, useThemeTransition } from '@interview-demo/shared-theme';
 import { Avatar, Button, Dropdown, Layout, Menu, Typography, theme } from 'antd';
 import { useCallback, useEffect, useMemo, useState } from 'react';
-import { Outlet, useLocation, useNavigate } from 'react-router-dom';
+import { Outlet, useLocation, useNavigate } from 'react-router';
 import { routes } from '../routes';
 import { useAuthStore, useThemeStore } from '../stores';
 import { clearTokens } from '../utils/token.ts';

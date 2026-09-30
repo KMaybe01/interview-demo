@@ -1,7 +1,7 @@
 import { StyleProvider } from '@ant-design/cssinjs';
 import { StrictMode } from 'react';
 import { createRoot } from 'react-dom/client';
-import { BrowserRouter } from 'react-router-dom';
+import { BrowserRouter } from 'react-router';
 import App from './App.tsx';
 import { initMonitor } from './monitor/index.ts';
 import { initVitalsReporter } from './utils/vitalsReporter.ts';

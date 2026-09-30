@@ -1,5 +1,5 @@
 import { Card, Col, Row, Typography } from 'antd';
-import { useNavigate } from 'react-router-dom';
+import { useNavigate } from 'react-router';
 import { routes } from '../routes';
 
 const { Title } = Typography;

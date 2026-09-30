@@ -21,7 +21,7 @@ import {
   useRef,
   useState,
 } from 'react';
-import { Navigate, NavLink, Route, Routes, useLocation, useNavigate } from 'react-router-dom';
+import { Navigate, NavLink, Route, Routes, useLocation, useNavigate } from 'react-router';
 import styles from './AIDemo.module.css';
 import { ErrorBoundary } from './components/ErrorBoundary.tsx';
 
