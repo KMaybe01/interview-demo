@@ -123,7 +123,7 @@
 │  ┌─────────────────────────────────────────────────────────────────────┐   │
 │  │                      表现层 (UI Layer)                               │   │
 │  │  Angular 22.0 + TypeScript 6.0 + Ng-Zorro 22.0 + @axyom-ui          │   │
-│  │  ECharts 5.x + OpenLayers 10.x + AntV G6 4.x                         │   │
+│  │  ECharts 6.x + OpenLayers 10.x + AntV G6 5.x                         │   │
 │  └─────────────────────────────────────────────────────────────────────┘   │
 │                              │                                              │
 │  ┌─────────────────────────────────────────────────────────────────────┐   │
@@ -316,7 +316,7 @@ export const RedirectGuard: CanActivateChildFn = (route, state) => {
 |------|----------|----------|
 | 框架 | Angular (Standalone默认 + Signals + 声明式控制流) | 22.0 |
 | UI | Ng-Zorro + @axyom-ui 自研组件库 (theme/acl/form/table) | 22.0 |
-| 图表 | ECharts (按需引入 Bar/Pie/Line/Tree) + AntV G6 | 5.x / 4.x |
+| 图表 | ECharts (按需引入 Bar/Pie/Line/Tree) + AntV G6 | 6.x / 5.x |
 | 地图 | OpenLayers + GeoServer WMS | 10.x |
 | 状态管理 | Angular Signals (signal/computed/linkedSignal) + @axyom-ui/acl | — |
 | 路由 | Hash 策略 + Standalone 懒加载 | — |
@@ -665,7 +665,7 @@ export const sidebar: Menu[] = [
 
 ### 2.7 函数式拦截器与守卫
 
-**Angular 20 函数式模式应用：**
+**Angular 20+ 函数式模式应用（Angular 22 中延续）：**
 
 ```typescript
 // ═══════════════════════════════════════════════════════

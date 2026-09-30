@@ -296,7 +296,7 @@ export { useThemeStore };
 - commitlint 配置在根 `commitlint.config.cjs`，作为全局 devDependencies 管理
 - `backend/Makefile` **不存在**于仓库中
 - **Monorepo**: 使用 Bun workspaces + Turborepo 管理，根 `package.json` 定义 `apps/*`、`packages/*` 工作区，`turbo.json` 配置编排管道
-- `package.json` 必须包含 `"packageManager": "bun@1.3.14"` 字段（Turborepo 2+ 要求）
+- `package.json` 必须包含 `"packageManager": "bun@1.4.2"` 字段（Turborepo 2+ 要求），升级 Bun 时同步更新此字段
 - 使用 `--filter` 参数限定 turbo 只作用于特定 workspace，如 `bun run build --filter=@interview-demo/frontend`
 - Vite 配置中 `form` 代码分割组包含 ajv 但**未使用** @rjsf
 - **TypeScript 7** (Go 原生编译器 tsgo)：`@biomejs/biome` 统一在根 `package.json` 管理，各 app 无独立 biome.json

@@ -115,21 +115,7 @@
 
 #### 4.1 技术栈全景
 
-| 层级 | 技术选型 | 关键版本 |
-|------|----------|----------|
-| 框架 | Angular (Standalone + Zoneless + Signals + 声明式控制流) | **22.0.0** |
-| UI | NG-ZORRO + @axyom-ui (table/form/acl/theme) | **22.0.1 / ~22.0.0** |
-| 图表 | ECharts (按需注册 Bar/Line/Pie/Tree + Grid/Tooltip/Legend/DataZoom/Toolbox) | **5.6.0** |
-| 终端 | ng-terminal (SSH直连网元) | **6.6.0** |
-| 实时通信 | STOMP over SockJS (sockjs-client + stompjs) | — |
-| 状态管理 | Angular Signals (signal/computed/effect) | — |
-| 路由 | Hash 答略 + ACLGuard + withComponentInputBinding + withViewTransitions | — |
-| 样式 | Less + BEM 命名规范 | — |
-| 构建 | Angular CLI + Bun | **22.x / 1.4.2** |
-| 测试 | Vitest + @analogjs/vitest-angular + jsdom | **3.2.1** |
-| 语言 | TypeScript (strict mode) | **6.0.3** |
-| 工程化 | ESLint 9 + Prettier + Husky + lint-staged + commitlint | — |
-| 日期处理 | date-fns + ng-zorro dateFns adapter | **4.x** |
+> 完整技术栈与关键版本见「一、系统架构设计 → 1.1 技术选型全景」（框架 / UI / 图表 / 终端 / 构建 / 测试 / 语言 等 13 项），此处不再重复。
 
 #### 4.2 四层分层架构
 
@@ -274,14 +260,14 @@
 |------|----------|----------|
 | 框架 | Angular (Standalone + Zoneless + Signals + 声明式控制流) | **22.0.0** |
 | UI | NG-ZORRO + @axyom-ui (table/form/acl/theme) | **22.0.1 / ~22.0.0** |
-| 图表 | ECharts (按需注册 Bar/Line/Pie/Tree + Grid/Tooltip/Legend/DataZoom/Toolbox) | **5.6.0** |
+| 图表 | ECharts (按需注册 Bar/Line/Pie/Tree + Grid/Tooltip/Legend/DataZoom/Toolbox) | **6.1.0** |
 | 终端 | ng-terminal (SSH直连网元) | **6.6.0** |
 | 实时通信 | STOMP over SockJS (sockjs-client + stompjs) | — |
 | 状态管理 | Angular Signals (signal/computed/effect) | — |
-| 路由 | Hash 答略 + ACLGuard + withComponentInputBinding + withViewTransitions | — |
+| 路由 | Hash 策略 + ACLGuard + withComponentInputBinding + withViewTransitions | — |
 | 样式 | Less + BEM 命名规范 | — |
 | 构建 | Angular CLI + Bun | **22.x / 1.4.2** |
-| 测试 | Vitest + @analogjs/vitest-angular + jsdom | **3.2.1** |
+| 测试 | Vitest + @analogjs/vitest-angular + jsdom | **4.1.9** |
 | 语言 | TypeScript (strict mode) | **6.0.3** |
 | 工程化 | ESLint 9 + Prettier + Husky + lint-staged + commitlint | — |
 | 日期处理 | date-fns + ng-zorro dateFns adapter | **4.x** |

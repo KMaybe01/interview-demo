@@ -22,7 +22,7 @@
 │   ├─ React Fiber 原理（必问）
 │   ├─ Event Loop + 微任务宏任务（必问）
 │   ├─ Zustand 状态管理原理
-│   ├─ React 19 编译器自动记忆化
+│   ├─ React Compiler 1.0 自动记忆化（已正式 GA）
 │   └─ 浏览器渲染流程（Layout / Paint / Composite）
 ├─ 第四阶段 10min — 手写题
 │   ├─ 防抖 / 节流 / Promise.all / 深拷贝 / 虚拟列表
@@ -45,8 +45,8 @@
 - 5G 核心网测试用例管理系统
 - 企业级综合网络管理系统（AeMS）
 
-技术栈上，主要使用 React 19 + TypeScript 6 + Ant Design 6 + Zustand 5，
-配合 Go + Gin 后端，深度使用 TypeScript 6 strict 模式。
+技术栈上，主要使用 React 19 + TypeScript 7 (tsgo) + Ant Design 6 + Zustand 5，
+配合 Go + Gin 后端，深度使用 TypeScript 7 strict 模式（tsgo Go 原生编译器，类型检查提速约 10×）。
 
 核心能力聚焦于三个方向：
 ┌─ 实时通信 ─── 多协议降级传输层 (WS→SSE→Polling) + 背压控制 + 消息合并
@@ -73,12 +73,12 @@
 我有 4 年前端经验，专注企业级 ToB 平台与实时通信系统架构。
 主导过 5G 测试平台、网络管理系统等项目。
 
-技术栈：React 19 + TypeScript 6 + Ant Design 6 + Zustand 5 + Go。
+技术栈：React 19 + TypeScript 7 (tsgo) + Ant Design 6 + Zustand 5 + Go。
 
 核心能力：
 - 实时通信：多协议降级传输(WS→SSE→Polling)+背压控制，1000+QPS下保持60fps
 - 性能优化：GIS十万级点位四重优化(<10fps→60fps, ↓85%内存)，百万行日志流式解密
-- 工程架构：递归动态表单引擎(4层AST+策略模式+四级校验, 人效↑80%)，LRU路由缓存，React 19编译器
+- 工程架构：递归动态表单引擎(4层AST+策略模式+四级校验, 人效↑80%)，LRU路由缓存，React Compiler 1.0
 ```
 
 ## 1.3 简历优化策略
@@ -168,7 +168,7 @@
 | 属性 | 内容 |
 |------|------|
 | 类型 | ToB 企业级 — 5G 核心网 SMF 测试工具管理界面 |
-| 技术栈 | React 19 + TypeScript 6 + Ant Design 6 + Zustand 5 + SSE + Go + Gin |
+| 技术栈 | React 19 + TypeScript 7 (tsgo) + Ant Design 6 + Zustand 5 + SSE + Go + Gin |
 | 时间 | 2024.03 – 至今 |
 | 负责 | 前端架构设计、递归动态表单引擎、SSE实时日志流、React 19并发特性实践、全链路可观测体系 |
 
@@ -179,7 +179,7 @@
 | 属性 | 内容 |
 |------|------|
 | 类型 | ToB 企业级 — 十万级网元统一监控与智能告警平台 |
-| 技术栈 | Angular 22 + TypeScript 6 + NG-ZORRO 21 + OpenLayers 10.x + ECharts 5.x + WebSocket(STOMP) + Go + Gin |
+| 技术栈 | Angular 22 + TypeScript 6（Angular 22 约束 `>=6.0 <6.1`）+ NG-ZORRO 22 + OpenLayers 10.x + ECharts 6 + WebSocket(STOMP) + Go + Gin |
 | 时间 | 2023.01 – 2024.12 |
 | 负责 | 前端架构设计、多协议降级传输层、权限体系、GIS性能优化、LRU路由缓存、精确Loading管理、工程化建设 |
 
@@ -235,7 +235,7 @@
 **追问链**：
 - **Q：条件显隐表达式为什么不用 eval？** → CSP严格模式下eval被禁止。当前用new Function但变量替换为参数名而非直接拼接字符串；CSP检测到限制时自动降级到预定义DSL（`{ when: { field: "X", eq: true } }`），DSL覆盖90%场景
 - **Q：字段联动如何避免死循环？** → `_isAutoFilling` 标记 + `maxAutoFillDepth=5` + 依赖图拓扑排序
-- **Q：200+字段会卡吗？** → React 19编译器自动memo；超500字段分层加载+virtualization
+- **Q：200+字段会卡吗？** → React Compiler 1.0 自动 memo；超500字段分层加载+virtualization
 
 ---
 
@@ -474,13 +474,13 @@ startTransition：标记整个状态更新为"过渡性的"，React 可中断处
 
 区别：useDeferredValue 是"延迟渲染"，startTransition 是"标记非紧急更新"
 
-React 19 编译器配合：
+React Compiler 1.0（已 GA）配合：
 ├─ 编译器自动注入 memo/useMemo/useCallback，确保仅变化字段重渲染
 ├─ 编译器处理"谁不该渲染"，并发 API 处理"谁可以晚渲染"
 └─ 效果：200 字段表单无卡顿，4000 msg/s 60fps
 ```
 
-**Q2：React 19 编译器自动 memo 的原理？**
+**Q2：React Compiler 自动 memo 的原理？（1.0 已于正式版发布，`babel-plugin-react-compiler@1.0.0`）**
 
 ```
 编译器在构建期分析组件依赖图：
@@ -562,7 +562,7 @@ Fiber 架构：
 ### React 19 新特性
 
 ```
-├─ React 编译器（React Forget）
+├─ React Compiler 1.0（原 React Forget，已于正式版发布）
 │   └─ 构建期自动注入 memo/useMemo/useCallback，零手动优化
 ├─ use() Hook
 │   └─ 在 render 中直接读取 Promise/Context，配合 Suspense 使用
@@ -633,7 +633,7 @@ Fiber 架构：
 ├─ @rjsf：标准场景好用，但条件显隐/字段联动/实时 JSON 编辑力不从心
 └─ 自研：4 层 AST + 7 种字段 + 条件显隐 + 字段联动 + 四级校验
 
-最终效果：开发人效提升 80%，编辑性能提升 40%（React 19 编译器 + 并发特性）
+最终效果：开发人效提升 80%，编辑性能提升 40%（React Compiler 1.0 + 并发特性）
 ```
 
 **追问模拟**：

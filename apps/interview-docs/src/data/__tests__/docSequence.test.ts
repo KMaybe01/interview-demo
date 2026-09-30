@@ -1,5 +1,15 @@
 import { describe, expect, it } from 'vitest';
 import { getAdjacentDocs, sortedDocUrls } from '../docSequence';
+import { getAllDocUrls } from '../docUrls';
+import { type NavItem, navConfig } from '../navigation';
+
+function collectLinks(items: NavItem[], acc: Set<string> = new Set()): Set<string> {
+  for (const item of items) {
+    if (item.link) acc.add(item.link.replace(/\/+$/, ''));
+    if (item.items) collectLinks(item.items, acc);
+  }
+  return acc;
+}
 
 describe('docSequence', () => {
   it('builds a non-empty ordered doc list', () => {
@@ -8,10 +18,10 @@ describe('docSequence', () => {
   });
 
   it('uses natural numeric ordering for stage files', () => {
-    const stage02 = sortedDocUrls.find((u) => u.startsWith('/S6-Go/阶段02'));
-    const stage10 = sortedDocUrls.find((u) => u.startsWith('/S6-Go/阶段10'));
-    if (stage02 && stage10) {
-      expect(sortedDocUrls.indexOf(stage02)).toBeLessThan(sortedDocUrls.indexOf(stage10));
+    const s6first = sortedDocUrls.find((u) => u.startsWith('/S6-Go/1-04'));
+    const s6later = sortedDocUrls.find((u) => u.startsWith('/S6-Go/3-10'));
+    if (s6first && s6later) {
+      expect(sortedDocUrls.indexOf(s6first)).toBeLessThan(sortedDocUrls.indexOf(s6later));
     }
   });
 
@@ -39,6 +49,22 @@ describe('docSequence', () => {
   it('resolves title from nav config when available', () => {
     const { next } = getAdjacentDocs('/S6-Go');
     expect(next).not.toBeNull();
-    expect(next?.title).toBe('Go学习路径');
+    expect(next?.title).toBe('学习路径与知识地图');
+  });
+
+  it('covers every S6-Go document in the sidebar nav', () => {
+    const links = collectLinks(navConfig);
+    const s6Docs = getAllDocUrls().filter((u) => u.startsWith('/S6-Go'));
+    const missing = s6Docs.filter((u) => !links.has(u.replace(/\/+$/, '')));
+
+    expect(missing).toEqual([]);
+    expect(s6Docs.length).toBeGreaterThanOrEqual(32);
+  });
+
+  it('has no dead S6-Go links in the sidebar nav', () => {
+    const docs = new Set(getAllDocUrls().map((u) => u.replace(/\/+$/, '')));
+    const dead = [...collectLinks(navConfig)].filter((l) => l.startsWith('/S6-Go') && !docs.has(l));
+
+    expect(dead).toEqual([]);
   });
 });

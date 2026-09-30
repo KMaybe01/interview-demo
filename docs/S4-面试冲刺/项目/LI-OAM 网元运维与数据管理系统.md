@@ -145,13 +145,13 @@ LI-OAM（Lawful Intercept Operation, Administration & Maintenance）是一套面
 │                                                                     │
 │  ┌─────────────────────────────────────────────────────────────┐   │
 │  │                      前端技术栈                               │   │
-│  │  Angular 22.x + PrimeNG 20.x + Tailwind CSS 4.x          │   │
+│  │  Angular 22.x + PrimeNG 22.x + Tailwind CSS 4.x          │   │
 │  │  RxJS 7.8.0 + Ace Editor 1.43.3                             │   │
 │  └─────────────────────────────────────────────────────────────┘   │
 │                              │                                      │
 │  ┌─────────────────────────────────────────────────────────────┐   │
 │  │                      后端技术栈                               │   │
-│  │  Go 1.24.x + Gin框架 + OAuth2 Authorization Server         │   │
+│  │  Go 1.26.x + Gin框架 + OAuth2 Authorization Server         │   │
 │  │  文件存储(PVC) + S3外部存储 + bcrypt                        │   │
 │  └─────────────────────────────────────────────────────────────┘   │
 │                              │                                      │
@@ -206,7 +206,7 @@ LI-OAM（Lawful Intercept Operation, Administration & Maintenance）是一套面
 │  jwtGuard (认证) + adminGuard (权限) + 懒加载 + 错误降级              │
 ├─────────────────────────────────────────────────────────────────────┤
 │                        构建层 (Build)                                │
-│  esbuild + TypeScript 5.9 strict + ESLint 500行限制 + Husky         │
+│  esbuild + TypeScript 6.0 strict + ESLint 500行限制 + Husky         │
 └─────────────────────────────────────────────────────────────────────┘
 ```
 
@@ -379,7 +379,7 @@ QA工作流: 设计评审 → 测试用例评审 → 端到端测试 → 性能�
 │  jwtGuard (认证) + adminGuard (权限) + 懒加载 + 错误降级          │
 ├─────────────────────────────────────────────────────────────────┤
 │                        构建层 (Build)                            │
-│  esbuild + TypeScript 5.9 strict + ESLint 500行限制 + Husky     │
+│  esbuild + TypeScript 6.0 strict + ESLint 500行限制 + Husky     │
 └─────────────────────────────────────────────────────────────────┘
 ```
 

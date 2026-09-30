@@ -47,7 +47,7 @@
 - 企业级综合网络管理系统（AeMS）
 - @axyom-ui 企业级内部组件库搭建
 
-技术栈上，主要使用 Angular 22 + TypeScript 6 + NG-ZORRO 21 + NgRx，
+技术栈上，主要使用 Angular 22 + TypeScript 6（Angular 22 官方约束 `>=6.0 <6.1`）+ NG-ZORRO 22 + NgRx，
 配合 Go + Gin 后端，深度使用 TypeScript strict 模式 + Angular ESLint 规范。
 
 核心能力聚焦于三个方向：
@@ -74,7 +74,7 @@
 我有 4 年前端经验，专注企业级 ToB 平台与实时通信系统架构。
 主导过 5G 测试平台、网络管理系统、@axyom-ui 组件库等项目。
 
-技术栈：Angular 22 + TypeScript 6 + NG-ZORRO 21 + NgRx + Go。
+技术栈：Angular 22 + TypeScript 6 + NG-ZORRO 22 + NgRx + Go。
 
  核心能力：
  - 架构：递归动态表单引擎、@axyom-ui 组件库
@@ -170,7 +170,7 @@
 | 属性 | 内容 |
 |------|------|
 | 类型 | ToB 企业级 — 十万级网元统一监控与智能告警平台 |
-| 技术栈 | Angular 22 + TypeScript 6 + NG-ZORRO 21 + OpenLayers 10.x + ECharts 5.x + WebSocket(STOMP) + Go + Gin |
+| 技术栈 | Angular 22 + TypeScript 6 + NG-ZORRO 22 + OpenLayers 10.x + ECharts 6 + WebSocket(STOMP) + Go + Gin |
 | 状态 | 线上运行（Docker → K8s 内网部署） |
 | 负责 | 前端架构设计、多协议降级传输层、RBAC权限体系、GIS性能优化、LRU路由缓存、精确Loading管理、工程化建设 |
 
@@ -181,7 +181,7 @@
 | 属性 | 内容 |
 |------|------|
 | 类型 | ToB 企业级 — 基于 Angular 22 的企业级内部组件库 |
-| 技术栈 | Angular 22 + TypeScript 6 + NG-ZORRO 21 + RxJS 7 + ng-packagr + Vitest |
+| 技术栈 | Angular 22 + TypeScript 6 + NG-ZORRO 22 + RxJS 7 + ng-packagr + Vitest 4 |
 | 状态 | 线上运行（GitLab NPM Registry 私有发布，复用 5+ 内部项目） |
 | 负责 | 组件库整体架构设计、表格组件核心引擎、表单框架五层架构、工程化建设 |
 
@@ -583,7 +583,7 @@ export() {
 
 **核心优化矩阵：**
 
-| 方向 | Angular 21 实现 | 效果 |
+| 方向 | Angular 22 实现 | 效果 |
 |------|----------------|------|
 | **传输降级** | WebSocket → SSE → Polling 三级 + Segmented 手动切换 | 任何网络环境都能工作 |
 | **背压控制** | `bufferTime(16, undefined, 64)` + `animationFrameScheduler` | 4000 msg/s → 60 次/s set |
@@ -1079,15 +1079,15 @@ RouteReuseStrategy（路由复用）：
     └─ 不再需要 NgModule，standalone 是默认方式
 ```
 
-### Angular 18 核心变化
+### Angular 18 核心变化（Signal 化起步）
 
 ```
 ├─ Signal-based Components（Signal inputs/outputs）
 │   └─ input() / output() / model() 替代 @Input / @Output
-├─ Zoneless Change Detection
+├─ Zoneless Change Detection（实验性预览，19+ 逐步稳定）
 │   └─ signal 变更自动触发 CD，无需 Zone.js
 ├─ httpResource()
-│   └─ 基于 Signal 的 HTTP 请求包装，替代 HttpClient Observable
+│   └─ 基于 Signal 的 HTTP 请求包装，替代 HttpClient Observable（19+ 起正式可用）
 ├─ NgRx Signals 集成
 │   └─ NgRx 支持 Signal Selector，与 Angular Signals 互操作
 └─ 可延迟视图 enhanced

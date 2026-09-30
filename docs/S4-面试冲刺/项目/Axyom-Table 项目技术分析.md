@@ -6,7 +6,7 @@
 
 ### 一、项目背景
 
-**Axyom-Table** 是一个基于 Angular 21 + ng-zorro-antd 封装的企业级高性能表格组件库，以 **Library** 形式发布（`@axyom-ui/table`）。它在 ng-zorro 基础上进行了深度封装和增强，提供了开箱即用的分页、排序、选择、树形展示、虚拟滚动、右键菜单、列拖拽调整、列显隐切换、CSV导出等企业级能力。
+**Axyom-Table** 是一个基于 Angular 22 + ng-zorro-antd 封装的企业级高性能表格组件库，以 **Library** 形式发布（`@axyom-ui/table`）。它在 ng-zorro 基础上进行了深度封装和增强，提供了开箱即用的分页、排序、选择、树形展示、虚拟滚动、右键菜单、列拖拽调整、列显隐切换、CSV导出等企业级能力。
 
 ### 二、核心定位
 
@@ -15,7 +15,7 @@
 | **项目名称** | @axyom-ui/table |
 | **产品定位** | Angular企业级高性能表格组件库 |
 | **目标用户** | Angular企业项目开发团队 |
-| **技术栈** | Angular 21.2 + ng-zorro-antd 21.3 + TypeScript 5.9 |
+| **技术栈** | Angular 22.x + ng-zorro-antd 22.x + TypeScript 6.0 |
 | **发布方式** | ng-packagr Library，支持tree shaking |
 
 ### 三、核心功能模块
@@ -95,7 +95,7 @@
 ├─────────────────────────────────────────────────┤
 │              Foundation (基础设施)                 │
 │  Angular Signals │ RxJS │ ng-zorro-antd          │
-│  lodash-es │ date-fns │ TypeScript 5.9           │
+│  lodash-es │ date-fns │ TypeScript 6.0           │
 └─────────────────────────────────────────────────┘
 ```
 
@@ -1156,7 +1156,7 @@ private parseHeight(height: string | null): number {
 #### Q1: 为什么选择 Signals 而不是 RxJS？
 
 **回答：**
-> "在 Angular 21 中，Signals 是官方推荐的响应式原语。这个项目的数据流主要是 UI 状态（分页、排序、选中行、列宽、列显隐），这些状态是同步的、需要直接绑定到模板。Signal 的 `computed` 自动追踪依赖，不需要手动 `subscribe`/`unsubscribe`，也不会有 `AsyncPipe` 的性能开销。对于真正的异步操作（列宽拖拽事件流、分页防抖），项目仍然使用 RxJS 的 `BehaviorSubject` + `takeUntilDestroyed`。两者是互补关系。"
+> "在 Angular 22 中，Signals 是官方推荐的响应式原语。这个项目的数据流主要是 UI 状态（分页、排序、选中行、列宽、列显隐），这些状态是同步的、需要直接绑定到模板。Signal 的 `computed` 自动追踪依赖，不需要手动 `subscribe`/`unsubscribe`，也不会有 `AsyncPipe` 的性能开销。对于真正的异步操作（列宽拖拽事件流、分页防抖），项目仍然使用 RxJS 的 `BehaviorSubject` + `takeUntilDestroyed`。两者是互补关系。"
 
 ---
 
@@ -1355,12 +1355,12 @@ readonly trackByRow = (item: T): string | number => {
 
 #### 开场白（30秒）
 
-> "我基于 Angular 21 + ng-zorro 封装了一个企业级表格组件库，全面拥抱 Signals API，实现了声明式配置、三态分页、前端/后端排序无缝切换、TemplateRef 插槽机制、信号化列宽/显隐管理、列拖拽调整、拖拽分割条动态调整高度、树形递归渲染、初始排序状态等能力。核心设计理念是**渐进增强**和**约定优于配置**，消费者最简只需传入 `cols` + `rows` 即可使用。"
+> "我基于 Angular 22 + ng-zorro 封装了一个企业级表格组件库，全面拥抱 Signals API，实现了声明式配置、三态分页、前端/后端排序无缝切换、TemplateRef 插槽机制、信号化列宽/显隐管理、列拖拽调整、拖拽分割条动态调整高度、树形递归渲染、初始排序状态等能力。核心设计理念是**渐进增强**和**约定优于配置**，消费者最简只需传入 `cols` + `rows` 即可使用。"
 
 #### 技术深度展示（选择 2-3 个点深入）
 
 **点1：Signals响应式架构**
-> "项目全面采用 Angular 21 的 Signals API，替代传统 RxJS BehaviorSubject。`computed` 自动追踪依赖图，`model` 实现父子组件双向绑定。前端排序从命令式重构为声明式——`data` 从 `signal` 变为 `computed`，排序逻辑内嵌其中。列宽和列显隐也信号化，通过 `columnWidths`/`hiddenColumns` 信号驱动，不再直接修改数组。"
+> "项目全面采用 Angular 22 的 Signals API，替代传统 RxJS BehaviorSubject。`computed` 自动追踪依赖图，`model` 实现父子组件双向绑定。前端排序从命令式重构为声明式——`data` 从 `signal` 变为 `computed`，排序逻辑内嵌其中。列宽和列显隐也信号化，通过 `columnWidths`/`hiddenColumns` 信号驱动，不再直接修改数组。"
 
 **点2：三态分页设计**
 > "通过 `frontPagination` + `page.pageSize` 的组合实现了三种分页模式：后端分页、前端分页、不分页。分页更新使用 `page$` BehaviorSubject + `debounceTime(10)` 防抖。关键细节是：后端排序时切换排序列不重置页码（已有排序），首次设置排序才重置为第 0 页。"
@@ -1684,8 +1684,8 @@ readonly trackByRow = (item: T): string | number => {
 │                                                                 │
 │  ┌───────────────────────────────────────────────────────────┐  │
 │  │  前沿技术应用                                               │  │
-│  │  Angular 21.2 · Signals API · model()双向绑定              │  │
-│  │  TypeScript 5.9 · RxJS 7.8 · ng-zorro-antd 21.3          │  │
+│  │  Angular 22.x · Signals API · model()双向绑定              │  │
+│  │  TypeScript 6.0 · RxJS 7.8 · ng-zorro-antd 22.x          │  │
 │  │  lodash-es · date-fns · Vitest · Pointer Events            │  │
 │  └───────────────────────────────────────────────────────────┘  │
 │                                                                 │

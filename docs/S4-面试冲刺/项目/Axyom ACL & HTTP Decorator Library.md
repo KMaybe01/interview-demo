@@ -15,7 +15,7 @@
 | **项目名称** | @axyom-ui ACL & HTTP Decorator Library |
 | **产品定位** | Angular企业级UI基础设施库 |
 | **目标用户** | Angular企业项目开发团队 |
-| **技术栈** | Angular 22+、Standalone Components、RxJS、TypeScript 5.x |
+| **技术栈** | Angular 22+、Standalone Components、RxJS、TypeScript 6.0 |
 | **发布方式** | npm包，支持tree shaking |
 
 ### 三、核心功能模块
@@ -377,7 +377,7 @@ return (acl instanceof Observable ? acl : of(acl))
 
 ---
 
-## 四、性能优化策略
+## 三、性能优化策略
 
 ### 4.1 已完成的优化
 
@@ -414,7 +414,7 @@ return (acl instanceof Observable ? acl : of(acl))
 
 ---
 
-## 五、工程化体系
+## 四、工程化体系
 
 ### 5.1 代码组织原则
 
@@ -494,7 +494,7 @@ return (acl instanceof Observable ? acl : of(acl))
 
 ---
 
-## 三、设计模式与架构亮点
+## 五、设计模式与架构亮点
 
 ### 3.1 设计模式应用
 
@@ -764,7 +764,7 @@ function makeMethod(method: METHOD_TYPE) {
 │  ┌───────────────────────────────────────────────────────────┐  │
 │  │  前沿技术应用                                               │  │
 │  │  Angular 22+ · Standalone Components · RxJS                │  │
-│  │  TypeScript 5.x · Tree Shaking · 零依赖                    │  │
+│  │  TypeScript 6.0 · Tree Shaking · 零依赖                    │  │
 │  └───────────────────────────────────────────────────────────┘  │
 │                                                                 │
 │  ┌───────────────────────────────────────────────────────────┐  │
@@ -837,7 +837,7 @@ function makeMethod(method: METHOD_TYPE) {
 
 ---
 
-## 附录：代码统计
+## 附录 A：代码统计
 
 | 模块 | 文件数 | 代码行数 | 测试覆盖 |
 |------|--------|---------|---------|
@@ -849,7 +849,7 @@ function makeMethod(method: METHOD_TYPE) {
 
 ---
 
-## 附录：扩展话题
+## 附录 B：扩展话题
 
 | 话题 | 可以聊的方向 |
 |------|------------|

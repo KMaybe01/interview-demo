@@ -106,7 +106,7 @@ quadrantChart
 mindmap
   前端可视化技术全景
     统计图表
-      ECharts 5.x
+      ECharts 6.x
       AntV G2Plot
       Highcharts
       Chart.js
@@ -140,7 +140,7 @@ flowchart TD
     Q --> A4["🏗️ 3D/数字孪生"]
     Q --> A5["🎨 定制化极高"]
 
-    A1 --> B1["ECharts 5.x ─── 最成熟、大屏首选"]
+    A1 --> B1["ECharts 6.x ─── 最成熟、大屏首选"]
     A1 --> B2["AntV G2Plot ── Ant Design 体系"]
     A1 --> B3["Highcharts ─── 商业授权、金融行业"]
     A1 --> B4["Chart.js ───── 轻量、简单图表"]
@@ -177,16 +177,18 @@ flowchart TD
 
 ### 2.3 📊 核心库深度对比
 
-#### ✅ ECharts 5.x —— ToB 第一选择
+#### ✅ ECharts 6.x —— ToB 第一选择
+
+> **版本口径**：ECharts 6.0.0 于 2025-07-30 正式发布，当前 stable 为 6.1.x。相比 5.x，默认主题与组件位置变更（如图例默认移到底部）、新增和弦图 / matrix 坐标系 / 可复用 custom 系列 / 断轴，共 5 项破坏性变更且官方均提供回退开关（如 `echarts/theme/v5.js` 恢复旧主题）。
 
 ```text
 ╔══════════════════════════════════════════════════╗
-║  🏆 ECharts 5.x 核心优势                         ║
+║  🏆 ECharts 6.x 核心优势                         ║
 ╠══════════════════════════════════════════════════╣
 ║  📊 20+ 内置图表类型（折线/柱状/饼图/雷达/      ║
 ║     桑基/树图/热力图/地图/K线）                  ║
 ║  ⚡ 配置驱动：一个 option 对象声明一切，上手最快  ║
-║  🚀 WebGL 渲染（5.0+），large 模式万级数据       ║
+║  🚀 large 大数据模式，万级数据流畅渲染          ║
 ║  📉 采样机制：'lttb'/'average'/'max'/'min'      ║
 ║  🖱 交互：dataZoom / connect 联动 / 下钻事件     ║
 ║  🖥 大屏：dataset + visualMap + 富文本标签        ║
@@ -200,7 +202,7 @@ flowchart TD
 ╠══════════════════════════════════════════════════╣
 ║  notMerge: true   → 全量替换（简单场景）          ║
 ║  notMerge: false  → 增量更新（高频场景）          ║
-║  large: true      → 超 2000 点自动 WebGL         ║
+║  large: true      → 大数据模式（Canvas 增量）    ║
 ║  sampling: 'lttb' → 降采样保留趋势特征            ║
 ║  按需引入         → 包体积减少 60%+               ║
 ╚══════════════════════════════════════════════════╝
@@ -478,9 +480,9 @@ flowchart TD
 │   └─ 效果：10 万点 → 1000 渲染点，趋势不变
 │
 ├─ 2. 开启 large 模式（渲染层）
-│   ├─ ECharts 5+ large: true 使用 WebGL 渲染
+│   ├─ large: true 启用大数据模式：简化绘制 + 增量渲染，仍基于 Canvas 2D
 │   ├── large 阈值：折线/散点图默认 > 2000 点自动启用
-│   └─ 效果：Canvas 2D → WebGL GPU 加速
+│   └─ 效果：大幅降低绘制与 GC 开销；真 GPU 加速需 echarts-gl（scatterGL/linesGL）
 │
 ├─ 3. 增量更新替代全量替换（更新层）
 │   ├─ setOption({...}, { notMerge: false })
@@ -1002,7 +1004,7 @@ D3 补充一些定制化图表（自定义 Sankey 图、Chord 图）。
 | **监控平台** | Recording Rules 预计算优化 | 大数据量聚合查询怎么加速？ |
 | **所有项目** | 统一 HTTP 层 + 双 Token 无感刷新 | 拦截器模式 + 401 自动刷新怎么设计？ |
 | **所有项目** | RBAC 位运算 + 后端 API 双校验 | 权限系统前后端一致性怎么保证？ |
-| **所有项目** | React 19 编译器自动 memo | 构建期优化怎么做？ |
+| **所有项目** | React Compiler 1.0 自动 memo | 构建期优化怎么做？ |
 
 ---
 
@@ -1636,13 +1638,13 @@ useMap 封装 OpenLayers 图层管理，useRealtimeData 处理 WebSocket 流式�
 第一，实例管理——用 useRef 持有图表实例，只在组件挂载时初始化一次，
 不需要每次渲染都 setOption 全量更新，通过 useEffect 的依赖数组控制增量更新。
 第二，大数据量——数据点超过 5000 时关闭动画（animation: false），
-启用 ECharts large 模式切 WebGL，用采样（sampling: 'lttb'）降维。
+启用 ECharts large 大数据模式，用采样（sampling: 'lttb'）降维。
 第三，实时数据流——自定义 useRealtimeData Hook 封装 WebSocket，
 内部用 RAF 帧同步替代 setState 的异步批处理，
 保证 60fps 渲染不丢帧。"
 
-STAR 故事版（AeMS 项目中 ECharts + React 落地）：
-"S（背景）：AeMS 监控平台用 React 16 + ECharts，每条告警都触发 setState → 全量 setOption，
+STAR 故事版（早期网管监控平台 ECharts + React 落地）：
+"S（背景）：早期网管监控平台用 React 16 + ECharts（历史技术栈），每条告警都触发 setState → 全量 setOption，
 页面切换卡顿 >2s，CPU 100%。
 
 T（任务）：保证 1000+ QPS 实时数据流畅渲染，页面切换 <500ms。
@@ -2059,14 +2061,14 @@ Next.js 在服务端执行 renderToString → chart 库依赖 window/document �
 
 ===== 三层解决方案 =====
 
-L1：动态导入 + ssr: false（Next.js 12+）
+L1：动态导入 + ssr: false（Pages Router，Next.js 12+）
 ├─ import dynamic from 'next/dynamic'
 ├─ const EChartsChart = dynamic(() => import('./EChartsChart'), { ssr: false })
 ├─ 优点：实现最简单
 ├─ 缺点：首屏图表缺失，SEO 不友好
 └─ 适用：内部系统、需要登录的 Dashboard
 
-L2：Skeleton 占位（Next.js 13+ App Router）
+L2：Skeleton 占位（App Router，Next.js 13+ 起；当前 stable 16.x）
 ├─ next/dynamic 配合 loading 组件：
 │   const EChartsChart = dynamic(() => import('./EChartsChart'), {
 │     loading: () => <ChartSkeleton />  // SSR 时渲染骨架，CSR 后替换
@@ -2733,13 +2735,14 @@ G2 / G2Plot（语法驱动）：
 **标准答案：**
 
 ```
-ECharts 5+ large 模式使用 WebGL 渲染器（通过底层库 zrender 支持）。
-普通模式是 Canvas 2D。
+ECharts 默认渲染器是 Canvas 2D（也可选 SVG）；**large 模式不是 WebGL**，
+而是 Canvas 2D 的大数据优化路径：关闭逐点动画与状态样式、简化绘制、走增量渲染（zrender 层）。
 
-数据量 < 2000 时 → Canvas 2D（足够快）
-数据量 > 2000 时 → 自动切换到 WebGL（large 模式）
+数据量 < 2000 时 → 常规 Canvas 2D 路径（保留动画与交互状态）
+数据量 > 2000 时 → large 大数据模式（简化绘制，仍是 Canvas 2D）
+想真正走 GPU 加速 → 需 echarts-gl 扩展（scatterGL / linesGL / bar3D）或自绘 WebGL / Deck.gl
 
-性能对比实测：
+性能对比实测（Canvas 2D 与 WebGL 两条路径的差异）：
 ├─ Canvas 2D 渲染 10 万点 → ~50ms drawCall → 掉帧（>16ms）
 ├─ WebGL 渲染 10 万点 → ~2ms drawCall → 流畅（<16ms）
 
@@ -3323,7 +3326,7 @@ useEffect(() => {
 
 ---
 
-## 🚀 九、前瞻趋势：2025-2026 可视化技术演进
+## 🚀 九、前瞻趋势：2026-2027 可视化技术演进
 
 > **面试加分：** 主动聊技术趋势展示技术视野。面试官问"你关注哪些新技术"时，从以下 3 个方向选 1-2 个展开。
 
@@ -3393,7 +3396,7 @@ useEffect(() => {
 
 | 🚨 场景 | ⚙️ 配置 | 🔬 原理 |
 |---------|---------|:------:|
-| 万级折线图卡顿 | `sampling: 'lttb'` + `large: true` | 降采样 + WebGL |
+| 万级折线图卡顿 | `sampling: 'lttb'` + `large: true` | 降采样 + 大数据模式 |
 | 实时更新掉帧 | `notMerge: false` + `animation: false` | 增量更新 + 关动画 |
 | 高频追加数据 | `appendData()` 替代 `setOption()` | 零 diff 开销 |
 | 大屏 resize 不及时 | `ResizeObserver` 替代 `window.resize` | 精准监听容器 |
@@ -3437,7 +3440,7 @@ quadrantChart
 
 ---
 
-## ⏱️ 附 B：可视化面试 15 分钟模拟演练
+## ⏱️ 附 A：可视化面试 15 分钟模拟演练
 
 ```mermaid
 timeline
@@ -3476,7 +3479,7 @@ timeline
 
 ---
 
-## ✅ 附 C：可视化面试自检清单 （出发前逐项打勾 ✅ 记录掌握进度）
+## ✅ 附 B：可视化面试自检清单 （出发前逐项打勾 ✅ 记录掌握进度）
 
 ```text
 ╔═══════════════════════════════════════════════════════════╗

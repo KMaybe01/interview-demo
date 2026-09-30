@@ -117,10 +117,10 @@ bun run lint                        # Biome check
 
 | Stage | 基础镜像 | 产出 |
 |-------|----------|------|
-| `frontend-builder` | oven/bun:1.3 | `bun install && bun run build` → `apps/frontend/dist/` |
-| `interview-docs-builder` | oven/bun:1.3 | `bun install && bun run build` → `apps/interview-docs/dist/` |
+| `frontend-builder` | oven/bun:1.4 | `bun install && bun run build` → `apps/frontend/dist/` |
+| `interview-docs-builder` | oven/bun:1.4 | `bun install && bun run build` → `apps/interview-docs/dist/` |
 | `backend-builder` | golang:1.26 | `CGO_ENABLED=0 go build` → 二进制 |
-| `ai-demo-builder` | oven/bun:1.3 | `bun install && bun run build` → `apps/ai-demo/dist/` |
+| `ai-demo-builder` | oven/bun:1.4 | `bun install && bun run build` → `apps/ai-demo/dist/` |
 | `frontend` | nginx:alpine | `dist/` + `nginx.conf` → :80 |
 | `interview-docs` | nginx:alpine | `dist/` + `nginx.interview-docs.conf` → :80 |
 | `ai-demo` | nginx:alpine | `dist/` + `nginx.ai-demo.conf` → :80 |

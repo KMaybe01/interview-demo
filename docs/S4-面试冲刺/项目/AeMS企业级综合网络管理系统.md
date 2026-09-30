@@ -93,7 +93,7 @@
 │  ┌─────────────────────────────────────────────────────────────┐   │
 │  │                      表现层 (UI Layer)                       │   │
 │  │  Angular 22.0 + TypeScript + Ng-Zorro + @axyom-ui          │   │
-│  │  ECharts 5.x + OpenLayers 10.x                              │   │
+│  │  ECharts 6.x + OpenLayers 10.x                              │   │
 │  └─────────────────────────────────────────────────────────────┘   │
 │                              │                                      │
 │  ┌─────────────────────────────────────────────────────────────┐   │
@@ -265,15 +265,15 @@ interface RoleConfig {
 
 ---
 
-## 一、系统架构设计
+## 一、技术选型总览
 
-### 1.1 四层分层架构
+### 1.1 技术栈全景
 
 | 层级 | 技术选型 | 关键版本 |
 |------|----------|----------|
-| 框架 | Angular (Standalone + Signals + 声明式控制流) | 21.3 |
-| UI | Ng-Zorro + @axyom-ui 自研组件库 (table/form/acl/theme) | 20.4 |
-| 图表 | ECharts (按需引入 Bar/Pie/Line/Tree) | 5.x |
+| 框架 | Angular (Standalone + Signals + 声明式控制流) | 22.0 |
+| UI | Ng-Zorro + @axyom-ui 自研组件库 (table/form/acl/theme) | 22.0 |
+| 图表 | ECharts (按需引入 Bar/Pie/Line/Tree) | 6.x |
 | 地图 | OpenLayers + GeoServer WMS | 10.x |
 | 实时通信 | STOMP over SockJS | 7.x |
 | 状态管理 | Angular Signals (signal/computed/effect) | — |
@@ -369,7 +369,7 @@ interface RoleConfig {
 
 ---
 
-## 二、技术难点深度剖析（12 项）
+## 三、技术难点深度剖析（12 项）
 
 ### 2.1 声明式 API 服务层 — 装饰器驱动的 HTTP 抽象
 
@@ -1043,7 +1043,7 @@ export class SearchComponent implements OnInit {
 
 ---
 
-## 三、设计模式与架构亮点
+## 四、设计模式与架构亮点
 
 ### 3.1 设计模式应用
 
@@ -1147,7 +1147,7 @@ export const authInterceptor: HttpInterceptorFn = (req, next) => {
 
 ---
 
-## 四、Angular 22新特性实战应用
+## 五、Angular 22 新特性实战应用
 
 ### 4.1 Signals状态管理
 
@@ -1290,11 +1290,11 @@ ngOnDestroy() {
 
 ---
 
-## 五、性能优化策略
+## 六、性能优化策略
 
 ### 5.1 框架升级收益
 
-| 维度 | Angular 17→21 升级收益 |
+| 维度 | Angular 17→22 升级收益 |
 |------|----------------------|
 | **状态管理** | BehaviorSubject → Signal，API 更简洁、自动依赖跟踪 |
 | **组件定义** | NgModule → Standalone，Tree-shaking 更优 |
@@ -1391,7 +1391,7 @@ interval(60000)
 
 ---
 
-## 六、工程化体系
+## 七、工程化体系
 
 ### 6.1 代码质量保障
 
@@ -1464,7 +1464,7 @@ export const ROLE = {
 
 ---
 
-## 七、组件设计亮点
+## 八、组件设计亮点
 
 ### 7.1 多编辑器统一管理
 
@@ -1517,7 +1517,7 @@ const scrollToPath = (path: string) => {
 
 ---
 
-## 八、面试高频问题（深度版）
+## 九、面试高频问题（深度版）
 
 ### 8.1 架构设计类
 
@@ -1583,7 +1583,7 @@ const scrollToPath = (path: string) => {
 
 ---
 
-## 九、技术亮点速查表
+## 十、技术亮点速查表
 
 | # | 亮点 | 关键词 | 代码位置 |
 |---|------|--------|----------|
