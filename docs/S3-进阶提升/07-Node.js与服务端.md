@@ -47,9 +47,27 @@ mindmap
 | **构建工具** | ✅ 非常适用 | Vite / Webpack / Rollup | JS 生态核心 |
 | **实时应用** | ✅ 适用 | Socket.io / WS | 事件驱动，非阻塞 I/O |
 | **API 网关** | ✅ 适用 | Express / Fastify | 轻量，高吞吐 |
-| **CPU 密集型** | ❌ 不适用 | - | 单线程阻塞事件循环 |
+| **CPU 密集型** | ⚠️ 需改造后可用 | `worker_threads` / N-API（Rust/C++ 原生插件） / 子进程 | 主线程单线程，直接算会阻塞事件循环；应把计算挪到 Worker 或用原生扩展 |
 
-### 2. Node.js 选型对比
+> ⚠️ **Warning**：「Node 不适合 CPU 密集」是**过时结论**。正确表述是：**不要让 CPU 密集任务跑在主线程**。可通过 `worker_threads`（同进程多线程，可共享 `SharedArrayBuffer`）、N-API 原生扩展、或把任务拆到独立子进程/队列解决。
+
+### 2. Node.js 版本与模块体系（现代必备）
+
+| 主题 | 现状与要点 |
+|------|-----------|
+| **版本策略** | 每年 4 月/10 月发布大版本，偶数版本进入 **LTS**（Active LTS → Maintenance）。生产环境选 LTS，具体版本号以 [nodejs.org](https://nodejs.org) 发布页为准 |
+| **双模块体系** | CommonJS（`require`/`module.exports`）与 ESM（`import`/`export`）共存；由 `package.json` 的 `type` 字段（`"module"` / `"commonjs"`）与扩展名（`.mjs` / `.cjs`）决定解析方式 |
+| **`exports` 字段** | 替代 `main`，可对不同环境/条件导出不同入口（条件导出），并**封装内部路径**，防止深引用：`"exports": { ".": { "import": "./dist/index.mjs", "require": "./dist/index.cjs" } }` |
+| **`node:` 前缀** | 内置模块推荐写成 `import fs from 'node:fs'`，语义清晰且避免被同名 npm 包劫持 |
+| **内置 fetch** | 基于 undici 提供全局 `fetch` / `AbortSignal` / `WebSocket`（版本支持度以官方文档为准），BFF 里可直接用，无需再装 axios/node-fetch |
+| **内置测试运行器** | `node:test` + `node --test`，零依赖跑单测，配合 `node:assert` |
+| **权限模型** | `--experimental-permission`（按版本演进）可限制文件/网络/子进程访问，降低供应链攻击风险 |
+| **内置 `node:sqlite`** | 提供轻量嵌入式数据库，适合 CLI/本地缓存场景（仍处演进中） |
+| **原生 TypeScript 支持** | 新版 Node 支持**类型剥离（type stripping）**直接运行 `.ts`（不支持需编译的 TS 特性如 enum/namespace），复杂项目仍建议走构建 |
+
+> 📝 **Note**：面试常问"ESM 与 CJS 如何互操作"。要点：ESM 中可用 `import` 加载 CJS（只能默认导入）；**CJS 中不能用同步 `require()` 加载 ESM**，必须用动态 `import()`。发布 npm 包时用 `exports` 做**双格式导出**（dual package），并注意"同一包被两种格式同时加载会产生两份实例"的陷阱。
+
+### 3. Node.js 选型对比
 
 | 框架 | 类型 | 性能 | 生态 | 学习成本 | 适用规模 |
 |------|------|------|------|---------|---------|
@@ -60,6 +78,22 @@ mindmap
 | **Hono** | Web 框架 | 极高 | 小 | 低 | 边缘计算 |
 | **Egg.js** | 企业框架 | 中等 | 中 | 中 | 中大型 |
 | **Midway** | 全栈框架 | 中等 | 中 | 中 | 中大型 |
+
+### 4. 运行时选型：Node.js vs Deno vs Bun（主流对比）
+
+| 维度 | **Node.js** | **Deno** | **Bun** |
+|------|-------------|----------|---------|
+| 引擎 | V8 | V8 | JavaScriptCore |
+| 语言 | C++ / JS | Rust / TS 原生 | Zig / JS |
+| 包管理 | npm（生态最大） | URL 导入 + JSR / npm 兼容 | **自带一体化包管理**（安装极快） |
+| TypeScript | 需构建（或新版类型剥离） | **原生支持** | **原生支持** |
+| 安全模型 | 默认全权限 | **默认无权限**，需显式授权 | 默认全权限 |
+| 内置能力 | 较少，靠生态 | 内置测试/lint/格式化/打包 | 内置测试/打包/SQLite/脚本运行 |
+| Node 兼容 | — | 提供兼容层（逐步完善） | **高度兼容 Node API**（迁移成本最低） |
+| 成熟度 | **最高，生产首选** | 中，适合内部工具/边缘 | 中，工具链与 CI 场景收益明显 |
+| 典型场景 | BFF、SSR、微服务、CLI | 安全敏感脚本、边缘运行时 | **Monorepo 安装、测试、构建提速** |
+
+> 📝 **Note**：本仓库（interview-demo）即采用 **Bun workspace + Turborepo** 做依赖管理与任务编排——Bun 的安装与脚本启动速度是主要收益点，运行时仍可按需要切换 Node。面试回答"是否应该上 Bun/Deno"时，建议口径：**新项目/工具链可以试，核心生产服务以 Node LTS 为主**，并强调 Bun 的价值集中在"安装 + 测试 + 构建"而非"替代运行时"。
 
 ---
 
@@ -107,7 +141,19 @@ process.nextTick(() => console.log('4: nextTick'));
 
 Promise.resolve().then(() => console.log('5: Promise.then'));
 
-// 输出：1 → 4 → 5 → 2/3（setTimeout 和 setImmediate 顺序取决于性能）
+// 输出：1 → 4 → 5 → 2/3
+// ⚠️ 2/3 的顺序只在「主模块顶层」不确定；在 I/O 回调（如 fs.readFile 回调）内部
+//    setImmediate 必定先于 setTimeout 执行（因为 poll → check 先于下一轮 timers）
+```
+
+```javascript
+import fs from 'node:fs';
+
+fs.readFile(__filename, () => {
+  setTimeout(() => console.log('setTimeout'), 0);
+  setImmediate(() => console.log('setImmediate'));
+});
+// 稳定输出：setImmediate → setTimeout
 ```
 
 | API | 执行时机 | 微任务/宏任务 | 用途 |
@@ -146,6 +192,17 @@ graph TD
     C --> C1["Apollo Server + Client"]
     D --> D1["Express + OpenAPI + Swagger"]
 ```
+
+### 2.5 主流 API 形态对比（REST / GraphQL / tRPC / gRPC-web）
+
+| 形态 | 数据契约 | 类型安全 | HTTP 缓存 | 适用场景 |
+|------|---------|---------|-----------|---------|
+| **RESTful** | 资源 + HTTP 方法，OpenAPI 描述 | 需额外生成（openapi-typescript 等） | ✅ 天然支持 | 对外开放、需 CDN 缓存、简单 CRUD |
+| **GraphQL** | Schema 单一端点 | ✅ Schema 即契约，可生成客户端类型 | ❌ 需自行实现（持久化查询 + 缓存键） | 多端差异大、复杂关联查询、BFF 聚合 |
+| **tRPC** | TS 函数即接口 | ✅ **端到端类型直通**（无需代码生成） | ❌ 走 POST | **全栈 TS 项目**（如 Next.js + React），内部系统 |
+| **gRPC-web** | protobuf | ✅ proto 生成 | ❌ | 内部多语言服务、强契约场景；**需 Envoy/grpc-web 代理**，浏览器不能直接跑 gRPC |
+
+**选型结论**：对外/需缓存 → REST；多端聚合 → GraphQL；**全栈 TypeScript 且前后端同仓 → tRPC 成本最低**；跨语言内部服务 → gRPC/gRPC-web。也可混用：主链路 REST + 复杂查询 GraphQL。
 
 ### 3. RESTful 最佳实践
 
@@ -548,7 +605,26 @@ async function withRetry(fn, retries = 2) {
 | **SSR** | 服务端 | ✅ | 快 | 中 |
 | **SSG** | 构建时 | ✅ | 极快 | 低（内容固定） |
 | **ISR** | 按需 | ✅ | 快 | 中 |
-| **流式 SSR** | 服务端（边渲染边推） | ✅ | 极快（TTFB 不变） | 高 |
+| **流式 SSR** | 服务端（边渲染边推） | ✅ | 极快（TTFB 更早、内容分批到达） | 高 |
+| **RSC（服务端组件）** | 服务端（组件级） | ✅ | 快（组件粒度流式 + 零客户端 JS） | 高 |
+| **边缘 SSR** | CDN 边缘节点 | ✅ | 极快（就近渲染） | 中（运行时能力受限） |
+
+**主流 SSR/全栈框架对比：**
+
+| 框架 | 技术栈 | 渲染模式 | 特点 | 适用 |
+|------|--------|---------|------|------|
+| **Next.js（App Router）** | React | SSR / SSG / ISR / **RSC + 流式** | 生态最大，Routing 与缓存模型复杂 | 中大型 React 应用 |
+| **Remix / React Router v7** | React | SSR + 嵌套路由 + 渐进增强 | Web 标准优先（Form/Request），数据加载与路由耦合清晰 | 表单/数据密集型应用 |
+| **Nuxt** | Vue | SSR / SSG / ISR（含 Nitro 服务端） | Vue 生态首选，配置化强 | Vue 项目 |
+| **Astro** | 任意 UI | ** islands 架构，默认零 JS** | 内容站性能极佳 | 文档/博客/营销站 |
+| **SvelteKit** | Svelte | SSR / SSG / 流式 | 产物体积小 | 轻量应用 |
+| **Angular Universal / Analog** | Angular | SSR / SSG | 企业级 Angular 项目 | Angular 体系 |
+
+**流式 SSR 与 RSC 的关键价值（面试热点）：**
+- **流式 SSR**：用 `renderToPipeableStream` / RSC 流式响应，先发 HTML 骨架，慢数据到达后再补，显著降低 **TTFB 与 FCP**，避免"最慢接口拖垮整页"
+- **选择性水合（Selective Hydration）**：先水合用户可交互的部分，交互更早可用（改善 INP）
+- **RSC**：服务端组件不进入客户端 bundle，减少 JS 体积；与客户端组件用 `'use client'` 边界划分
+- **边缘运行时**：在 CDN 节点渲染需注意——通常**没有完整 Node API**（文件系统、部分原生模块不可用），只能用 Fetch/WebCrypto/Streams 等 Web 标准子集
 
 ### 2. Node.js 作为 BFF 层的核心职责
 
@@ -572,6 +648,14 @@ graph TD
 | **格式转换** | 数据格式适配 | 时间戳转日期、枚举转中文 |
 | **降级熔断** | 非核心服务不可用时的降级 | 缓存数据 + 默认值兜底 |
 
+**BFF 的部署形态差异（面试加分）：**
+
+| 形态 | 运行环境 | 优点 | 约束 |
+|------|---------|------|------|
+| 传统 BFF（Node 服务） | 容器 / K8s | 完整 Node API，可用任意 npm 包 | 需自行运维、扩缩容 |
+| Serverless BFF | 函数计算（按请求计费） | 免运维、自动扩缩 | **冷启动**、**无状态**、执行时长受限、连接需复用 |
+| 边缘 BFF | CDN 边缘运行时 | 延迟最低、就近鉴权/灰度 | **仅支持 Web 标准子集**（Fetch/Streams/WebCrypto），不能用 fs / 原生模块，npm 包需兼容 |
+
 ---
 
 ## 七、Node.js 性能优化
@@ -591,16 +675,22 @@ graph TD
 ### 2. 内存泄漏排查
 
 ```bash
-# 使用 heapdump 采集堆快照
+# 1) 首选：开调试端口 + Chrome DevTools 抓堆快照（跨平台，Windows 也可用）
+node --inspect app.js
+# 浏览器打开 chrome://inspect → Memory → Take heap snapshot（对比两次快照看增长对象）
+
+# 2) 程序内主动写快照（无需额外依赖）
+node --heapsnapshot-signal=SIGUSR2 app.js   # 类 Unix：kill -USR2 <pid>
+
+# 3) heapdump 模块（注意：依赖信号机制，Windows 下不可用）
 node --require heapdump app.js
-kill -USR2 <pid>  # 触发堆快照
 
-# 使用 clinic 诊断
-npx clinic doctor -- node app.js
-
-# 使用 0x 火焰图
-npx 0x app.js
+# 4) 诊断工具
+npx clinic doctor -- node app.js   # 综合诊断（CPU/内存/事件循环延迟）
+npx 0x app.js                      # CPU 火焰图
 ```
+
+> ⚠️ **Warning**：`kill -USR2` 与 `heapdump` 依赖 POSIX 信号，在 **Windows 上不可用**；Windows 环境请走 `--inspect` + `chrome://inspect`，或在代码中用 `v8.writeHeapSnapshot()` 主动落盘。
 
 ```javascript
 // 常见内存泄漏场景
@@ -632,7 +722,7 @@ clearInterval(timer);  // 不再需要时清理
 
 ### 1. Node.js 适用于怎样的场景？
 
-Node.js 适合 I/O 密集型场景：BFF 层（API 聚合）、SSR（服务端渲染）、CLI 工具、实时应用（WebSocket）、构建工具。不适合 CPU 密集型场景（如复杂图像处理、数据分析）。
+Node.js 适合 I/O 密集型场景：BFF 层（API 聚合）、SSR（服务端渲染）、CLI 工具、实时应用（WebSocket）、构建工具。CPU 密集任务（图像处理、大量数据计算）**不是不能做**，而是要移出主线程：`worker_threads`、N-API 原生扩展、子进程或异步任务队列。
 
 ### 2. RESTful 和 GraphQL 的关系和区别？
 
