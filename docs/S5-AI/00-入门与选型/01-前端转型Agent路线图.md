@@ -73,11 +73,23 @@ graph LR
 
 ## 技术基线
 
-- **AI SDK 7**（2026-06 发布）
-- **MCP 规范 2026-07-28**
-- **A2A（Linux Foundation）**
+> 唯一真源见 [../index.md](../index.md#版本基线唯一真源)，本节只做引用，不另立版本。
+
+- **AI SDK 7**（`ai@7.0.123`，`node >= 22`）
+- **MCP 规范 2026-07-28**（上一稳定版 `2025-11-25`）
+- **A2A v1.0**（2026-03 发布，Linux Foundation Agentic AI Foundation 治理）
 
 本仓库 `apps/ai-demo` 实际依赖 `ai@^7` + `@ai-sdk/react@^4`，文档示例与项目代码同版本。
+
+### 阶段六需要掌握的三个新变化
+
+| 变化 | 说明 | 影响 |
+|------|------|------|
+| **MCP 无状态化** | 移除 `initialize` 握手与 `Mcp-Session-Id`，每个请求自包含；新增 `server/discover` 与 `MCP-Protocol-Version` 头 | 远程 MCP 可任意实例横向扩展，网关按 `Mcp-Method` / `Mcp-Name` 路由限流 |
+| **MCP Apps / Tasks** | Apps：`ui://` 资源 + 受限 iframe + postMessage；Tasks：`tasks/get\|update\|cancel` 长任务句柄 | 对话内可渲染交互 UI；长任务可跨断线恢复 |
+| **Skills over MCP** | 技能作为可复用能力单元挂载到 MCP / Agent 运行时 | 从「写 Prompt」升级为「维护可复用技能库」 |
+
+→ 详见 [../../01-实战篇/06-前沿技术与生态.md](../01-实战篇/06-前沿技术与生态.md)
 
 ---
 
@@ -134,21 +146,23 @@ graph LR
 # 本仓库统一使用 bun
 bun install
 
-# 独立新项目的最小依赖
-bun add ai @ai-sdk/react @ai-sdk/openai zod          # AI SDK 7 核心
-bun add @modelcontextprotocol/sdk                    # MCP 协议
-bun add @langchain/core @langchain/community          # RAG（按需）
-bun add @huggingface/transformers                     # 端侧推理（按需）
+# 独立新项目的最小依赖（版本号对齐 ../index.md 的基线表，按实际最新 patch 调整）
+bun add ai@^7.0.123 @ai-sdk/react@^4 @ai-sdk/openai@^4 zod@^4   # AI SDK 7 核心
+bun add @modelcontextprotocol/sdk@^2                            # MCP 协议（需支持 2026-07-28）
+bun add @langchain/core @langchain/community                     # RAG（按需）
+bun add @huggingface/transformers                                # 端侧推理（按需）
 ```
+
+> Node 需 `>= 22`（AI SDK 7 的 `engines` 要求）；`zod` 需 `^3.25.76 || ^4.1.8`。
 
 ### 模型 Provider 推荐
 
 | 场景 | 推荐方向 |
 |------|---------|
-| 日常聊天/高并发 | 小尺寸模型（gpt-4o-mini、Gemini Flash、Haiku） |
-| 深度推理 | 带 reasoning 档位的旗舰模型 |
-| 长文档 | 百万级上下文窗口的模型 |
-| 中文优先 | DeepSeek / Qwen / GLM |
+| 日常聊天/高并发 | 各厂商低成本档位（如 GPT-6 Luna、Gemini Flash、Claude Haiku 系列） |
+| 深度推理 | 带 reasoning / 高推理档位的旗舰模型（GPT-6 Sol、Claude Opus 5.5） |
+| 长文档 | 百万级上下文窗口的模型（Gemini 3 系） |
+| 中文优先 | DeepSeek V4 / Qwen3 / GLM |
 | 本地/离线 | Ollama + 量化小模型 |
 
 ---

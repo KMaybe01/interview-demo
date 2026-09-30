@@ -58,7 +58,8 @@ const docs = await loader.load();
 const splitter = new RecursiveCharacterTextSplitter({ chunkSize: 500, chunkOverlap: 50 });
 const chunks = await splitter.splitDocuments(docs);
 
-const embeddings = new OpenAIEmbeddings({ model: "text-embedding-ada-002" });
+// text-embedding-ada-002 已过时；当前主力为 3-small（1536 维）/ 3-large（3072 维）
+const embeddings = new OpenAIEmbeddings({ model: "text-embedding-3-small", dimensions: 1536 });
 const vectorStore = await Chroma.fromDocuments(chunks, embeddings, { collectionName: "my_knowledge" });
 
 const retriever = vectorStore.asRetriever(3);
@@ -73,7 +74,8 @@ const chain = RunnableSequence.from([
     question: (input: { question: string }) => input.question,
   },
   prompt,
-  new OpenAI({ model: "gpt-4o-mini" }),
+  // 型号按 ../../index.md 基线表选择当期模型（演示用低成本档）
+  new OpenAI({ model: "gpt-5-mini" }),
   new StringOutputParser(),
 ]);
 

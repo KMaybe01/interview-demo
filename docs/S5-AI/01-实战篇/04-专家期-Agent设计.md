@@ -127,7 +127,7 @@ graph TD
 
 | 组件 | 职责 | 技术方案 | 设计要点 |
 |:---|:---|:---|:---|
-| **模型入口** | 统一接入LLM，处理鉴权、限流、重试、版本和成本 | GPT-4o / Claude / DeepSeek | 可以是模型级联（大模型处理复杂决策，小模型处理简单任务） |
+| **模型入口** | 统一接入LLM，处理鉴权、限流、重试、版本和成本 | 旗舰档 / 主力档 / 低成本档（按 [../index.md](../index.md#版本基线唯一真源) 选当期型号） | 可以是模型级联（大模型处理复杂决策，小模型处理简单任务） |
 | **任务规划器** | 把用户目标拆成可执行步骤，决定是否需要工具 | ReAct / Plan-and-Execute | 分解任务、制定步骤 |
 | **工具层** | 连接搜索、数据库、工单、代码仓库、监控或业务系统 | Function Calling / MCP（Streamable HTTP + OAuth 2.1，2025+）/ API | 工具描述清晰、避免工具过多（<10个） |
 | **上下文与记忆** | 保留当前会话、任务状态、用户偏好或项目配置 | RAG + 向量数据库 + 摘要 | 短期+中期+长期三层记忆 |
@@ -190,9 +190,9 @@ Function Calling 不是什么新能力，它就是"预测下一个词"——只�
 **模型级联策略（降低成本的关键）：**
 | 模型类型 | 用途 | 示例配置 |
 |:---|:---|:---|
-| 主模型 | 复杂推理、决策判断 | GPT-4o / Claude 3.5 Sonnet |
-| 辅助模型 | 图片分析、网页抽取、压缩摘要 | Claude Haiku / GPT-4o-mini |
-| 审批模型 | 危险命令审批 | GPT-4o-mini |
+| 主模型 | 复杂推理、决策判断 | 旗舰档 / 主力档（GPT-6 Sol、Claude Opus 5.5、Sonnet 5.5） |
+| 辅助模型 | 图片分析、网页抽取、压缩摘要 | 低成本档（Claude Haiku 系、Gemini Flash、Qwen3 小模型） |
+| 审批模型 | 危险命令审批 | 低成本档 + 规则校验（审批不能只依赖模型） |
 
 **Prompt Caching（降低重复计算成本）：**
 - Anthropic和OpenAI都支持前缀匹配缓存
@@ -321,7 +321,7 @@ export class ReActAgent {
 
     for (let i = 0; i < this.maxIterations; i++) {
       const response = await this.openai.chat.completions.create({
-        model: 'gpt-4o',
+        model: 'gpt-6-luna', // 按基线表选择当期型号
         messages,
         tools,
         tool_choice: 'auto',

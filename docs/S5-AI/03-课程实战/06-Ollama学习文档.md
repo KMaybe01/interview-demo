@@ -1,7 +1,14 @@
 # Ollama 学习文档
 
-> Ollama 版本：v0.30.10（2026年6月最新版）
 > 涵盖：入门 → 推理 → API → Modelfile → 生态集成 → 生产 Agent 开发 → 多模态 → 成本优化
+>
+> ⚠️ **版本说明**：本文件不再固定声明 Ollama 版本号——Ollama 迭代频繁，写死的版本号会立刻腐化
+> （旧版本声称的 "v0.30.10" 与其版本迁移史均无法核验，已移除）。
+> 请以 `ollama --version` 与 [Ollama 官方 Release](https://github.com/ollama/ollama/releases) 为准；
+> 涉及 API 差异时以你本机实际版本验证。
+>
+> 全文示例模型（如 `llama3`）仅为占位，实际请用 `ollama pull <model>` 拉取当期可用模型
+> （`ollama list` 查看本地已有模型）。
 
 ---
 
@@ -1499,24 +1506,25 @@ client.chat([{ role: 'user', content: '你好' }])
 
 > Ollama 的 API 仍在快速演进中。了解变化历史，避免被 breaking change 绊倒。
 
-#### v0.x API 变化时间线
+#### API 演进脉络
 
-| 版本 | 关键变化 | 影响 |
+> ⚠️ **版本口径修正**：旧版本把演进写成精确到 `v0.10 / v0.20 / v0.25 / v0.30` 的时间线，
+> 这些版本号与迁移路径无法核验，已改为**能力阶段**描述。请以官方 Release Notes 与你本机 `ollama --version` 为准。
+
+| 阶段 | 关键变化 | 影响 |
 |------|---------|------|
-| v0.1.x | 初始 REST API：`/api/generate`、`/api/chat` | 基础 |
-| v0.2.x | 新增 `/api/embeddings`、`/api/create` | 向量化支持 |
-| v0.3.x | 新增 `/api/copy`、`/api/push`，`/api/tags` 改版 | 模型管理增强 |
-| v0.4.x | 新增 `stream: false` 支持 | 非流式简化 |
-| v0.5.x | OpenAI 兼容 API 预览：`/v1/chat/completions` | 迁移便利 |
-| v0.10.x | `format: 'json'` 结构化输出 | JSON Mode |
-| v0.20.x | Function Calling 原生支持、OpenAI 兼容 GA | 工具调用 |
-| v0.25.x | 多工具并行调用、流式工具调用 | 高级 Agent |
-| **v0.30.x** | **ollama launch、IQ 量化、同时加载多模型优化** | 当前最新 |
+| 基础阶段 | 初始 REST API：`/api/generate`、`/api/chat` | 文本生成与对话 |
+| 向量化阶段 | 新增 `/api/embeddings`、`/api/create` | 支持 RAG |
+| 模型管理阶段 | 新增 `/api/copy`、`/api/push`，`/api/tags` 改版 | 模型分发 |
+| 兼容阶段 | OpenAI 兼容 API `/v1/chat/completions` | 生态迁移便利 |
+| 结构化输出阶段 | `format: 'json'` 结构化输出 | JSON Mode |
+| 工具调用阶段 | Function Calling 原生支持、多工具并行调用、流式工具调用 | Agent 能力基础 |
+| 近期 | IQ 系列量化、多模型同时加载优化、Agent 相关命令 | 显存受限场景、本地 Agent |
 
-#### 从 v0.20 迁移到 v0.30 注意事项
+#### 从 `generate` 迁移到 `chat` 接口（推荐）
 
 ```typescript
-// ❌ 旧方式（v0.20）
+// ❌ 旧方式：generate 用 prompt（模型名按本地实际可用模型替换）
 const oldWay = await fetch('http://localhost:11434/api/generate', {
   method: 'POST',
   body: JSON.stringify({
@@ -1526,7 +1534,7 @@ const oldWay = await fetch('http://localhost:11434/api/generate', {
   }),
 })
 
-// ✅ 新方式（v0.30，推荐使用 chat 统一接口）
+// ✅ 新方式：chat 用 messages（推荐，统一接口）
 const newWay = await fetch('http://localhost:11434/api/chat', {
   method: 'POST',
   body: JSON.stringify({
@@ -1546,13 +1554,15 @@ const newWay = await fetch('http://localhost:11434/api/chat', {
 
 #### 废弃端点替代方案
 
-| 废弃端点 | 替代 | 移除版本 |
-|---------|------|---------|
-| `POST /api/generate` | `POST /api/chat` | v0.35+ 计划 |
-| `options.raw` | `options: { raw: true }` | v0.30+ |
-| `context` 数组 | `messages` 数组 | v0.30+ |
+| 不推荐的用法 | 替代 | 说明 |
+|---------|------|------|
+| `POST /api/generate` | `POST /api/chat` | 官方推荐统一走 chat 接口 |
+| `options.raw` | `options: { raw: true }` | 参数位置变更 |
+| `context` 数组 | `messages` 数组 | 用完整聊天历史替代状态续接 |
 
 > ⚠️ **常见陷阱**：不要在 `/api/generate` 和 `/api/chat` 之间混用参数格式。`/api/generate` 用 `prompt`，`/api/chat` 用 `messages`，混用会导致 400 错误。
+
+## 6. Modelfile 深度解析
 
 > Modelfile 是 Ollama 的灵魂，它让你像写 Dockerfile 一样定制 LLM。
 > 从改 Prompt 到调参数，再到融合多个模型，Modelfile 是一切高级用法的起点。

@@ -228,17 +228,17 @@ class GraphRAG {
 #### 2.3 项目初始化
 
 ```bash
-# 🚀 创建项目
-npx create-next-app@latest rag-app --typescript --tailwind --app
+# 🚀 创建项目（本仓库统一用 bun）
+bunx create-next-app@latest rag-app --typescript --tailwind --app
 
 cd rag-app
 
 # 📦 安装 LangChain.js 生态
-npm install langchain @langchain/openai @langchain/pinecone
-npm install @pinecone-database/pinecone
+bun add langchain @langchain/openai @langchain/pinecone
+bun add @pinecone-database/pinecone
 
 # 📄 安装文档解析依赖
-npm install pdf-parse mammoth cheerio
+bun add pdf-parse mammoth cheerio
 ```
 
 #### 2.4 环境变量配置
@@ -247,9 +247,11 @@ npm install pdf-parse mammoth cheerio
 # .env.local
 OPENAI_API_KEY=sk-your-openai-key
 PINECONE_API_KEY=pc-your-pinecone-key
-PINECONE_ENVIRONMENT=us-east-1
 PINECONE_INDEX_NAME=rag-documents
 ```
+
+> ⚠️ 旧教程里的 `PINECONE_ENVIRONMENT` 已被 Pinecone 新版移除：现在只需要 `apiKey` + `indexName`
+> （索引的 cloud/region 在**创建索引时**指定，不在客户端传入）。
 
 ### 💻 核心实现
 
@@ -396,7 +398,8 @@ export class RAGChain {
 
   constructor(vectorStore: VectorStoreManager) {
     this.vectorStore = vectorStore;
-    this.llm = new ChatOpenAI({ model: 'gpt-4o', temperature: 0.3 });
+    // 型号按 ../../index.md 基线表选择当期型号
+    this.llm = new ChatOpenAI({ model: 'gpt-6-luna', temperature: 0.3 });
     this.chain = this.buildChain();
   }
 

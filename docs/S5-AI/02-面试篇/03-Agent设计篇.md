@@ -104,15 +104,24 @@
 > 3. **重复检测**：相同工具+参数连续出现 3 次则停止
 > 4. **成本控制**：Token 消耗超过阈值则停止
 >
-> **实现代码**（AI SDK）：
-> ```ts
-> const result = await generateText({
->   maxSteps: 10,        // 最大迭代次数
->   abortSignal: AbortSignal.timeout(30000),
-> });
-> ```
->
+> **实现代码**（AI SDK 7，可复制运行）：
+
+```ts
+import { Experimental_Agent as Agent, stepCountIs } from 'ai';
+
+const agent = new Agent({
+  model: openai('gpt-6-luna'), // 按基线表选择当期型号
+  tools: { search: searchTool },
+  // ✅ v7：停止条件与超时统一声明，取代旧的 maxSteps
+  stopWhen: stepCountIs(10),
+  timeout: { totalMs: 300_000, stepMs: 30_000 },
+});
+
+const result = await agent.generate({ prompt: userInput });
+```
+
 > **经验**：生产环境必须有防护，否则一个失控循环可能烧掉大量 Token。
+> 三层保险缺一不可：**步骤数上限 + 超时 + 成本阈值**。
 
 ### Q8: Agent 工具设计原则？
 
@@ -123,18 +132,23 @@
 > 4. **幂等性**：相同输入相同输出，允许重试
 > 5. **错误处理**：返回明确错误信息，不要静默失败
 >
-> **示例**：
-> ```ts
-> const searchTool = tool({
->   description: '搜索知识库，返回相关文档片段',
->   parameters: z.object({
->     query: z.string().describe('搜索关键词'),
->   }),
->   execute: async ({ query }) => {
->     // 实现
->   },
-> });
-> ```
+> **示例**（AI SDK 7 用 `inputSchema` / `outputSchema` 取代旧的 `parameters`）：
+
+```ts
+import { tool } from 'ai';
+import { z } from 'zod';
+
+const searchTool = tool({
+  description: '搜索知识库，返回相关文档片段。用于事实性问答；闲聊时不要调用。',
+  inputSchema: z.object({
+    query: z.string().describe('搜索关键词'),
+  }),
+  execute: async ({ query }) => {
+    // 实现检索；只回传必要字段，避免把整页内容灌回上下文
+    return { hits: await knowledgeBase.search(query, 5) };
+  },
+});
+```
 
 ### Q9: Agent 安全防护怎么做？
 
@@ -216,13 +230,15 @@
 
 ---
 
-## 六、面试金句
+## 六、一句话开场 + 追问链
 
-| 场景 | 金句 |
-|------|------|
-| 解释 Agent | "Agent = LLM + Tools + Memory + Planning" |
-| 解释 ReAct | "边想边做，每步都有理由" |
-| 解释工具设计 | "单一职责，明确描述，幂等安全" |
+> 金句只是**开场钩子**；Agent 题几乎必被追到"失败与成本"，务必准备。
+
+| 场景 | 一句话开场 | 必接的追问（提前准备答案） |
+|---|---|---|
+| 解释 Agent | "Agent = LLM + Tools + Memory + Planning" | 停止条件与审批点怎么设计？执行轨迹怎么观测与回放？ |
+| 解释 ReAct | "边想边做，每步都有理由" | 推理 token 成本怎么控？如何避免无限循环？什么时候改用 Workflow？ |
+| 解释工具设计 | "单一职责，明确描述，幂等安全" | 幂等键怎么实现？有副作用的操作如何做人工审批（HITL）？ |
 | 解释安全防护 | "最小权限，输入过滤，输出验证" |
 | 解释评估 | "任务完成率是北极星指标" |
 

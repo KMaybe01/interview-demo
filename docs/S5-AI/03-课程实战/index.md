@@ -3,6 +3,9 @@
 > 面向有 React/TS 基础的前端开发者，七步打通 RAG → MCP/A2A → 编程 Agent → 全流程落地 → 模型微调 → 本地部署 → 全栈开发。
 > 
 > **前置阅读**：[学习指南总览](../index.md) 了解完整学习路径。
+>
+> ⚠️ **版本基线**：所有型号/版本号以 [../index.md](../index.md#版本基线唯一真源) 为准。
+> 本目录各篇为**课程笔记视角**，同一主题会在不同篇中从不同角度出现，请先看下方的"避免重复阅读"导航。
 
 ---
 
@@ -67,6 +70,21 @@ graph TB
 | [05-大模型训练](./05-大模型训练.md) | 模型微调与部署 | 多节 | Python/ML 基础 | LLaMA-Factory → 量化部署 | ML/AI 工程师 |
 | [06-Ollama 学习文档](./06-Ollama学习文档.md) | 本地推理与 Agent 开发 | 多节 | 命令行基础 | Ollama → Open WebUI → LangChain | 个人开发者/研究者 |
 | [07-Agent 全栈开发实战](./07-Agent全栈开发实战.md) | Agent 应用全栈开发 | 多节 | LangChain 基础 | LangGraph → CrewAI → 多 Agent | 全栈开发者 |
+
+---
+
+## 避免重复阅读：同一主题的权威章节
+
+> 课程笔记天然会有重叠。同一主题**只需精读「权威章节」**，其余篇目按自己的项目视角选读即可。
+
+| 主题 | 权威章节（精读） | 其他出现位置（选读） |
+|---|---|---|
+| **RAG 全链路** | [01-RAG 全栈技术实战](./01-RAG全栈技术实战.md) | 04 §4（项目内应用视角）、05 §3-§7（配合微调）、06 §7.9（本地模型）、07 §11（全栈集成） |
+| **MCP** | [01-实战篇/06-前沿技术与生态](../01-实战篇/06-前沿技术与生态.md)（协议） | 02 第 7 章（Server/Client 实现）、03 §6（编程 Agent 接入）、06 §7.10（本地工具） |
+| **A2A** | [01-实战篇/06-前沿技术与生态](../01-实战篇/06-前沿技术与生态.md)（协议 v1.0） | 02 第 14-17 章（多 Agent 编排实战） |
+| **Agent 设计** | [01-实战篇/04-专家期-Agent设计](../01-实战篇/04-专家期-Agent设计.md) | 04 §6-§9、05 §8、06 §10、07 §12-§15 |
+| **上下文工程 / Skills** | [01-实战篇/10-上下文工程与Agent Skills](../01-实战篇/10-上下文工程与Agent%20Skills.md) | 02（多 Agent 上下文传递） |
+| **生成式 UI / 前端组件** | [01-实战篇/11-生成式UI与前端AI组件生态](../01-实战篇/11-生成式UI与前端AI组件生态.md) | — |
 
 ---
 
@@ -161,13 +179,14 @@ graph TB
 |------|---------|--------|---------|
 | LangChain | 全系列 | `@langchain/core` | >= 0.3 |
 | LangGraph | 03 第 16 章 / 07 | `@langchain/langgraph` | >= 0.1 |
-| MCP 协议 | 02 第 7 章 | `@modelcontextprotocol/sdk` | latest |
+| MCP 协议 | 02 第 7 章 | `@modelcontextprotocol/sdk` | 需支持规范 `2026-07-28` |
+| A2A 协议 | 02 第 14-17 章 | A2A SDK / 自研 | `v1.0`（2026-03） |
 | Chroma | 01 第 5 章 | `chromadb` / `@langchain/chroma` | >= 0.5 |
 | Playwright | 02 第 11 章 | `playwright` | >= 1.40 |
 | FastAPI | 02 第 5 章 | `express` / `fastapi` | latest |
 | Docker | 全系列 | Docker Desktop | >= 24 |
 | LLaMA-Factory | 05 | `llama-factory` | latest |
-| Ollama | 06 | `ollama` | >= 0.3 |
+| Ollama | 06 | `ollama` | 以官方 Release 为准（不写死版本） |
 | Open WebUI | 06 | `open-webui` | latest |
 | vLLM | 05 | `vllm` | >= 0.6 |
 | Milvus | 01 | `pymilvus` | >= 2.4 |
@@ -200,12 +219,12 @@ graph TB
 ## 快速开始
 
 ```bash
-# 1. 环境准备
-node -v  # >= 18
-pnpm -v  # 推荐包管理器
+# 1. 环境准备（AI SDK 7 要求 Node >= 22；本仓库统一用 bun）
+node -v  # >= 22
+bun -v
 
 # 2. 基础依赖
-npm install @langchain/core @langchain/community @langchain/openai
+bun add @langchain/core @langchain/community @langchain/openai
 
 # 3. 向量数据库（选一）
 pip install chromadb        # 轻量开发

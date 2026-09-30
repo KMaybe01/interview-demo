@@ -5,6 +5,27 @@
 
 ---
 
+> ⚠️ **本支线的定位**：这是与 [03-课程实战](../03-课程实战/index.md)（TS / LangChain 主线）**并行的第二条支线**，
+> 用 Go + Gin 重走一遍 LLM 后端。两条线技术栈独立、目标相同，**选一条走完即可**，不必都读。
+>
+> **版本基线**：型号与协议版本统一以 [../index.md](../index.md#版本基线唯一真源) 为准。
+
+### 🔒 依赖版本锁定表
+
+| 依赖 | 版本建议 | 说明 |
+|---|---|---|
+| **Go** | `>= 1.23` | 阶段教程按 Go 1.23+ 编写 |
+| **Gin** | 当期稳定版 | `gin-gonic/gin`，避免 lock 到过旧 minor |
+| **LangChain Go** | 当期稳定版 | `github.com/tmc/langchaingo` |
+| **OpenAI Go SDK** | 当期稳定版 | `github.com/sashabaranov/go-openai`（注意与 OpenAI 官方 Go SDK 的区别） |
+| **React** | `19.x` | 与本仓库 `apps/frontend` 对齐 |
+| **Docker** | `>= 24` | Compose v2 |
+| **MCP SDK**（如涉及） | 支持规范 `2026-07-28` | Go SDK 亦需版本协商 |
+
+> 本目录为**课程笔记**，示例代码未做逐版本回归验证：跑不通时优先核对依赖版本与 SDK 的 breaking change。
+
+---
+
 > 🎯 **学习目标**：打通 AI 应用开发的"任督二脉"，实现从 0 到 1 的突破，掌握生产级 AI Agent 全栈开发能力。
 
 ### 💡 你将学到

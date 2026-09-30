@@ -213,6 +213,16 @@ export const navConfig: NavItem[] = [
             icon: '🔗',
             link: '/S5-AI/01-实战篇/09-AI SDK 数据连接与聊天',
           },
+          {
+            text: '上下文工程与Agent Skills',
+            icon: '🧩',
+            link: '/S5-AI/01-实战篇/10-上下文工程与Agent Skills',
+          },
+          {
+            text: '生成式UI与前端AI组件生态',
+            icon: '🎨',
+            link: '/S5-AI/01-实战篇/11-生成式UI与前端AI组件生态',
+          },
         ],
       },
       {
