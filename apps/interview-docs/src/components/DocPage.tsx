@@ -2,8 +2,10 @@ import { motion } from 'motion/react';
 import { useCallback, useEffect, useMemo, useRef, useState } from 'react';
 import { Link, useLocation } from 'react-router';
 import { loadContent } from '../data/content';
+import { getAdjacentDocs } from '../data/docSequence';
 import { slugify } from '../utils/slugify';
 import { splitMarkdown } from '../utils/split-markdown';
+import DocPageNav from './DocPageNav';
 import DocVirtualScroll from './DocVirtualScroll';
 import Outline from './Outline';
 
@@ -15,6 +17,7 @@ interface Heading {
 export default function DocPage() {
   const location = useLocation();
   const [content, setContent] = useState<string | null>(null);
+  const [docUrl, setDocUrl] = useState('');
   const [loading, setLoading] = useState(true);
   const [activeHeadingId, setActiveHeadingId] = useState<string>('');
   const headings = useMemo(() => {
@@ -24,6 +27,7 @@ export default function DocPage() {
       .map((s) => ({ level: s.level, text: s.heading! }));
   }, [content]);
   const [notFound, setNotFound] = useState(false);
+  const { prev, next } = useMemo(() => getAdjacentDocs(docUrl), [docUrl]);
   const observerRef = useRef<IntersectionObserver | null>(null);
   const headingIdsRef = useRef<Map<Element, string>>(new Map());
 
@@ -36,6 +40,7 @@ export default function DocPage() {
     setLoading(true);
     setNotFound(false);
     setContent(null);
+    setDocUrl('');
 
     loadContent(location.pathname)
       .then((result) => {
@@ -46,6 +51,7 @@ export default function DocPage() {
           return;
         }
         setContent(result.content);
+        setDocUrl(result.url);
         setLoading(false);
       })
       .catch(() => {
@@ -150,6 +156,7 @@ export default function DocPage() {
     >
       <div className="doc-content">
         <DocVirtualScroll content={content!} />
+        <DocPageNav prev={prev} next={next} />
       </div>
       {headings.length > 0 && <Outline headings={headings} activeId={activeHeadingId} />}
     </motion.div>

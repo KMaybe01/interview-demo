@@ -1,24 +1,8 @@
+import { getDocFile, loadRawDoc } from './docUrls';
+
 interface ContentResult {
   content: string;
   url: string;
-}
-
-const lazyModules = import.meta.glob('../../../../docs/S{1,2,3,4,5,6}-*/**/*.md', {
-  query: '?raw',
-  import: 'default',
-}) as Record<string, () => Promise<string>>;
-
-const DOCS_PREFIX = /^(?:.*[/\\])?docs\//;
-
-const urlToFile = new Map<string, string>();
-
-for (const filePath of Object.keys(lazyModules)) {
-  let urlPath = filePath.replace(/\.md$/, '');
-  urlPath = urlPath.replace(DOCS_PREFIX, '/');
-  if (urlPath.endsWith('/index')) {
-    urlPath = urlPath.slice(0, -6);
-  }
-  urlToFile.set(urlPath, filePath);
 }
 
 const FRONTMATTER_RE = /^---[\s\S]*?\n---\s*\n/;
@@ -33,13 +17,13 @@ export async function loadContent(url: string): Promise<ContentResult | null> {
   const decoded = decodeURIComponent(url);
   const withoutTrailing = decoded.replace(/\/$/, '');
 
-  const filePath = urlToFile.get(decoded) || urlToFile.get(withoutTrailing);
+  const filePath = getDocFile(decoded) ?? getDocFile(withoutTrailing);
   if (!filePath) return null;
 
-  const loadFn = lazyModules[filePath];
-  if (!loadFn) return null;
+  const rawPromise = loadRawDoc(filePath);
+  if (!rawPromise) return null;
 
-  const raw = await loadFn();
+  const raw = await rawPromise;
   const content = stripFrontmatter(raw);
   return { content, url: withoutTrailing || '/' };
 }

@@ -24,9 +24,10 @@ bun run changelog # conventional-changelog
 - Vite base path `/` (default) — overridden to `/interview-demo/` for GitHub Pages deploy via `VITE_BASE_PATH` env.
 - Route `/*` → `DocPage` (catch-all). Route `/` → `HomePage`.
 - Content files live in `S1-*/` through `S6-*/` directories (outside `src/`).
-- Loaded via `import.meta.glob('/S{1,2,3,4,5,6}-*/**/*.md', { query: '?raw' })` in `src/data/content.ts`.
+- Loaded via `import.meta.glob('/S{1,2,3,4,5,6}-*/**/*.md', { query: '?raw' })` in `src/data/docUrls.ts`; `src/data/content.ts` wraps it with frontmatter stripping (`loadContent`).
 - Route = MD file path minus `.md` extension. `index.md` maps to its parent directory path.
 - Frontmatter (`---...---`) is stripped automatically; only body content is rendered.
+- **Prev/next chapter nav** (`DocPageNav`, bottom of every doc page): ordering comes from `src/data/docSequence.ts` — URL segments compared with numeric-aware natural sort (`阶段02` < `阶段10`); titles prefer `navigation.ts` text, fallback to filename segment minus `NN-` prefix. No manual maintenance needed for new docs.
 - **Adding a new doc requires**:
   1. Create the `.md` file in the appropriate `S?-*/` directory
   2. Add a nav entry in `src/data/navigation.ts`
