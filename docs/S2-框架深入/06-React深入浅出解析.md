@@ -2260,6 +2260,9 @@ timeline
     2020 : React 17 : 为并发奠基 : JSX 新转换
     2022 : React 18 : Concurrent 模式 : 自动批处理
     2024 : React 19 : Actions : useActionState : RSC 稳定
+    2025.06 : React 19.1 : Owner Stack : 调试增强
+    2025.10 : React 19.2 : Activity : useEffectEvent : 部分预渲染
+    2026.06 : React 19.2.7 : Server Actions 回归修复 : 当前主线
 ```
 
 ### 24.2 React 17（承上启下）
@@ -2374,4 +2377,101 @@ function NewPostForm() {
 | useFormState | 存在 | **移除**，替换为 useActionState |
 | hydrateRoot | ReactDOM.hydrate | **hydrateRoot** |
 | renderToNodeStream | ReactDOMServer.renderToNodeStream | **已废弃**，改用 renderToPipeableStream |
+
+### 24.5 React 19.1（调试能力增强）
+
+React 19.1 没有新增面向业务的 API，重点在**可观测性**：
+
+| 能力 | 说明 |
+|------|------|
+| **Owner Stack** | 报错/警告时给出"拥有该组件的父组件"调用栈，而非仅仅渲染位置，定位第三方库内部报错更准确 |
+| `captureOwnerStack()` | 开发环境下主动捕获 Owner Stack，便于自定义错误边界与日志上报 |
+| Hydration 差异诊断 | 客户端与服务端不一致时给出更精确的 diff 提示 |
+
+```jsx
+import { captureOwnerStack } from 'react';
+
+// 自定义错误边界中上报"是谁渲染了出错组件"
+class ErrorBoundary extends React.Component {
+  componentDidCatch(error) {
+    const ownerStack = captureOwnerStack?.();
+    reportError({ error, ownerStack });
+  }
+}
+```
+
+### 24.6 React 19.2（并发体验与 SSR 增强）
+
+> 📌 **版本现状**：React 19.2 发布于 2025-10-01，19.2.7（2026-06）修复了 Server Actions 的一个回归问题，是当前主线版本。
+
+#### `<Activity>`：保留状态的显隐切换
+
+过去"隐藏但保留状态"只能靠 CSS（`display: none`）或卸载后重挂载重建状态。`<Activity>` 在框架层面解决了这个问题：
+
+```jsx
+import { Activity } from 'react';
+
+<Activity mode={isOpen ? 'visible' : 'hidden'}>
+  <ExpensivePanel />
+</Activity>
+```
+
+| mode | 行为 |
+|------|------|
+| `visible` | 正常渲染，副作用生效 |
+| `hidden` | 卸载 DOM 与副作用（effect cleanup 执行），但**保留组件状态**，再次 visible 时状态恢复 |
+
+**典型场景**：Tab 切换、侧边抽屉、路由级页面缓存——比 CSS 隐藏省内存（不保留 DOM），比重挂载保状态。
+
+#### `useEffectEvent`：把非响应式逻辑从 Effect 中抽离
+
+解决"Effect 依赖了某个值，但该值变化时不希望重跑 Effect"的经典难题：
+
+```jsx
+function ChatRoom({ roomId, theme }) {
+  const onConnected = useEffectEvent(() => {
+    // ✅ 总是读到最新的 theme，但 theme 变化不会重连
+    showToast(`已加入 ${roomId}`, theme);
+  });
+
+  useEffect(() => {
+    const conn = createConnection(roomId);
+    conn.on('connected', onConnected);
+    conn.connect();
+    return () => conn.disconnect();
+  }, [roomId]); // 🎯 依赖里不再需要 theme
+}
+```
+
+> ⚠️ **注意**：`useEffectEvent` 返回的函数**不是**响应式值，不能在依赖数组中使用，也不能在渲染期间调用。它打破的不是数据流，而是"Effect 闭包过期"问题。
+
+#### 其他重要变化
+
+| 特性 | 说明 |
+|------|------|
+| `cacheSignal` | 返回一个 `AbortSignal`，在缓存作用域结束或请求中断时触发，便于提前中止 fetch / 清理资源 |
+| 部分预渲染（Partial Prerendering） | 静态外壳先预渲染并直出，动态"洞"由 Suspense 流式填充，兼顾首屏与个性化 |
+| `useDeferredValue` initialValue | 支持传入初始值，首次渲染直接使用该值而不必先渲染一次旧值 |
+| Node SSR 支持 Web Streams | `renderToReadableStream` / `prerender` / `resume` 等 API 可在 Node.js 中使用标准 Web Streams |
+| Suspense 批量揭示 | Suspense 边界延迟少量时间后批量揭示，避免多个内容块逐个弹出造成的布局抖动；若接近 2.5s LCP 阈值则立即揭示 |
+
+```jsx
+import { cacheSignal } from 'react';
+import { useDeferredValue } from 'react';
+
+// 1️⃣ cacheSignal：缓存失效/请求中断时自动 abort
+async function fetchWithCache(url) {
+  const res = await fetch(url, { signal: cacheSignal() });
+  return res.json();
+}
+
+// 2️⃣ useDeferredValue 初始值
+const deferredQuery = useDeferredValue(query, '');
+```
+
+#### 面试要点速记
+
+- **19 → 19.2 的演进主线**：19 解决"怎么写异步与表单"（Actions / `use()` / `useActionState`），19.1 解决"怎么定位问题"（Owner Stack），19.2 解决"怎么让并发与 SSR 体验更好"（`<Activity>` / `useEffectEvent` / 部分预渲染）。
+- **`<Activity>` vs `display: none`**：前者不保留 DOM、但保留 React 状态；后者保留 DOM 与状态但持续占用内存与布局。
+- **`useEffectEvent` vs `useCallback`**：`useCallback` 是响应式值（会进依赖数组），`useEffectEvent` 明确不是响应式值，专供 Effect 内部读取最新值。
 

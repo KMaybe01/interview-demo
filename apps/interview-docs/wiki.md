@@ -177,7 +177,7 @@ There is no global state library. State is managed through:
 ## Bundle Splitting
 
 ```
-vendor chunk        → node_modules (react, react-dom, react-router-dom)
+vendor chunk        → node_modules (react, react-dom, react-router)
 MermaidDiagram      → lazy loaded, separate chunk (~2.6KB)
 Each S[1-6]-*/*.md  → code-split by Vite rolldown (2046 modules)
 ```

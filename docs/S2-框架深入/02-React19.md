@@ -376,7 +376,7 @@ Fiber 将原本不可中断的**递归渲染**（Stack Reconciler）改造成了
 #### 🌟 重要特性速览
 
 ```
-React 19 (2024)
+React 19.0 (2024-12)
 ├─ React Compiler (自动优化)
 ├─ Actions (统一表单处理)
 ├─ use() Hook (异步数据)
@@ -384,7 +384,77 @@ React 19 (2024)
 ├─ useFormStatus/useActionState (原 useFormState)
 ├─ Server Components 支持
 └─ Web Components 增强
+
+React 19.1 (2025-06)
+├─ Owner Stack（报错定位到"拥有者"组件）
+├─ captureOwnerStack() API
+└─ Hydration 差异诊断增强
+
+React 19.2 (2025-10)  ← 当前主线
+├─ <Activity>（保留状态的显隐切换）
+├─ useEffectEvent（抽离非响应式 Effect 逻辑）
+├─ cacheSignal（缓存作用域 AbortSignal）
+├─ 部分预渲染 Partial Prerendering
+├─ useDeferredValue 支持 initialValue
+├─ Node.js SSR 支持 Web Streams
+└─ Suspense 边界批量揭示
+
+React 19.2.7 (2026-06)
+└─ 修复 Server Actions 回归问题（本仓库所用版本）
 ```
+
+> 📌 **版本现状**：本文主线为 **React 19.2**（19.2.7 为当前最新补丁）。19.1 与 19.2 的增量特性集中在下文，19.0 的核心特性（Actions / `use()` / Compiler）见后续各节。
+
+#### 🆕 React 19.2 核心增量特性
+
+##### `<Activity>` — 保留状态的显隐切换
+
+```jsx
+import { Activity } from 'react';
+
+<Activity mode={isOpen ? 'visible' : 'hidden'}>
+  <ExpensivePanel />
+</Activity>
+```
+
+| mode | 行为 |
+|------|------|
+| `visible` | 正常渲染，副作用生效 |
+| `hidden` | 卸载 DOM 并执行 effect cleanup，但**保留组件状态**，再次 `visible` 时状态恢复 |
+
+对比传统方案：`display: none` 保留 DOM 但持续占用内存与布局；卸载重挂载省内存但丢失状态。`<Activity>` 两者兼得，适合 Tab 切换、抽屉、路由级页面缓存。
+
+##### `useEffectEvent` — 抽离非响应式 Effect 逻辑
+
+解决"Effect 依赖了某个值，但该值变化时不希望重跑 Effect"：
+
+```jsx
+function ChatRoom({ roomId, theme }) {
+  const onConnected = useEffectEvent(() => {
+    // ✅ 总是读到最新 theme，但 theme 变化不会触发重连
+    showToast(`已加入 ${roomId}`, theme);
+  });
+
+  useEffect(() => {
+    const conn = createConnection(roomId);
+    conn.on('connected', onConnected);
+    conn.connect();
+    return () => conn.disconnect();
+  }, [roomId]); // 🎯 依赖中不再需要 theme
+}
+```
+
+> ⚠️ `useEffectEvent` 返回的函数**不是响应式值**：不能放进依赖数组，也不能在渲染期间调用。
+
+##### 其他增量
+
+| 特性 | 说明 |
+|------|------|
+| `cacheSignal` | 缓存作用域结束或请求中断时触发的 `AbortSignal`，便于中止 fetch / 清理资源 |
+| 部分预渲染 | 静态外壳预渲染直出，动态部分由 Suspense 流式填充 |
+| `useDeferredValue` initialValue | 支持初始值，首屏直接使用该值而不先渲染旧值 |
+| Node SSR Web Streams | `renderToReadableStream` / `prerender` / `resume` 支持标准 Web Streams |
+| Suspense 批量揭示 | 延迟少量时间后批量揭示，避免逐块弹出抖动；接近 2.5s LCP 阈值时立即揭示 |
 
 #### 🔧 React Compiler 详解
 
@@ -775,7 +845,7 @@ graph TD
 | Wave 点击波纹效果异常 | 全局 Button、Tag 等 | 安装兼容补丁或升级 v6 |
 | Modal/Notification/Message 静态方法失效 | `Modal.confirm()`、`message.success()` 等 | 安装兼容补丁；hooks 调用方式不受影响 |
 | `element.ref` 访问移除 | 依赖 ref 的组件 | React 19 中 `ref` 是常规 prop，避免直接访问 `element.ref` |
-| Next.js 15 + React 19 兼容 | SSR 场景 | 安装 `@ant-design/nextjs-registry` + 兼容补丁 |
+| Next.js 16 + React 19 兼容 | SSR 场景 | 安装 `@ant-design/nextjs-registry` + 兼容补丁 |
 | `findDOMNode` 废弃警告 | 使用类组件的场景 | v6 已移除相关兼容逻辑，推荐迁移到函数组件 |
 
 > 💡 **升级到 antd 6.x 可完全解决上述问题**：v6 最低要求 React 18，原生支持 React 19，无需 `@ant-design/v5-patch-for-react-19` 补丁包。v5 主分支将进入 1 年维护期，不再提供功能更新。
@@ -891,7 +961,7 @@ export default defineConfig({
 |------|------|-----------|
 | React 19 + Next.js | 全栈应用首选 | 最广泛使用 |
 | Angular 22 | 企业级应用 | Zoneless 默认，性能大幅提升 |
-| Vue 3.6 + Nuxt 5 | 渐进式开发 | Vapor Mode 实验性，性能接近 Solid |
+| Vue 3.6 + Nuxt 4 | 渐进式开发 | Vapor Mode 实验性，性能接近 Solid |
 | Svelte 5 | 编译时优化 | Runes 响应式，轻量级首选 |
 | Solid.js | 细粒度响应式 | 性能标杆，生态增长中 |
 | Astro 5 | 内容型网站 | Islands 架构，零 JS 默认 |
@@ -997,7 +1067,7 @@ return (
 {showTitle && <h1>Title</h1>}
 ```
 
-> 🔗 **链式思考**：JSX 是 React 的"模板语言"，本质是 `createElement` 函数的语法糖。Vue 采用 SFC（单文件组件）用 `<template>` 分离模板和逻辑，Angular 则用 `@Component` 装饰器绑定模板、样式和逻辑。三者的组件化本质相同——都是"模板/渲染函数 + 状态 + 属性"，差异在代码组织和编译策略：JSX 灵活但难以编译优化，Vue SFC 结构清晰且易于 PatchFlag 优化，Angular 装饰器配置式且有 AOT 编译。详见 [04-框架对比](../框架对比/) 的"组件化方案对比"。
+> 🔗 **链式思考**：JSX 是 React 的"模板语言"，本质是 `createElement` 函数的语法糖。Vue 采用 SFC（单文件组件）用 `<template>` 分离模板和逻辑，Angular 则用 `@Component` 装饰器绑定模板、样式和逻辑。三者的组件化本质相同——都是"模板/渲染函数 + 状态 + 属性"，差异在代码组织和编译策略：JSX 灵活但难以编译优化，Vue SFC 结构清晰且易于 PatchFlag 优化，Angular 装饰器配置式且有 AOT 编译。详见 [04-框架对比](./04-框架对比) 的"组件化方案对比"。
 
 ---
 
@@ -1478,7 +1548,7 @@ function handleClick(e) {
 | 第三方库依赖 document 事件 | ✅ 正常工作 | ⚠️ 可能失效 | 使用 `stopPropagation` 阻止 |
 | 事件对象异步访问 | ❌ 需要 persist | ✅ 直接访问 | 无 |
 
-> 🔗 **链式思考**：React Hooks 的核心设计是"函数即组件"，每次渲染重新执行函数，通过链表维护状态顺序。Vue 的 Composition API（`ref`/`reactive`/`computed`）同样是把状态逻辑抽取到函数中，但依赖 Proxy 自动追踪而非手动声明依赖。Angular 的 `inject()` 函数（Angular 14+）则是 DI 驱动的依赖注入，与 React/Vue 的"按需调用"不同，Angular 的状态来自 Service 注入，而非函数调用。详见 [04-框架对比](../框架对比/) 的"组件化方案对比"。
+> 🔗 **链式思考**：React Hooks 的核心设计是"函数即组件"，每次渲染重新执行函数，通过链表维护状态顺序。Vue 的 Composition API（`ref`/`reactive`/`computed`）同样是把状态逻辑抽取到函数中，但依赖 Proxy 自动追踪而非手动声明依赖。Angular 的 `inject()` 函数（Angular 14+）则是 DI 驱动的依赖注入，与 React/Vue 的"按需调用"不同，Angular 的状态来自 Service 注入，而非函数调用。详见 [04-框架对比](./04-框架对比) 的"组件化方案对比"。
 
 ---
 
@@ -2822,7 +2892,7 @@ export function CartProvider({ children }: { children: React.ReactNode }) {
 }
 ```
 
-> 🔗 **链式思考**：React 状态管理生态最为多元——从内置的 `useState`/`useReducer` 到第三方 Zustand/Redux/Jotai，体现"轻核心 + 重生态"哲学。Vue 的 Pinia 是官方统一方案，深度集成响应式系统。Angular 的 NgRx SignalStore 则结合了 RxJS 和 Signals。选择策略：小型应用用内置方案，中型应用用 Zustand/Pinia/SignalStore，大型应用用 Redux/NgRx。详见 [框架对比](../框架对比/) 的"状态管理生态"。
+> 🔗 **链式思考**：React 状态管理生态最为多元——从内置的 `useState`/`useReducer` 到第三方 Zustand/Redux/Jotai，体现"轻核心 + 重生态"哲学。Vue 的 Pinia 是官方统一方案，深度集成响应式系统。Angular 的 NgRx SignalStore 则结合了 RxJS 和 Signals。选择策略：小型应用用内置方案，中型应用用 Zustand/Pinia/SignalStore，大型应用用 Redux/NgRx。详见 [框架对比](./04-框架对比) 的"状态管理生态"。
 
 ---
 
@@ -3353,7 +3423,7 @@ RTK:         10KB
 TanStack Q:  11KB
 ```
 
-> 🔗 **链式思考**：React Router v8 的 `loaders`/`actions` 本质是"声明式数据获取"，在路由匹配时自动加载数据——这与 Vue Router 的导航守卫 + 手动数据获取模式不同，更接近 Angular Router 的 `resolve` 守卫。三者都支持懒加载和嵌套路由，但 React Router 以 URL 为中心，Vue Router 以组件树为中心，Angular Router 以配置为中心。详见 [框架对比](../框架对比/) 的"路由方案"。
+> 🔗 **链式思考**：React Router v8 的 `loaders`/`actions` 本质是"声明式数据获取"，在路由匹配时自动加载数据——这与 Vue Router 的导航守卫 + 手动数据获取模式不同，更接近 Angular Router 的 `resolve` 守卫。三者都支持懒加载和嵌套路由，但 React Router 以 URL 为中心，Vue Router 以组件树为中心，Angular Router 以配置为中心。详见 [框架对比](./04-框架对比) 的"路由方案"。
 
 ---
 
@@ -4520,7 +4590,7 @@ function CheckoutFlow() {
 
 ---
 
-> 🔗 **链式思考**：React 性能优化的核心矛盾是"不知道什么变了，所以需要 Diff"——因此 `React.memo`、`useMemo`、`useCallback` 都是手动告诉 React"这里没变，跳过渲染"。Vue 3 的 Proxy 响应式天然知道"什么变了"，所以不需要手动 memo。Angular 的 OnPush + Signals 则介于两者之间——OnPush 缩小检测范围，Signals 精确到依赖。详见 [框架对比](../框架对比/) 的"性能优化策略"。
+> 🔗 **链式思考**：React 性能优化的核心矛盾是"不知道什么变了，所以需要 Diff"——因此 `React.memo`、`useMemo`、`useCallback` 都是手动告诉 React"这里没变，跳过渲染"。Vue 3 的 Proxy 响应式天然知道"什么变了"，所以不需要手动 memo。Angular 的 OnPush + Signals 则介于两者之间——OnPush 缩小检测范围，Signals 精确到依赖。详见 [框架对比](./04-框架对比) 的"性能优化策略"。
 
 ---
 
@@ -5848,7 +5918,7 @@ interface Fiber {
 }
 ```
 
-> 🔗 **链式思考**：React Fiber 的核心设计是"可中断渲染"，通过链表结构 + 优先级调度实现。这解决了 React 的"运行时不知道什么变了"的固有问题——既然需要全量 Diff，那至少让 Diff 可以被中断。Vue 3 不需要 Fiber，因为 Proxy 精确知道什么变了，Diff 范围极小，通常 1ms 内完成。Angular 22 的 Zoneless + Signals 同样不需要全量检测——Signal 变化只会更新依赖它的视图。三种架构本质是"精确追踪 vs 全量 Diff + 可中断"的不同选择。详见 [框架对比](../框架对比/) 的"响应式原理深度对比"。
+> 🔗 **链式思考**：React Fiber 的核心设计是"可中断渲染"，通过链表结构 + 优先级调度实现。这解决了 React 的"运行时不知道什么变了"的固有问题——既然需要全量 Diff，那至少让 Diff 可以被中断。Vue 3 不需要 Fiber，因为 Proxy 精确知道什么变了，Diff 范围极小，通常 1ms 内完成。Angular 22 的 Zoneless + Signals 同样不需要全量检测——Signal 变化只会更新依赖它的视图。三种架构本质是"精确追踪 vs 全量 Diff + 可中断"的不同选择。详见 [框架对比](./04-框架对比) 的"响应式原理深度对比"。
 
 #### ⚠️ 面试高频追问
 
