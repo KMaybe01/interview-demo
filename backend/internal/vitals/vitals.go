@@ -170,11 +170,11 @@ func VitalsHistory(c *gin.Context) {
 }
 
 type TelemetryReport struct {
-	Requests      int     `json:"requests"`
-	Errors        int     `json:"errors"`
-	AvgLatency    float64 `json:"avgLatency"`
-	CacheHitRate  float64 `json:"cacheHitRate"`
-	Timestamp     int64   `json:"timestamp"`
+	Requests     int     `json:"requests"`
+	Errors       int     `json:"errors"`
+	AvgLatency   float64 `json:"avgLatency"`
+	CacheHitRate float64 `json:"cacheHitRate"`
+	Timestamp    int64   `json:"timestamp"`
 }
 
 var (
@@ -354,68 +354,68 @@ func GetMonitorSummary(c *gin.Context) {
 	bundleCount := len(bundleStore)
 	bundleMu.RUnlock()
 
-		for _, item := range monitorStore {
-			if t, ok := item["type"].(string); ok {
-				byType[t]++
-				switch t {
-				case "error", "js_error", "promise_error", "resource_error", "business_error":
+	for _, item := range monitorStore {
+		if t, ok := item["type"].(string); ok {
+			byType[t]++
+			switch t {
+			case "error", "js_error", "promise_error", "resource_error", "business_error":
+				errors++
+			case "api", "api_error", "slow_api":
+				if t == "api_error" {
 					errors++
-				case "api", "api_error", "slow_api":
-					if t == "api_error" {
-						errors++
-					}
-					apis++
-				case "performance":
-					perfs++
 				}
+				apis++
+			case "performance":
+				perfs++
 			}
+		}
 		if cat, ok := item["category"].(string); ok && cat != "" {
 			byCategory[cat]++
 		}
 	}
 
 	c.JSON(http.StatusOK, gin.H{
-		"total":        len(monitorStore),
-		"byType":       byType,
-		"byCategory":   byCategory,
-		"errors":       errors,
-		"apis":         apis,
-		"perfs":        perfs,
-		"bundles":      bundleCount,
+		"total":      len(monitorStore),
+		"byType":     byType,
+		"byCategory": byCategory,
+		"errors":     errors,
+		"apis":       apis,
+		"perfs":      perfs,
+		"bundles":    bundleCount,
 	})
 }
 
 // --- Bundle (JS/CSS bundle 加载耗时统计) ---
 
 type BundleRecord struct {
-	TotalLoadTime    float64   `json:"totalLoadTime"`
-	TotalTransferSize float64  `json:"totalTransferSize"`
-	TotalDecodedSize  float64  `json:"totalDecodedSize"`
-	ChunkCount        int      `json:"chunkCount"`
-	JSCount           int      `json:"jsCount"`
-	CSSCount          int      `json:"cssCount"`
-	JSTotalSize       float64  `json:"jsTotalSize"`
-	CSSTotalSize      float64  `json:"cssTotalSize"`
-	LargestChunkName  string   `json:"largestChunkName,omitempty"`
-	LargestChunkSize  float64  `json:"largestChunkSize,omitempty"`
-	SlowChunkCount    int      `json:"slowChunkCount"`
-	URL               string   `json:"url"`
+	TotalLoadTime     float64   `json:"totalLoadTime"`
+	TotalTransferSize float64   `json:"totalTransferSize"`
+	TotalDecodedSize  float64   `json:"totalDecodedSize"`
+	ChunkCount        int       `json:"chunkCount"`
+	JSCount           int       `json:"jsCount"`
+	CSSCount          int       `json:"cssCount"`
+	JSTotalSize       float64   `json:"jsTotalSize"`
+	CSSTotalSize      float64   `json:"cssTotalSize"`
+	LargestChunkName  string    `json:"largestChunkName,omitempty"`
+	LargestChunkSize  float64   `json:"largestChunkSize,omitempty"`
+	SlowChunkCount    int       `json:"slowChunkCount"`
+	URL               string    `json:"url"`
 	Timestamp         time.Time `json:"timestamp"`
 }
 
 type BundleSummary struct {
-	TotalLoadTime     float64  `json:"totalLoadTime"`
-	AvgLoadTime       float64  `json:"avgLoadTime"`
-	MinLoadTime       float64  `json:"minLoadTime"`
-	MaxLoadTime       float64  `json:"maxLoadTime"`
-	TotalTransferSize float64  `json:"totalTransferSize"`
-	AvgTransferSize   float64  `json:"avgTransferSize"`
-	TotalChunks       int      `json:"totalChunks"`
-	TotalJSChunks     int      `json:"totalJSChunks"`
-	TotalCSSChunks    int      `json:"totalCSSChunks"`
-	AvgChunkCount     float64  `json:"avgChunkCount"`
-	SlowBundleCount   int      `json:"slowBundleCount"`
-	ReportCount       int      `json:"reportCount"`
+	TotalLoadTime     float64 `json:"totalLoadTime"`
+	AvgLoadTime       float64 `json:"avgLoadTime"`
+	MinLoadTime       float64 `json:"minLoadTime"`
+	MaxLoadTime       float64 `json:"maxLoadTime"`
+	TotalTransferSize float64 `json:"totalTransferSize"`
+	AvgTransferSize   float64 `json:"avgTransferSize"`
+	TotalChunks       int     `json:"totalChunks"`
+	TotalJSChunks     int     `json:"totalJSChunks"`
+	TotalCSSChunks    int     `json:"totalCSSChunks"`
+	AvgChunkCount     float64 `json:"avgChunkCount"`
+	SlowBundleCount   int     `json:"slowBundleCount"`
+	ReportCount       int     `json:"reportCount"`
 }
 
 var (
@@ -493,18 +493,18 @@ func GetBundleSummary(c *gin.Context) {
 	n := float64(len(bundleStore))
 
 	c.JSON(http.StatusOK, BundleSummary{
-		TotalLoadTime:   math.Round(sumLoadTime*100) / 100,
-		AvgLoadTime:     math.Round(sumLoadTime/n*100) / 100,
-		MinLoadTime:     math.Round(minLoadTime*100) / 100,
-		MaxLoadTime:     math.Round(maxLoadTime*100) / 100,
+		TotalLoadTime:     math.Round(sumLoadTime*100) / 100,
+		AvgLoadTime:       math.Round(sumLoadTime/n*100) / 100,
+		MinLoadTime:       math.Round(minLoadTime*100) / 100,
+		MaxLoadTime:       math.Round(maxLoadTime*100) / 100,
 		TotalTransferSize: math.Round(sumTransferSize*100) / 100,
 		AvgTransferSize:   math.Round(sumTransferSize/n*100) / 100,
-		TotalChunks:     totalChunks,
-		TotalJSChunks:   totalJSChunks,
-		TotalCSSChunks:  totalCSSChunks,
-		AvgChunkCount:   math.Round(float64(totalChunks)/n*100) / 100,
-		SlowBundleCount: slowCount,
-		ReportCount:     len(bundleStore),
+		TotalChunks:       totalChunks,
+		TotalJSChunks:     totalJSChunks,
+		TotalCSSChunks:    totalCSSChunks,
+		AvgChunkCount:     math.Round(float64(totalChunks)/n*100) / 100,
+		SlowBundleCount:   slowCount,
+		ReportCount:       len(bundleStore),
 	})
 }
 

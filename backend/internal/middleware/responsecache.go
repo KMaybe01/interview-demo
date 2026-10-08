@@ -23,11 +23,11 @@ type cachedResponse struct {
 }
 
 type ResponseCache struct {
-	mu       sync.RWMutex
-	items    map[string]*cachedResponse
-	keys     []string
-	maxSize  int
-	ttl      time.Duration
+	mu      sync.RWMutex
+	items   map[string]*cachedResponse
+	keys    []string
+	maxSize int
+	ttl     time.Duration
 }
 
 var defaultCache *ResponseCache
@@ -65,8 +65,11 @@ func ResponseCacher() gin.HandlerFunc {
 			return
 		}
 
+		// /api/ai/* 是 LLM/MCP/A2A 的读写混合端点：
+		// 聊天、工具调用、MCP tools/call 都不能被响应缓存命中，否则会返回过期答案。
 		if strings.HasPrefix(c.Request.URL.Path, "/api/chat") ||
 			strings.HasPrefix(c.Request.URL.Path, "/api/agents") ||
+			strings.HasPrefix(c.Request.URL.Path, "/api/ai/") ||
 			strings.HasPrefix(c.Request.URL.Path, "/api/sse/") {
 			c.Next()
 			return

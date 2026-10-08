@@ -14,9 +14,9 @@ type MCPTool struct {
 }
 
 type A2ATool struct {
-	Name        string `json:"name"`
-	Description string `json:"description"`
-	AgentType   string `json:"agentType"`
+	Name         string   `json:"name"`
+	Description  string   `json:"description"`
+	AgentType    string   `json:"agentType"`
 	Capabilities []string `json:"capabilities"`
 }
 
@@ -55,27 +55,27 @@ var mcpTools = []MCPTool{
 
 var a2aTools = []A2ATool{
 	{
-		Name:        "react_agent",
-		Description: "ReAct 模式智能体：推理 + 行动循环",
-		AgentType:   "react",
+		Name:         "react_agent",
+		Description:  "ReAct 模式智能体：推理 + 行动循环",
+		AgentType:    "react",
 		Capabilities: []string{"reasoning", "tool_use", "planning"},
 	},
 	{
-		Name:        "function_calling_agent",
-		Description: "Function Calling 智能体：通过函数调用执行任务",
-		AgentType:   "function",
+		Name:         "function_calling_agent",
+		Description:  "Function Calling 智能体：通过函数调用执行任务",
+		AgentType:    "function",
 		Capabilities: []string{"function_calling", "api_integration"},
 	},
 	{
-		Name:        "multi_agent",
-		Description: "多智能体系统：协调多个子智能体协作",
-		AgentType:   "multi",
+		Name:         "multi_agent",
+		Description:  "多智能体系统：协调多个子智能体协作",
+		AgentType:    "multi",
 		Capabilities: []string{"delegation", "coordination", "workflow"},
 	},
 	{
-		Name:        "rag_agent",
-		Description: "RAG 智能体：基于知识库检索增强生成",
-		AgentType:   "rag",
+		Name:         "rag_agent",
+		Description:  "RAG 智能体：基于知识库检索增强生成",
+		AgentType:    "rag",
 		Capabilities: []string{"retrieval", "generation", "knowledge_base"},
 	},
 }

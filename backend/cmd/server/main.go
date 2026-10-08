@@ -275,6 +275,9 @@ func main() {
 		port = "8080"
 	}
 
+	// 统一 AI 能力入口：/api/ai/*（含 MCP 与 A2A）
+	setupAI(api, r, ragService, port)
+
 	srv := &http.Server{
 		Addr:    ":" + port,
 		Handler: r,

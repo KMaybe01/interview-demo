@@ -351,8 +351,6 @@ func (s *RAGService) keywordScore(queryTokens []string, content string) float64 
 	return tf
 }
 
-
-
 func (s *RAGService) chunkDocument(doc model.Document) []model.DocumentChunk {
 	var chunks []model.DocumentChunk
 	content := doc.Content
