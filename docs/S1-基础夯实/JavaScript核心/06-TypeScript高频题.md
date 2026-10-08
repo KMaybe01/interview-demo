@@ -1195,4 +1195,126 @@ type Result = HeadTail<'😀abc'>
 | 大 monorepo | TS 7 CI 提速 8-10x，editor 体验极大改善 |
 
 **一句话总结：TS 7 = Go 重写 + 10x 更快 + 所有 TS 6 废弃项变硬错误。先升 6，再升 7。**
+
+### 2️⃣2️⃣ 类型体操进阶：DeepReadonly 与递归类型（🔥 高频手写）
+
+> 💡 **面试现场**：「写一个 `DeepReadonly`」—— 工作四年的同学憋了十分钟没写出来。
+> 这题考的不是记忆，而是**递归 + 边界意识**：能不能想到数组、函数、内置对象和循环引用。
+
+**L1 → L4 分层答案（能写到 L3 才算达标）：**
+
+```typescript
+// L1：只会浅层（这才是刚开始）
+type Readonly1<T> = { readonly [K in keyof T]: T[K] }
+
+// L2：会递归（大多数人停在这一层，但数组和函数会被搞坏）
+type Readonly2<T> = {
+  readonly [K in keyof T]: T[K] extends object ? Readonly2<T[K]> : T[K]
+}
+
+// L3：内置对象黑名单 + 数组/元组 + 函数短路（✅ 达标线）
+type Primitive = string | number | boolean | bigint | symbol | null | undefined
+type Builtin =
+  | Primitive
+  | Function
+  | Date
+  | RegExp
+  | Map<any, any>
+  | Set<any>
+  | WeakMap<any, any>
+  | WeakSet<any>
+  | Promise<any>
+
+type DeepReadonly<T> = T extends Builtin
+  ? T
+  : T extends ReadonlyArray<infer U>
+    ? ReadonlyArray<DeepReadonly<U>>
+    : T extends object
+      ? { readonly [K in keyof T]: DeepReadonly<T[K]> }
+      : T
+
+// L4：加深度上限，防循环引用与递归爆炸（⭐ 加分项）
+type DeepReadonlyN<T, D extends number = 8, Acc extends unknown[] = []> =
+  Acc['length'] extends D
+    ? T
+    : T extends Builtin
+      ? T
+      : T extends ReadonlyArray<infer U>
+        ? ReadonlyArray<DeepReadonlyN<U, D, [...Acc, unknown]>>
+        : T extends object
+          ? { readonly [K in keyof T]: DeepReadonlyN<T[K], D, [...Acc, unknown]> }
+          : T
 ```
+
+**必须讲清的三个坑：**
+
+| 坑 | 现象 | 解法 |
+|----|------|------|
+| 递归进函数 | 破坏参数逆变与返回值类型，`DeepReadonly<(a: string) => void>` 变成 `{}` | 用 `T extends Function ? T` 提前短路 |
+| 递归进 `Date` / `Map` / `Set` | `Date` 被映射成 `{}`，`getTime()` 全部消失 | 内置对象黑名单（Builtin 联合类型） |
+| 丢掉可选修饰符 | 用非同态写法导致 `?` 全部丢失 | 用 `keyof T` 的**同态映射**，自动保留 `?` 与 `readonly` |
+
+**配套变体题（同场面试经常连着问）：**
+
+```typescript
+// DeepMutable：递归移除 readonly（数组要还原成可变数组）
+type DeepMutable<T> = T extends Builtin
+  ? T
+  : T extends ReadonlyArray<infer U>
+    ? Array<DeepMutable<U>>
+    : T extends object
+      ? { -readonly [K in keyof T]: DeepMutable<T[K]> }
+      : T
+
+// 手写 Awaited：递归剥 Promise
+type MyAwaited<T> = T extends null | undefined
+  ? T
+  : T extends object & { then(onfulfilled: infer F, ...args: any[]): any }
+    ? F extends (value: infer V, ...args: any[]) => any
+      ? MyAwaited<V>
+      : never
+    : T
+
+// Flatten：递归拍平嵌套数组
+type Flatten<T extends any[]> = T extends [infer F, ...infer R]
+  ? [...(F extends any[] ? Flatten<F> : [F]), ...Flatten<R>]
+  : []
+
+type F1 = Flatten<[1, [2, [3, 4]], 5]>  // [1, 2, 3, 4, 5]
+
+// UnionToIntersection：联合转交叉（逆变 + infer 的经典套路）
+type UnionToIntersection<U> = (U extends any ? (k: U) => void : never) extends (
+  k: infer I
+) => void
+  ? I
+  : never
+
+type U2I = UnionToIntersection<{ a: 1 } | { b: 2 }>  // { a: 1 } & { b: 2 }
+
+// DeepOmit：按路径删除嵌套属性
+type DeepOmit<T, Path extends string> = Path extends `${infer K}.${infer Rest}`
+  ? K extends keyof T
+    ? Omit<T, K> & { [P in K]: DeepOmit<T[K], Rest> }
+    : T
+  : Omit<T, Path>
+```
+
+**⚠️ 常见误区（第 20 节 `DeepPartial` 的坑）：**
+
+```typescript
+// ❌ 常见写法：数组被递归成「元素可选」，但数组方法/长度语义被破坏
+type DeepPartialBad<T> = {
+  [P in keyof T]?: T[P] extends object ? DeepPartialBad<T[P]> : T[P]
+}
+
+// ✅ 修正：数组单独处理，保持数组本身可选、元素递归
+type DeepPartial<T> = T extends Builtin
+  ? T
+  : T extends Array<infer U>
+    ? Array<DeepPartial<U>>
+    : T extends object
+      ? { [K in keyof T]?: DeepPartial<T[K]> }
+      : T
+```
+
+**一句话总结：`DeepReadonly = 内置对象短路 + 数组元组特判 + 同态映射递归`，能顺手说出「深度上限防循环引用」就是加分项。**

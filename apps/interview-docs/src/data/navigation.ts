@@ -122,6 +122,7 @@ export const navConfig: NavItem[] = [
       { text: '简历', icon: '📝', link: '/S4-面试冲刺/01-简历' },
       { text: '简历问题', icon: '⚛️', link: '/S4-面试冲刺/02-简历问题' },
       { text: '反向面试', icon: '📌', link: '/S4-面试冲刺/05-反向面试' },
+      { text: '面试官视角复盘', icon: '👁️', link: '/S4-面试冲刺/06-面试官视角-22场技术面复盘' },
       {
         text: 'React 中高级面试通关指南',
         icon: '⚛️',
