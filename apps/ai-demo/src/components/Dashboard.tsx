@@ -9,7 +9,6 @@ import {
   MessageOutlined,
   ReloadOutlined,
   RobotOutlined,
-  SettingOutlined,
   ThunderboltOutlined,
   ToolOutlined,
 } from '@ant-design/icons';
@@ -31,11 +30,11 @@ import {
 import type { ReactNode } from 'react';
 import { useCallback, useEffect, useState } from 'react';
 import { useMessageApi } from '../AIDemo.tsx';
-import { agentAPI, chatAPI, knowledgeAPI, mcpAPI, modelAPI } from '../services/api.ts';
+import { a2aAPI, aiAPI, mcpAPI, obsAPI } from '../services/aiApi.ts';
+import { knowledgeAPI } from '../services/api.ts';
 import { useChatStore } from '../stores/chatStore.ts';
 import { responseCache } from '../utils/response-cache.ts';
 import { telemetry } from '../utils/telemetry.ts';
-import { builtinPlugins } from './Plugins.tsx';
 
 const { Text } = Typography;
 
@@ -46,8 +45,19 @@ interface DashboardProps {
 interface ResourceStats {
   knowledgeBases: number;
   models: number;
-  agents: number;
+  availableModels: number;
+  agentTools: number;
   mcpTools: number;
+  a2aAgents: number;
+}
+
+interface LLMSummary {
+  requests: number;
+  tokens: number;
+  costUsd: number;
+  errorRate: number;
+  degradedRate: number;
+  p95: number;
 }
 
 interface FeatureItem {
@@ -88,29 +98,29 @@ const FEATURES: FeatureItem[] = [
     key: 'agents',
   },
   {
-    title: 'Playground',
-    description: 'MCP/A2A 服务 · 模型路由 · 监控面板',
+    title: '协议控制台',
+    description: 'MCP 2026-07-28 · A2A v1.0 · tools/call · message/send',
     icon: <ApiOutlined />,
     color: '#1677ff',
-    key: 'playground',
+    key: 'protocols',
+  },
+  {
+    title: 'LLMOps 可观测',
+    description: '链路追踪 · Token/成本 · 工具审计 · 评测 · Prompt 版本',
+    icon: <ThunderboltOutlined />,
+    color: '#fa8c16',
+    key: 'observability',
   },
   {
     title: 'A2UI',
-    description: 'A2UI Protocol v0.9 · 声明式 UI · XCard',
+    description: 'A2UI Protocol · 声明式 UI · XCard',
     icon: <DeploymentUnitOutlined />,
     color: '#722ed1',
     key: 'a2ui',
   },
-  {
-    title: '插件中心',
-    description: `${builtinPlugins.length} 个内置插件 · 分类管理 · 参数配置`,
-    icon: <SettingOutlined />,
-    color: '#13c2c2',
-    key: 'plugins',
-  },
 ];
 
-const REMOTE_STAT_TITLES = ['知识库', '模型', '智能体', 'MCP 工具'];
+const REMOTE_STAT_TITLES = ['知识库', '模型', '智能体工具', 'MCP 工具', 'A2A Agent'];
 
 function Dashboard({ onNavigate }: DashboardProps) {
   const { token } = theme.useToken();
@@ -120,33 +130,48 @@ function Dashboard({ onNavigate }: DashboardProps) {
   const [stats, setStats] = useState<ResourceStats>({
     knowledgeBases: 0,
     models: 0,
-    agents: 0,
+    availableModels: 0,
+    agentTools: 0,
     mcpTools: 0,
+    a2aAgents: 0,
   });
+  const [llm, setLlm] = useState<LLMSummary | null>(null);
   const [loading, setLoading] = useState(false);
   const [backendHealthy, setBackendHealthy] = useState<boolean | null>(null);
   const [healthChecking, setHealthChecking] = useState(false);
   const [cacheStats, setCacheStats] = useState(responseCache.stats());
   const [telemetrySummary, setTelemetrySummary] = useState(telemetry.getSummary());
 
-  const pluginCount = builtinPlugins.length;
-  const enabledPluginCount = builtinPlugins.filter((p) => p.enabled).length;
-
   const loadStats = useCallback(async (silent = false) => {
     if (!silent) setLoading(true);
     try {
-      const [kbRes, modelRes, agentRes, mcpRes] = await Promise.all([
+      const [kbRes, modelRes, toolRes, mcpRes, a2aRes, metricsRes] = await Promise.all([
         knowledgeAPI.list(),
-        modelAPI.list(),
-        agentAPI.list(),
-        mcpAPI.listTools().catch(() => ({ mcp_tools: [], a2a_tools: [], count: 0 })),
+        aiAPI.listModels().catch(() => ({ models: [], providers: [], count: 0 })),
+        aiAPI.listTools().catch(() => ({ tools: [], count: 0, tier: '' })),
+        mcpAPI.listTools().catch(() => ({ tools: [], count: 0 })),
+        a2aAPI.agents().catch(() => ({ agents: [], count: 0 })),
+        obsAPI.metrics('24h').catch(() => null),
       ]);
+      const models = modelRes.models ?? [];
       setStats({
         knowledgeBases: kbRes.count || 0,
-        models: modelRes.count || 0,
-        agents: agentRes.count || 0,
-        mcpTools: (mcpRes.mcp_tools?.length || 0) + (mcpRes.a2a_tools?.length || 0),
+        models: models.length,
+        availableModels: models.filter((m) => m.available).length,
+        agentTools: toolRes.count || 0,
+        mcpTools: mcpRes.count || 0,
+        a2aAgents: a2aRes.count || 0,
       });
+      if (metricsRes) {
+        setLlm({
+          requests: metricsRes.requests,
+          tokens: metricsRes.tokens,
+          costUsd: metricsRes.costUsd,
+          errorRate: metricsRes.errorRate,
+          degradedRate: metricsRes.degradedRate,
+          p95: metricsRes.latency.p95,
+        });
+      }
     } catch {
       // ignore
     } finally {
@@ -157,8 +182,8 @@ function Dashboard({ onNavigate }: DashboardProps) {
   const checkHealth = useCallback(async () => {
     setHealthChecking(true);
     try {
-      const healthy = await chatAPI.healthCheck();
-      setBackendHealthy(healthy);
+      const res = await fetch('/api/health');
+      setBackendHealthy(res.ok);
     } catch {
       setBackendHealthy(false);
     } finally {
@@ -192,20 +217,20 @@ function Dashboard({ onNavigate }: DashboardProps) {
 
   const statCards = [
     { title: '知识库', value: stats.knowledgeBases, icon: <BookOutlined />, color: '#52c41a' },
-    { title: '模型', value: stats.models, icon: <AppstoreOutlined />, color: '#faad14' },
-    { title: '智能体', value: stats.agents, icon: <RobotOutlined />, color: '#eb2f96' },
+    {
+      title: '模型',
+      value: stats.availableModels,
+      suffix: `/ ${stats.models}`,
+      icon: <AppstoreOutlined />,
+      color: '#faad14',
+    },
+    { title: '智能体工具', value: stats.agentTools, icon: <ToolOutlined />, color: '#eb2f96' },
     { title: 'MCP 工具', value: stats.mcpTools, icon: <ApiOutlined />, color: '#1677ff' },
+    { title: 'A2A Agent', value: stats.a2aAgents, icon: <RobotOutlined />, color: '#722ed1' },
     {
       title: '对话',
       value: conversations.length,
       icon: <MessageOutlined />,
-      color: '#722ed1',
-    },
-    {
-      title: '插件',
-      value: enabledPluginCount,
-      suffix: `/ ${pluginCount}`,
-      icon: <ToolOutlined />,
       color: '#13c2c2',
     },
     {
@@ -215,11 +240,21 @@ function Dashboard({ onNavigate }: DashboardProps) {
       color: '#52c41a',
     },
     {
-      title: 'API 请求',
+      title: '前端 API 请求',
       value: telemetrySummary.totalRequests,
       icon: <ThunderboltOutlined />,
       color: '#fa8c16',
     },
+  ];
+
+  /** AI 侧（后端 LLMOps）近 24 小时汇总 */
+  const llmCards = [
+    { title: 'AI 请求', value: llm?.requests ?? 0, precision: 0, suffix: '' },
+    { title: 'Token 消耗', value: llm?.tokens ?? 0, precision: 0, suffix: '' },
+    { title: '成本', value: llm?.costUsd ?? 0, precision: 4, suffix: '$' },
+    { title: '错误率', value: (llm?.errorRate ?? 0) * 100, precision: 1, suffix: '%' },
+    { title: '降级率', value: (llm?.degradedRate ?? 0) * 100, precision: 1, suffix: '%' },
+    { title: 'P95 延迟', value: llm?.p95 ?? 0, precision: 0, suffix: 'ms' },
   ];
 
   const healthStatus =
@@ -263,6 +298,44 @@ function Dashboard({ onNavigate }: DashboardProps) {
           ))}
         </Row>
       </Card>
+
+      <Row gutter={[16, 16]} style={{ marginTop: 16 }}>
+        <Col xs={24}>
+          <Card
+            title="AI 侧运行指标（近 24h）"
+            extra={
+              <Button size="small" onClick={() => onNavigate('observability')}>
+                查看 LLMOps
+              </Button>
+            }
+          >
+            <Row gutter={[16, 16]}>
+              {llmCards.map((item) => (
+                <Col xs={12} sm={8} lg={4} key={item.title}>
+                  <Statistic
+                    title={item.title}
+                    value={item.value}
+                    precision={item.precision}
+                    prefix={item.suffix === '$' ? '$' : undefined}
+                    suffix={item.suffix && item.suffix !== '$' ? item.suffix : undefined}
+                    valueStyle={{
+                      color:
+                        item.title === '降级率' && (llm?.degradedRate ?? 0) > 0
+                          ? token.colorWarning
+                          : undefined,
+                    }}
+                  />
+                </Col>
+              ))}
+            </Row>
+            {(llm?.degradedRate ?? 0) > 0 && (
+              <Tag color="warning" style={{ marginTop: 12 }}>
+                当前存在降级请求：未配置可用的模型密钥，或模型服务不可用
+              </Tag>
+            )}
+          </Card>
+        </Col>
+      </Row>
 
       <Row gutter={[16, 16]} style={{ marginTop: 16 }}>
         <Col xs={24} lg={24}>

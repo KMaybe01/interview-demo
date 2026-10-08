@@ -179,15 +179,14 @@ mindmap
          Function Calling
          Multi-Agent
          MCP 工具协议
-       🎮 Playground 调试台
-         PromptGuard
-         ResponseCache
-         Token 估算
-       🛡️ 中间件层
-         PromptGuard 中间件
-         ResponseCache 中间件
-       📊 遥测与监控
-         Token/Latency 统计
+       🎮 协议控制台
+         MCP 2026-07-28
+         A2A v1.0
+         MRTR + 幂等
+       📊 LLMOps 可观测
+         链路追踪 / 工具审计
+         离线评测 / Prompt 版本
+         Token/成本统计
     支付中台
        💳 UniPay 统一支付
          支付状态机
@@ -215,10 +214,10 @@ mindmap
 | **演示页面** | 16 个 | frontend 15 路由页 (含 Dashboard 首页 + MonitorDashboard) + 1 登录页 |
 | **AI 演示页面** | 8 个 | ai-demo 8 选项卡 |
 | **路由配置** | 15 条 | 14 条懒加载路由 + 1 条 Eager 加载登录页 |
-| **后端 API (Go)** | 80+ | 19 个 internal 包 |
-| **Go 内部包** | 19 个 | agent/alert/auth/chat/encryptedlog/gis/health/knowledge/lrucache/memory/middleware/model/payment/rbac/requestload/schema/sse/upload/vitals |
-| **Go 源文件** | 37 个 | 非测试源文件 |
-| **Go 测试文件** | 29 个 | `go test ./internal/... -v` 全量通过 |
+| **后端 API (Go)** | 100+ | 26 个 internal 包 |
+| **Go 内部包** | 26 个 | 原 19 个（agent/alert/auth/chat/encryptedlog/gis/health/knowledge/lrucache/memory/middleware/model/payment/rbac/requestload/schema/sse/upload/vitals）+ AI 侧 7 个（llm/tool/guard/airouter/mcp/a2a/obs） |
+| **Go 源文件** | 69 个 | `internal/` 非测试源文件 |
+| **Go 测试文件** | 35 个 | `go test ./internal/... -v` 全量通过 |
 | **前端状态存储** | 7 个 | Zustand 状态管理 (alert/auth/lru/monitor/request/theme/upload) |
 | **共享包** | 2 个 | `shared-theme` (7 文件), `shared-monitor` (10 文件) |
 | **工具函数** | 30+ 个 | Token/LRU/RBAC/WS 传输层/VitalsReporter/VitalsSnapshot/RequestResource + 共享监控 SDK + 3 Workers + AI Demo 工具链 |
@@ -313,7 +312,8 @@ const Roles = {
 | **LLM 流式对话** | SSE 流式 `[DONE]` 标记 + DeepSeek 解析 + 上下文窗口管理 | ⭐⭐ |
 | **混合 RAG 知识库** | BM25 + Vector 混合检索 + 多格式文档解析 + 智能分块策略 | ⭐⭐⭐ |
 | **智能体 Agent 流式** | ReAct 循环 SSE 流式输出 + Function Calling + Multi-Agent + MCP | ⭐⭐⭐ |
-| **Playground 调试台** | PromptGuard + ResponseCache + Token 估算 + 遥测上报 | ⭐⭐⭐ |
+| **MCP / A2A 协议** | MCP 2026-07-28 无状态单端点（tools/call + MRTR + 幂等）+ A2A v1.0 Agent 协作 | ⭐⭐⭐ |
+| **LLMOps 可观测** | 链路追踪 + 工具审计 + 离线评测 + Prompt 版本 + Token/成本 | ⭐⭐⭐ |
 | **PromptGuard 中间件** | 提示注入检测（正则 + 关键词 + 模式匹配）+ HTTP 中间件封装 | ⭐⭐ |
 | **ResponseCache 中间件** | LRU 缓存 + TTL 过期 + Content-Type 智能缓存 | ⭐⭐ |
 | **AI 遥测系统** | Token 用量 / Latency / Cache 命中率 / 错误率上报 + ECharts | ⭐⭐ |
@@ -734,18 +734,19 @@ Worker Pool = `navigator.hardwareConcurrency`，自适应等量分区，K 路指
 
 ### 2.15 AI 后端六阶段进阶模式 ⭐⭐⭐
 
-**位置**: `apps/ai-demo/` (9 组件 + 8 工具函数) + `backend/internal/` (agent/chat/knowledge/middleware/vitals)
+**位置**: `apps/ai-demo/` (9 组件 + 3 服务层 + 8 工具函数) + `backend/internal/` (llm/tool/guard/airouter/mcp/a2a/obs/agent/chat/knowledge)
 
 | Stage | 功能 | 前端组件 | 后端包 |
 |-------|------|----------|--------|
-| 1 | LLM 流式对话 | Chat.tsx | chat/ |
+| 1 | LLM 流式对话（工具调用 + HITL） | AIChat.tsx | airouter/ + llm/ + tool/ + guard/ |
 | 2 | 混合 RAG 知识库 | KnowledgeBase.tsx | knowledge/ |
 | 3 | 智能体 Agent | Agents.tsx | agent/ |
-| 4 | Playground 调试台 | Playground.tsx | — |
-| 5 | 中间件层 | — | middleware/ |
-| 6 | 遥测与监控 | Dashboard.tsx | vitals/ |
+| 4 | MCP/A2A 协议控制台 | ProtocolConsole.tsx | mcp/ + a2a/ |
+| 5 | 安全中间件（注入防护/脱敏） | — | guard/ + middleware/ |
+| 6 | LLMOps 可观测 | Observability.tsx | obs/ |
 
 8 个工具函数：token-estimator / error-handler / context-manager / text-splitter / prompt-guard / data-masker / response-cache / telemetry。
+3 个服务层：aiApi.ts（`/api/ai/*` REST）/ aiStream.ts（SSE 解析）/ api.ts（知识库/智能体）。
 
 ---
 
@@ -974,9 +975,9 @@ use() 声明式，Suspense 自动处理加载态，消除 loading 样板代码�
 "该项目是一个 Monorepo (Bun + Turborepo) 全栈项目，包含三个前端应用和一个 Go 后端：
 
 - **frontend**：React 19 SPA，16 个技术演示页面（含监控面板），覆盖实时通信、性能优化、工程架构、支付中台四大领域
-- **ai-demo**：@ant-design/x 构建的 AI 全栈演示平台，8 个选项卡覆盖 LLM 对话、RAG 知识库、智能体 Agent、Playground 调试台
+- **ai-demo**：@ant-design/x 构建的 AI 全栈演示平台，8 个选项卡覆盖 LLM 对话（工具调用 + HITL）、RAG 知识库、智能体 Agent、MCP/A2A 协议控制台、LLMOps 可观测
 - **interview-docs**：前端知识库文档站点，Markdown 内容，GitHub Pages 部署
-- **backend**：Go 1.26 + Gin，19 个内部包 80+ API
+- **backend**：Go 1.26 + Gin，26 个内部包 100+ API（含 AI 侧 llm/tool/guard/airouter/mcp/a2a/obs）
 
 技术深度方面：
 

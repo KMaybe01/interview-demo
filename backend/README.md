@@ -23,23 +23,30 @@ backend/
 │   ├── swagger.json
 │   └── swagger.yaml
 ├── internal/
+│   ├── a2a/                 # A2A v1.0（Agent 卡片 / message/send / 任务状态机 / 取消 / well-known）
 │   ├── agent/               # 智能体引擎（ReAct / Function Calling / Multi-Agent）
+│   ├── airouter/            # AI 编排层（RAG → 工具 → 重试 → HITL 循环 + SSE 事件 + /api/ai/* handler）
 │   ├── alert/               # 多协议告警（WebSocket / SSE / HTTP Polling 统一分发）
 │   ├── auth/                # JWT 双 Token 认证（登录/刷新/重放检测 + Session Nonce）
 │   ├── chat/                # LLM 对话（流式 / 模型管理 / 对话历史 / OpenAI/DeepSeek/Ollama）
 │   ├── encryptedlog/        # 加密日志流（RSA 密钥交换 + AES-256-GCM 加密）
 │   ├── gis/                 # GIS 随机点位生成（上限 50 万点）
+│   ├── guard/               # Prompt 注入检测 + PII 脱敏 + 输入分隔符隔离
 │   ├── health/              # 健康检查端点
 │   ├── knowledge/           # RAG 知识库（文档加载 / 分块 / 嵌入 / 向量搜索）
+│   ├── llm/                 # LLM Provider 注册表（OpenAI/DeepSeek/Gemini/Qwen/Ollama）+ 降级 + 熔断 + 定价
 │   ├── lrucache/            # LRU 缓存演示（服务列表 / 配置 / 日志）
+│   ├── mcp/                 # MCP 2026-07-28 无状态单端点（tools/call + MRTR + 幂等 + 双版本兼容）
 │   ├── memory/              # 对话记忆管理
 │   ├── middleware/          # CORS 中间件
 │   ├── model/               # 领域类型（按 domain 拆分 7 个文件）
+│   ├── obs/                 # 可观测（链路追踪 / 运行计数 / 工具审计 / 离线评测 / Prompt 版本）
 │   ├── payment/             # 支付状态机 + 幂等性 + 指数退避重试 + 安全校验
 │   ├── rbac/                # RBAC 位运算权限校验
 │   ├── requestload/         # 模拟请求延迟 / 失败
 │   ├── schema/              # 动态 JSON Schema 表单定义 + 递归校验
 │   ├── sse/                 # SSE 日志流
+│   ├── tool/                # 工具注册中心（参数净化沙箱 + L0/L1/L2 权限分级 + 幂等 + 超时 + 审计）
 │   ├── upload/              # 大文件分片上传（SHA-256 校验 + 会话管理）
 │   └── vitals/              # Web Vitals 采集与聚合（CLS/FCP/INP/LCP/TTFB）
 ├── uploads/
@@ -74,7 +81,7 @@ swag init -g cmd/server/main.go -o docs
 go test ./internal/... -v
 ```
 
-当前覆盖 19 个内部包，共 37 个非测试源文件 + 29 个测试文件。
+当前覆盖 26 个内部包，共 69 个非测试源文件 + 35 个测试文件。
 
 ## API 路由
 
@@ -122,6 +129,26 @@ go test ./internal/... -v
 | GET | `/ws/alerts` | WebSocket 告警推送（`transport` / `rate` / `workers`） |
 | GET | `/api/alerts` | SSE / HTTP Polling 告警推送 |
 
+### AI 统一入口（`/api/ai/*`，见 `internal/airouter`）
+
+| 方法 | 路径 | 说明 |
+|------|------|------|
+| GET | `/api/ai/models` | 模型注册表（含 provider 可用性） |
+| POST | `/api/ai/chat` | 编排式对话（非流式） |
+| POST | `/api/ai/chat/stream` | 流式对话（SSE：start/delta/sources/tool_call/tool_result/approval_required/usage/done） |
+| GET | `/api/ai/tools` | 工具注册中心清单 |
+| POST | `/api/ai/tools/call` | 直接调用工具 |
+| GET | `/api/ai/approvals` | HITL 待审批工单 |
+| POST | `/api/ai/approvals/:id/resolve` | 放行/拒绝工具调用 |
+| GET | `/api/ai/obs/metrics` | LLMOps 指标（延迟分位/Token/成本） |
+| GET | `/api/ai/obs/runs` | 运行记录 |
+| GET | `/api/ai/obs/traces` · `/api/ai/obs/traces/:id` | 链路追踪 |
+| GET | `/api/ai/obs/audit` | 工具审计 |
+| GET/POST | `/api/ai/eval/datasets` · `/api/ai/eval/run` · `/api/ai/eval/runs` | 离线评测 |
+| GET/POST | `/api/ai/prompts` · `/api/ai/prompts/:name/*` | Prompt 版本管理 |
+| POST | `/api/ai/mcp` | MCP 2026-07-28 单端点（`server/discover` / `tools/call`） |
+| GET/POST | `/api/ai/a2a/*` | A2A v1.0（agents / message/send / tasks） |
+
 ### 受保护（需 JWT Authorization Header）
 
 | 方法 | 路径 | 说明 |
@@ -168,6 +195,12 @@ go test ./internal/... -v
 | `AUTH_PASSWORD` | `admin123` | 登录密码 |
 | `CORS_ORIGIN` | `*` | CORS / WebSocket 允许来源 |
 | `OPENAI_API_KEY` | - | OpenAI API Key（LLM 功能） |
+| `DEEPSEEK_API_KEY` | - | DeepSeek API Key（默认 `https://api.deepseek.com/v1`） |
+| `GEMINI_API_KEY` | - | Gemini API Key（OpenAI 兼容端点） |
+| `QWEN_API_KEY` | - | 通义千问 API Key（DashScope 兼容模式） |
+| `OLLAMA_BASE_URL` | `http://localhost:11434/v1` | Ollama 本地推理地址（无需 Key） |
+| `LLM_DEFAULT_PROVIDER` | 自动 | 首选 Provider 标识（如 `openai` / `deepseek` / `gemini` / `qwen` / `ollama`） |
+| `LLM_FALLBACK_PROVIDER` | `offline` | 主模型失败后的降级目标 |
 
 ## 容器部署
 

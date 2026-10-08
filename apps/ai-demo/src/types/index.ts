@@ -313,11 +313,13 @@ export interface PluginParameter {
   description: string;
 }
 
+/** 侧边栏菜单键：必须与 AIDemo.tsx 的 NAV_ITEMS 路径保持一致 */
 export type MenuKey =
   | 'dashboard'
   | 'chat'
   | 'knowledge'
   | 'models'
   | 'agents'
-  | 'plugins'
-  | 'playground';
+  | 'protocols'
+  | 'observability'
+  | 'a2ui';

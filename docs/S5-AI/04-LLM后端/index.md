@@ -316,6 +316,22 @@ graph LR
 
 ---
 
+## 🏗️ 本仓库落地实现对照
+
+> 教程中的核心能力已在本仓库 `backend/internal/` 落地为生产化 Go 包，可对照代码阅读。统一入口 `/api/ai/*`（见 `backend/internal/airouter/router.go`）。
+
+| 教程阶段 | 落地包 | 关键实现 |
+|---------|--------|----------|
+| 阶段1 基础聊天机器人 | `llm` + `airouter` | OpenAI 兼容 Provider 注册表（OpenAI/DeepSeek/Gemini/Qwen/Ollama）+ 流式 SSE + 离线降级链 + 熔断 |
+| 阶段2 商业级（记忆/RAG/Agent） | `tool` + `guard` + `knowledge` + `agent` | 工具注册中心（参数净化沙箱 / L0-L2 分级 / 幂等 / 超时 / 审计）+ Prompt 注入防护 + PII 脱敏 + RAG + ReAct 引擎 |
+| 阶段3 LLMOps 平台可视化 | `obs` | 链路追踪 / 运行计数 / 工具审计 / 离线评测 / Prompt 版本 |
+| 阶段4 多 LLM 集成 | `llm`（注册表）+ `airouter` | 多 Provider 路由 + 降级链 + 电路熔断 + 定价估算 |
+| 前沿协议（MCP / A2A） | `mcp` + `a2a` | MCP 2026-07-28 无状态单端点（server/discover、tools/call、MRTR、幂等）+ A2A v1.0（Agent 卡片 / message/send / 任务状态机 / 取消） |
+
+前端对应：`apps/ai-demo/src/services/{aiApi.ts, aiStream.ts}` + `components/{AIChat, ProtocolConsole, Observability, Models}.tsx`。
+
+---
+
 ## 📖 详细教程
 
 ### 🟢 入门阶段

@@ -1,19 +1,19 @@
 # AI Demo — AI 全栈工程化演示
 
-基于 React 19 + Ant Design 6 + @ant-design/x 构建的 AI 前端交互演示平台，涵盖 AI 应用开发的 **6 个阶段**：从聊天室搭建到生产化工程化。
+基于 React 19 + Ant Design 6 + @ant-design/x 构建的 AI 前端交互演示平台，由 Go 后端（`backend/internal/*`）统一提供 `/api/ai/*` 能力，覆盖从 LLM 对话到生产化工程化的完整链路：模型路由与降级、RAG、工具调用 + 人工确认（HITL）、MCP / A2A 协议、LLMOps 可观测与离线评测。
 
 ## 功能模块
 
-| 选项卡 | 对应阶段 | 核心功能 |
+| 选项卡 | 核心功能 | 后端能力 |
 |--------|----------|----------|
-| **Dashboard** | — | 6 指标概览卡片 + ECharts 趋势图 |
-| **AI 聊天** | 入门期 | LLM 流式对话（Bubble.List + Sender）、Token 估算与上下文指标、PII 脱敏显示、错误自动重试、多模型切换 |
-| **知识库** | 进阶期 | 知识库 CRUD、文件批量上传、语义搜索、分块策略配置（固定/递归/语义）、Embedding 模型选择、混合搜索开关 |
-| **模型管理** | 技术选型 | 模型列表、参数对比表 |
-| **智能体** | 专家期 | Agent 创建/执行/删除、工具注册表（6 个内置工具）、执行轨迹 Tree 可视化、逐步播放 + HITL 审核模拟、记忆管理（短期/长期） |
-| **Playground** | 前沿 + 生产化 | MCP/A2A 协议服务注册与管理、模型路由配置与降级策略、遥测监控面板（请求/延迟/缓存命中） |
-| **插件中心** | 生产化 | 插件浏览与启停 |
-| **A2UI** | 前沿 | @a2ui/react 集成 A2A 协议 UI 组件 |
+| **控制台** | 资源统计 + AI 侧 24h 运行指标 | `/api/ai/models` `/tools` `/obs/metrics` `/a2a/agents` |
+| **AI 聊天** | 流式对话（SSE）、多模型路由、RAG 引用来源、工具调用轨迹、HITL 人工确认、Token/成本、离线降级提示 | `/api/ai/chat/stream` `/api/ai/approvals` |
+| **知识库** | 知识库 CRUD、语义搜索、混合检索、分块配置 | `/api/knowledge/*` |
+| **模型管理** | 真实 provider 注册表、可用性标注、连接探测 | `/api/ai/models` `/api/ai/chat` |
+| **智能体** | ReAct / Function Calling / Multi-Agent、执行轨迹、HITL、记忆 | `/api/agents/*`（`internal/agent`） |
+| **协议控制台** | MCP 2026-07-28（无状态）+ A2A v1.0（Agent 协作）实机调用 | `/api/ai/mcp` `/api/ai/a2a/*` |
+| **LLMOps** | 延迟分位 / Token / 成本、链路追踪、工具审计、评测、Prompt 版本 | `/api/ai/obs/*` `/api/ai/eval/*` `/api/ai/prompts` |
+| **A2UI** | 声明式 UI 生成 | `@a2ui/react` |
 
 ## 工具模块 (`src/utils/`)
 
@@ -101,19 +101,40 @@ src/
 ├── AIDemo.tsx              # 主应用壳，XProvider + 侧边栏 8 选项卡
 ├── App.tsx                 # 根组件，ConfigProvider + 主题切换
 ├── components/
-│   ├── Chat.tsx            # AI 聊天（Bubble.List + Sender + Conversations + Welcome + Prompts）
+│   ├── AIChat.tsx          # 企业级聊天：流式 + 工具调用 + RAG 引用 + HITL + 用量
 │   ├── KnowledgeBase.tsx   # 知识库管理（RAG）
-│   ├── Models.tsx          # 模型管理
+│   ├── Models.tsx          # 模型管理（真实 provider 注册表）
 │   ├── Agents.tsx          # 智能体（工具/记忆/轨迹/HITL）
-│   ├── Playground.tsx      # MCP/A2A + 模型路由 + 遥测
-│   ├── Plugins.tsx         # 插件中心
+│   ├── ProtocolConsole.tsx # MCP 2026-07-28 + A2A v1.0 协议控制台
+│   ├── Observability.tsx   # LLMOps：指标/链路/审计/评测/Prompt
 │   ├── Dashboard.tsx       # 控制台
-│   ├── A2UI.tsx            # A2A 协议 UI 集成
+│   ├── A2UI.tsx            # 声明式 UI
 │   └── ErrorBoundary.tsx   # 错误边界
-├── services/api.ts         # API 客户端，含 SSE 流式读取
+├── services/
+│   ├── api.ts              # 旧版知识库/智能体 API 客户端
+│   ├── aiApi.ts            # /api/ai/* REST 客户端（模型/工具/HITL/obs/评测/Prompt/MCP/A2A）
+│   └── aiStream.ts         # /api/ai/chat/stream SSE 解析器（处理分帧边界）
 ├── stores/
 │   ├── chatStore.ts        # 对话历史 Zustand store
 │   └── themeStore.ts       # 主题切换 (re-export from @interview-demo/shared-theme)
-├── types/index.ts          # 类型定义
+├── types/
+│   ├── index.ts            # 通用类型
+│   └── ai.ts               # /api/ai/* 契约类型（与后端 JSON tag 对齐）
 └── utils/                  # 8 个工具模块
 ```
+
+## 后端契约（backend/）
+
+前端不再直连模型厂商（旧的 `AISDKDemo` 直连 Google 密钥的方式已移除，存在密钥泄露风险）。所有 AI 能力统一由 Go 后端 `backend/internal/` 提供：
+
+| 包 | 职责 |
+|----|------|
+| `llm` | Provider 注册表（OpenAI/DeepSeek/Gemini/Qwen/Ollama）+ 离线降级 + 熔断 + 定价估算 |
+| `tool` | 工具注册中心：参数净化沙箱 + 权限分级（L0/L1/L2）+ 幂等 + 超时 + 审计 |
+| `guard` | Prompt 注入检测 + PII 脱敏 + 输入分隔符隔离 |
+| `airouter` | 编排层：Agentic 循环（RAG → 工具 → 重试 → HITL） + SSE 事件 + HTTP handler |
+| `mcp` | MCP 2026-07-28 无状态单端点 + MRTR + 幂等 + 双版本兼容 |
+| `a2a` | A2A v1.0：Agent 卡片 / message/send / 任务状态机 / 取消 |
+| `obs` | 链路追踪 / 运行计数 / 工具审计 / 离线评测 / Prompt 版本 |
+
+配置方式：在 `backend/.env` 中填入对应厂商的 `*_API_KEY`，后端启动时自动装配；未配置密钥的请求会走离线降级链（`degraded=true`），UI 会明确提示。

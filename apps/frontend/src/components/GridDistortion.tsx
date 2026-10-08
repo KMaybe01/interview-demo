@@ -72,12 +72,12 @@ export default function GridDistortion() {
 
   useEffect(() => {
     const canvas = canvasRef.current;
-    const c = canvas?.getContext('2d');
-    if (!canvas || !c) return;
+    const ctx = canvas?.getContext('2d');
+    if (!canvas || !ctx) return;
 
     let alive = true;
 
-    function tick(ctx: CanvasRenderingContext2D) {
+    const tick = () => {
       if (!alive || typeof window === 'undefined') return;
 
       const w = window.innerWidth;
@@ -114,16 +114,16 @@ export default function GridDistortion() {
         ctx.fill();
       }
 
-      rafRef.current = requestAnimationFrame(() => tick(c!));
-    }
+      rafRef.current = requestAnimationFrame(tick);
+    };
 
-    rafRef.current = requestAnimationFrame(() => tick(c!));
+    rafRef.current = requestAnimationFrame(tick);
 
     return () => {
       alive = false;
       cancelAnimationFrame(rafRef.current);
     };
-  }, [smoothX]);
+  }, [smoothX, smoothY]);
 
   return (
     <canvas

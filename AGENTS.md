@@ -68,9 +68,9 @@ go test ./internal/... -v
 - **认证守卫**: `apps/frontend/src/components/AuthGuard.tsx` 保护除 `/login` 外的所有路由
 - **状态管理**: Zustand store 位于 `apps/frontend/src/stores/`，通过 `apps/frontend/src/stores/index.ts` 桶文件导出
 - **API 客户端**: `apps/frontend/src/utils/fetchClient.ts` (Axios，自动注入 Bearer Token，401 自动刷新 + 请求重放)
-- **后端**: Go backend (`backend/`) — 19 个内部包覆盖认证、支付、表单、GIS、上传、监控等全部 API 需求
+- **后端**: Go backend (`backend/`) — 26 个内部包覆盖认证、支付、表单、GIS、上传、监控与 AI（LLM Provider 路由 / 工具中心 / MCP / A2A / LLMOps）等全部 API 需求
 - **前端知识库**: `apps/interview-docs/` — React 19 文档站点，Markdown 内容，GitHub Pages 部署
-- **AI Demo**: `apps/ai-demo/` — 独立项目，6 选项卡 AI 演示（聊天/知识库/模型/智能体/插件/控制台）
+- **AI Demo**: `apps/ai-demo/` — 独立项目，8 选项卡 AI 演示（聊天/知识库/模型/智能体/协议控制台/LLMOps/A2UI/控制台），统一走 `/api/ai/*`
 - **共享主题包**: `packages/shared-theme/` — 统一管理 dark/light 主题切换，提供 Zustand store（`useThemeStore`）和 React hook（`useTheme`）两种接口，支持 `class`/`attribute` 两种 DOM 策略
 - **共享监控包**: `packages/shared-monitor/` — 前端性能监控 SDK，提供 API 监控、Bundle 监控、错误监控、性能监控、上报管理器 + Zustand store 和降级策略
 
@@ -102,18 +102,23 @@ go test ./internal/... -v
 | 文件 | 职责 |
 |------|------|
 | `App.tsx` | 根组件，ConfigProvider + 主题切换 + 布局 |
-| `AIDemo.tsx` | 主页面，XProvider 包裹 + 8 选项卡布局（Chat / KnowledgeBase / Models / Agents / Plugins / Dashboard / Playground / A2UI） |
-| `components/Chat.tsx` | LLM 聊天 — 使用 `@ant-design/x` 组件（Bubble.List + Sender + Conversations + Welcome + Prompts），配套 `@ant-design/x-sdk` 数据流 |
+| `AIDemo.tsx` | 主页面，XProvider 包裹 + 8 选项卡布局（AIChat / KnowledgeBase / Models / Agents / ProtocolConsole / Observability / Dashboard / A2UI） |
+| `components/AIChat.tsx` | 企业级聊天 — 流式 SSE（`aiStream.ts`）+ 模型路由 + RAG 引用 + 工具调用轨迹 + HITL 人工确认 + Token/成本 + 离线降级提示 |
 | `components/KnowledgeBase.tsx` | 知识库管理（CRUD + 文档添加） |
-| `components/Models.tsx` | 模型管理与选择 |
+| `components/Models.tsx` | 模型管理（真实 `/api/ai/models` provider 注册表 + 连接探测） |
 | `components/Agents.tsx` | 智能体管理（ReAct / Function Calling / Multi-Agent） |
-| `components/Plugins.tsx` | 插件中心 |
-| `components/Dashboard.tsx` | AI Dashboard 统计概览 |
+| `components/ProtocolConsole.tsx` | MCP 2026-07-28 + A2A v1.0 协议控制台（实机调用） |
+| `components/Observability.tsx` | LLMOps 可观测（指标/链路/工具审计/评测/Prompt 版本） |
+| `components/Dashboard.tsx` | 控制台（资源统计 + AI 侧 24h 运行指标） |
+| `components/A2UI.tsx` | 声明式 UI 生成 |
 | `components/ErrorBoundary.tsx` | 错误边界 |
-| `services/api.ts` | AI 相关 API 封装 |
+| `services/api.ts` | 知识库/智能体等 API 封装 |
+| `services/aiApi.ts` | `/api/ai/*` REST 客户端（模型/工具/HITL/obs/评测/Prompt/MCP/A2A） |
+| `services/aiStream.ts` | `/api/ai/chat/stream` SSE 解析器（处理 TCP 分帧边界） |
 | `stores/chatStore.ts` | 聊天状态管理 |
 | `stores/themeStore.ts` | 主题状态管理（light/dark，re-export from `@interview-demo/shared-theme`） |
-| `types/index.ts` | AI Demo 类型定义 |
+| `types/index.ts` | AI Demo 通用类型定义 |
+| `types/ai.ts` | `/api/ai/*` 契约类型（与后端 JSON tag 对齐） |
 
 ### Ant Design X 集成说明
 
@@ -125,7 +130,7 @@ go test ./internal/... -v
 - **Welcome** — 空状态欢迎卡片
 - **Prompts** — 快捷提示词按钮
 
-全局通过 `XProvider`（AIDemo.tsx 内）配置 ant-design/x 主题与 locale。保留原 Zustand + 自定义 API 服务层不变。
+全局通过 `XProvider`（AIDemo.tsx 内）配置 ant-design/x 主题与 locale。数据流：`aiStream.ts`（SSE 解析）→ `aiApi.ts`（`/api/ai/*` REST）→ Go 后端 `airouter` 编排；不再使用 `@ant-design/x-sdk`（原 `AISDKDemo` 前端直连密钥方式已移除）。Zustand `chatStore` 仍负责对话历史持久化。
 
 ## 关键模式
 
@@ -214,11 +219,11 @@ PageTracker (App.tsx 中包裹每个路由)
 - 测试设置：`src/test/setup.ts` (frontend) / `src/test-setup.ts` (ai-demo, interview-docs) (引入 jest-dom vitest matcher，mock ResizeObserver + matchMedia)
 - 测试文件与源码同目录，放在 `__tests__/` 下
 - 用 `userEvent` 而不是 `fireEvent` 模拟用户交互
-- frontend 28 测试文件 148 测试，interview-docs 7 测试文件 39 测试，ai-demo 1 测试文件 1 测试
+- frontend 28 测试文件 148 测试，interview-docs 7 测试文件 39 测试，ai-demo 2 测试文件 5 测试（含 `aiStream.ts` SSE 解析器 4 用例）
 
 ## 后端模块
 
-`backend/internal/` 包含 19 个内部包：
+`backend/internal/` 包含 26 个内部包（新增 AI 侧 7 个：`llm` / `tool` / `guard` / `airouter` / `mcp` / `a2a` / `obs`）：
 
 | 包 | 职责 |
 |----|------|
@@ -241,6 +246,13 @@ PageTracker (App.tsx 中包裹每个路由)
 | `sse` | SSE 日志流 |
 | `upload` | 大文件分片上传（SHA-256 校验 + 会话管理） |
 | `vitals` | Web Vitals 采集与聚合（CLS/FCP/INP/LCP/TTFB） |
+| `llm` | LLM Provider 注册表（OpenAI/DeepSeek/Gemini/Qwen/Ollama）+ 离线降级 + 熔断 + 定价估算 |
+| `tool` | 工具注册中心（参数净化沙箱 + 权限分级 L0/L1/L2 + 幂等 + 超时 + 审计） |
+| `guard` | Prompt 注入检测 + PII 脱敏 + 输入分隔符隔离 |
+| `airouter` | 编排层（RAG → 工具 → 重试 → HITL 的 Agentic 循环 + SSE 事件 + `/api/ai/*` handler） |
+| `mcp` | MCP 2026-07-28 无状态单端点（server/discover / tools/call + MRTR + 幂等 + 双版本兼容） |
+| `a2a` | A2A v1.0（Agent 卡片 / message/send / 任务状态机 / 取消 / well-known） |
+| `obs` | 可观测（链路追踪 / 运行计数 / 工具审计 / 离线评测 / Prompt 版本） |
 
 ## CI/CD
 

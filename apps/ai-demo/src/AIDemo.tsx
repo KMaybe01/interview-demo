@@ -4,9 +4,9 @@ import {
   BookOutlined,
   DashboardOutlined,
   DeploymentUnitOutlined,
+  LineChartOutlined,
   MessageOutlined,
   RobotOutlined,
-  SettingOutlined,
 } from '@ant-design/icons';
 import { XProvider } from '@ant-design/x';
 import { App as AntApp, Spin, theme } from 'antd';
@@ -27,13 +27,12 @@ import { ErrorBoundary } from './components/ErrorBoundary.tsx';
 
 const A2UI = lazy(() => import('./components/A2UI.tsx'));
 const Agents = lazy(() => import('./components/Agents.tsx'));
-const Chat = lazy(() => import('./components/Chat.tsx'));
+const AIChat = lazy(() => import('./components/AIChat.tsx'));
 const DashboardLazy = lazy(() => import('./components/Dashboard.tsx'));
 const KnowledgeBase = lazy(() => import('./components/KnowledgeBase.tsx'));
 const Models = lazy(() => import('./components/Models.tsx'));
-const Playground = lazy(() => import('./components/Playground.tsx'));
-const Plugins = lazy(() => import('./components/Plugins.tsx'));
-const AISDKDemoLazy = lazy(() => import('./components/AISDKDemo.tsx'));
+const Observability = lazy(() => import('./components/Observability.tsx'));
+const ProtocolConsole = lazy(() => import('./components/ProtocolConsole.tsx'));
 
 function TabFallback() {
   return (
@@ -69,13 +68,12 @@ interface NavItem {
 const NAV_ITEMS: NavItem[] = [
   { path: '/', icon: <DashboardOutlined />, label: '控制台' },
   { path: '/chat', icon: <MessageOutlined />, label: 'AI 聊天' },
-  { path: '/aisdk-demo', icon: <RobotOutlined />, label: 'AI SDK Demo' },
   { path: '/knowledge', icon: <BookOutlined />, label: '知识库' },
   { path: '/models', icon: <AppstoreOutlined />, label: '模型管理' },
   { path: '/agents', icon: <RobotOutlined />, label: '智能体' },
-  { path: '/playground', icon: <ApiOutlined />, label: 'Playground' },
+  { path: '/protocols', icon: <ApiOutlined />, label: '协议控制台' },
+  { path: '/observability', icon: <LineChartOutlined />, label: 'LLMOps' },
   { path: '/a2ui', icon: <DeploymentUnitOutlined />, label: 'A2UI' },
-  { path: '/plugins', icon: <SettingOutlined />, label: '插件中心' },
 ];
 
 export default function AIDemo() {
@@ -185,14 +183,13 @@ export default function AIDemo() {
               <Suspense fallback={<TabFallback />}>
                 <Routes>
                   <Route path="/" element={<DashboardLazy onNavigate={handleNavigate} />} />
-                  <Route path="/chat" element={<Chat />} />
-                  <Route path="/aisdk-demo" element={<AISDKDemoLazy />} />
+                  <Route path="/chat" element={<AIChat />} />
                   <Route path="/knowledge" element={<KnowledgeBase />} />
                   <Route path="/models" element={<Models />} />
                   <Route path="/agents" element={<Agents />} />
-                  <Route path="/playground" element={<Playground />} />
+                  <Route path="/protocols" element={<ProtocolConsole />} />
+                  <Route path="/observability" element={<Observability />} />
                   <Route path="/a2ui" element={<A2UI />} />
-                  <Route path="/plugins" element={<Plugins />} />
                   <Route path="*" element={<Navigate to="/" replace />} />
                 </Routes>
               </Suspense>
