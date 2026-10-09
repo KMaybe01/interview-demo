@@ -13,7 +13,7 @@ const features = [
   {
     icon: '⚛️',
     title: 'S2 框架深入',
-    details: 'Vue3 · React19 · Angular21 · 框架对比与选型',
+    details: 'Vue3 · React19 · Angular22 · 框架对比与选型',
     link: '/S2-框架深入/',
   },
   {
