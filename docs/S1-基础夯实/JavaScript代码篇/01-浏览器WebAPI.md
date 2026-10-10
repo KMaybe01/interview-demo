@@ -1,6 +1,24 @@
 ﻿---
 title: 浏览器 Web API
 ---
+
+# 篇四 · 01 🌐 浏览器 Web API
+
+> **面试权重**：★★★★☆（Observer 家族与存储/通信 API 高频） ｜ **建议用时**：1 天 ｜ **前置**：JavaScript 基础、事件机制
+>
+> **本篇定位**：本篇是「浏览器能做什么」的清单与用法。面试常问的是**为什么用它替代老方案**：IntersectionObserver 替代滚动监听、`AbortController` 取消请求、`BroadcastChannel` 跨标签通信、Service Worker 做离线。
+
+## 🧭 核心考点
+
+| 主题 | 必会考点 | 权重 |
+|------|----------|------|
+| Observer 家族 | Intersection / Mutation / Resize / PerformanceObserver 的用途差异 | 🔥🔥🔥 |
+| 存储 | Cookie / Web Storage / IndexedDB 的取舍（详见 S3 篇一） | 🔥🔥 |
+| 通信 | `postMessage`、`BroadcastChannel`、WebSocket/WebRTC、`fetch` 流式 | 🔥🔥 |
+| 控制流 | `AbortController` 取消、`requestIdleCallback`、任务优先级 | 🔥🔥🔥 |
+| 设备与平台 | 剪贴板、文件访问、通知、地理位置、屏幕唤醒锁 | 🔥 |
+| 离线 | Service Worker + Cache API（详见 S1 篇一 Q32） | 🔥🔥 |
+
 ## 🌐 浏览器 Web API
 
 ### 1️⃣ IntersectionObserver
@@ -1057,3 +1075,14 @@ flowchart LR
 
 ---
 
+
+---
+
+## ✅ 自测清单（浏览器 Web API）
+
+- [ ] 能说清四种 Observer 的用途与触发时机
+- [ ] 能用 `IntersectionObserver` 实现懒加载与曝光埋点
+- [ ] 能对比 Cookie / Web Storage / IndexedDB 并给出选型
+- [ ] 能用 `AbortController` 取消 fetch 并清理副作用
+- [ ] 能说出跨标签页/跨窗口通信的方案（BroadcastChannel / postMessage）
+- [ ] 能说明 Service Worker 的生命周期与典型缓存策略

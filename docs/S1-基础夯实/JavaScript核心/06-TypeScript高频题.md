@@ -1,12 +1,65 @@
 ﻿---
 title: TypeScript 高频题
 ---
+
+# 篇三 · 06 📘 TypeScript 高频题
+
+> **面试权重**：★★★★★（中高级岗几乎必问，也是「工程能力」的凭证） ｜ **建议用时**：1.5 天 ｜ **前置**：JavaScript 类型与泛型思维
+>
+> **本篇定位**：TS 题的区分点在「类型系统思维」而不仅是语法：`unknown` vs `any`、类型守卫与收窄、泛型约束、条件/映射类型、`satisfies` 与 `as const` 的取舍。本篇 22 题按统一模板组织，可直接复述。
+>
+> 📌 **版本现状（2026-10-10 核验）**：TypeScript 最新 stable 为 **7.0.2**（`rc` `7.0.1-rc`、`next` `7.1.0-dev`）；**Angular 22 只支持 `typescript >=6.0 <6.1`，不支持 TS 7**。TS 7 是 Go 原生编译器（tsgo）主线，编译性能大幅提升；文中 TS 6 vs 7 的差异以此为准。
+
+## 🧭 核心考点
+
+| 主题 | 必会考点 | 权重 |
+|------|----------|------|
+| 基础类型 | `any`/`unknown`/`never`/`void` 的语义差异、`interface` vs `type` | 🔥🔥🔥 |
+| 类型收窄 | 类型守卫、`typeof`/`in`/`instanceof`、判别联合、断言函数 | 🔥🔥🔥 |
+| 泛型 | 泛型约束、`keyof`/`typeof`/索引访问、泛型默认值与推断 | 🔥🔥🔥 |
+| 类型编程 | 条件类型、映射类型、模板字面量类型、工具类型实现 | 🔥🔥 |
+| 工程实践 | `satisfies` vs `as const`、声明文件、`tsconfig` 关键项、装饰器 | 🔥🔥 |
+| 版本演进 | TS 6 vs TS 7（tsgo）的定位与影响 | 🔥 |
+
+## 📑 本篇题目索引（共 22 题）
+
+> 难度：⭐⭐ 以下必会，⭐⭐⭐ 进阶，⭐⭐⭐⭐+ 专家级 ｜ 频率：🔥 高频（80%+）｜ 📌 常考（50%~80%）｜ 📖 了解（<50%）
+
+| 题号 | 题目 | 难度 | 频率 |
+|------|------|------|------|
+| Q1 | TypeScript 和 JavaScript 的区别 | ⭐⭐ | 🔥 |
+| Q2 | interface 和 type 的区别 | ⭐⭐ | 🔥 |
+| Q3 | any、unknown、never、void 的区别 | ⭐⭐⭐ | 🔥 |
+| Q4 | 泛型（Generics）的理解与应用 | ⭐⭐⭐ | 🔥 |
+| Q5 | keyof、typeof、索引访问类型的用法 | ⭐⭐⭐ | 📌 |
+| Q6 | 类型守卫（Type Guards）和类型收窄 | ⭐⭐⭐ | 🔥 |
+| Q7 | 工具类型（Utility Types）详解 | ⭐⭐⭐ | 🔥 |
+| Q8 | 条件类型（Conditional Types） | ⭐⭐⭐⭐ | 📌 |
+| Q9 | 映射类型（Mapped Types） | ⭐⭐⭐⭐ | 📌 |
+| Q10 | `satisfies` 操作符 | ⭐⭐⭐ | 📌 |
+| Q11 | `as const` 的作用 | ⭐⭐⭐ | 📌 |
+| Q12 | 装饰器（Decorators）— Legacy vs 标准装饰器 | ⭐⭐⭐ | 📌 |
+| Q13 | TypeScript 中的 class 增强 | ⭐⭐⭐ | 📖 |
+| Q14 | 模块声明与类型声明 | ⭐⭐⭐ | 📌 |
+| Q15 | tsconfig.json 核心配置 | ⭐⭐⭐ | 📌 |
+| Q16 | 枚举（Enum）的使用与问题 | ⭐⭐ | 📌 |
+| Q17 | 类型断言 vs 类型声明 | ⭐⭐⭐ | 📌 |
+| Q18 | `this` 参数类型 | ⭐⭐⭐ | 📖 |
+| Q19 | 模板字面量类型 | ⭐⭐⭐⭐ | 📌 |
+| Q20 | TypeScript 常见面试手写题 | ⭐⭐⭐ | 🔥 |
+| Q21 | TypeScript 6.0 vs 7.0 核心变化 | ⭐⭐⭐ | 🔥 |
+| Q22 | 类型体操进阶：DeepReadonly 与递归类型（🔥 高频手写） | ⭐⭐⭐⭐ | 🔥 |
+
 ## 📘 十二、TypeScript 高频面试题
 
 > 🎯 **面试星级**：★★★★★ | 几乎每场前端面试必问
 > TypeScript 已成为前端开发标配，以下为最高频的面试考点
 
-### 1️⃣ TypeScript 和 JavaScript 的区别
+### Q1：TypeScript 和 JavaScript 的区别
+
+**难度**：⭐⭐ ｜ **频率**：🔥 ｜ **考点**：TS 是 JS 的超集，核心差异在类型系统与编译期
+
+**💡 记忆关键词**：超集 / 静态类型 / 编译期 / 类型擦除
 
 | 对比维度 | JavaScript | TypeScript |
 |---------|-----------|------------|
@@ -33,7 +86,16 @@ function add(a: number, b: number): number {
 add(1, '2');  // ❌ 类型错误：string 不能赋值给 number
 ```
 
-### 2️⃣ interface 和 type 的区别
+
+**⚠️ 常见误区**：以为 TS 会改变运行时行为——类型在编译后被擦除，运行时仍是 JS
+
+**📝 一句话总结**：TS = JS + 静态类型系统，只在编译期起作用，运行时类型被擦除
+
+### Q2：interface 和 type 的区别
+
+**难度**：⭐⭐ ｜ **频率**：🔥 ｜ **考点**：interface 可声明合并与继承，type 可做联合/交叉与类型运算
+
+**💡 记忆关键词**：声明合并 / extends / 联合交叉 / 类型运算
 
 ```mermaid
 graph TD
@@ -90,7 +152,16 @@ class Dog implements Animal {
 
 **推荐原则：** 优先用 `interface` 描述对象，需要联合/映射/条件类型时用 `type`。
 
-### 3️⃣ any、unknown、never、void 的区别
+
+**⚠️ 常见误区**：以为两者完全等价——interface 支持声明合并、type 支持更灵活的类型运算
+
+**📝 一句话总结**：描述对象结构优先 interface，需要联合/交叉/条件类型时用 type
+
+### Q3：any、unknown、never、void 的区别
+
+**难度**：⭐⭐⭐ ｜ **频率**：🔥 ｜ **考点**：any 放弃检查、unknown 需收窄、never 表示不可能、void 表示无返回
+
+**💡 记忆关键词**：any 逃逸 / unknown 安全 / never 不可达 / void 无返回
 
 ```mermaid
 graph TD
@@ -145,7 +216,16 @@ function log(msg: string): void {
 }
 ```
 
-### 4️⃣ 泛型（Generics）的理解与应用
+
+**⚠️ 常见误区**：把 unknown 当 any 用（unknown 必须先收窄才能操作，这正是它的安全价值）
+
+**📝 一句话总结**：any 关掉检查、unknown 强制收窄、never 表示不可能、void 只关心「没有返回值」
+
+### Q4：泛型（Generics）的理解与应用
+
+**难度**：⭐⭐⭐ ｜ **频率**：🔥 ｜ **考点**：泛型是「类型参数」，用于保持输入与输出的类型关联
+
+**💡 记忆关键词**：类型参数 / 约束 extends / 推断 / 默认值
 
 **泛型：** 在定义函数、接口、类时，不预先指定具体类型，而是在使用时再确定的类型变量。
 
@@ -195,7 +275,16 @@ function createArray<T = string>(length: number, value: T): T[] {
 }
 ```
 
-### 5️⃣ keyof、typeof、索引访问类型的用法
+
+**⚠️ 常见误区**：把泛型当成「用 any 的高级写法」——泛型的价值是保留类型关系而非放弃类型
+
+**📝 一句话总结**：泛型让函数/类型在保持类型关联的前提下复用，约束用 `extends`
+
+### Q5：keyof、typeof、索引访问类型的用法
+
+**难度**：⭐⭐⭐ ｜ **频率**：📌 ｜ **考点**：keyof 取键联合、typeof 取值类型、索引访问取属性类型
+
+**💡 记忆关键词**：keyof / typeof / T[K] / 类型查询
 
 ```mermaid
 graph TD
@@ -254,7 +343,16 @@ interface APIResponse {
 type AvatarType = APIResponse['data']['user']['profile']['avatar']  // string
 ```
 
-### 6️⃣ 类型守卫（Type Guards）和类型收窄
+
+**⚠️ 常见误区**：混淆「类型位置的 typeof」与「值位置的 typeof」——前者取类型，后者是运行时运算符
+
+**📝 一句话总结**：keyof 查键、typeof 查类型、索引访问查属性，三者是类型编程的基础工具
+
+### Q6：类型守卫（Type Guards）和类型收窄
+
+**难度**：⭐⭐⭐ ｜ **频率**：🔥 ｜ **考点**：类型守卫把联合类型收窄到具体分支
+
+**💡 记忆关键词**：typeof / in / instanceof / 判别联合 / 断言函数
 
 ```typescript
 // typeof 类型守卫
@@ -319,7 +417,16 @@ function area(shape: Shape): number {
 }
 ```
 
-### 7️⃣ 工具类型（Utility Types）详解
+
+**⚠️ 常见误区**：以为 `if (x.foo)` 能收窄——只有 TS 能识别的守卫（typeof/in/instanceof/判别式/自定义）才会收窄
+
+**📝 一句话总结**：收窄靠「TS 可判别的条件」，判别联合是工程中最推荐的写法
+
+### Q7：工具类型（Utility Types）详解
+
+**难度**：⭐⭐⭐ ｜ **频率**：🔥 ｜ **考点**：内置工具类型的语义与实现（Partial/Required/Pick/Omit/Record 等）
+
+**💡 记忆关键词**：Partial / Pick / Omit / Record / ReturnType
 
 ```mermaid
 graph LR
@@ -397,7 +504,16 @@ type MyPartial<T> = {
 }
 ```
 
-### 8️⃣ 条件类型（Conditional Types）
+
+**⚠️ 常见误区**：只会用不会写——面试常要求手写实现（本质是映射类型 + 条件类型的组合）
+
+**📝 一句话总结**：工具类型本质是「映射类型 + keyof + 条件类型」的组合，会写才算掌握
+
+### Q8：条件类型（Conditional Types）
+
+**难度**：⭐⭐⭐⭐ ｜ **频率**：📌 ｜ **考点**：条件类型 `T extends U ? X : Y` 与 `infer` 推断
+
+**💡 记忆关键词**：条件类型 / infer / 分发 / 裸类型
 
 ```typescript
 // 基础条件类型
@@ -428,7 +544,16 @@ type FirstArg<T> = T extends (first: infer F, ...args: any[]) => any ? F : never
 type First = FirstArg<(name: string, age: number) => void>  // string
 ```
 
-### 9️⃣ 映射类型（Mapped Types）
+
+**⚠️ 常见误区**：忽略「裸类型参数会分发」这一特性，导致联合类型下的结果不符合预期
+
+**📝 一句话总结**：条件类型是类型层面的 if，`infer` 负责在分支中提取子类型
+
+### Q9：映射类型（Mapped Types）
+
+**难度**：⭐⭐⭐⭐ ｜ **频率**：📌 ｜ **考点**：映射类型遍历键并变换修饰符与值类型
+
+**💡 记忆关键词**：in keyof / 修饰符 +/- / as 重映射
 
 ```typescript
 // 基础映射类型：将对象的所有属性转为 boolean
@@ -472,7 +597,16 @@ type UserMethods = Methods<{ name: string; age: number }>
 // { setName?: (value: string) => void; setAge?: (value: number) => void }
 ```
 
-### 1️⃣0️⃣ `satisfies` 操作符
+
+**⚠️ 常见误区**：以为映射类型只能改可选性——配合 `as` 子句还能重命名/过滤键
+
+**📝 一句话总结**：映射类型 = 遍历键 + 变换值，是工具类型的实现基础
+
+### Q10：`satisfies` 操作符
+
+**难度**：⭐⭐⭐ ｜ **频率**：📌 ｜ **考点**：`satisfies` 校验类型的同时保留更精确的字面量推断
+
+**💡 记忆关键词**：satisfies / 保留推断 / 不 widening
 
 `satisfies`（TS 4.9+）用于**验证类型兼容性**，同时保留**最窄的类型推断**。
 
@@ -511,7 +645,16 @@ const config2 = {
 } satisfies ButtonConfig  // ✅ 正确
 ```
 
-### 1️⃣1️⃣ `as const` 的作用
+
+**⚠️ 常见误区**：用 `as` 代替 `satisfies`——`as` 会丢掉精确推断且可能掩盖错误
+
+**📝 一句话总结**：`satisfies` 是「在不丢失推断的前提下做类型校验」，优于类型断言
+
+### Q11：`as const` 的作用
+
+**难度**：⭐⭐⭐ ｜ **频率**：📌 ｜ **考点**：`as const` 让字面量收窄为只读字面量类型
+
+**💡 记忆关键词**：as const / 字面量类型 / readonly
 
 `as const` 将值推断为**字面量类型**，使对象的属性变为 `readonly`。
 
@@ -554,7 +697,16 @@ const roles = ['admin', 'user', 'guest'] as const
 type Role = typeof roles[number]  // 'admin' | 'user' | 'guest'
 ```
 
-### 1️⃣2️⃣ 装饰器（Decorators）— Legacy vs 标准装饰器
+
+**⚠️ 常见误区**：以为 `as const` 只影响数组——它对对象同样生效，会递归加 readonly
+
+**📝 一句话总结**：`as const` 把「可变宽类型」变成「精确只读字面量类型」
+
+### Q12：装饰器（Decorators）— Legacy vs 标准装饰器
+
+**难度**：⭐⭐⭐ ｜ **频率**：📌 ｜ **考点**：Legacy 装饰器与 TC39 标准装饰器的差异
+
+**💡 记忆关键词**：experimentalDecorators / 标准装饰器 / 求值顺序
 
 > **面试高频**：TypeScript 5.x 引入的 Stage 3 标准装饰器与 legacy experimentalDecorators 的本质区别。
 
@@ -689,7 +841,16 @@ class User {
 
 **推荐：新项目使用标准装饰器，无需开启 `experimentalDecorators`。**
 
-### 1️⃣3️⃣ TypeScript 中的 class 增强
+
+**⚠️ 常见误区**：混用两套装饰器语义——标准装饰器（TS 5+）与 legacy 装饰器参数与顺序不同
+
+**📝 一句话总结**：新项目优先标准装饰器，legacy 装饰器需 `experimentalDecorators`
+
+### Q13：TypeScript 中的 class 增强
+
+**难度**：⭐⭐⭐ ｜ **频率**：📖 ｜ **考点**：class 的参数属性、访问修饰符与 `abstract`
+
+**💡 记忆关键词**：public/private/protected / 参数属性 / 抽象类
 
 ```typescript
 // 访问修饰符
@@ -757,7 +918,16 @@ Utils.PI               // ✅ 3.14159
 Utils.createRandomId() // ✅ 'x7f8a...'
 ```
 
-### 1️⃣4️⃣ 模块声明与类型声明
+
+**⚠️ 常见误区**：以为 `private` 是运行时私有——它只在编译期生效，真正的运行时私有是 `#` 字段
+
+**📝 一句话总结**：`private` 是编译期约束，`#` 才是运行时私有字段
+
+### Q14：模块声明与类型声明
+
+**难度**：⭐⭐⭐ ｜ **频率**：📌 ｜ **考点**：`.d.ts` 声明文件与 `declare` 的用途
+
+**💡 记忆关键词**：d.ts / declare module / declare global / 类型包
 
 ```typescript
 // .d.ts 声明文件
@@ -796,7 +966,16 @@ interface Data { id: UserID }
 const API_URL = '/api'
 ```
 
-### 1️⃣5️⃣ tsconfig.json 核心配置
+
+**⚠️ 常见误区**：把 `declare` 当成定义实现——它只声明类型，不产生运行时代码
+
+**📝 一句话总结**：声明文件为无类型的 JS 补类型，是 TS 生态互操作的关键
+
+### Q15：tsconfig.json 核心配置
+
+**难度**：⭐⭐⭐ ｜ **频率**：📌 ｜ **考点**：strict 系列、moduleResolution、paths、target 等核心配置
+
+**💡 记忆关键词**：strict / noUncheckedIndexedAccess / moduleResolution / paths
 
 ```json
 {
@@ -846,7 +1025,16 @@ const name: string = null  // ❌ Type 'null' is not assignable to type 'string'
 const name: string | null = null  // ✅ 需联合类型
 ```
 
-### 1️⃣6️⃣ 枚举（Enum）的使用与问题
+
+**⚠️ 常见误区**：只开 `strict: true` 就以为够了——`noUncheckedIndexedAccess` 能挡住大量下标越界类 bug
+
+**📝 一句话总结**：tsconfig 的关键是 strict 家族与模块解析策略，二者决定类型系统的强度
+
+### Q16：枚举（Enum）的使用与问题
+
+**难度**：⭐⭐ ｜ **频率**：📌 ｜ **考点**：枚举的运行时产物与替代方案
+
+**💡 记忆关键词**：enum / const enum / 字面量联合
 
 ```typescript
 // 数字枚举
@@ -899,7 +1087,16 @@ type Status = typeof Status[keyof typeof Status]
 // 'active' | 'inactive' | 'pending'
 ```
 
-### 1️⃣7️⃣ 类型断言 vs 类型声明
+
+**⚠️ 常见误区**：以为 `enum` 是纯类型——它会产生运行时对象；`const enum` 才被内联（且受 `isolatedModules` 限制）
+
+**📝 一句话总结**：多数场景用「字面量联合 + as const」替代 enum，减少运行时产物
+
+### Q17：类型断言 vs 类型声明
+
+**难度**：⭐⭐⭐ ｜ **频率**：📌 ｜ **考点**：断言（`as`）绕过检查，声明（`:` 注解）约束类型
+
+**💡 记忆关键词**：as / 类型注解 / 双重断言
 
 ```typescript
 // 类型断言（告诉 TS 你比它更了解类型）
@@ -928,7 +1125,16 @@ const user2: Admin = { name: 'Tom', email: 'tom@test.com' }
 // 关键区别：类型声明要求完全符合接口，类型断言会放宽检查
 ```
 
-### 1️⃣8️⃣ `this` 参数类型
+
+**⚠️ 常见误区**：用 `as` 掩盖类型错误而不是解决它——断言应当极少使用
+
+**📝 一句话总结**：声明是「约束」，断言是「绕过」，后者应作为最后手段
+
+### Q18：`this` 参数类型
+
+**难度**：⭐⭐⭐ ｜ **频率**：📖 ｜ **考点**：函数首个参数声明 `this` 的类型（仅编译期）
+
+**💡 记忆关键词**：this 参数 / ThisParameterType / noImplicitThis
 
 ```typescript
 // TypeScript 可以显式声明 this 参数类型（此参数为假参数，编译后移除）
@@ -956,7 +1162,16 @@ const handlers = {
 }
 ```
 
-### 1️⃣9️⃣ 模板字面量类型
+
+**⚠️ 常见误区**：以为 `this` 参数会作为真实参数传入——它只用于类型检查，编译后被移除
+
+**📝 一句话总结**：`this` 参数是「给函数签名补充 this 类型」的编译期语法
+
+### Q19：模板字面量类型
+
+**难度**：⭐⭐⭐⭐ ｜ **频率**：📌 ｜ **考点**：模板字面量类型做字符串级别的类型运算
+
+**💡 记忆关键词**：模板字面量 / 联合展开 / 大小写内置
 
 ```typescript
 // 基础模板字面量类型
@@ -988,7 +1203,16 @@ type SpacingClass = `${SpacingType}${SpacingSide}-${Spacing}`
 // 'm-0' | 'm-1' | ... | 'pt-2' | 'pb-4' | 'pr-8' | ...
 ```
 
-### 2️⃣0️⃣ TypeScript 常见面试手写题
+
+**⚠️ 常见误区**：忽略模板字面量类型与联合组合时的「笛卡尔积」爆炸问题
+
+**📝 一句话总结**：模板字面量类型把字符串拼接提升到类型层，适合约束事件名、路径等
+
+### Q20：TypeScript 常见面试手写题
+
+**难度**：⭐⭐⭐ ｜ **频率**：🔥 ｜ **考点**：高频手写：Partial/Pick/Omit/Readonly/DeepReadonly/Awaited 等
+
+**💡 记忆关键词**：手写工具类型 / 递归 / 分发
 
 ```typescript
 // 1. 实现 Pick
@@ -1040,7 +1264,16 @@ type Mutable<T> = {
 }
 ```
 
-### 2️⃣1️⃣ TypeScript 6.0 vs 7.0 核心变化
+
+**⚠️ 常见误区**：只会调用内置工具类型，手写递归类型时忘记处理数组与函数分支
+
+**📝 一句话总结**：手写工具类型的套路是「映射 + 条件 + 递归」，递归要覆盖数组/函数分支
+
+### Q21：TypeScript 6.0 vs 7.0 核心变化
+
+**难度**：⭐⭐⭐ ｜ **频率**：🔥 ｜ **考点**：TS 6.0 与 TS 7.0（Go 原生编译器 tsgo）的定位差异
+
+**💡 记忆关键词**：tsgo / 编译性能 / 兼容性 / 生态适配
 
 > TypeScript 6.0（2026.03）是**最后一个 JS 编写的编译器版本**，TypeScript 7.0（2026.07）是**Go 重写的原生编译器**，速度提升 8-12x。
 
@@ -1196,7 +1429,16 @@ type Result = HeadTail<'😀abc'>
 
 **一句话总结：TS 7 = Go 重写 + 10x 更快 + 所有 TS 6 废弃项变硬错误。先升 6，再升 7。**
 
-### 2️⃣2️⃣ 类型体操进阶：DeepReadonly 与递归类型（🔥 高频手写）
+
+**⚠️ 常见误区**：以为 TS 7 立刻可用于所有项目——Angular 22 仍只支持 `typescript >=6.0 <6.1`
+
+**📝 一句话总结**：TS 7 是 Go 原生编译器主线，性能提升显著，但生态（如 Angular）适配需要时间
+
+### Q22：类型体操进阶：DeepReadonly 与递归类型（🔥 高频手写）
+
+**难度**：⭐⭐⭐⭐ ｜ **频率**：🔥 ｜ **考点**：递归类型实现 DeepReadonly 等深层变换
+
+**💡 记忆关键词**：递归 / 条件终止 / 数组与函数分支
 
 > 💡 **面试现场**：「写一个 `DeepReadonly`」—— 工作四年的同学憋了十分钟没写出来。
 > 这题考的不是记忆，而是**递归 + 边界意识**：能不能想到数组、函数、内置对象和循环引用。
@@ -1318,3 +1560,24 @@ type DeepPartial<T> = T extends Builtin
 ```
 
 **一句话总结：`DeepReadonly = 内置对象短路 + 数组元组特判 + 同态映射递归`，能顺手说出「深度上限防循环引用」就是加分项。**
+
+
+**⚠️ 常见误区**：递归类型漏掉「函数」分支导致函数类型被映射破坏；或没有终止条件
+
+**📝 一句话总结**：深层类型变换 = 递归 + 终止条件 + 对数组/函数的特殊处理
+
+---
+
+## ✅ 自测清单（TypeScript）
+
+- [ ] 能说清 TS 与 JS 的关系，以及「类型在运行时被擦除」的含义
+- [ ] 能对比 `interface` 与 `type`，并给出各自适用场景
+- [ ] 能区分 `any`/`unknown`/`never`/`void`，并说明 `unknown` 的安全价值
+- [ ] 能写出带约束的泛型函数，并解释 `keyof`/`typeof`/索引访问的组合用法
+- [ ] 能写出类型守卫与判别联合，并解释收窄的触发条件
+- [ ] 能手写一个工具类型（如 `Omit`/`Awaited`），并说清实现原理
+- [ ] 能解释 `satisfies` 与 `as const` 的差异及各自适用场景
+- [ ] 能说出 `tsconfig` 中 strict 家族与模块解析的关键项
+- [ ] 能说明枚举的运行时产物及替代方案
+- [ ] 能说清 TS 6 与 TS 7（tsgo）的差异，以及生态适配现状（Angular 22 不支持 TS 7）
+- [ ] 能手写 `DeepReadonly` 这类递归类型，并正确处理数组与函数分支
