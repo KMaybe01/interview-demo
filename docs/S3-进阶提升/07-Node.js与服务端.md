@@ -1,7 +1,24 @@
-# 🖥️ Node.js 与服务端知识详解（含 Mermaid 图解）
+# 篇七 · 07 🖥️ Node.js 与服务端知识详解（含 Mermaid 图解）
 
-> 🎯 **面试星级**：★★★★☆ | **建议用时**：1.5 天
+> **面试权重**：★★★★☆（前端进阶必备，BFF/SSR 岗位的硬门槛） ｜ **建议用时**：1.5 天 ｜ **前置**：事件循环、HTTP 协议
+>
+> **本篇定位**：S3 的「服务端延伸篇」。前端往服务端走的三个落点——工具链、BFF、SSR——都依赖本篇的运行时与并发知识。本仓库的 Go 后端与 Node 侧能力形成对照，可横向比较。
+>
 > Node.js 在前端工程化、SSR、BFF 层、工具链开发中的广泛应用，使其成为前端进阶的必备技能
+>
+> 📌 **版本现状（2026-10-10 联网核验）**：Node.js 当前 latest 为 **26.11.1**；Deno latest **2.9.6**（LTS `2.2.15`）；Bun latest **1.4.3**（本仓库 `packageManager: bun@1.4.2`）。
+
+## 🧭 核心考点
+
+| 模块 | 必会考点 | 面试权重 |
+|------|----------|----------|
+| 运行时 | 事件循环阶段、`nextTick`/`setImmediate`/`setTimeout` 顺序、libuv 线程池 | 🔥🔥🔥 |
+| 模块体系 | CJS/ESM 双模块、`exports` 条件导出、`require` 缓存与循环依赖 | 🔥🔥 |
+| API 形态 | REST vs GraphQL vs tRPC vs gRPC-web 的取舍 | 🔥🔥🔥 |
+| 高并发 | 集群与负载均衡、限流、熔断、降级、连接池 | 🔥🔥🔥 |
+| BFF/SSR | BFF 职责与注意事项、SSR 方案对比（Next/Nuxt/Remix/Astro/RSC） | 🔥🔥 |
+| 性能与排障 | CPU 密集任务移出主线程、堆快照定位内存泄漏 | 🔥🔥 |
+| 运行时选型 | Node vs Deno vs Bun 的差异与适用场景 | 🔥 |
 
 ---
 
@@ -720,22 +737,50 @@ clearInterval(timer);  // 不再需要时清理
 
 ## 八、面试题精选
 
-### 1. Node.js 适用于怎样的场景？
+### 📑 本篇题目索引（共 7 题）
+
+| 题号 | 题目 | 难度 | 频率 |
+|------|------|------|------|
+| Q1 | Node.js 适用于怎样的场景？ | ⭐⭐ | 🔥 |
+| Q2 | RESTful 和 GraphQL 的关系和区别？ | ⭐⭐⭐ | 🔥 |
+| Q3 | 如何解决高并发问题？ | ⭐⭐⭐ | 🔥 |
+| Q4 | Node.js 作为 BFF 中间件服务有哪些注意事项？ | ⭐⭐⭐ | 📌 |
+| Q5 | 什么是事件循环？Node.js 事件循环有哪些阶段？ | ⭐⭐⭐ | 🔥 |
+| Q6 | process.nextTick 和 setImmediate 的区别？ | ⭐⭐⭐ | 🔥 |
+| Q7 | Node.js require 机制与模块循环 | ⭐⭐⭐ | 📌 |
+
+### Q1：Node.js 适用于怎样的场景？
+
+**难度**：⭐⭐ ｜ **频率**：🔥 ｜ **考点**：Node 适合 I/O 密集；CPU 密集要移出主线程
+
+**💡 记忆关键词**：I/O 密集 / BFF / SSR / worker_threads / 子进程
 
 Node.js 适合 I/O 密集型场景：BFF 层（API 聚合）、SSR（服务端渲染）、CLI 工具、实时应用（WebSocket）、构建工具。CPU 密集任务（图像处理、大量数据计算）**不是不能做**，而是要移出主线程：`worker_threads`、N-API 原生扩展、子进程或异步任务队列。
 
-### 2. RESTful 和 GraphQL 的关系和区别？
+### Q2：RESTful 和 GraphQL 的关系和区别？
+
+**难度**：⭐⭐⭐ ｜ **频率**：🔥 ｜ **考点**：REST 面向资源、GraphQL 面向查询，可共存
+
+**💡 记忆关键词**：资源 / 查询语言 / HTTP 缓存 / 多端差异
 
 RESTful 是面向资源的架构风格，GraphQL 是面向查询的数据获取语言。REST 适合简单、稳定的接口，天然支持 HTTP 缓存；GraphQL 适合多端、数据需求差异大的场景，客户端灵活指定字段。可以共存：主体用 REST，复杂查询场景用 GraphQL。
 
-### 3. 如何解决高并发问题？
+### Q3：如何解决高并发问题？
+
+**难度**：⭐⭐⭐ ｜ **频率**：🔥 ｜ **考点**：高并发分层治理：负载均衡、缓存、数据层扩展、限流熔断降级
+
+**💡 记忆关键词**：负载均衡 / Cluster / Redis / 读写分离 / 限流熔断
 
 - **应用层**：负载均衡（Nginx）、多进程（Cluster）、连接池
 - **缓存层**：Redis 缓存、CDN 缓存、本地缓存
 - **数据层**：读写分离、分库分表、消息队列削峰
 - **降级**：限流（Token Bucket）、熔断（Circuit Breaker）、降级默认值
 
-### 4. Node.js 作为 BFF 中间件服务有哪些注意事项？
+### Q4：Node.js 作为 BFF 中间件服务有哪些注意事项？
+
+**难度**：⭐⭐⭐ ｜ **频率**：📌 ｜ **考点**：BFF 的超时、降级、错误格式、监控、日志与安全防护
+
+**💡 记忆关键词**：超时 / 降级熔断 / 统一错误 / Trace ID / 鉴权与校验
 
 - 超时控制：给上游请求设置超时，避免 Node 线程被慢服务阻塞
 - 降级熔断：非核心服务不可用时提供降级数据
@@ -744,15 +789,27 @@ RESTful 是面向资源的架构风格，GraphQL 是面向查询的数据获取�
 - 日志规范：结构化日志，关联 Trace ID 便于链路追踪
 - 安全防护：鉴权统一、请求校验、CORS 配置、防 SQL 注入
 
-### 5. 什么是事件循环？Node.js 事件循环有哪些阶段？
+### Q5：什么是事件循环？Node.js 事件循环有哪些阶段？
+
+**难度**：⭐⭐⭐ ｜ **频率**：🔥 ｜ **考点**：事件循环阶段顺序与各自职责
+
+**💡 记忆关键词**：timers / pending / poll / check / close / 微任务
 
 事件循环是 Node.js 实现非阻塞 I/O 的核心机制。主要阶段：timers（定时器回调）→ pending callbacks（延迟 I/O 回调）→ poll（I/O 事件轮询）→ check（setImmediate）→ close callbacks（关闭事件）。
 
-### 6. process.nextTick 和 setImmediate 的区别？
+### Q6：process.nextTick 和 setImmediate 的区别？
+
+**难度**：⭐⭐⭐ ｜ **频率**：🔥 ｜ **考点**：nextTick 是微任务且优先级最高，setImmediate 在 check 阶段
+
+**💡 记忆关键词**：nextTick / setImmediate / 微任务 / I/O 饿死
 
 `process.nextTick` 在当前阶段结束、下一阶段开始前执行（微任务），优先级高于 Promise；`setImmediate` 在 check 阶段执行（宏任务）。`process.nextTick` 如果递归调用会导致 I/O 饿死，建议优先使用 `setImmediate`。
 
-### 7. Node.js require 机制与模块循环
+### Q7：Node.js require 机制与模块循环
+
+**难度**：⭐⭐⭐ ｜ **频率**：📌 ｜ **考点**：require 的解析-加载-包装-执行-缓存五步，以及循环依赖拿到的是未完成副本
+
+**💡 记忆关键词**：解析 / 包装 / 执行 / 缓存 / 循环依赖
 
 #### require 加载流程（5 步）
 
@@ -814,3 +871,24 @@ module.exports = { name: 'world' };
 ```
 
 ---
+
+
+**⚠️ 常见误区**：以为循环依赖会死锁——实际拿到的是「部分完成」的 exports，因此要避免顶层相互读取
+
+**📝 一句话总结**：require 靠缓存与包装函数实现，循环依赖的安全做法是延迟读取或重构依赖方向
+
+
+---
+
+## ✅ 自测清单（Node.js 与服务端）
+
+- [ ] 能说出事件循环的阶段顺序，并判断混合输出题的结果
+- [ ] 说清 nextTick / setImmediate / setTimeout 的优先级与 I/O 饿死风险
+- [ ] 能解释 require 五步与循环依赖的实际表现
+- [ ] 能对比 REST / GraphQL / tRPC / gRPC-web 并给出选型
+- [ ] 能按「分流 + 减负 + 扩容 + 兜底」四层讲高并发治理
+- [ ] 能说出限流（令牌桶）与熔断（断路器）的实现思路
+- [ ] 能列出 BFF 的 6 项注意事项（超时/降级/错误/监控/日志/安全）
+- [ ] 能说明 CPU 密集任务的三种移出主线程方式
+- [ ] 能对比 Node / Deno / Bun 的运行时差异与适用场景
+- [ ] 知道当前真实版本：Node 26.11.1、Deno 2.9.6（LTS 2.2.15）、Bun 1.4.3
