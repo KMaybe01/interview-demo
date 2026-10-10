@@ -38,7 +38,7 @@ WORKDIR /app/apps/interview-docs
 RUN bun run build
 
 # Stage 4: Build backend
-FROM golang:1.26-alpine AS backend-builder
+FROM golang:1.27-alpine AS backend-builder
 WORKDIR /app
 COPY backend/go.* ./
 RUN go mod download

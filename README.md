@@ -8,7 +8,7 @@ Monorepo (Bun workspaces + Turborepo) 全栈项目，包含：
 - **AI 演示应用**: React 19 + @ant-design/x 构建的 AI 全栈工程化演示平台，**8 个选项卡**覆盖 LLM 流式对话（工具调用 + 人工确认 HITL）、混合 RAG 知识库、智能体 Agent、模型管理、MCP/A2A 协议控制台、LLMOps 可观测与 A2UI 声明式 UI。
 - **前端知识库**: React 19 + Vite 8 + react-markdown 构建的文档站点，覆盖前端面试**六阶段（S1–S6）**学习路径，共 **117 篇** Markdown 文档。
 - **共享包**: `packages/shared-theme`（跨应用主题切换，被 **3 个**前端应用复用）+ `packages/shared-monitor`（声明式前端监控 SDK，当前被 **frontend** 复用）。
-- **Go 后端**: Go 1.26 + Gin 1.12，**26 个内部包**覆盖认证、支付、表单、GIS、上传、监控与 AI（LLM Provider 路由 / 工具中心 / MCP / A2A / LLMOps）等全部 API 需求。
+- **Go 后端**: Go 1.27 + Gin 1.12，**26 个内部包**覆盖认证、支付、表单、GIS、上传、监控与 AI（LLM Provider 路由 / 工具中心 / MCP / A2A / LLMOps）等全部 API 需求。
 
 **Keywords:** 无感刷新 · Token Rotation · 递归表单引擎 · 双重校验 · 实时 JSON 编辑 · WebSocket 心跳 · LRU 路由缓存 · Web Worker 分治 · OpenLayers 聚类 · RBAC 位编码 · SSE 流式日志 · 请求加载 Signal · 树形数据引擎 · 大文件断点续传 · 页面性能监控 · 统一支付中台 · AI Agent 流式执行 · MCP/A2A 协议 · 混合检索 RRF · 声明式埋点 · 优先级上报队列 · 多级去重 · 柔性降级 · 共享主题包 · 声明式监控 SDK
 
@@ -22,7 +22,7 @@ Monorepo (Bun workspaces + Turborepo) 全栈项目，包含：
 | 共享包 | `shared-theme` (Zustand + DOM 策略 + useSyncExternalStore + ThemeToggle 组件), `shared-monitor` (声明式监控 SDK) |
 | 工具链 | Biome 2.5 (lint + format), Husky + commitlint, Vitest 4, Turborepo 2 (编排) |
 | 样式 | Ant Design tokens + CSS Modules (Login) + BEM (interview-docs) |
-| 后端 (Go) | Go 1.26, Gin 1.12, Gorilla WebSocket, golang-jwt, go-openai |
+| 后端 (Go) | Go 1.27（`go.mod` 声明 `go 1.27.2`）, Gin 1.12, Gorilla WebSocket, golang-jwt, go-openai |
 | 运行时 | Bun 1.4.2（依赖安装 + 脚本执行 + CI/CD, Monorepo + Turborepo 编排） |
 | CI/CD | GitHub Actions (lint/test/typecheck) + GitHub Pages (文档站) + GitLab CI (validate → build → Docker 镜像) |
 | 部署 | Helm Chart 手工部署到 K8s (RollingUpdate, maxUnavailable=0 → zero-downtime) + Nginx Ingress；文档站同时发布到 GitLab Pages |
@@ -109,7 +109,7 @@ bun run test                        # Vitest run
 
 ## 代码校验 (GitHub Actions + GitLab CI, Turborepo 编排)
 
-GitHub Actions（`.github/workflows/lint.yml`，Go 1.26 / Bun）：
+GitHub Actions（`.github/workflows/lint.yml`，Go 1.27 / Bun）：
 
 | Job | 命令 | 工具 |
 |-----|------|------|
@@ -138,7 +138,7 @@ GitLab CI（`.gitlab-ci.yml`）分四阶段：`validate`（go vet / go test -rac
 |-------|----------|------|
 | `frontend-builder` | oven/bun:1.4 | `bun install && bun run build` → `apps/frontend/dist/` |
 | `interview-docs-builder` | oven/bun:1.4 | `bun install && bun run build` → `apps/interview-docs/dist/` |
-| `backend-builder` | golang:1.26-alpine | `CGO_ENABLED=0 go build` → 二进制 |
+| `backend-builder` | golang:1.27-alpine | `CGO_ENABLED=0 go build` → 二进制 |
 | `ai-demo-builder` | oven/bun:1.4 | `bun install && bun run build` → `apps/ai-demo/dist/` |
 | `frontend` | nginx:alpine | `dist/` + `nginx.conf` → :80 |
 | `interview-docs` | nginx:alpine | `dist/` + `nginx.interview-docs.conf` → :80 |

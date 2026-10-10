@@ -1,12 +1,12 @@
 # Interview Demo — Backend
 
-Go 1.26 + Gin 1.12 后端服务，为前端 15 个技术演示场景及 AI Demo 提供 API 支持。无外部数据库，所有数据存储在内存中。
+Go 1.27 + Gin 1.12 后端服务，为前端 15 个技术演示场景及 AI Demo 提供 API 支持。无外部数据库，所有数据存储在内存中。
 
 ## 技术栈
 
 | 组件 | 用途 |
 |------|------|
-| Go 1.26 | 语言 / 运行时 |
+| Go 1.27（`go.mod` 声明 `go 1.27.2`） | 语言 / 运行时 |
 | Gin 1.12 | HTTP Web 框架 |
 | golang-jwt v5 | JWT 双 Token（登录、刷新轮换、重放检测） |
 | Gorilla WebSocket v1.5 | WebSocket 告警推送 |

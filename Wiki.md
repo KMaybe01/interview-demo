@@ -66,7 +66,7 @@ graph TB
 | **项目类型** | 前端工程化与性能优化综合演示 |
 | **开发周期/人数** | 独立开发，持续迭代 |
 | **当前状态** | 本地开发运行，Docker/Helm 可部署 |
-| **一句话定位** | 覆盖 19 个高级技术场景的 React 19 + Go 1.26 全栈演示平台，包含 frontend / ai-demo / interview-docs 三个前端应用，聚焦前端工程化、性能优化与架构设计 |
+| **一句话定位** | 覆盖 19 个高级技术场景的 React 19 + Go 1.27 全栈演示平台，包含 frontend / ai-demo / interview-docs 三个前端应用，聚焦前端工程化、性能优化与架构设计 |
 | **部署环境** | Docker 多阶段构建 → Kubernetes Helm (滚动更新) |
 | **构建编排** | Bun workspaces + Turborepo 2 (缓存加速 + 并行编排) |
 | **CI/CD** | GitHub Actions + GitLab CI, Turbo 缓存复用 |
@@ -97,7 +97,7 @@ graph TB
     end
 
     subgraph Backend["🖥️ 后端层 Backend"]
-        Go["Go 1.26 + Gin<br/>19 内部包"]
+        Go["Go 1.27 + Gin<br/>19 内部包"]
         WS["Gorilla WebSocket"]
         JWT["golang-jwt"]
     end
@@ -398,7 +398,7 @@ graph TB
     end
 
     subgraph BackendLayer["🖥️ 后端服务层"]
-        GO["Go 1.26 / Gin<br/>19 内部包"]
+        GO["Go 1.27 / Gin<br/>19 内部包"]
     end
 
     Presentation --> Components
@@ -968,7 +968,7 @@ use() 声明式，Suspense 自动处理加载态，消除 loading 样板代码�
 
 ### 1 分钟版本
 
-"这是一个 React 19 + TypeScript 7 + Go 1.26 的全栈技术演示平台，涵盖 19 个高级技术场景。我独立完成了所有前端架构设计和 Go 后端 API 开发。核心亮点包括递归动态表单引擎、WebSocket 三协议降级传输层、RBAC 位运算权限系统、大文件断点续传、UniPay 支付状态机、AI Agent 六阶段全栈工程化。此外还设计了两个共享包——跨应用主题切换和声明式前端监控 SDK，被三个前端应用复用。"
+"这是一个 React 19 + TypeScript 7 + Go 1.27 的全栈技术演示平台，涵盖 19 个高级技术场景。我独立完成了所有前端架构设计和 Go 后端 API 开发。核心亮点包括递归动态表单引擎、WebSocket 三协议降级传输层、RBAC 位运算权限系统、大文件断点续传、UniPay 支付状态机、AI Agent 六阶段全栈工程化。此外还设计了两个共享包——跨应用主题切换和声明式前端监控 SDK，被三个前端应用复用。"
 
 ### 3 分钟版本
 
@@ -977,7 +977,7 @@ use() 声明式，Suspense 自动处理加载态，消除 loading 样板代码�
 - **frontend**：React 19 SPA，16 个技术演示页面（含监控面板），覆盖实时通信、性能优化、工程架构、支付中台四大领域
 - **ai-demo**：@ant-design/x 构建的 AI 全栈演示平台，8 个选项卡覆盖 LLM 对话（工具调用 + HITL）、RAG 知识库、智能体 Agent、MCP/A2A 协议控制台、LLMOps 可观测
 - **interview-docs**：前端知识库文档站点，Markdown 内容，GitHub Pages 部署
-- **backend**：Go 1.26 + Gin，26 个内部包 100+ API（含 AI 侧 llm/tool/guard/airouter/mcp/a2a/obs）
+- **backend**：Go 1.27 + Gin，26 个内部包 100+ API（含 AI 侧 llm/tool/guard/airouter/mcp/a2a/obs）
 
 技术深度方面：
 
