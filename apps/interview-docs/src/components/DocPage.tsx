@@ -30,17 +30,59 @@ export default function DocPage() {
   const { prev, next } = useMemo(() => getAdjacentDocs(docUrl), [docUrl]);
   const observerRef = useRef<IntersectionObserver | null>(null);
   const headingIdsRef = useRef<Map<Element, string>>(new Map());
+  // 点击目录后进入短暂锁定：平滑滚动 + 虚拟滚动回填期间不让滚动观察器覆盖高亮
+  const scrollLockRef = useRef(false);
+  const lockTimersRef = useRef<number[]>([]);
+
+  const clearLockTimers = useCallback(() => {
+    for (const t of lockTimersRef.current) {
+      window.clearTimeout(t);
+    }
+    lockTimersRef.current = [];
+  }, []);
 
   const getHeadingId = useCallback((el: Element): string => {
     return el.id || slugify(el.textContent || '');
   }, []);
 
+  const handleOutlineSelect = useCallback(
+    (id: string) => {
+      clearLockTimers();
+      scrollLockRef.current = true;
+      setActiveHeadingId(id);
+
+      // 虚拟滚动下目标节点可能先以占位节点存在，真实内容回填后位置会变化，需要多次校正
+      const scrollToTarget = (tries = 6) => {
+        const el = document.getElementById(id);
+        if (el) {
+          el.scrollIntoView({ behavior: 'smooth', block: 'start' });
+        }
+        if (tries > 0) {
+          lockTimersRef.current.push(window.setTimeout(() => scrollToTarget(tries - 1), 60));
+        }
+      };
+      scrollToTarget();
+
+      lockTimersRef.current.push(
+        window.setTimeout(() => {
+          scrollLockRef.current = false;
+        }, 800),
+      );
+    },
+    [clearLockTimers],
+  );
+
+  useEffect(() => clearLockTimers, [clearLockTimers]);
+
   useEffect(() => {
     let cancelled = false;
+    clearLockTimers();
+    scrollLockRef.current = false;
     setLoading(true);
     setNotFound(false);
     setContent(null);
     setDocUrl('');
+    setActiveHeadingId('');
 
     loadContent(location.pathname)
       .then((result) => {
@@ -64,7 +106,7 @@ export default function DocPage() {
     return () => {
       cancelled = true;
     };
-  }, [location.pathname]);
+  }, [location.pathname, clearLockTimers]);
 
   useEffect(() => {
     if (!content || loading) return;
@@ -74,11 +116,19 @@ export default function DocPage() {
     headingIdsRef.current = headingIds;
 
     const callback: IntersectionObserverCallback = (entries) => {
+      if (scrollLockRef.current) return;
+
+      // 同一批回调里可能有多个标题命中，取最靠上的那个，避免下方标题抢走高亮
+      let topEntry: IntersectionObserverEntry | null = null;
       for (const entry of entries) {
-        if (entry.isIntersecting) {
-          const id = headingIds.get(entry.target) || getHeadingId(entry.target);
-          setActiveHeadingId(id);
+        if (!entry.isIntersecting) continue;
+        if (!topEntry || entry.boundingClientRect.top < topEntry.boundingClientRect.top) {
+          topEntry = entry;
         }
+      }
+      if (topEntry) {
+        const id = headingIds.get(topEntry.target) || getHeadingId(topEntry.target);
+        setActiveHeadingId(id);
       }
     };
 
@@ -104,8 +154,21 @@ export default function DocPage() {
 
     const timer = setTimeout(setupObserver, 100);
 
+    // 虚拟滚动会把占位节点替换成真实内容，已观察的节点随之脱离文档，需要重新挂载观察
+    let mutationTimer = 0;
+    const contentRoot = document.querySelector('.doc-content');
+    const mutationObserver = contentRoot
+      ? new MutationObserver(() => {
+          window.clearTimeout(mutationTimer);
+          mutationTimer = window.setTimeout(setupObserver, 150);
+        })
+      : null;
+    mutationObserver?.observe(contentRoot!, { childList: true, subtree: true });
+
     return () => {
       clearTimeout(timer);
+      window.clearTimeout(mutationTimer);
+      mutationObserver?.disconnect();
       observerRef.current?.disconnect();
       headingIds.clear();
     };
@@ -158,7 +221,9 @@ export default function DocPage() {
         <DocVirtualScroll content={content!} />
         <DocPageNav prev={prev} next={next} />
       </div>
-      {headings.length > 0 && <Outline headings={headings} activeId={activeHeadingId} />}
+      {headings.length > 0 && (
+        <Outline headings={headings} activeId={activeHeadingId} onSelect={handleOutlineSelect} />
+      )}
     </motion.div>
   );
 }

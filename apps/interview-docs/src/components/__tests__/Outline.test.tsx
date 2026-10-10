@@ -1,5 +1,6 @@
 import { render, screen } from '@testing-library/react';
-import { describe, expect, it } from 'vitest';
+import userEvent from '@testing-library/user-event';
+import { describe, expect, it, vi } from 'vitest';
 import Outline from '../Outline';
 
 describe('Outline', () => {
@@ -40,6 +41,19 @@ describe('Outline', () => {
     expect(links[1]).toHaveStyle('padding-left: 12px');
     expect(links[2]).toHaveStyle('padding-left: 24px');
     expect(links[3]).toHaveStyle('padding-left: 12px');
+  });
+
+  it('marks the heading matched by activeId as active', () => {
+    render(<Outline headings={headings} activeId="section-1" />);
+    expect(screen.getByText('Section 1').closest('a')).toHaveClass('outline-item--active');
+    expect(screen.getByText('Section 2').closest('a')).not.toHaveClass('outline-item--active');
+  });
+
+  it('notifies the parent with the slugified id on click', async () => {
+    const onSelect = vi.fn();
+    render(<Outline headings={headings} activeId="title" onSelect={onSelect} />);
+    await userEvent.click(screen.getByText('Section 1'));
+    expect(onSelect).toHaveBeenCalledWith('section-1');
   });
 
   it('returns null when headings array is empty', () => {

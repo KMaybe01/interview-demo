@@ -9,9 +9,10 @@ interface Heading {
 interface OutlineProps {
   headings: Heading[];
   activeId?: string;
+  onSelect?: (id: string) => void;
 }
 
-export default function Outline({ headings, activeId }: OutlineProps) {
+export default function Outline({ headings, activeId, onSelect }: OutlineProps) {
   if (headings.length === 0) return null;
 
   return (
@@ -38,6 +39,10 @@ export default function Outline({ headings, activeId }: OutlineProps) {
               whileHover={{ x: 4 }}
               onClick={(e) => {
                 e.preventDefault();
+                if (onSelect) {
+                  onSelect(id);
+                  return;
+                }
                 const el = document.getElementById(id);
                 if (el) el.scrollIntoView({ behavior: 'smooth' });
               }}
