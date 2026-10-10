@@ -94,10 +94,10 @@ timeline
 
 | 模型 | 厂商 | 特点 | 适合场景 |
 |------|------|------|----------|
-| GPT-4o | OpenAI | 全能型，多模态 | 通用开发 |
-| DeepSeek V3/R1 | 深度求索 | 高性价比，推理强 | 国内业务 |
-| Qwen 2.5 | 阿里云 | 中文优秀 | 企业应用 |
-| Llama 3 | Meta | 开源可私有化 | 本地部署 |
+| GPT-5 | OpenAI | 全能型，多模态 | 通用开发 |
+| DeepSeek V4 | 深度求索 | 高性价比、推理强 | 国内业务 |
+| Qwen3 | 阿里云 | 中文优秀、多尺寸 | 企业应用 |
+| Llama 4 | Meta | 开源可私有化 | 本地部署 |
 | GLM-4 | 智谱 AI | 中文理解深 | 知识密集场景 |
 
 ### 1.3 大模型的不足与解决方案
@@ -206,7 +206,7 @@ import { ChatPromptTemplate } from "@langchain/core/prompts";
 import { StringOutputParser } from "@langchain/core/output_parsers";
 
 const model = new ChatOpenAI({
-  model: "gpt-4o-mini",
+  model: "gpt-5-mini",
   apiKey: process.env.OPENAI_API_KEY,
 });
 

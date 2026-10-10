@@ -75,7 +75,7 @@ graph LR
 
 > 唯一真源见 [../index.md](../index.md#版本基线唯一真源)，本节只做引用，不另立版本。
 
-- **AI SDK 7**（`ai@7.0.123`，`node >= 22`）
+- **AI SDK 7**（本仓库 `ai@^7`，实际依赖 `7.0.36`；`node >= 22`）
 - **MCP 规范 2026-07-28**（上一稳定版 `2025-11-25`）
 - **A2A v1.0**（2026-03 发布，Linux Foundation Agentic AI Foundation 治理）
 
@@ -147,7 +147,7 @@ graph LR
 bun install
 
 # 独立新项目的最小依赖（版本号对齐 ../index.md 的基线表，按实际最新 patch 调整）
-bun add ai@^7.0.123 @ai-sdk/react@^4 @ai-sdk/openai@^4 zod@^4   # AI SDK 7 核心
+bun add ai@^7 @ai-sdk/react@^4 @ai-sdk/openai@^4 zod@^4   # AI SDK 7 核心
 bun add @modelcontextprotocol/sdk@^2                            # MCP 协议（需支持 2026-07-28）
 bun add @langchain/core @langchain/community                     # RAG（按需）
 bun add @huggingface/transformers                                # 端侧推理（按需）
@@ -159,8 +159,8 @@ bun add @huggingface/transformers                                # 端侧推理�
 
 | 场景 | 推荐方向 |
 |------|---------|
-| 日常聊天/高并发 | 各厂商低成本档位（如 GPT-6 Luna、Gemini Flash、Claude Haiku 系列） |
-| 深度推理 | 带 reasoning / 高推理档位的旗舰模型（GPT-6 Sol、Claude Opus 5.5） |
+| 日常聊天/高并发 | 各厂商低成本档位（如 GPT-5-mini、Gemini Flash、Claude Haiku 系列） |
+| 深度推理 | 带 reasoning / 高推理档位的旗舰模型（GPT-5、Claude Opus 5.5） |
 | 长文档 | 百万级上下文窗口的模型（Gemini 3 系） |
 | 中文优先 | DeepSeek V4 / Qwen3 / GLM |
 | 本地/离线 | Ollama + 量化小模型 |

@@ -228,17 +228,17 @@ timeline
     2022 : ChatGPT 引爆全球
     2023 : Llama 2 / GPT-4 / Claude
     2024 : Llama 3 / DeepSeek V2 / Qwen 2
-    2025 : DeepSeek R1 / Llama 4 / Gemini 2.5
+   | 维度 | DeepSeek V4 | DeepSeek V4-thinking |
 ```
 
 ### 3.2 Agent 视角的 LLM 能力要求
 
 | 能力 | 重要性 | 代表模型 |
 |------|--------|----------|
-| Tool Calling（函数调用） | ⭐⭐⭐ | GPT-4o, DeepSeek, Llama 3.1+ |
-| 长上下文 | ⭐⭐⭐ | Gemini 1M, GPT-4o 128K |
-| JSON Mode | ⭐⭐⭐ | GPT-4o-mini, Ollama 模型 |
-| 推理能力 | ⭐⭐⭐ | DeepSeek R1, o1/o3, Claude 3.5 |
+| Tool Calling（函数调用） | ⭐⭐⭐ | GPT-5, DeepSeek V4, Llama 4 |
+| 长上下文 | ⭐⭐⭐ | Gemini 3.5（百万级上下文）, GPT-5 128K |
+| JSON Mode | ⭐⭐⭐ | GPT-5-mini, Ollama 模型 |
+| 推理能力 | ⭐⭐⭐ | DeepSeek V4, o 系列, Claude 4.5 |
 
 ### 3.3 开源 vs 闭源模型选型
 
@@ -329,7 +329,7 @@ const COT_PROMPT = \问题：Agent 每步耗时 2 秒，平均 5 步完成一个
 
 | 模型 | 参数量 | 特点 | API 价格 |
 |------|--------|------|----------|
-| DeepSeek V3 | 671B MoE | 通用对话，媲美 GPT-4o | 极低 |
+| DeepSeek V4 | MoE | 通用对话，媲美 GPT-5 | 极低 |
 | DeepSeek R1 | 671B MoE | 推理增强，数学/代码突出 | 极低 |
 
 ### 5.2 推理大模型的核心创新
@@ -349,7 +349,7 @@ flowchart LR
     end
 ```
 
-| 维度 | DeepSeek V3 | DeepSeek R1 |
+| 维度 | DeepSeek V4 | DeepSeek V4-thinking |
 |------|-------------|-------------|
 | 推理方式 | 直接生成答案 | 内化 CoT |
 | 数学能力 | ⭐⭐⭐ | ⭐⭐⭐⭐⭐ |
@@ -461,7 +461,7 @@ import { ChatPromptTemplate } from "@langchain/core/prompts";
 import { StringOutputParser } from "@langchain/core/output_parsers";
 
 const model = new ChatOpenAI({
-  model: "gpt-4o-mini",
+  model: "gpt-5-mini",
   apiKey: process.env.OPENAI_API_KEY,
 });
 
@@ -502,7 +502,7 @@ function createModel(provider: string): BaseChatModel {
   switch (provider) {
     case "openai":
       return new ChatOpenAI({
-        model: "gpt-4o-mini",
+        model: "gpt-5-mini",
         apiKey: process.env.OPENAI_API_KEY,
       });
     case "deepseek":
@@ -535,10 +535,10 @@ console.log({
 
 | 模型 | 上下文窗口 | 适合场景 |
 |------|-----------|----------|
-| GPT-4o | 128K | 长文档分析、复杂 Agent |
-| DeepSeek | 64K | 通用开发 |
-| Llama 3.2 | 128K | 本地部署 |
-| Gemini 2.5 | 1M | 极限长上下文 |
+| GPT-5 | 128K | 长文档分析、复杂 Agent |
+| DeepSeek V4 | 128K | 通用开发（性价比） |
+| Llama 4 | 128K+ | 本地部署 |
+| Gemini 3.5 | 百万级 | 极限长上下文 |
 
 ### 7.4 异常处理与缓存
 
@@ -772,7 +772,7 @@ import { OutputFixingParser } from "@langchain/core/output_parsers";
 
 // 自动修复解析失败
 const fixParser = OutputFixingParser.fromLLM(
-  new ChatOpenAI({ model: "gpt-4o-mini" }),
+  new ChatOpenAI({ model: "gpt-5-mini" }),
   { parser: structuredParser }
 );
 
@@ -1593,7 +1593,7 @@ const correctnessEvaluator = new RunEvaluator({
 
 // 模拟用户评估
 const simulatedUser = new ChatOpenAI({
-  model: "gpt-4o",
+  model: "gpt-5",
   prompt: "你是一个用户，评估 AI 助手的回答质量。",
 });
 ```
@@ -1688,7 +1688,7 @@ const agent = new Agent({
   goal: "分析数据并给出洞察",
   backstory: "资深数据分析师",
   tools: [sqlTool, chartTool],
-  llm: new ChatOpenAI({ model: "gpt-4o" }),
+  llm: new ChatOpenAI({ model: "gpt-5" }),
   memory: true,           // 启用记忆
   maxIter: 5,             // 最大迭代次数
   allowDelegation: true,  // 允许委派任务
@@ -1847,7 +1847,7 @@ flowchart TB
 | 深入 LangGraph | LangGraph 官方文档 + GitHub |
 | Agent 安全 | OWASP LLM Top 10 |
 | 生产级部署 | LangSmith + LangGraph Cloud |
-| 多模态 Agent | GPT-4o Vision / Gemini 多模态 |
+| 多模态 Agent | GPT-5 Vision / Gemini 多模态 |
 | 开源 Agent 框架 | AutoGen、Semantic Kernel、Dify |
 
 ---

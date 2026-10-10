@@ -165,6 +165,11 @@ export const navConfig: NavItem[] = [
         icon: '🚀',
         items: [
           {
+            text: '快速入门 · 30 分钟从 0 到 1',
+            icon: '⚡',
+            link: '/S5-AI/01-实战篇/00-快速入门-30分钟从0到1',
+          },
+          {
             text: 'AI推荐学习',
             icon: '📖',
             link: '/S5-AI/01-实战篇/00-AI推荐学习',

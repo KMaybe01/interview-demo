@@ -110,7 +110,7 @@
 import { Experimental_Agent as Agent, stepCountIs } from 'ai';
 
 const agent = new Agent({
-  model: openai('gpt-6-luna'), // 按基线表选择当期型号
+  model: openai('gpt-5-mini'), // 按基线表选择当期型号
   tools: { search: searchTool },
   // ✅ v7：停止条件与超时统一声明，取代旧的 maxSteps
   stopWhen: stepCountIs(10),
@@ -183,7 +183,7 @@ const searchTool = tool({
 > 3. **安全指标**：越权操作次数、Prompt 注入成功率
 >
 > **评估方法**：
-> - **LLM-as-Judge**：用 GPT-4 评估输出质量
+> - **LLM-as-Judge**：用 GPT-5 / Claude 等旗舰模型评估输出质量
 > - **人工评估**：黄金标准，但成本高
 > - **回归测试**：建立测试集，持续监控
 > - **A/B 测试**：对比不同版本效果

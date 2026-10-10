@@ -72,7 +72,7 @@ export async function POST(req: Request) {
   const { prompt } = await req.json();
 
   const result = await generateText({
-    model: openai('gpt-6-luna'), // 按 ../../index.md 基线表选当期型号
+    model: openai('gpt-5-mini'), // 按 ../../index.md 基线表选当期型号
     prompt,
     output: Output.object({ schema: UISchema }), // generateObject 已废弃
   });

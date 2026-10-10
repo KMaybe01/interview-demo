@@ -214,15 +214,17 @@ console.log(`Token 数: ${chunks.length}`);
 
 ### 3.2 国内外主流模型对比
 
+> 型号为 **2026-09 档位示例**；落地前请以当期实际模型 ID 替换（OpenAI `gpt-5` / Anthropic `claude-*` 系列）。
+
 | 模型 | 厂商 | 上下文窗口 | 特点 | 适用场景 |
 |------|------|-----------|------|---------|
-| GPT-4o | OpenAI | 128K | 多模态、指令遵循强 | 通用问答、复杂推理 |
-| GPT-4o-mini | OpenAI | 128K | 低成本、快速 | 日常对话、分类 |
-| Claude 3.5 Sonnet | Anthropic | 200K | 长文本、代码能力强 | 文档分析、编程 |
-| GLM-4 | 智谱 AI | 128K | 中文优秀、开源 | 中文场景 |
-| Qwen2.5 | 阿里千问 | 128K | 开源、多尺寸 | 本地部署、微调 |
-| DeepSeek-V3 | 深度求索 | 128K | 数学推理强 | 专业问答 |
-| Llama 3.1 | Meta | 128K | 开源生态好 | 私有部署 |
+| GPT-5 / GPT-5-mini | OpenAI | 128K+ | 多模态、推理/编码强 | 通用问答、复杂推理、Agent 主模型 |
+| GPT-5-fast | OpenAI | 128K | 低成本、快速 | 日常对话、分类 |
+| Claude Sonnet 4.5–5.5 | Anthropic | 200K | 长文本、代码能力强 | 文档分析、编程 |
+| GLM-4.5 / 4.6 | 智谱 AI | 128K+ | 中文优秀、开源权重 | 中文场景、Agent |
+| Qwen3 / Qwen3-Coder | 阿里千问 | 128K | 开源、多尺寸 | 本地部署、微调、编码 |
+| DeepSeek V4 | 深度求索 | 128K | 数学/代码推理强、性价比 | 专业问答、低成本 |
+| Llama 4 | Meta | 128K+ | 开源生态好 | 私有部署 |
 
 ### 3.3 模型部署方式选型
 
@@ -247,7 +249,7 @@ const response = await model.invoke("什么是 RAG？");
 **API 调用**：
 ```typescript
 import { ChatOpenAI } from "@langchain/openai";
-const model = new ChatOpenAI({ model: "gpt-4o-mini", temperature: 0.3, apiKey: process.env.OPENAI_API_KEY });
+const model = new ChatOpenAI({ model: "gpt-5-mini", temperature: 0.3, apiKey: process.env.OPENAI_API_KEY });
 ```
 
 ### 3.4 模型评估维度
@@ -550,7 +552,7 @@ graph TB
 
 | 组件 | 选型 | 理由 |
 |------|------|------|
-| LLM | GPT-4o-mini | 性价比高、指令遵循好 |
+| LLM | GPT-5-mini | 性价比高、指令遵循好 |
 | Embedding | text-embedding-3-small | 1536 维、兼容性好 |
 | 向量数据库 | Chroma | 轻量、无需额外服务 |
 | 文档解析 | LangChain Loaders | 支持多种格式 |
@@ -573,7 +575,7 @@ graph TB
     end
     subgraph 生成答案
         I --> J[Prompt 组装]
-        J --> K[GPT-4o-mini]
+        J --> K[GPT-5-mini]
         K --> L[答案 + 引用]
     end
 ```
@@ -624,7 +626,7 @@ async function createQAChain(vectorStore: Chroma) {
       question: (input: { question: string }) => input.question,
     },
     prompt,
-    new ChatOpenAI({ model: "gpt-4o-mini", temperature: 0 }),
+    new ChatOpenAI({ model: "gpt-5-mini", temperature: 0 }),
     new StringOutputParser(),
   ]);
   return chain;
@@ -717,7 +719,7 @@ async function evaluateFaithfulness(answer: string, contexts: string[], model: C
 }
 
 async function evaluateRAGSystem(testCases: EvalSample[]) {
-  const model = new ChatOpenAI({ model: "gpt-4o", temperature: 0 });
+  const model = new ChatOpenAI({ model: "gpt-5", temperature: 0 });
   let total = 0;
   for (const tc of testCases) {
     const score = await evaluateFaithfulness(tc.answer, tc.contexts, model);
@@ -1079,7 +1081,7 @@ await graph.query(`
 
 // Graph RAG 问答链
 const chain = GraphCypherQAChain.fromLLM({
-  llm: new ChatOpenAI({ model: "gpt-4o", temperature: 0 }),
+  llm: new ChatOpenAI({ model: "gpt-5", temperature: 0 }),
   graph, verbose: true, validateCypher: true,
 });
 
@@ -1173,7 +1175,7 @@ const calcTool = new DynamicStructuredTool({
 });
 
 const agent = await createStructuredChatAgent({
-  llm: new ChatOpenAI({ model: "gpt-4o", temperature: 0 }),
+  llm: new ChatOpenAI({ model: "gpt-5", temperature: 0 }),
   tools: [policyTool, graphTool, calcTool],
   prompt: PromptTemplate.fromTemplate(
     "根据问题类型选择合适工具。\n\n可用工具：{tools}\n\n{agent_scratchpad}"
@@ -1199,7 +1201,7 @@ async function routeQuery(query: string, llm: ChatOpenAI): Promise<"policy" | "f
 }
 
 async function agenticRAG(query: string, handlers: Record<string, (q: string) => Promise<string>>) {
-  const llm = new ChatOpenAI({ model: "gpt-4o-mini", temperature: 0 });
+  const llm = new ChatOpenAI({ model: "gpt-5-mini", temperature: 0 });
   const category = await routeQuery(query, llm);
   const context = await (handlers[category] || handlers.general)(query);
   return RunnableSequence.from([
@@ -1238,7 +1240,7 @@ const ragChain = RunnableSequence.from([
     question: (input: { question: string }) => input.question,
   },
   PromptTemplate.fromTemplate("基于以下信息回答问题。\n信息：{context}\n问题：{question}"),
-  new ChatOpenAI({ model: "gpt-4o-mini", temperature: 0 }),
+  new ChatOpenAI({ model: "gpt-5-mini", temperature: 0 }),
   new StringOutputParser(),
 ]);
 

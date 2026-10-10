@@ -1,7 +1,7 @@
 # 🔵 阶段二：进阶期 - RAG 应用
 
 > 📖 **本文档为《AI 前端开发体系化学习指南》的阶段拆分文档**
-> 完整指南请查看：[学习指南总览](./README.md#-ai-前端开发体系化学习指南)
+> 完整指南请查看：[学习指南总览](../index.md)
 
 ---
 
@@ -398,8 +398,8 @@ export class RAGChain {
 
   constructor(vectorStore: VectorStoreManager) {
     this.vectorStore = vectorStore;
-    // 型号按 ../../index.md 基线表选择当期型号
-    this.llm = new ChatOpenAI({ model: 'gpt-6-luna', temperature: 0.3 });
+    // 型号按 ../X 基线表选择当期型号
+    this.llm = new ChatOpenAI({ model: 'gpt-5-mini', temperature: 0.3 });
     this.chain = this.buildChain();
   }
 

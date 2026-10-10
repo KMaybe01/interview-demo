@@ -549,7 +549,7 @@ class OpenAIProvider implements LLMProvider {
         Authorization: "Bearer " + this.config.apiKey,
       },
       body: JSON.stringify({
-        model: options?.model ?? "gpt-4o",
+        model: options?.model ?? "gpt-5",
         messages,
         temperature: options?.temperature ?? 0.7,
       }),
@@ -570,7 +570,7 @@ class OpenAIProvider implements LLMProvider {
         "Content-Type": "application/json",
         Authorization: "Bearer " + this.config.apiKey,
       },
-      body: JSON.stringify({ model: options?.model ?? "gpt-4o", messages, stream: true }),
+      body: JSON.stringify({ model: options?.model ?? "gpt-5", messages, stream: true }),
     });
     const reader = res.body!.getReader();
     const decoder = new TextDecoder();
@@ -3994,7 +3994,7 @@ function SettingsModal({ isOpen, onClose }: { isOpen: boolean; onClose: () => vo
               onChange={e => setSettings({ ...settings, model: e.target.value })}
             >
               <option value="deepseek-chat">DeepSeek Chat</option>
-              <option value="gpt-4o">GPT-4o</option>
+              <option value="gpt-5">GPT-5</option>
               <option value="claude-3-opus">Claude 3 Opus</option>
             </select>
           </label>

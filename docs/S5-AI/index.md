@@ -12,18 +12,23 @@
 
 > 全库所有版本声明以此表为准。各章节**只引用、不自创**版本号；如与下表冲突，以本表为准并回帖修正。
 
-**基线核对日期**：2026-09-30
+**基线核对日期**：2026-10-10
 
 | 维度 | 基线值 | 核验来源 |
 |------|--------|---------|
-| **AI SDK** | `ai@7.0.123`（`engines: node >= 22`，peerDeps `zod ^3.25.76 \|\| ^4.1.8`） | npm registry `ai/latest` |
-| **React 适配器** | `@ai-sdk/react@^4` | 本仓库 `apps/ai-demo/package.json` |
+| **AI SDK** | `ai@^7.0.36`（本仓库实际依赖；`engines: node >= 22`，peerDeps `zod ^3.25.76 \|\| ^4.1.8`） | 本仓库 `node_modules/ai/package.json` = `7.0.36` |
+| **React 适配器** | `@ai-sdk/react@^4.0.39` | 本仓库 `apps/ai-demo/package.json` |
 | **React** | `19.x` | 本仓库 `apps/ai-demo/package.json` |
 | **MCP 规范** | `2026-07-28`（上一稳定版 `2025-11-25`） | modelcontextprotocol.io/specification/2026-07-28 |
 | **A2A 规范** | `v1.0`（2026-03 发布，首个生产就绪版） | a2aproject / Linux Foundation Agentic AI Foundation |
-| **前沿模型** | GPT-6 Astra/Sol/Luna、Claude Opus 5.5 / Sonnet 5.5、Gemini 3 系、DeepSeek V4、Qwen3.x | 2026-09 公开发布信息 |
+| **前沿模型** | 旗舰：OpenAI GPT-5 系、Claude Opus/Sonnet 4.5–5.5、Gemini 3.5；性价比：DeepSeek V4、Qwen3、GLM-4.5 | 2026-10 Vercel AI Gateway `/v1/models` 实列 |
+| **端侧小模型** | Qwen2.5 / Qwen3 0.5B–1.5B（Transformers.js / onnx-community） | 浏览器推理生态 |
 | **前端 AI UI** | AI Elements、assistant-ui、CopilotKit、AG-UI、`@ant-design/x`、`@a2ui/react` | 公开仓库 / 发布信息 |
 | **包管理器** | `bun`（本仓库禁止 npm/yarn/pnpm） | 根 `AGENTS.md` |
+
+> 💡 **型号说明**：模型迭代极快，上表「旗舰/性价比」是**档位划分**而非永久结论。
+> 写代码前请核对你所用 Gateway / 厂商当期的**实际模型 ID**（如 `openai/gpt-5`、
+> `anthropic/claude-opus-4.5`、`google/gemini-3.5-flash`），不要照抄本文示例里的具体型号。
 
 ### 关于「AI SDK 6.x」
 
@@ -35,6 +40,12 @@
 
 `GPT-4o` / `Claude 3.5 Sonnet` / `Gemini 1.5 Pro` / `Llama 3.1` / `Qwen 2.5` 属 **2024 代际**，
 仅可出现在「技术演进史」语境；**选型与示例一律使用上表的 2026 基线**。
+
+### 关于「OpenAI 营销代号 / 未实列型号」
+
+历史版本曾把 OpenAI 的下一代旗舰写作「GPT-5/Sol/Luna」，该命名**未成为官方实列的模型 ID**。
+以 Vercel AI Gateway `/v1/models` 实列的 `openai/gpt-5`、`openai/gpt-5-mini`、`openai/gpt-5-codex` 为准；
+写代码前请核对当期实际型号，不要把未经验证的营销代号写进示例。
 
 ---
 
@@ -48,6 +59,7 @@ S5-AI/
 │   ├── 02-技术选型对比合集.md             # 技术栈对比（精简版）
 │   └── 03-AI应用市场与生态.md             # MCP/平台/工具全景
 ├── 01-实战篇/                            # 实战教程
+│   ├── 00-快速入门-30分钟从0到1.md        # ⚡ 最短上手路径（先看这个）
 │   ├── 00-AI推荐学习.md                   # 学习资源与术语
 │   ├── 01-入门期-AI聊天室.md
 │   ├── 02-进阶期-RAG应用.md
@@ -83,6 +95,9 @@ S5-AI/
 
 ## 快速开始
 
+> **最短路径**：直接看 [⚡ 快速入门 · 30 分钟从 0 到 1](./01-实战篇/00-快速入门-30分钟从0到1.md)，
+> 30 分钟跑通一个可运行的流式聊天应用（AI SDK 7 + `@ai-sdk/react`）。
+
 ### 1. 学习路径
 
 **六阶段进阶**：
@@ -104,7 +119,7 @@ S5-AI/
 |-------|------|
 | **前端框架** | AI SDK 7（React）/ LangChain + LangGraph（后端编排） |
 | **向量库** | 小规模 Chroma / pgvector，大规模 Milvus / Qdrant |
-| **模型** | 旗舰：GPT-6 系 / Claude Opus 5.5 / Gemini 3；性价比：DeepSeek V4 / Qwen3 |
+| **模型** | 旗舰：GPT-5 系 / Claude Opus 4.5–5.5 / Gemini 3.5；性价比：DeepSeek V4 / Qwen3 / GLM |
 | **网关** | LiteLLM + LangFuse |
 | **部署** | Vercel（MVP）/ AWS（生产） |
 
@@ -193,3 +208,4 @@ S5-AI/
 | 2025-09 | 重构为新目录结构，精简面试篇，新增应用市场与面试技巧 |
 | 2026-07 | 对齐 AI SDK 7 + MCP 2026-07-28 |
 | 2026-09 | 建立唯一版本基线表；修正 MCP「有状态」误述与 A2A v0.3→v1.0；AI SDK v4→v7 示例迁移；重做 2026 模型矩阵；新增上下文工程/Agent Skills 与生成式 UI 两章；清理无出处数字与重复章节 |
+| 2026-10 | 新增「快速入门 · 30 分钟从 0 到 1」；版本基线对齐仓库实际依赖（`ai@7.0.36`）；模型矩阵改以 Gateway 实列型号为准（GPT-5 / Claude 4.5–5.5 / Gemini 3.5），标注营销代号作废 |
