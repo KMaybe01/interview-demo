@@ -1,5 +1,26 @@
-# React 深入浅出解析
+# 篇六 · 06 React 深入浅出解析
 
+> **面试权重**：★★★★☆（React 原理追问的底层依据） ｜ **建议用时**：3 天 ｜ **前置**：JavaScript 事件循环、数据结构基础
+>
+> **本篇定位**：S2 的「原理纵深篇」。与 02-React19 的分工是——**02 讲「19 的新特性与面试怎么答」，本篇按「世界观 → 数据 → 架构 → 生态」逐层拆解 React 的设计由来**。想答好「为什么这样设计」，要读本篇。
+>
+> 📌 **版本说明（2026-10-10 联网核验）**：React 最新 stable 为 **19.3.0**，本仓库使用 `^19.2.7`。本篇的设计思想部分跨版本通用，涉及版本差异处会单独标注；React Compiler（`babel-plugin-react-compiler`）**1.0.0 已 GA**。
+
+## 🧭 核心考点
+
+| 章节 | 面试常问点 | 权重 |
+|------|-----------|------|
+| 世界观与 JSX | 声明式的价值、JSX 编译产物、虚拟 DOM 的收益与代价 | 🔥🔥 |
+| setState 与不可变数据 | 批处理与版本差异、为什么不可变是 React 的地基 | 🔥🔥🔥 |
+| 事件系统 | 合成事件、事件委托根节点（17+ 起为 root 容器） | 🔥🔥 |
+| Stack → Fiber | 为什么递归不可中断、Fiber 链表如何做到可恢复 | 🔥🔥🔥 |
+| 渲染链路与调度（13） | `performSyncWorkOnRoot` / `performConcurrentWorkOnRoot`、Lane 优先级、时间切片 | 🔥🔥🔥 |
+| Concurrent | `useTransition` / `useDeferredValue`、Suspense 与中断恢复 | 🔥🔥🔥 |
+| Hooks 与状态管理 | Hooks 链表、Redux/Zustand 选型 | 🔥🔥🔥 |
+| 路由 / SSR / 样式 / TS | 方案对比与选型理由 | 🔥🔥 |
+| 性能与设计模式 | 优化路径与设计模式的 React 落地 | 🔥🔥 |
+
+---
 
 ## 1. React 世界观
 
@@ -1373,6 +1394,93 @@ let lastPlacedIndex = 0;
 
 ---
 
+## 13. 调度器与优先级：Lane 模型（补充章节）
+
+> 第 12 章讲完了渲染链路，本章补上「**谁决定先渲染、渲染多久让出主线程**」这一环，是理解 Concurrent 的前置。
+
+### 13.1 为什么需要调度器
+
+Stack Reconciler 用递归遍历组件树，一次递归必须走完，长时间占用主线程会让输入、动画掉帧。Fiber 把渲染拆成可中断的工作单元后，就需要一个「**何时继续、何时让出、先做哪个**」的决策者——这就是 `Scheduler`。
+
+```
+递归（Stack）                     链表遍历 + 调度（Fiber）
+mountComponent 递归到底      →    performUnitOfWork 处理一个 Fiber
+                                  ↓
+无法中断                          每个单元后检查 shouldYield()
+```
+
+### 13.2 两条渲染入口
+
+```javascript
+// 同步（离散事件、legacy 模式）
+function performSyncWorkOnRoot(root) {
+  // 同步走完，不可中断
+  workLoopSync();
+  commitRoot(root);
+}
+
+// 并发（Concurrent 模式）
+function performConcurrentWorkOnRoot(root) {
+  const shouldTimeSlice = !includesBlockingLane(root, lanes);
+  const exitStatus = shouldTimeSlice ? workLoopConcurrent() : workLoopSync();
+  // 未完成 → 返回 Continuation，等下一次调度继续
+}
+
+function workLoopConcurrent() {
+  while (workInProgress !== null && !shouldYield()) {
+    performUnitOfWork(workInProgress);
+  }
+}
+```
+
+**关键点**：并发循环每次迭代都检查 `shouldYield()`（默认 5ms 时间片），让出后由 `Scheduler` 通过 `MessageChannel` 重新排一个宏任务继续，`workInProgress` 指针保留了现场，所以能「接着做」。
+
+### 13.3 Lane 模型：用位运算表达优先级
+
+```javascript
+// 简化示意
+const SyncLane            = 0b0000000000000000000000000000001; // 离散事件（点击、输入）
+const InputContinuousLane = 0b0000000000000000000000000000100; // 连续输入（滚动、拖拽）
+const DefaultLane         = 0b0000000000000000000000000010000; // 普通更新
+const TransitionLane      = 0b0000000000000000000001000000000; // startTransition
+const IdleLane            = 0b0100000000000000000000000000000; // 空闲任务
+```
+
+| 概念 | 含义 |
+|------|------|
+| `lane` | 单个更新自带的优先级（1 个位） |
+| `lanes` | 一批更新的优先级集合（多个位的或运算结果） |
+| `getNextLanes()` | 每次调度前选出「当前最高优先级的一批 lanes」 |
+| 饥饿处理 | 低优 lane 等待过久会被提升到更高优先级，避免永远得不到执行 |
+
+**为什么用位运算**：一次 `lanes & -lanes` 就能取到最高优先级位；判断某 lane 是否在集合中只需 `lanes & lane`，成本极低且天然支持批量。
+
+### 13.4 时间切片的实现与取舍
+
+```javascript
+// React 的 Scheduler 用 MessageChannel 而非 setTimeout / requestIdleCallback
+const channel = new MessageChannel();
+channel.port1.onmessage = performWorkUntilDeadline;
+function schedulePerformWorkUntilDeadline() {
+  channel.port2.postMessage(null); // 宏任务，约 5ms 内触发
+}
+```
+
+| 方案 | 问题 |
+|------|------|
+| `requestIdleCallback` | Safari 长期不支持；触发时机不可控，空闲回调可能 50ms+ 才来 |
+| `setTimeout` | 最小 4ms 抖动，且嵌套超过 5 层会被强制提升到 4ms+ |
+| `MessageChannel` | 宏任务、无最小延迟抖动、主流浏览器一致 → **React 的选择** |
+
+**⚠️ 常见误区**：
+1. 以为「可中断」是随时打断 JS 执行——实际是在 **Fiber 单元边界**主动检查并让出。
+2. 以为 Lane 就是「优先级队列」，它其实是**位图**，批量与饥饿处理都靠位运算完成。
+3. 以为并发渲染会减少总工作量——它只改变**执行顺序与可打断性**，总量不变。
+
+**📝 一句话总结**：调度器解决「何时做 + 做多久」，Lane 解决「先做谁」，二者配合把一次不可打断的递归渲染，变成可插队、可续跑的分片任务。
+
+---
+
 ## 14. Concurrent 模式与 React 18
 
 ### 14.1 什么是 Concurrent 模式？
@@ -2262,7 +2370,8 @@ timeline
     2024 : React 19 : Actions : useActionState : RSC 稳定
     2025.06 : React 19.1 : Owner Stack : 调试增强
     2025.10 : React 19.2 : Activity : useEffectEvent : 部分预渲染
-    2026.06 : React 19.2.7 : Server Actions 回归修复 : 当前主线
+    2026.06 : React 19.2.7 : Server Actions 回归修复 : 本仓库所用版本
+    2026    : React 19.3.0 : 19.x 最新 stable（2026-10-10 核验）
 ```
 
 ### 24.2 React 17（承上启下）
@@ -2402,7 +2511,7 @@ class ErrorBoundary extends React.Component {
 
 ### 24.6 React 19.2（并发体验与 SSR 增强）
 
-> 📌 **版本现状**：React 19.2 发布于 2025-10-01，19.2.7（2026-06）修复了 Server Actions 的一个回归问题，是当前主线版本。
+> 📌 **版本现状**：React 19.2 发布于 2025-10-01，19.2.7（2026-06）修复了 Server Actions 的一个回归问题，是本仓库使用的版本；npm 最新 stable 为 **19.3.0**（2026-10-10 核验）。
 
 #### `<Activity>`：保留状态的显隐切换
 
@@ -2474,4 +2583,36 @@ const deferredQuery = useDeferredValue(query, '');
 - **19 → 19.2 的演进主线**：19 解决"怎么写异步与表单"（Actions / `use()` / `useActionState`），19.1 解决"怎么定位问题"（Owner Stack），19.2 解决"怎么让并发与 SSR 体验更好"（`<Activity>` / `useEffectEvent` / 部分预渲染）。
 - **`<Activity>` vs `display: none`**：前者不保留 DOM、但保留 React 状态；后者保留 DOM 与状态但持续占用内存与布局。
 - **`useEffectEvent` vs `useCallback`**：`useCallback` 是响应式值（会进依赖数组），`useEffectEvent` 明确不是响应式值，专供 Effect 内部读取最新值。
+
+---
+
+## 25. 全篇总结与速记
+
+| 主题 | 一句话结论 |
+|------|-----------|
+| React 是什么 | 声明式 UI 库：你描述状态，框架负责把状态映射成 UI |
+| 虚拟 DOM | 用「多一次 diff」换「声明式开发 + 批量操作 + 跨平台」 |
+| setState | 更新是批处理的，本轮渲染读到的仍是旧值；依赖前值用函数式更新 |
+| 不可变数据 | React 判断「是否变了」靠引用比较，不可变是这套模型的地基 |
+| Fiber | 把递归改成链表遍历，从而在单元边界可中断、可恢复 |
+| Lane + Scheduler | Lane 决定「先做谁」，Scheduler 决定「何时做、做多久」 |
+| Concurrent | 让紧急交互插队，不减少总工作量，只改变执行顺序 |
+| Hooks | 状态按调用顺序存在链表里，所以依赖必须写全、引用必须稳住 |
+| Compiler | 把手写记忆化变成编译期自动推断，前提是代码符合 Hooks 规则 |
+
+---
+
+## ✅ 自测清单（React 原理纵深）
+
+- [ ] 能说清「声明式」到底省掉了什么，以及虚拟 DOM 的真实收益与代价
+- [ ] 能解释 JSX 编译产物，以及为什么 17 之后不再需要 `import React`
+- [ ] 说清 setState 在 18/19 的批处理语义，以及函数式更新的必要性
+- [ ] 解释为什么不可变数据是 React 的地基（引用比较 → 重渲染判断）
+- [ ] 画出 Stack → Fiber 的演进原因，并说明 `alternate` 双缓冲的作用
+- [ ] 说清 `workLoopConcurrent` + `shouldYield` 如何实现时间切片
+- [ ] 解释 Lane 位图如何表达优先级，以及低优任务的饥饿处理
+- [ ] 说清 `useTransition` / `useDeferredValue` 各自解决什么问题
+- [ ] 解释 Hooks 的链表存储机制，并由此推出「不能写在条件里」的原因
+- [ ] 能对比 Redux / Zustand / Context 的适用边界并给出选型理由
+- [ ] 能说出 React 19 → 19.1 → 19.2 → 19.3 各自的演进主线
 

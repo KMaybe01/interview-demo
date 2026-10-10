@@ -45,9 +45,10 @@ export const navConfig: NavItem[] = [
     icon: '⚛️',
     items: [
       { text: '阶段概览', icon: '📖', link: '/S2-框架深入/' },
-      { text: '框架对比', icon: '⚖️', link: '/S2-框架深入/04-框架对比/' },
+      { text: '框架设计思想', icon: '🧠', link: '/S2-框架深入/07-框架设计思想' },
+      { text: '框架对比', icon: '⚖️', link: '/S2-框架深入/04-框架对比' },
       { text: 'Angular22', icon: '🅰️', link: '/S2-框架深入/03-Angular22' },
-      { text: 'React19', icon: '⚛️', link: '/S2-框架深入/02-React19/' },
+      { text: 'React19', icon: '⚛️', link: '/S2-框架深入/02-React19' },
       { text: 'React深入浅出解析', icon: '🔍', link: '/S2-框架深入/06-React深入浅出解析' },
       { text: 'Vue3', icon: '💚', link: '/S2-框架深入/01-Vue3' },
       { text: 'Vue3源码解析', icon: '🔧', link: '/S2-框架深入/05-Vue3.0源码深度解析' },

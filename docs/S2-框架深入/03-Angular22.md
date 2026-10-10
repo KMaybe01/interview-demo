@@ -1,7 +1,68 @@
-# 🚀 [Angular 22](https://angular.dev) 完整学习指南
+# 篇三 · 03 [Angular 22](https://angular.dev) 完整学习指南 🚀
 
-> 🎯 **面试星级**：★★★★★ | **建议用时**：5 天
-> Angular 22 系统学习指南，覆盖组件、模板、DI、Signals、RxJS、路由、表单、性能优化与面试题、源码级原理、Zoneless 深度解析、Signal Forms 稳定版、@Service 装饰器、injectAsync 异步 DI、项目实战重难点、内存泄漏排查、深度面试追问题
+> **面试权重**：★★★★☆（Angular 岗必考，跨框架横向对比高频） ｜ **建议用时**：5 天 ｜ **前置**：TypeScript 装饰器与泛型、RxJS 基础、S1 基础夯实
+>
+> **本篇定位**：S2 框架深入的主框架篇。以「DI → 变更检测 → Signals → 路由与表单 → 源码级原理 → 工程与性能」为主线，把 Angular 讲成一套**能扛住源码级追问**的体系，并时刻与 Vue/React 做横向对照。
+>
+> Angular 22 系统学习指南，覆盖组件、模板、DI、Signals、RxJS、路由、表单、性能优化与面试题、源码级原理、Zoneless 深度解析、Signal Forms、`@Service` 装饰器、`injectAsync` 异步 DI、项目实战重难点、内存泄漏排查、深度面试追问题
+>
+> 📌 **版本现状（2026-10-10 联网核验）**：`@angular/core` 最新 stable 为 **22.2.2**（`next` 为 `22.3.0-next.1`）；21.x LTS 为 `21.2.25`。据官方 v22 发布说明，**Signal Forms 与 Angular Aria 已转 stable**，**OnPush 成为默认变更检测策略**，**Zoneless 自 v21 起对新项目默认启用**。
+>
+> ⚠️ **TypeScript 版本适配**：Angular 22 的 `compiler-cli` 要求 `typescript >=6.0 <6.1`，**不支持 TS 7**（TS 最新 stable 为 `7.0.2`，React/Vue 技术栈常用）。这是面试里最容易答错的版本细节。
+
+## 🧭 核心考点
+
+| 模块 | 必会考点 | 面试权重 |
+|------|----------|----------|
+| 依赖注入 | 分层注入器、`Injectable` 作用域、`InjectionToken`、`inject()` 与 `@Service` | 🔥🔥🔥 |
+| 变更检测 | Zone.js 触发 vs Signals 精确通知、OnPush 默认化、Zoneless 迁移 | 🔥🔥🔥 |
+| Signals | `signal`/`computed`/`effect`、`linkedSignal`、`resource()` 与 Signals/RxJS 互操作 | 🔥🔥🔥 |
+| 路由与表单 | 守卫执行顺序、Signal Forms vs Reactive Forms 选型、跨字段校验 | 🔥🔥 |
+| 模板与编译 | AOT/JIT、`@if`/`@for` Control Flow、`@defer` 增量水合 | 🔥🔥 |
+| 源码级 | DI 实现、变更检测遍历、Signals 依赖图、模板编译产物 | 🔥 |
+| 工程与性能 | 内存泄漏与 `takeUntilDestroyed`、SSR、大型应用优化 | 🔥🔥 |
+
+## 📑 本篇题目索引（共 35 题）
+
+> 难度：⭐⭐ 以下必会，⭐⭐⭐ 进阶，⭐⭐⭐⭐+ 专家级 ｜ 频率：🔥 高频（80%+）｜ 📌 常考（50%~80%）｜ 📖 了解（<50%）
+
+| 题号 | 题目 | 难度 | 频率 |
+|------|------|------|------|
+| Q1 | Angular 的变更检测机制是什么？Zone.js 和 Signals 有什么区别？ | ⭐⭐⭐ | 🔥 |
+| Q2 | Angular 依赖注入（DI）的核心原理是什么？ | ⭐⭐⭐ | 🔥 |
+| Q3 | Signals 和 Observables 的核心区别？ | ⭐⭐⭐ | 🔥 |
+| Q4 | Angular 的生命周期执行顺序？哪些在 SSR 中不执行？ | ⭐⭐⭐ | 📌 |
+| Q5 | Angular 的 `input()`/`output()`/`model()` vs 旧 `@Input`/`@Output`/`@ViewChild` 原理？ | ⭐⭐⭐ | 🔥 |
+| Q6 | Angular Router 的路由守卫有哪些？执行顺序？ | ⭐⭐⭐ | 📌 |
+| Q7 | Angular 三种表单方案全面对比（Signal Forms / Reactive Forms / Template-driven） | ⭐⭐⭐ | 🔥 |
+| Q8 | Signal Forms 与 Reactive Forms 的核心区别？Angular 为什么要推出 Signal Forms？ | ⭐⭐⭐⭐ | 🔥 |
+| Q9 | 模板驱动表单为什么不适合复杂场景？底层脏检查机制是什么？ | ⭐⭐⭐ | 📌 |
+| Q10 | Angular 表单的 touched/dirty/pristine/untouched 四种状态的区别？实际业务中如何使用？ | ⭐⭐ | 📌 |
+| Q11 | 如何在 Angular 中实现跨字段验证？三种方案分别怎么做？ | ⭐⭐⭐ | 📌 |
+| Q12 | 动态表单（运行时增减字段）如何实现？FormArray vs Signal 数组？ | ⭐⭐⭐⭐ | 📌 |
+| Q13 | asyncValidator 与 debounceTime 结合使用的最佳实践？如何避免请求风暴？ | ⭐⭐⭐ | 📌 |
+| Q14 | Signal Forms 中 `formField` 指令的工作原理是什么？它如何实现双向绑定？ | ⭐⭐⭐⭐ | 📌 |
+| Q15 | 模板驱动表单中 `ngModel` 和 `FormControl` 是什么关系？为什么说它们是"同一个底层"？ | ⭐⭐⭐ | 📖 |
+| Q16 | Angular 22 表单如何处理 SSR 场景？三种方案的 SSR 差异？ | ⭐⭐⭐ | 📖 |
+| Q17 | 如何选择 Angular 表单方案？给出从"登录页"到"复杂配置页"的选型建议？ | ⭐⭐⭐ | 📌 |
+| Q18 | Angular 中如何防止内存泄漏？最佳实践？ | ⭐⭐⭐ | 🔥 |
+| Q19 | Angular 19+ 的 `resource()` 和 `httpResource()` 是什么？ | ⭐⭐⭐⭐ | 📌 |
+| Q20 | Angular 22 Zoneless 模式下如何迁移？ | ⭐⭐⭐⭐ | 🔥 |
+| Q21 | Angular 的 AOT 和 JIT 编译有什么区别？ | ⭐⭐⭐ | 🔥 |
+| Q22 | Angular 中如何实现跨组件通信？ | ⭐⭐⭐ | 🔥 |
+| Q23 | 如何优化大型 Angular 应用的性能？ | ⭐⭐⭐ | 🔥 |
+| Q24 | Standalone 组件 vs NgModule 有什么区别？ | ⭐⭐⭐ | 🔥 |
+| Q25 | 纯管道 vs 非纯管道的区别？ | ⭐⭐⭐ | 📌 |
+| Q26 | Angular 模块加载方式有哪些？ | ⭐⭐ | 📖 |
+| Q27 | Angular 有哪些跨平台能力？ | ⭐ | 📖 |
+| Q28 | Angular 变更检测与 React 的区别？ | ⭐⭐⭐ | 📌 |
+| Q29 | Angular DI 与 React Context 的区别？ | ⭐⭐⭐ | 📌 |
+| Q30 | Angular Zone.js → Signals 迁移深度分析 | ⭐⭐⭐⭐ | 📌 |
+| Q31 | Angular Signals 与 Vue 3 Signals 的区别？ | ⭐⭐⭐ | 📌 |
+| Q32 | Token 刷新拦截器（完整实现） | ⭐⭐⭐ | 📌 |
+| Q33 | Angular DI 原理深度 | ⭐⭐⭐⭐ | 📌 |
+| Q34 | takeUntilDestroyed 防止内存泄漏（Angular 22+） | ⭐⭐⭐ | 🔥 |
+| Q35 | Angular 20+ 新特性一览 | ⭐⭐ | 📌 |
 
 ---
 
@@ -4995,6 +5056,10 @@ export class PerformanceService {
 
 ### Q1：Angular 的变更检测机制是什么？Zone.js 和 Signals 有什么区别？
 
+**难度**：⭐⭐⭐ ｜ **频率**：🔥 ｜ **考点**：Zone.js 打补丁触发全局变更检测 vs Signals 精确通知依赖节点的差异
+
+**💡 记忆关键词**：Zone.js 打补丁 / 自上而下遍历 / 精确通知 / OnPush 默认化
+
 **Angular 变更检测的演进三阶段：**
 
 ```
@@ -5035,7 +5100,16 @@ export class PerformanceService {
 > ```
 > **懒加载不初始化问题：** `providedIn: 'root'` 的服务不会被"急切"创建。Angular 的注入器是懒创建的——只有在组件树中实际注入时，才会创建实例。如果某个懒加载模块 never 注入某个 root 服务，该服务 never 被实例化。
 
+
+**⚠️ 常见误区**：说「Zoneless 就是不用变更检测了」——去掉的是 Zone.js 的触发源，检测与渲染仍在
+
+**📝 一句话总结**：Zone.js 解决「什么时候检查」，Signals 解决「检查谁」，Zoneless 是把前者换成显式通知
+
 ### Q2：Angular 依赖注入（DI）的核心原理是什么？
+
+**难度**：⭐⭐⭐ ｜ **频率**：🔥 ｜ **考点**：分层注入器、提供者作用域、Token 与 inject() 的解析流程
+
+**💡 记忆关键词**：分层注入器 / providedIn / InjectionToken / inject()
 
 **DI 的三大核心角色：**
 
@@ -5096,7 +5170,16 @@ constructor(@Optional() private logger?: LoggerService) {}
 > ```
 > **根本改进：** `input()` 是基于 Signal 的"推送"模式——数据变化精确推送到消费组件，无需全树遍历，也无需手动配置 OnPush。而 `@Input()` 是基于 Zone.js 的"拉取"模式——异步事件后从根全量遍历。Angular 22 默认 Zoneless 下，`@Input()` 装饰器虽仍可用但不再享受自动检测。**推荐全面使用 `input()`/`output()`/`model()`。**
 
+
+**⚠️ 常见误区**：以为所有服务都是应用级单例（组件级 providers 会创建独立实例）
+
+**📝 一句话总结**：Angular DI 是「分层注入器 + Token 解析」，作用域由提供者注册的位置决定
+
 ### Q3：Signals 和 Observables 的核心区别？
+
+**难度**：⭐⭐⭐ ｜ **频率**：🔥 ｜ **考点**：Signals 是同步可读取的状态容器，Observables 是异步流，两者职责不同
+
+**💡 记忆关键词**：拉取 vs 推送 / 同步读取 / 流操作符 / 互操作
 
 | 维度 | Signals | Observables (RxJS) |
 |------|---------|-------------------|
@@ -5131,7 +5214,16 @@ userResource = resource({
 })
 ```
 
+
+**⚠️ 常见误区**：断言 Signals 取代 RxJS（异步编排仍需 RxJS，二者通过 toSignal/toObservable 互操作）
+
+**📝 一句话总结**：Signals 管「当前值」，RxJS 管「随时间到达的多个值」，组合使用而非替代
+
 ### Q4：Angular 的生命周期执行顺序？哪些在 SSR 中不执行？
+
+**难度**：⭐⭐⭐ ｜ **频率**：📌 ｜ **考点**：生命周期钩子执行顺序，以及 SSR 下不执行的钩子
+
+**💡 记忆关键词**：ngOnInit / ngAfterViewInit / ngOnDestroy / afterNextRender
 
 ```
 组件创建
@@ -5153,7 +5245,16 @@ userResource = resource({
 - `constructor` 中不要做复杂初始化（依赖可能还没准备好）
 - `ngOnInit` 才是业务初始化的正确位置
 
+
+**⚠️ 常见误区**：在 ngOnInit 里直接操作 DOM 或依赖视图尺寸（视图尚未就绪，且 SSR 下 DOM 钩子不执行）
+
+**📝 一句话总结**：SSR 场景把 DOM 相关逻辑放进 afterNextRender，构造与初始化逻辑放进 ngOnInit
+
 ### Q5：Angular 的 `input()`/`output()`/`model()` vs 旧 `@Input`/`@Output`/`@ViewChild` 原理？
+
+**难度**：⭐⭐⭐ ｜ **频率**：🔥 ｜ **考点**：signal-based input()/output()/model() 与装饰器 API 在类型与时序上的差异
+
+**💡 记忆关键词**：input() / output() / model() / viewChild() 信号化
 
 ```typescript
 @Component({ selector: 'app-child', template: `...` })
@@ -5195,7 +5296,16 @@ export class ModernComponent {
 }
 ```
 
+
+**⚠️ 常见误区**：以为 input() 在构造函数里就能读到值（最早要到 ngOnInit 之后）
+
+**📝 一句话总结**：新 API 把输入输出统一为信号，带来更强的类型推导与更明确的读取时机
+
 ### Q6：Angular Router 的路由守卫有哪些？执行顺序？
+
+**难度**：⭐⭐⭐ ｜ **频率**：📌 ｜ **考点**：CanActivate / CanActivateChild / CanDeactivate / CanLoad / Resolve 的执行顺序
+
+**💡 记忆关键词**：守卫链 / 顺序 / 返回 UrlTree 重定向
 
 ```typescript
 const routes: Routes = [{
@@ -5251,7 +5361,16 @@ export class AuthGuard {
 > ```
 > **最佳实践：** 组件内用 Signal，跨组件/HTTP 用 Observable，通过 RxJS Interop 桥接。
 
+
+**⚠️ 常见误区**：以为守卫可以并行执行（实际串行，任一返回 false 即终止导航）
+
+**📝 一句话总结**：守卫串行执行、可返回 UrlTree 做重定向，函数式守卫是 v15+ 的推荐写法
+
 ### Q7：Angular 三种表单方案全面对比（Signal Forms / Reactive Forms / Template-driven）
+
+**难度**：⭐⭐⭐ ｜ **频率**：🔥 ｜ **考点**：Signal Forms / Reactive Forms / Template-driven 三种方案的心智模型与适用边界
+
+**💡 记忆关键词**：声明式 vs 命令式 / 类型安全 / 复杂度边界
 
 #### 一、三种方案 12 维度对比表
 
@@ -5463,7 +5582,16 @@ export class LoginTemplateComponent {
 
 #### 五、面试八股文（10 题）
 
+
+**⚠️ 常见误区**：一律用 Reactive Forms 或一律用模板驱动，忽视表单复杂度与团队习惯
+
+**📝 一句话总结**：简单表单用模板驱动，复杂动态表单用 Reactive/Signal Forms，Angular 22 起 Signal Forms 已 stable
+
 ### Q8：Signal Forms 与 Reactive Forms 的核心区别？Angular 为什么要推出 Signal Forms？
+
+**难度**：⭐⭐⭐⭐ ｜ **频率**：🔥 ｜ **考点**：Signal Forms 以信号承载字段状态，替代 FormControl 的命令式模型
+
+**💡 记忆关键词**：信号化字段 / 类型推导 / 更少样板 / 与 Reactive Forms 互操作
 
 **核心区别：**
 
@@ -5489,7 +5617,16 @@ Signal Forms 解决的问题：
 **面试追问：** *Signal Forms 能完全替代 Reactive Forms 吗？*
 > 目前不能。Signal Forms 的 `validateHttp()` 等 API 仍在演进中，且第三方库（如 Angular Material 的 mat-form-field）对 Reactive Forms 的支持更成熟。Angular 22 推荐新项目用 Signal Forms，旧项目渐进式迁移。
 
+
+**⚠️ 常见误区**：以为 Signal Forms 是完全不兼容的重写（官方提供与既有表单的互操作路径）
+
+**📝 一句话总结**：Signal Forms 用「信号 + 声明式校验」取代 FormControl 树，类型推导更强、样板更少
+
 ### Q9：模板驱动表单为什么不适合复杂场景？底层脏检查机制是什么？
+
+**难度**：⭐⭐⭐ ｜ **频率**：📌 ｜ **考点**：模板驱动表单依赖 NgModel 的脏检查与异步更新，复杂场景难以控制
+
+**💡 记忆关键词**：NgModel / 异步更新 / ngModelOptions / 难以单测
 
 **不适合复杂场景的原因：**
 ```
@@ -5518,7 +5655,16 @@ ngModel 工作流程：
 **面试追问：** *模板驱动表单中的 `ngModelChange` 和 `(input)` 事件有什么区别？*
 > `ngModelChange` 是 Angular 输出事件，在 ngModel 内部更新后触发，值已经是 Angular 处理过的。`(input)` 是原生 DOM 事件，值需要从 `$event.target.value` 手动获取。模板驱动表单推荐用 `ngModelChange`，因为它保证值已经过 Angular 表单管道处理。
 
+
+**⚠️ 常见误区**：用 [(ngModel)] 做复杂联动与动态校验，最终不得不退回 Reactive Forms
+
+**📝 一句话总结**：模板驱动适合「简单、静态、低校验要求」的表单，复杂场景必须上 Reactive/Signal Forms
+
 ### Q10：Angular 表单的 touched/dirty/pristine/untouched 四种状态的区别？实际业务中如何使用？
+
+**难度**：⭐⭐ ｜ **频率**：📌 ｜ **考点**：touched/dirty/pristine/untouched 四种状态的语义与业务用法
+
+**💡 记忆关键词**：touched 失焦 / dirty 修改过 / pristine 未改
 
 **四种状态定义：**
 
@@ -5557,7 +5703,16 @@ this.form.markAllAsTouched();
 **面试追问：** *`markAllAsTouched()` 和 `markAsDirty()` 的区别？什么时候用哪个？*
 > `markAllAsTouched()` 遍历所有子控件，将 touched 设为 true — 用于**提交时强制显示所有验证错误**。`markAsDirty()` 只影响当前控件 — 用于**手动标记某个控件已被修改**。提交表单用 `markAllAsTouched()`，自定义场景用 `markAsDirty()`。
 
+
+**⚠️ 常见误区**：把 dirty 当成「校验失败」，实际它只表示值被修改过，与合法性无关
+
+**📝 一句话总结**：pristine/dirty 记「值是否被改」，untouched/touched 记「是否失焦过」，错误提示通常等 touched
+
 ### Q11：如何在 Angular 中实现跨字段验证？三种方案分别怎么做？
+
+**难度**：⭐⭐⭐ ｜ **频率**：📌 ｜ **考点**：跨字段校验的三种实现：表单级验证器、字段级联动、Signal 派生
+
+**💡 记忆关键词**：表单级验证器 / setErrors / 派生信号
 
 **场景：** 密码确认 — `confirmPassword` 必须与 `password` 相同。
 
@@ -5628,7 +5783,16 @@ export class PasswordMatchDirective implements Validator {
 
 **对比：** Signal Forms 最简洁，Reactive Forms 其次，Template-driven 最繁琐。
 
+
+**⚠️ 常见误区**：在两个字段的验证器里互相读取对方值，导致校验循环与时序问题
+
+**📝 一句话总结**：跨字段校验应提升到「表单级」，由上层统一读取多个字段后给出错误
+
 ### Q12：动态表单（运行时增减字段）如何实现？FormArray vs Signal 数组？
+
+**难度**：⭐⭐⭐⭐ ｜ **频率**：📌 ｜ **考点**：动态表单在 FormArray 与 Signal 数组两种模型下的增删改与校验
+
+**💡 记忆关键词**：FormArray / push-remove / Signal 数组 / 不可变更新
 
 **场景：** 订单表单，用户可以动态添加/删除商品项。
 
@@ -5716,7 +5880,16 @@ export class OrderSignalComponent {
 
 **对比：** FormArray 有丰富的 API（push/removeAt/moveControl），Signal 数组更直观但需要手动管理不可变更新。
 
+
+**⚠️ 常见误区**：直接修改 Signal 数组的元素而不替换引用，导致变更检测不到更新
+
+**📝 一句话总结**：FormArray 用命令式 API 维护控件树，Signal 数组靠不可变替换触发更新
+
 ### Q13：asyncValidator 与 debounceTime 结合使用的最佳实践？如何避免请求风暴？
+
+**难度**：⭐⭐⭐ ｜ **频率**：📌 ｜ **考点**：asyncValidator 配合 debounceTime 抑制请求风暴的关键写法
+
+**💡 记忆关键词**：debounceTime / distinctUntilChanged / switchMap / 请求风暴
 
 **问题：** 用户快速输入时，每次值变化都触发异步验证请求 → 请求风暴。
 
@@ -5776,7 +5949,16 @@ const signupForm = form(signupModel, (schemaPath) => {
 5. Signal Forms 的 validateHttp 内置了以上全部
 ```
 
+
+**⚠️ 常见误区**：只在验证器里加防抖，却没有用 switchMap 取消过期请求（结果可能乱序）
+
+**📝 一句话总结**：防抖 + 去重 + switchMap 三件套，才能既减少请求又保证结果顺序正确
+
 ### Q14：Signal Forms 中 `formField` 指令的工作原理是什么？它如何实现双向绑定？
+
+**难度**：⭐⭐⭐⭐ ｜ **频率**：📌 ｜ **考点**：formField 指令把控件与 DOM 元素绑定，并桥接值与状态的双向同步
+
+**💡 记忆关键词**：指令绑定 / 值写入 / 状态同步 / 与 Signal Forms 的配合
 
 **工作原理：**
 
@@ -5805,7 +5987,16 @@ formField 指令职责：
 **面试追问：** *`formField` 指令如何处理自定义组件（如日期选择器、下拉框）？*
 > 与 ngModel 一样，自定义控件实现 `ControlValueAccessor` 接口（writeValue / registerOnChange / registerOnTorch），formField 指令会自动识别并绑定。Angular 22 的 signal-based ControlValueAccessor 正在设计中，未来会提供更简洁的 API。
 
+
+**⚠️ 常见误区**：以为 formField 自己做校验（校验仍由 schema/验证器定义，指令只负责绑定）
+
+**📝 一句话总结**：formField 负责「控件 ↔ DOM」的值与状态桥接，校验规则由表单模型定义
+
 ### Q15：模板驱动表单中 `ngModel` 和 `FormControl` 是什么关系？为什么说它们是"同一个底层"？
+
+**难度**：⭐⭐⭐ ｜ **频率**：📖 ｜ **考点**：模板驱动的 ngModel 在底层仍会创建 FormControl
+
+**💡 记忆关键词**：NgModel 桥接 / 同一个 FormControl / 复用能力
 
 **关系图：**
 
@@ -5860,7 +6051,16 @@ export class NgModel implements ControlValueAccessor {
 **面试追问：** *为什么 Angular 要提供两种不同的 API 来做同一件事？*
 > 设计哲学不同。Template-driven Forms 面向"模板思维"的开发者 — 声明式、简单、学习成本低。Reactive Forms 面向"代码思维"的开发者 — 显式、可测试、适合复杂场景。底层共享 AbstractControl 是为了代码复用和一致性。
 
+
+**⚠️ 常见误区**：以为模板驱动与 Reactive 是两套完全独立的实现（底层共享控件模型）
+
+**📝 一句话总结**：ngModel 是 FormControl 的模板层包装，这也是模板驱动能复用校验器的原因
+
 ### Q16：Angular 22 表单如何处理 SSR 场景？三种方案的 SSR 差异？
+
+**难度**：⭐⭐⭐ ｜ **频率**：📖 ｜ **考点**：三种表单方案在 SSR 下的水合与状态一致性差异
+
+**💡 记忆关键词**：SSR 水合 / 状态序列化 / 首屏校验
 
 **SSR 核心问题：** 表单状态在服务端创建，需要序列化到 HTML，客户端 hydrate 时恢复。
 
@@ -5892,7 +6092,16 @@ export class FormComponent {
 // SSR 输出的 HTML 包含表单状态，客户端 hydrate 时自动恢复
 ```
 
+
+**⚠️ 常见误区**：在 SSR 阶段执行依赖 DOM 的表单逻辑导致服务端报错
+
+**📝 一句话总结**：SSR 下表单要避免触碰 DOM，并把「服务端渲染的值」与「客户端水合状态」对齐
+
 ### Q17：如何选择 Angular 表单方案？给出从"登录页"到"复杂配置页"的选型建议？
+
+**难度**：⭐⭐⭐ ｜ **频率**：📌 ｜ **考点**：从登录页到复杂配置页的表单选型决策路径
+
+**💡 记忆关键词**：复杂度分级 / 动态性 / 类型要求
 
 **按复杂度选型：**
 
@@ -5931,7 +6140,16 @@ export class FormComponent {
 动态表单看字段数量：少用 Signal 数组，多用 FormArray
 ```
 
+
+**⚠️ 常见误区**：把所有表单都做成「最灵活的方案」，结果样板代码膨胀、维护成本上升
+
+**📝 一句话总结**：按「字段是否动态 + 校验是否跨字段 + 类型要求」三问做选型决策
+
 ### Q18：Angular 中如何防止内存泄漏？最佳实践？
+
+**难度**：⭐⭐⭐ ｜ **频率**：🔥 ｜ **考点**：订阅、定时器、事件监听与 DOM 引用的泄漏场景及 takeUntilDestroyed 清理
+
+**💡 记忆关键词**：订阅泄漏 / DestroyRef / takeUntilDestroyed
 
 | 方案 | 适用场景 | 代码量 |
 |------|---------|--------|
@@ -5963,7 +6181,16 @@ export class SimpleComponent {
 }
 ```
 
+
+**⚠️ 常见误区**：只清了 subscribe 却忘了 setTimeout 与 window 事件监听
+
+**📝 一句话总结**：Angular 的清理核心是「把订阅绑到组件销毁信号」，takeUntilDestroyed 是最省心的写法
+
 ### Q19：Angular 19+ 的 `resource()` 和 `httpResource()` 是什么？
+
+**难度**：⭐⭐⭐⭐ ｜ **频率**：📌 ｜ **考点**：resource()/httpResource() 把异步数据包装成带状态的信号资源
+
+**💡 记忆关键词**：resource / 加载状态 / 自动重取 / 与 Signals 集成
 
 ```typescript
 const userId = signal(1)
@@ -6003,7 +6230,16 @@ const userResource = httpResource<User>(() => `/api/users/${userId()}`)
 > ```
 > **是否完全移除装饰器：** Angular 团队计划逐步"缩减装饰器使用范围"，但不会完全移除。`@Component`/@Directive/@Injectable 作为框架核心元数据标记将继续存在。Angular 22 新增的编译时宏（如 `input()`/`output()`/`viewChild()`）表明"从装饰器向函数式 API 迁移"是长期趋势。
 
+
+**⚠️ 常见误区**：把 resource 当成一次性请求（它有加载态、可响应依赖变化自动重取）
+
+**📝 一句话总结**：resource 把「异步请求 + 加载/错误状态」统一建模为信号，省掉手写三态
+
 ### Q20：Angular 22 Zoneless 模式下如何迁移？
+
+**难度**：⭐⭐⭐⭐ ｜ **频率**：🔥 ｜ **考点**：Zoneless 迁移的启用方式、不兼容点与验证手段
+
+**💡 记忆关键词**：provideZonelessChangeDetection / 移除 zone.js / 显式通知
 
 **迁移四步骤：**
 
@@ -6032,7 +6268,16 @@ const data = httpResource(() => '/api/data')
 - `NgZone` API 的使用（`onStable`、`runOutsideAngular`）
 - 第三方库依赖 Zone.js 的自动检测
 
+
+**⚠️ 常见误区**：以为开启 Zoneless 后第三方库仍会自动触发更新（需要显式 markForCheck 或信号）
+
+**📝 一句话总结**：Zoneless 要求「状态变化必须可观测」，迁移重点是把隐式变更改成信号或显式通知
+
 ### Q21：Angular 的 AOT 和 JIT 编译有什么区别？
+
+**难度**：⭐⭐⭐ ｜ **频率**：🔥 ｜ **考点**：AOT 构建期编译模板、JIT 运行时编译，二者在体积与安全上的差异
+
+**💡 记忆关键词**：构建期编译 / 模板类型检查 / 更小的运行时
 
 | 维度 | JIT（Just-in-Time） | AOT（Ahead-of-Time） |
 |------|-------------------|---------------------|
@@ -6047,7 +6292,16 @@ const data = httpResource(() => '/api/data')
 - 减少 bundle 体积（无需在浏览器中编译模板）
 - 更快的首次渲染（无需等待编译）
 
+
+**⚠️ 常见误区**：以为 AOT 只是「构建更快」，真正收益是运行时更小、模板错误提前暴露
+
+**📝 一句话总结**：AOT 把模板编译提前到构建期，换来更小的体积、更快的启动与模板类型检查
+
 ### Q22：Angular 中如何实现跨组件通信？
+
+**难度**：⭐⭐⭐ ｜ **频率**：🔥 ｜ **考点**：Input/Output、服务共享状态、Signal Store、ViewChild 等通信方式
+
+**💡 记忆关键词**：输入输出 / 共享服务 / Signal Store
 
 | 方式 | 适用范围 | 方向 |
 |------|---------|------|
@@ -6076,7 +6330,16 @@ export class AnyComponent {
 }
 ```
 
+
+**⚠️ 常见误区**：用共享服务传递一次性事件，导致状态残留与时序耦合
+
+**📝 一句话总结**：父子用输入输出，跨组件共享用服务 + 信号，命令式调用用 viewChild
+
 ### Q23：如何优化大型 Angular 应用的性能？
+
+**难度**：⭐⭐⭐ ｜ **频率**：🔥 ｜ **考点**：OnPush、TrackBy、@defer、虚拟滚动与构建优化的组合拳
+
+**💡 记忆关键词**：OnPush / trackBy / @defer / 虚拟滚动
 
 ```
 📦 构建优化
@@ -6107,7 +6370,16 @@ export class AnyComponent {
 
 ---
 
+
+**⚠️ 常见误区**：只谈 OnPush 不谈 trackBy（列表场景下后者往往收益更大）
+
+**📝 一句话总结**：优化顺序：减少检测范围（OnPush/Zoneless）→ 减少 DOM（虚拟滚动/@defer）→ 减少打包体积
+
 ### Q24：Standalone 组件 vs NgModule 有什么区别？
+
+**难度**：⭐⭐⭐ ｜ **频率**：🔥 ｜ **考点**：Standalone 组件自带依赖声明，NgModule 是集中式声明
+
+**💡 记忆关键词**：standalone: true / imports 自带 / 更少样板
 
 | 维度 | Standalone | NgModule |
 |------|-----------|----------|
@@ -6117,7 +6389,16 @@ export class AnyComponent {
 | 推荐度 | ✅ Angular 17+ 推荐 | ⚠️ 旧项目兼容 |
 | 适用场景 | 新项目 | 遗留项目 |
 
+
+**⚠️ 常见误区**：以为 Standalone 组件不能与 NgModule 混用（可以渐进迁移）
+
+**📝 一句话总结**：Standalone 把「依赖声明」下沉到组件，减少 NgModule 样板并利于渐进迁移
+
 ### Q25：纯管道 vs 非纯管道的区别？
+
+**难度**：⭐⭐⭐ ｜ **频率**：📌 ｜ **考点**：纯管道只在输入引用变化时执行，非纯管道每次检测都执行
+
+**💡 记忆关键词**：pure / impure / 性能代价
 
 - **纯管道**：只在输入值变化时重新计算（通过引用比较），性能好
 - **非纯管道**：每次变更检测都重新计算，性能较差
@@ -6127,7 +6408,16 @@ export class AnyComponent {
 @Pipe({ name: 'impure', pure: false }) // 非纯管道
 ```
 
+
+**⚠️ 常见误区**：把带副作用的逻辑写进管道，或滥用非纯管道拖垮性能
+
+**📝 一句话总结**：非纯管道每次变更检测都会重算，只应在确实需要感知内部变化时使用
+
 ### Q26：Angular 模块加载方式有哪些？
+
+**难度**：⭐⭐ ｜ **频率**：📖 ｜ **考点**：预加载、懒加载与自定义预加载策略
+
+**💡 记忆关键词**：懒加载 / PreloadAllModules / 自定义策略
 
 ```
 Eager（立即加载）: 在 AppModule 中直接导入 → 包含在初始 Bundle 中
@@ -6135,7 +6425,16 @@ Lazy（懒加载）: loadChildren / loadComponent → 按需加载代码块
 Preload（预加载）: PreloadAllModules → 在初始加载后后台加载
 ```
 
+
+**⚠️ 常见误区**：把所有模块都设为预加载，抵消了懒加载的首屏收益
+
+**📝 一句话总结**：懒加载保证首屏体积，预加载策略决定「何时补上后续路由」
+
 ### Q27：Angular 有哪些跨平台能力？
+
+**难度**：⭐ ｜ **频率**：📖 ｜ **考点**：Angular 的跨平台能力（Web/SSR/桌面/移动端方案）
+
+**💡 记忆关键词**：SSR / NativeScript / Ionic / Electron
 
 ```
 Web        → @angular/platform-browser
@@ -6146,7 +6445,16 @@ Desktop    → Electron + Angular
 PWA        → @angular/service-worker
 ```
 
+
+**⚠️ 常见误区**：把 Angular 的跨平台等同于「一套代码跑所有端」（实际是分层复用 + 平台适配）
+
+**📝 一句话总结**：跨平台能力来自「渲染器抽象 + 平台适配器」，业务逻辑可复用、视图层仍需适配
+
 ### Q28：Angular 变更检测与 React 的区别？
+
+**难度**：⭐⭐⭐ ｜ **频率**：📌 ｜ **考点**：Angular 的自上而下检测 vs React 的自上而下重渲染，两者优化入口不同
+
+**💡 记忆关键词**：遍历检测 / 重渲染 / OnPush vs memo
 
 | 维度 | Angular | React |
 |------|---------|-------|
@@ -6175,7 +6483,16 @@ function MyComponent() {
 }
 ```
 
+
+**⚠️ 常见误区**：把 OnPush 等同于 React.memo（前者是策略，后者是组件记忆化，机制不同）
+
+**📝 一句话总结**：Angular 用「策略」裁剪检测范围，React 用「记忆化 + 不可变数据」避免重渲染
+
 ### Q29：Angular DI 与 React Context 的区别？
+
+**难度**：⭐⭐⭐ ｜ **频率**：📌 ｜ **考点**：Angular DI 是运行时注入体系，React Context 是组件树取值通道
+
+**💡 记忆关键词**：注入器层级 / 作用域 / 组件树取值
 
 | 维度 | Angular DI | React Context |
 |------|-----------|---------------|
@@ -6190,7 +6507,16 @@ function MyComponent() {
 **关键差异：** Angular DI 是框架级基础设施，内建分层注入器和可选修饰符，适合大型企业级应用的依赖管理。React Context 本质是组件树上的值传递机制，适合中浅层级的共享状态，深层嵌套时性能问题较明显。
 
 
+
+**⚠️ 常见误区**：以为 Context 能做到 DI 的「作用域隔离与可替换实现」（Context 没有生命周期与作用域概念）
+
+**📝 一句话总结**：DI 提供「谁能拿到什么、作用域多大」，Context 只提供「值沿树传递」
+
 ### Q30：Angular Zone.js → Signals 迁移深度分析
+
+**难度**：⭐⭐⭐⭐ ｜ **频率**：📌 ｜ **考点**：从 Zone.js 到 Signals 的心智迁移：触发源、检测范围与调试方式
+
+**💡 记忆关键词**：触发源 / 检测范围 / 调试手段 / 迁移清单
 
 **Zone.js 原理：**
 ```
@@ -6243,7 +6569,16 @@ signal(0) → .get() → track 当前 effect
 > **解决方案：** `NgZone.run()` 手动触发、迁移到 Signals 模式、或 `ChangeDetectorRef.markForCheck()`。
 
 
+
+**⚠️ 常见误区**：以为迁移只是「删掉 zone.js」，忽略第三方库与手动 markForCheck 的改造
+
+**📝 一句话总结**：迁移的本质是把「隐式全局触发」改成「显式信号通知」，其余代码按需补通知
+
 ### Q31：Angular Signals 与 Vue 3 Signals 的区别？
+
+**难度**：⭐⭐⭐ ｜ **频率**：📌 ｜ **考点**：Angular Signals 与 Vue 响应式在 API 形态与更新粒度上的异同
+
+**💡 记忆关键词**：signal / computed / effect / 依赖追踪
 
 | 维度 | Angular Signals | Vue 3 Signals |
 |------|----------------|---------------|
@@ -6253,7 +6588,16 @@ signal(0) → .get() → track 当前 effect
 | **生态整合** | RxJS 深度整合 | 独立生态 |
 
 
+
+**⚠️ 常见误区**：说两者完全一样（Angular 没有模板级 PatchFlag 优化，Vue 的更新粒度更偏模板绑定）
+
+**📝 一句话总结**：两者都是细粒度依赖追踪，但 Angular 偏「显式 API + 调度」，Vue 偏「自动代理 + 编译优化」
+
 ### Q32：Token 刷新拦截器（完整实现）
+
+**难度**：⭐⭐⭐ ｜ **频率**：📌 ｜ **考点**：Token 刷新拦截器的并发控制、失败重试与跨标签页共享
+
+**💡 记忆关键词**：拦截器链 / 并发刷新 / exhaustMap / BroadcastChannel
 
 ```ts
 @Injectable()
@@ -6357,7 +6701,16 @@ sequenceDiagram
 
 ---
 
+
+**⚠️ 常见误区**：用 switchMap 防并发（应改用 exhaustMap，否则刷新会被反复取消重发）
+
+**📝 一句话总结**：刷新拦截器的关键词是「只发一次 + 队列等待 + 新 token 重试」，多标签页再叠加广播
+
 ### Q33：Angular DI 原理深度
+
+**难度**：⭐⭐⭐⭐ ｜ **频率**：📌 ｜ **考点**：DI 的注入器树、解析算法与提供者覆盖机制
+
+**💡 记忆关键词**：注入器树 / 解析算法 / 覆盖 provider
 
 #### 分层注入器
 
@@ -6497,7 +6850,16 @@ const routes = [
 
 ---
 
+
+**⚠️ 常见误区**：以为在子组件 providers 里重复声明会复用父级实例（实际会创建新实例）
+
+**📝 一句话总结**：DI 的核心数据结构是「注入器树 + 提供者记录」，实例归属由注册位置决定
+
 ### Q34：takeUntilDestroyed 防止内存泄漏（Angular 22+）
+
+**难度**：⭐⭐⭐ ｜ **频率**：🔥 ｜ **考点**：takeUntilDestroyed 借 DestroyRef 在组件销毁时自动取消订阅
+
+**💡 记忆关键词**：takeUntilDestroyed / DestroyRef / 自动取消
 
 Angular 22+ 推荐使用 `takeUntilDestroyed`，基于 `DestroyRef`，无需手动管理 `Subject` 和 `ngOnDestroy`。
 
@@ -6555,7 +6917,16 @@ flowchart LR
 
 ---
 
+
+**⚠️ 常见误区**：在构造函数之外调用 takeUntilDestroyed 却没有传入 DestroyRef（需要注入上下文）
+
+**📝 一句话总结**：takeUntilDestroyed 把「手动 unsubscribe」变成「绑定到销毁信号」，是防泄漏首选
+
 ### Q35：Angular 20+ 新特性一览
+
+**难度**：⭐⭐ ｜ **频率**：📌 ｜ **考点**：v16 起的 Signals 演进、v17 的 Control Flow 与 @defer、v19 的 resource、v22 的 Signal Forms 稳定化
+
+**💡 记忆关键词**：Signals / Control Flow / @defer / resource / Signal Forms
 
 | 特性 | 描述 | 版本 |
 |------|------|------|
@@ -6596,4 +6967,26 @@ flowchart LR
 
 ---
 
+
+
+
+**⚠️ 常见误区**：把开发者预览期的特性说成已稳定（如 httpResource 需注意版本与成熟度标注）
+
+**📝 一句话总结**：Angular 近几代主线是「去 Zone.js + 全面信号化 + 模板能力现代化」，v22 把 Signal Forms 推向 stable
+
+---
+
+## ✅ 自测清单（Angular 22）
+
+- [ ] 说清 Zone.js 与 Signals 分别解决「何时检查」与「检查谁」，以及 Zoneless 迁移要改什么
+- [ ] 讲清 DI 的分层注入器与解析流程，能解释「组件级 providers 为什么会得到新实例」
+- [ ] 说清 Signals 与 RxJS 的职责边界，以及 `toSignal` / `toObservable` 的互操作场景
+- [ ] 能画出路由守卫的串行执行顺序，并写出一个返回 `UrlTree` 的重定向守卫
+- [ ] 讲清 Signal Forms / Reactive Forms / 模板驱动三者的选型路径（含 Angular 22 的成熟度）
+- [ ] 能实现带防抖的异步校验器，并说明为什么要用 `exhaustMap`/`switchMap`
+- [ ] 说出四类内存泄漏场景，并能用 `takeUntilDestroyed` 写出正确的清理代码
+- [ ] 说清 AOT vs JIT 的真实收益，以及 Control Flow、`@defer` 各自解决的问题
+- [ ] 讲清 OnPush 与 React.memo 的机制差异（策略 vs 记忆化）
+- [ ] 能说出 Angular 22 与 TypeScript 的版本适配约束（`typescript >=6.0 <6.1`，不支持 TS 7）
+- [ ] 对比 Angular DI 与 React Context：作用域、生命周期、可替换实现三方面
 

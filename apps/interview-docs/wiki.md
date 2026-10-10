@@ -69,12 +69,12 @@ graph LR
 | 阶段 | 目录 | Markdown 文件数 | 导航条目数 |
 |------|------|----------------:|-----------:|
 | S1 | `docs/S1-基础夯实/` | 14 | 11 |
-| S2 | `docs/S2-框架深入/` | 7 | 7 |
+| S2 | `docs/S2-框架深入/` | 8 | 8 |
 | S3 | `docs/S3-进阶提升/` | 8 | 8 |
 | S4 | `docs/S4-面试冲刺/` | 19 | 19 |
 | S5 | `docs/S5-AI/` | 36 | 36 |
 | S6 | `docs/S6-Go/` | 33 | 33 |
-| **合计** | | **117** | **114**（另加「首页」） |
+| **合计** | | **118** | **115**（另加「首页」） |
 
 共 10 个 `index.md` 目录概览页。S1 是唯一一个三个 `index.md` 都没有进导航的阶段（S1 没有「阶段概览」条目）。
 
@@ -781,7 +781,7 @@ ANALYZE=true bun run build    # 生成 dist/stats.html 并自动打开
 interview-demo/                    ← monorepo 根
 ├── docs/                          ← 全部内容（共享，在本应用之外）
 │   ├── S1-基础夯实/                14 个文件
-│   ├── S2-框架深入/                7 个文件
+│   ├── S2-框架深入/                8 个文件
 │   ├── S3-进阶提升/                8 个文件
 │   ├── S4-面试冲刺/                19 个文件
 │   ├── S5-AI/                    36 个文件
@@ -947,7 +947,7 @@ Vitest 4 + jsdom + `@testing-library/react` 16 + `@testing-library/user-event` 1
 
 ```
 docs/S1-基础夯实/       HTML、CSS、JavaScript 核心、Web API、手写实现
-docs/S2-框架深入/       Vue3、React19、Angular22、框架对比
+docs/S2-框架深入/       Vue3、React19、Angular22、框架对比、框架设计思想
 docs/S3-进阶提升/       浏览器原理、性能优化、工程化、监控埋点、Node.js
 docs/S4-面试冲刺/       简历、项目复盘、反向面试、通关指南
 docs/S5-AI/            AI Agent、RAG、MCP/A2A、上下文工程、生成式 UI

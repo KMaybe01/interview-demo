@@ -1,7 +1,88 @@
-## 🚀 [React 19](https://react.dev) 完整学习指南
+# 篇二 · 02 [React 19](https://react.dev) 完整学习指南 🚀
 
-> 🎯 **面试星级**：★★★★★ | **建议用时**：5 天
+> **面试权重**：★★★★★（前端岗第一优先级，本仓库技术主线） ｜ **建议用时**：5 天 ｜ **前置**：JavaScript 事件循环、不可变数据、S1 基础夯实
+>
+> **本篇定位**：S2 框架深入的主框架篇。以「渲染链路 → Fiber 与调度 → 并发特性 → Hooks 安全 → Compiler → 服务端组件 → 工程与性能」为主线，把 React 讲成一套**能被源码级追问**的体系。
+>
 > React 19 系统学习指南，融合核心原理、高级特性、工程实践与面试题，从入门到精通、源码级原理、React Compiler 深度、项目实战重难点、内存泄漏排查、深度面试追问题
+>
+> 📌 **版本现状（2026-10-10 联网核验）**：React 最新 stable 为 **19.3.0**（本仓库依赖 `^19.2.7`）；React Compiler（`babel-plugin-react-compiler`）**1.0.0 已 GA**。文中涉及 `use()`、Actions、View Transitions 等均以 19.x stable 为准，canary/实验特性会单独标注。
+
+## 🧭 核心考点
+
+| 模块 | 必会考点 | 面试权重 |
+|------|----------|----------|
+| 渲染链路 | Trigger → Render → Commit 三阶段、双缓冲 Fiber 树、effect 收集 | 🔥🔥🔥 |
+| Fiber 与调度 | Fiber 数据结构、`MessageChannel` 时间切片、Lane 优先级、可中断与恢复 | 🔥🔥🔥 |
+| 并发特性 | `startTransition`、`useDeferredValue`、Suspense 与选择性水合 | 🔥🔥🔥 |
+| Hooks 安全 | 依赖完整性、闭包陷阱、清理函数、`useMemo`/`useCallback` 的滥用与必要性 | 🔥🔥🔥 |
+| React 19 新特性 | Actions、`useActionState`、`useFormStatus`、`useOptimistic`、`use()`、ref  cleanup | 🔥🔥 |
+| Compiler | 自动记忆化原理、与手写 memo 的关系、启用条件与边界 | 🔥🔥 |
+| 服务端组件 | RSC 与 SSR 的差异、`use client` 边界、流式渲染 | 🔥🔥 |
+| 工程与性能 | 虚拟列表、内存泄漏、Profiler 与渲染性能分析 | 🔥 |
+
+## 📑 本篇题目索引（共 56 题）
+
+> 难度：⭐⭐ 以下必会，⭐⭐⭐ 进阶，⭐⭐⭐⭐+ 专家级 ｜ 频率：🔥 高频（80%+）｜ 📌 常考（50%~80%）｜ 📖 了解（<50%）
+
+| 题号 | 题目 | 难度 | 频率 |
+|------|------|------|------|
+| Q1 | 说说 React 的渲染流程（Trigger → Render → Commit） | ⭐⭐⭐ | 🔥 |
+| Q2 | useEffect 的完整执行时序是什么？ | ⭐⭐ | 🔥 |
+| Q3 | React 19 Actions 是什么？解决了什么问题？ | ⭐⭐⭐ | 🔥 |
+| Q4 | React 中 key 的作用和最佳实践？ | ⭐⭐ | 🔥 |
+| Q5 | React 18 Concurrent Mode 解决了什么问题？ | ⭐⭐⭐⭐ | 🔥 |
+| Q6 | React 19 `use()` 与 useEffect 数据获取的区别？ | ⭐⭐⭐⭐ | 📌 |
+| Q7 | React 合成事件（SyntheticEvent）是什么？ | ⭐⭐⭐ | 🔥 |
+| Q8 | React Hooks 为什么不能放在条件/循环中？ | ⭐⭐⭐ | 🔥 |
+| Q9 | Server Component vs Client Component 的区别？ | ⭐⭐⭐⭐ | 🔥 |
+| Q10 | React.memo 和 useMemo 的区别？ | ⭐⭐ | 🔥 |
+| Q11 | React 19 Compiler 如何实现自动记忆化？ | ⭐⭐⭐⭐ | 🔥 |
+| Q12 | React Fiber 架构如何实现可中断渲染？ | ⭐⭐⭐⭐ | 🔥 |
+| Q13 | React 事件机制与原生事件的区别？ | ⭐⭐⭐ | 📌 |
+| Q14 | React Fiber 与 Vue 3 虚拟 DOM 的区别？ | ⭐⭐⭐⭐ | 📌 |
+| Q15 | React 19 Actions 与 Vue 3 的区别？ | ⭐⭐⭐ | 📖 |
+| Q16 | React Server Components 与 SSR 的区别？ | ⭐⭐⭐⭐ | 🔥 |
+| Q17 | 类组件的 shouldComponentUpdate 与 React.memo 的关系？ | ⭐⭐⭐ | 📌 |
+| Q18 | React 中 setState 是同步还是异步？ | ⭐⭐⭐ | 🔥 |
+| Q19 | 自定义 Hook 的命名规范和设计原则？ | ⭐⭐⭐ | 🔥 |
+| Q20 | React 中受控组件和非受控组件的选择策略？ | ⭐⭐ | 🔥 |
+| Q21 | forwardRef 的作用和 React 19 的变化？ | ⭐⭐⭐ | 📌 |
+| Q22 | React Portal 的使用场景和事件冒泡机制？ | ⭐⭐⭐ | 📌 |
+| Q23 | ErrorBoundary 为什么必须是类组件？函数组件怎么实现错误处理？ | ⭐⭐⭐ | 🔥 |
+| Q24 | React 19 useOptimistic 的实现原理和适用场景？ | ⭐⭐⭐⭐ | 📌 |
+| Q25 | Hooks 闭包陷阱（Stale Closure）的成因和解决方案？ | ⭐⭐⭐ | 🔥 |
+| Q26 | React HOC、Render Props、Hooks 三种复用方案对比？ | ⭐⭐⭐ | 🔥 |
+| Q27 | useMemo 和 useCallback 什么时候必须用？ | ⭐⭐⭐ | 🔥 |
+| Q28 | React 中 useEffect 的清理函数什么时机执行？ | ⭐⭐⭐ | 🔥 |
+| Q29 | React 中 Context 的性能问题如何优化？ | ⭐⭐⭐ | 🔥 |
+| Q30 | React 19 中 useActionState 和 useFormStatus 如何配合使用？ | ⭐⭐⭐ | 📌 |
+| Q31 | React 事件代理机制中，e.stopPropagation() 为何不能阻止原生事件冒泡？ | ⭐⭐⭐ | 📌 |
+| Q32 | React 中如何实现组件间通信？（所有方式总结） | ⭐⭐ | 🔥 |
+| Q33 | React 合成事件与原生事件混用需要注意什么？ | ⭐⭐⭐ | 📌 |
+| Q34 | React 中 key 使用数组索引有什么危害？ | ⭐⭐ | 🔥 |
+| Q35 | React 18 的自动批处理（Automatic Batching）是怎么实现的？ | ⭐⭐⭐ | 🔥 |
+| Q36 | React 中 props 和 state 的本质区别？ | ⭐⭐ | 🔥 |
+| Q37 | React 中 PureComponent 和 Component 的区别？ | ⭐⭐⭐ | 📌 |
+| Q38 | React 中 Fragment（<></>）的作用和原理？ | ⭐⭐ | 📌 |
+| Q39 | React 中 ref 的几种使用方式及各自适用场景？ | ⭐⭐⭐ | 🔥 |
+| Q40 | React 中 StrictMode 的作用和检测机制？ | ⭐⭐⭐ | 📌 |
+| Q41 | React 中如何实现条件渲染？各方式对比？ | ⭐ | 📌 |
+| Q42 | React 中 dangerouslySetInnerHTML 的危险性和安全替代方案？ | ⭐⭐ | 📌 |
+| Q43 | React 中 useEffect 与 useLayoutEffect 的选择策略？ | ⭐⭐⭐ | 🔥 |
+| Q44 | React 中列表渲染为什么需要 key？Diff 算法如何利用 key？ | ⭐⭐ | 🔥 |
+| Q45 | React 16+ 为什么废弃三个 will 生命周期？ | ⭐⭐⭐ | 📌 |
+| Q46 | React 类组件中事件绑定 this 的几种方式？ | ⭐⭐ | 📖 |
+| Q47 | React 中 setState 的合并策略是什么？ | ⭐⭐⭐ | 📌 |
+| Q48 | React 中函数组件每次渲染都有独立闭包是什么意思？ | ⭐⭐⭐ | 🔥 |
+| Q49 | React 中 getDerivedStateFromProps 的真实使用场景？ | ⭐⭐⭐ | 📖 |
+| Q50 | React 中 useState 和 useReducer 如何选择？ | ⭐⭐ | 🔥 |
+| Q51 | React 中 useEffect 的依赖比较机制（Object.is 比较）？ | ⭐⭐⭐ | 🔥 |
+| Q52 | React 中 ref 回调的执行时机？ | ⭐⭐⭐ | 📌 |
+| Q53 | React 中 forceUpdate 的使用场景和替代方案？ | ⭐⭐ | 📖 |
+| Q54 | React 中 createElement、cloneElement、isValidElement 的用途？ | ⭐⭐ | 📖 |
+| Q55 | React 中 Profiler 如何使用？如何分析渲染性能？ | ⭐⭐⭐ | 📌 |
+| Q56 | React Hooks 安全使用综合指南（useCallback / useEffect / useMemo / useRef） | ⭐⭐⭐ | 🔥 |
 
 ### 🎯 React 核心概念关系图
 
@@ -390,7 +471,7 @@ React 19.1 (2025-06)
 ├─ captureOwnerStack() API
 └─ Hydration 差异诊断增强
 
-React 19.2 (2025-10)  ← 当前主线
+React 19.2 (2025-10)  ← 本仓库所用主线（`react@^19.2.7`）
 ├─ <Activity>（保留状态的显隐切换）
 ├─ useEffectEvent（抽离非响应式 Effect 逻辑）
 ├─ cacheSignal（缓存作用域 AbortSignal）
@@ -401,9 +482,12 @@ React 19.2 (2025-10)  ← 当前主线
 
 React 19.2.7 (2026-06)
 └─ 修复 Server Actions 回归问题（本仓库所用版本）
+
+React 19.3 (2026)  ← 最新 stable：**19.3.0**（2026-10-10 联网核验）
+└─ 19.x 主线持续迭代；本仓库仍使用 19.2.7，升级前请核对官方 changelog 与 Breaking 说明
 ```
 
-> 📌 **版本现状**：本文主线为 **React 19.2**（19.2.7 为当前最新补丁）。19.1 与 19.2 的增量特性集中在下文，19.0 的核心特性（Actions / `use()` / Compiler）见后续各节。
+> 📌 **版本现状**：本文主线为 **React 19.2**（本仓库依赖 `^19.2.7`）；npm 最新 stable 为 **19.3.0**（2026-10-10 核验）。19.1 与 19.2 的增量特性集中在下文，19.0 的核心特性（Actions / `use()` / Compiler）见后续各节。
 
 #### 🆕 React 19.2 核心增量特性
 
@@ -8155,6 +8239,10 @@ function useHistory<T>(initialValue: T) {
 
 ### Q1：说说 React 的渲染流程（Trigger → Render → Commit）
 
+**难度**：⭐⭐⭐ ｜ **频率**：🔥 ｜ **考点**：Trigger → Render → Commit 三阶段，Render 可中断、Commit 不可中断
+
+**💡 记忆关键词**：三阶段 / workInProgress 树 / effectTag / 双缓冲
+
 **三阶段模型：**
 
 ```mermaid
@@ -8211,7 +8299,16 @@ graph LR
 > ```
 > **为什么不用 rIC 做主调度：** rIC 在 Safari 不支持、触发间隔不可控（可能 50ms+，导致卡顿）、Chrome 下最低 50ms 间隔不够激进。MessageChannel 提供更确定性的调度，在主流浏览器中均能达到约 5ms 的切片粒度。
 
+
+**⚠️ 常见误区**：以为 Render 阶段会操作 DOM（DOM 变更全部集中在 Commit 阶段）
+
+**📝 一句话总结**：Render 阶段构建并标记 Fiber 树（可中断重来），Commit 阶段同步落地 DOM 与副作用
+
 ### Q2：useEffect 的完整执行时序是什么？
+
+**难度**：⭐⭐ ｜ **频率**：🔥 ｜ **考点**：useLayoutEffect 在绘制前同步执行，useEffect 在绘制后异步调度
+
+**💡 记忆关键词**：同步 vs 异步 / 绘制前后 / 清理函数
 
 ```typescript
 function Lifecycle() {
@@ -8232,7 +8329,16 @@ function Lifecycle() {
 Render → DOM 更新 → useLayoutEffect（同步）→ 浏览器绘制 → useEffect（异步）
 ```
 
+
+**⚠️ 常见误区**：把 useEffect 当成「DOM 更新后立刻执行」，忽略它是绘制后被调度的
+
+**📝 一句话总结**：顺序：DOM 更新 → useLayoutEffect（同步）→ 绘制 → useEffect（异步）
+
 ### Q3：React 19 Actions 是什么？解决了什么问题？
+
+**难度**：⭐⭐⭐ ｜ **频率**：🔥 ｜ **考点**：Actions 用 useActionState / useFormStatus / useOptimistic 收敛表单三态
+
+**💡 记忆关键词**：pending 自动管理 / 乐观更新 / 渐进增强 / 自动 reset
 
 **核心问题：** 表单提交需要手动管理 loading、error、success 状态，代码冗余：
 
@@ -8268,7 +8374,16 @@ const [state, formAction, pending] = useActionState(async (prev, formData) => {
 3. **渐进增强**：`<form action={formAction}>` 即使 JS 未加载也能提交
 4. **表单重置**：`formAction` 成功后自动调用 `form.reset()`
 
+
+**⚠️ 常见误区**：以为 Actions 只能在服务端组件里用；把 useFormStatus 放在与 form 同级的组件里读不到状态
+
+**📝 一句话总结**：Actions 把「pending / error / 乐观 UI」从手写状态机变成框架能力
+
 ### Q4：React 中 key 的作用和最佳实践？
+
+**难度**：⭐⭐ ｜ **频率**：🔥 ｜ **考点**：key 决定 Diff 中的节点身份，值要稳定唯一
+
+**💡 记忆关键词**：节点身份 / 稳定唯一 / 业务 id
 
 ```mermaid
 flowchart LR
@@ -8292,7 +8407,16 @@ flowchart LR
 ⚠️ 只有静态列表可用 index（不增删改排）
 ```
 
+
+**⚠️ 常见误区**：用 index 或随机值当 key，导致输入态错位与无谓重建
+
+**📝 一句话总结**：key 是节点身份证：稳定唯一才复用，改 key 是最直接的强制重建手段
+
 ### Q5：React 18 Concurrent Mode 解决了什么问题？
+
+**难度**：⭐⭐⭐⭐ ｜ **频率**：🔥 ｜ **考点**：Concurrent 用可中断渲染 + 优先级调度解决「大渲染阻塞交互」
+
+**💡 记忆关键词**：时间切片 / 优先级 / 可中断 / 过渡更新
 
 **核心价值：** 紧急更新不被非紧急更新阻塞。
 
@@ -8309,7 +8433,16 @@ flowchart LR
 | Suspense        | 基础支持         | 流式 SSR + 选择性 hydration |
 | startTransition | ❌                | ✅ 标记非紧急更新            |
 
+
+**⚠️ 常见误区**：以为开启并发模式就自动变快（它只解决响应性，不减少总工作量）
+
+**📝 一句话总结**：Concurrent 的价值是「让紧急交互插队」，而不是让渲染总量变少
+
 ### Q6：React 19 `use()` 与 useEffect 数据获取的区别？
+
+**难度**：⭐⭐⭐⭐ ｜ **频率**：📌 ｜ **考点**：use() 在渲染中读取 Promise/Context，与 useEffect 取数的时序与语义差异
+
+**💡 记忆关键词**：渲染期读取 / 挂起与恢复 / 配合 Suspense
 
 ```typescript
 // 方式 1：useEffect + useState（React 18 及以前）
@@ -8362,7 +8495,16 @@ function App() {
 > ```
 > **经验教训：** `use()` 更适合"渲染阶段的数据依赖"（如从 Context 中读取 Promise），`await` 适合"事件处理中的异步操作"（如表单提交）。
 
+
+**⚠️ 常见误区**：在条件分支里调用 use() 或把它当成 await 使用
+
+**📝 一句话总结**：use() 让「读异步数据」回到渲染流程里，由 Suspense 负责等待，而不是 effect 里回填 state
+
 ### Q7：React 合成事件（SyntheticEvent）是什么？
+
+**难度**：⭐⭐⭐ ｜ **频率**：🔥 ｜ **考点**：合成事件是 React 在根节点代理的事件对象，屏蔽浏览器差异
+
+**💡 记忆关键词**：事件代理 / 事件池 / 根节点委托
 
 **为什么需要合成事件？**
 
@@ -8394,7 +8536,16 @@ function handleClick(e: React.MouseEvent) {
 }
 ```
 
+
+**⚠️ 常见误区**：说 React 17+ 事件还挂在 document 上（17 起挂在渲染的 root 容器）
+
+**📝 一句话总结**：合成事件 = 统一事件对象 + 根节点委托，带来跨平台与一致性
+
 ### Q8：React Hooks 为什么不能放在条件/循环中？
+
+**难度**：⭐⭐⭐ ｜ **频率**：🔥 ｜ **考点**：Hooks 以链表顺序存储，条件/循环会打乱顺序导致状态错位
+
+**💡 记忆关键词**：链表顺序 / Hook 索引 / 每次渲染一致
 
 **根本原因：** Hooks 存储在 Fiber 节点的 **单向链表** 中，依赖**调用顺序**来匹配状态。
 
@@ -8455,7 +8606,16 @@ function ConditionalComponent({ showData }: { showData: boolean }) {
 - 它通过当前 Fiber 的 Suspense 边界实现暂停/恢复，不依赖链表顺序匹配
 - 这也是 React 19 对 Hooks 规则的一次"松绑"，但 **useState/useEffect/useCallback 等仍然必须遵守顺序规则**
 
+
+**⚠️ 常见误区**：把原因说成「语法限制」，真正原因是 Hook 状态按调用顺序存进 Fiber 的链表
+
+**📝 一句话总结**：Hooks 状态靠「调用顺序」定位，所以必须顶层无条件调用
+
 ### Q9：Server Component vs Client Component 的区别？
+
+**难度**：⭐⭐⭐⭐ ｜ **频率**：🔥 ｜ **考点**：RSC 在服务端渲染且不进客户端 bundle，Client Component 有水合与交互能力
+
+**💡 记忆关键词**：use client 边界 / 不进 bundle / 序列化 props / 水合
 
 ```tsx
 // 🖥️ Server Component（默认）
@@ -8489,7 +8649,16 @@ export function Counter() {
 | 数据获取         | 直接 await       | use/useEffect    |
 | API Key 安全     | ✅ 安全           | ❌ 暴露风险       |
 
+
+**⚠️ 常见误区**：把 RSC 等同于 SSR（SSR 输出 HTML 但组件代码仍要下发与水合）
+
+**📝 一句话总结**：RSC 省的是「组件代码与数据请求」，SSR 省的是「首屏 HTML 时间」
+
 ### Q10：React.memo 和 useMemo 的区别？
+
+**难度**：⭐⭐ ｜ **频率**：🔥 ｜ **考点**：React.memo 记忆组件渲染结果，useMemo 记忆一个值
+
+**💡 记忆关键词**：组件级 vs 值级 / props 浅比较 / 引用稳定
 
 | 特性         | React.memo           | useMemo      |
 | ------------ | -------------------- | ------------ |
@@ -8522,7 +8691,16 @@ const handleClick = useCallback(() => doSomething(id), [id]);
 // ✅ 正确：const handle = useCallback(() => api.report(count), [count]);
 ```
 
+
+**⚠️ 常见误区**：给所有组件套 memo 却传了内联对象和箭头函数，浅比较永远失败
+
+**📝 一句话总结**：memo 挡的是「父渲染带动子渲染」，useMemo 挡的是「重复计算与引用漂移」
+
 ### Q11：React 19 Compiler 如何实现自动记忆化？
+
+**难度**：⭐⭐⭐⭐ ｜ **频率**：🔥 ｜ **考点**：Compiler 在编译期分析依赖与可变性，自动插入等价的记忆化代码
+
+**💡 记忆关键词**：编译期分析 / 自动 useMemo / 依赖推断 / 逃逸分析
 
 **原理：** Compiler 在编译阶段分析函数的作用域和依赖关系，自动推断哪些值和函数需要缓存。
 
@@ -8576,7 +8754,16 @@ function ProfilePage({ user }) {
 > ```
 > **最佳实践：** 将副作用和可变操作封装到自定义 Hook 中，用 `'use memo'` 标记纯计算组件。
 
+
+**⚠️ 常见误区**：以为 Compiler 取代了不可变数据要求（它依赖代码符合 React 规则才能安全优化）
+
+**📝 一句话总结**：React Compiler 把「手写记忆化」变成「编译期自动推断」，但前提是你的代码符合 Hooks 规则
+
 ### Q12：React Fiber 架构如何实现可中断渲染？
+
+**难度**：⭐⭐⭐⭐ ｜ **频率**：🔥 ｜ **考点**：Fiber 把渲染拆成可中断的工作单元，配合调度器让出主线程
+
+**💡 记忆关键词**：工作单元 / 双缓冲 / 时间切片 / shouldYield
 
 **核心数据结构：Fiber 链表**
 
@@ -8610,7 +8797,16 @@ function workLoop(fiber: Fiber) {
 
 **调度机制：** React 通过 `requestIdleCallback` 或 `MessageChannel` 实现时间切片，每次处理一个 Fiber 节点后检查是否超时（约 5ms），超时则让出主线程。
 
+
+**⚠️ 常见误区**：以为「可中断」是随时中断 JS 执行（实际是在 Fiber 单元边界主动让出）
+
+**📝 一句话总结**：可中断的本质是「把递归改成链表遍历 + 在单元边界检查是否该让出主线程」
+
 ### Q13：React 事件机制与原生事件的区别？
+
+**难度**：⭐⭐⭐ ｜ **频率**：📌 ｜ **考点**：合成事件与原生事件在绑定位置、对象类型、执行顺序上的差异
+
+**💡 记忆关键词**：root 委托 / 原生冒泡 / 执行顺序
 
 | 对比项       | 原生 DOM 事件              | React 合成事件                            |
 | ------------ | -------------------------- | ----------------------------------------- |
@@ -8621,7 +8817,16 @@ function workLoop(fiber: Fiber) {
 | **性能**     | 多个 listener              | 内存中 1 个 listener                      |
 | **异步访问** | 始终可访问                 | React 16 需 `e.persist()`，React 17+ 无需 |
 
+
+**⚠️ 常见误区**：混用两者时假设执行顺序与绑定顺序一致（实际取决于事件流阶段）
+
+**📝 一句话总结**：合成事件跑在 React 的委托链上，原生事件跑在 DOM 事件流上，混用要显式处理 stopPropagation
+
 ### Q14：React Fiber 与 Vue 3 虚拟 DOM 的区别？
+
+**难度**：⭐⭐⭐⭐ ｜ **频率**：📌 ｜ **考点**：Fiber 是不可变链表树 + 调度，Vue 是依赖追踪 + 编译期动态节点裁剪
+
+**💡 记忆关键词**：不可变 + 调度 / 依赖追踪 / 组件级重渲染
 
 | 维度 | React Fiber | Vue 3 Virtual DOM |
 |------|------------|-------------------|
@@ -8630,7 +8835,16 @@ function workLoop(fiber: Fiber) {
 | **更新机制** | 双缓冲 | 一次性更新 |
 | **优化策略** | Time Slicing | Block Tree + PatchFlag |
 
+
+**⚠️ 常见误区**：说「Vue 没有 Fiber 所以更慢」，忽略两者的更新粒度与优化路径完全不同
+
+**📝 一句话总结**：React 用调度换响应性，Vue 用精确依赖换更新量，优化入口分别是并发与编译优化
+
 ### Q15：React 19 Actions 与 Vue 3 的区别？
+
+**难度**：⭐⭐⭐ ｜ **频率**：📖 ｜ **考点**：React Actions 与 Vue 表单处理在状态机与渐进增强上的差异
+
+**💡 记忆关键词**：表单状态机 / 渐进增强 / 双向绑定
 
 | 维度 | React Actions | Vue 3 |
 |------|--------------|-------|
@@ -8639,7 +8853,16 @@ function workLoop(fiber: Fiber) {
 | **错误处理** | 原生支持 | 需要 try/catch |
 | **乐观更新** | useOptimistic | 需要手动实现 |
 
+
+**⚠️ 常见误区**：把 v-model 的双向绑定与 Actions 的单向提交流混为一谈
+
+**📝 一句话总结**：Vue 偏向「双向绑定 + 本地状态」，React 偏向「单向提交 + 显式状态机」
+
 ### Q16：React Server Components 与 SSR 的区别？
+
+**难度**：⭐⭐⭐⭐ ｜ **频率**：🔥 ｜ **考点**：RSC 不下发组件代码，SSR 下发并水合；两者可叠加为流式渲染
+
+**💡 记忆关键词**：bundle 体积 / 水合 / 流式 / 序列化边界
 
 | 维度 | RSC | SSR |
 |------|-----|-----|
@@ -8648,7 +8871,16 @@ function workLoop(fiber: Fiber) {
 | **客户端 JS** | 不包含服务端组件 | 包含所有组件 |
 | **交互性** | 无（纯数据） | 有（Hydration） |
 
+
+**⚠️ 常见误区**：以为用了 RSC 就不需要 SSR（RSC 常与 SSR/流式配合输出首屏 HTML）
+
+**📝 一句话总结**：SSR 解决首屏 HTML，RSC 解决客户端代码体积，二者正交且常组合使用
+
 ### Q17：类组件的 shouldComponentUpdate 与 React.memo 的关系？
+
+**难度**：⭐⭐⭐ ｜ **频率**：📌 ｜ **考点**：shouldComponentUpdate 手写比较，React.memo 做 props 浅比较
+
+**💡 记忆关键词**：手写比较 / 浅比较 / 类组件 vs 函数组件
 
 **本质相同**：都是防止不必要的重渲染，但应用对象不同。
 
@@ -8680,7 +8912,16 @@ const List = React.memo(
 | 返回值 | boolean（是否更新） | boolean（是否跳过） |
 | 实现位置 | 组件内部 | 组件外部包裹 |
 
+
+**⚠️ 常见误区**：在 shouldComponentUpdate 里做深比较，开销反而超过重渲染
+
+**📝 一句话总结**：memo 是函数组件版的内置浅比较，sCU 提供更可控但更易误用的手写比较
+
 ### Q18：React 中 setState 是同步还是异步？
+
+**难度**：⭐⭐⭐ ｜ **频率**：🔥 ｜ **考点**：18 起所有更新自动批处理，19 保持；批处理发生在同一事件循环内
+
+**💡 记忆关键词**：自动批处理 / 合成事件 / 微任务
 
 **结论：看执行上下文。**
 
@@ -8756,7 +8997,16 @@ function FunctionComponent() {
 | React 18+ | **所有场景自动批处理** | 行为更一致，性能更好 |
 | React 19 | Actions 内自动批处理 + 支持 `useOptimistic` 乐观更新 | 表单场景减少手动状态管理 |
 
+
+**⚠️ 常见误区**：以为 setState 一定是异步的（在原生事件与 setTimeout 中 18 之后同样批处理，但读取时机仍是渲染后）
+
+**📝 一句话总结**：「同步/异步」的准确说法是：state 更新是批处理的，本轮渲染读到的仍是旧值
+
 ### Q19：自定义 Hook 的命名规范和设计原则？
+
+**难度**：⭐⭐⭐ ｜ **频率**：🔥 ｜ **考点**：自定义 Hook 以 use 开头、封装状态与副作用、返回稳定引用
+
+**💡 记忆关键词**：useXxx / 单一职责 / 引用稳定 / 依赖外置
 
 **命名规范：** 必须以 `use` 开头（React 通过命名检测 Hook 规则，相关 ESLint 规则依赖此前缀）。
 
@@ -8809,7 +9059,16 @@ function useDebounce<T>(value: T, delay: number): T {
 }
 ```
 
+
+**⚠️ 常见误区**：在自定义 Hook 里省略依赖或返回每次新建的对象，导致下游 memo 全部失效
+
+**📝 一句话总结**：自定义 Hook 是「状态逻辑的复用单元」，命名必须以 use 开头才能被 lint 规则检查
+
 ### Q20：React 中受控组件和非受控组件的选择策略？
+
+**难度**：⭐⭐ ｜ **频率**：🔥 ｜ **考点**：受控组件以 state 为唯一数据源，非受控依赖 DOM 与 ref
+
+**💡 记忆关键词**：单一数据源 / defaultValue / ref 读取
 
 ```typescript
 // 受控组件（推荐大多数场景）
@@ -8849,7 +9108,16 @@ function UncontrolledForm() {
 第三方 JS 库集成（如富文本）？→ ✅ 非受控 + ref
 ```
 
+
+**⚠️ 常见误区**：给受控 input 只传 value 不传 onChange（会变成只读并告警）
+
+**📝 一句话总结**：需要实时校验与联动用受控，只关心最终值或集成三方库用非受控
+
 ### Q21：forwardRef 的作用和 React 19 的变化？
+
+**难度**：⭐⭐⭐ ｜ **频率**：📌 ｜ **考点**：forwardRef 转发 ref，React 19 起函数组件可直接把 ref 当 prop
+
+**💡 记忆关键词**：ref 转发 / useImperativeHandle / React 19 简化
 
 ```typescript
 // React 18：必须用 forwardRef
@@ -8880,7 +9148,16 @@ const FancyInput = forwardRef(function FancyInput(_, ref) {
 | React 16-18 | forwardRef 包裹 | ✅ 必须 |
 | React 19 | ref 直接作为 prop | ❌ 不需要（但 forwardRef 仍可用） |
 
+
+**⚠️ 常见误区**：还在所有场景都写 forwardRef（19 中函数组件可直接接收 ref prop）
+
+**📝 一句话总结**：React 19 让 ref 变成普通 prop，forwardRef 只为兼容旧代码保留
+
 ### Q22：React Portal 的使用场景和事件冒泡机制？
+
+**难度**：⭐⭐⭐ ｜ **频率**：📌 ｜ **考点**：Portal 改变 DOM 挂载位置但保留 React 树中的事件冒泡
+
+**💡 记忆关键词**：DOM 位置 vs 树位置 / 事件冒泡 / 弹层
 
 ```typescript
 import { createPortal } from 'react-dom';
@@ -8913,7 +9190,16 @@ function App() {
 - **Context**：Portal 内可访问父组件的 Context
 - **CSS 隔离**：DOM 层级独立，不受父容器 overflow/z-index 限制
 
+
+**⚠️ 常见误区**：以为 Portal 会切断事件冒泡（事件仍沿 React 组件树冒泡）
+
+**📝 一句话总结**：Portal 挪 DOM、不挪 React 树，因此上下文与事件冒泡都保留
+
 ### Q23：ErrorBoundary 为什么必须是类组件？函数组件怎么实现错误处理？
+
+**难度**：⭐⭐⭐ ｜ **频率**：🔥 ｜ **考点**：错误边界依赖类组件的 componentDidCatch/getDerivedStateFromError
+
+**💡 记忆关键词**：错误边界 / 类组件 / 渲染期错误 / 不捕获异步
 
 ```typescript
 // ErrorBoundary 必须是类组件的原因：
@@ -8981,7 +9267,16 @@ function AsyncComponent() {
 | 构造函数错误 | 服务端渲染错误 |
 | 子组件树错误 | ErrorBoundary 自身错误 |
 
+
+**⚠️ 常见误区**：以为错误边界能捕获事件回调与异步错误（它只捕获渲染与生命周期中的错误）
+
+**📝 一句话总结**：错误边界只兜住渲染期错误，函数组件需借助类组件或 ErrorBoundary 库实现
+
 ### Q24：React 19 useOptimistic 的实现原理和适用场景？
+
+**难度**：⭐⭐⭐⭐ ｜ **频率**：📌 ｜ **考点**：useOptimistic 在提交进行中展示乐观值，提交结束自动回滚或确认
+
+**💡 记忆关键词**：乐观 UI / 自动回滚 / 配 Actions
 
 ```typescript
 import { useOptimistic, useTransition } from 'react';
@@ -9036,7 +9331,16 @@ function TodoList({ todos: initialTodos }: { todos: Todo[] }) {
 
 **原理：** useOptimistic 在底层维护一个"乐观状态"，当 `addOptimisticTodo` 调用时，React 立即用更新函数计算新的乐观状态并渲染；当实际数据返回后，React 自动丢弃乐观状态，切换到真实数据。
 
+
+**⚠️ 常见误区**：把乐观值当成真正的 state 去发后续请求（它只在过渡期间有效）
+
+**📝 一句话总结**：useOptimistic 是「过渡期的临时视图状态」，必须配合真实提交结果收敛
+
 ### Q25：Hooks 闭包陷阱（Stale Closure）的成因和解决方案？
+
+**难度**：⭐⭐⭐ ｜ **频率**：🔥 ｜ **考点**：闭包陷阱源于 effect 捕获了旧的渲染闭包
+
+**💡 记忆关键词**：渲染闭包 / 依赖缺失 / 函数式更新 / ref 持有最新值
 
 ```typescript
 function Timer() {
@@ -9132,7 +9436,16 @@ const handleClick = useCallback(() => {
 
 **核心原则：** useCallback 的闭包陷阱本质与 useEffect 一致——依赖数组决定了函数能"看到"哪些变量。补齐依赖或用 ref 绕过闭包。
 
+
+**⚠️ 常见误区**：用「加个 ref 或者去掉依赖」粗暴处理，而不是补全依赖或改用函数式更新
+
+**📝 一句话总结**：闭包陷阱的本质是「回调捕获了某次渲染的变量快照」，解法是补依赖、函数式更新或用 ref 读最新值
+
 ### Q26：React HOC、Render Props、Hooks 三种复用方案对比？
+
+**难度**：⭐⭐⭐ ｜ **频率**：🔥 ｜ **考点**：HOC、Render Props、Hooks 三代复用方案的问题与取舍
+
+**💡 记忆关键词**：wrapper 地狱 / 嵌套回调 / 逻辑复用
 
 ```typescript
 // 1️⃣ HOC（高阶组件）- 装饰器模式
@@ -9183,7 +9496,16 @@ function UserList() {
 | 学习曲线 | 中 | 中 | 低 |
 | **推荐度** | ⭐⭐ | ⭐ | ⭐⭐⭐⭐⭐ |
 
+
+**⚠️ 常见误区**：认为 HOC 已被完全淘汰（跨切面能力与三方库集成仍有价值）
+
+**📝 一句话总结**：HOC 解决横切、Render Props 解决动态渲染、Hooks 解决状态逻辑复用，后者是主流
+
 ### Q27：useMemo 和 useCallback 什么时候必须用？
+
+**难度**：⭐⭐⭐ ｜ **频率**：🔥 ｜ **考点**：useMemo/useCallback 只在「避免昂贵计算」或「保持引用稳定」时才必要
+
+**💡 记忆关键词**：引用稳定 / 昂贵计算 / 下游 memo
 
 ```typescript
 // ✅ 必须用 useMemo：计算开销大
@@ -9248,7 +9570,16 @@ function Button() {
 | **反向性能** | 滥用 useCallback + React.memo，比较开销大于重渲染开销 | 只在传给 memo 子组件 / useEffect 依赖时使用 |
 | **异步旧值** | setTimeout/Promise 中读取闭包捕获的旧 state | 用 ref 保存最新值，或用函数式更新 `setState(prev => ...)` |
 
+
+**⚠️ 常见误区**：无脑包裹所有函数与对象，让代码复杂度上升却没有收益
+
+**📝 一句话总结**：记忆化的两个正经理由：算得贵、或下游依赖引用相等（否则别用）
+
 ### Q28：React 中 useEffect 的清理函数什么时机执行？
+
+**难度**：⭐⭐⭐ ｜ **频率**：🔥 ｜ **考点**：清理函数在下次 effect 前与卸载时执行，用于取消与解绑
+
+**💡 记忆关键词**：下次执行前 / 卸载时 / 取消请求
 
 ```typescript
 function EffectCleanup() {
@@ -9293,7 +9624,16 @@ function DataFetcher({ id }: { id: number }) {
 }
 ```
 
+
+**⚠️ 常见误区**：以为清理只在卸载时跑（依赖变化导致的重跑也会先执行清理）
+
+**📝 一句话总结**：清理函数的语义是「结束上一次副作用」，卸载只是它的最后一个触发点
+
 ### Q29：React 中 Context 的性能问题如何优化？
+
+**难度**：⭐⭐⭐ ｜ **频率**：🔥 ｜ **考点**：Context 变化会使所有消费者重渲染，需拆分 Context 或用选择器
+
+**💡 记忆关键词**：value 引用 / 拆分 Context / useSyncExternalStore
 
 ```typescript
 // ❌ 问题：Context value 每次渲染都创建新对象
@@ -9349,7 +9689,16 @@ const MemoizedProfile = React.memo(Profile);
 2. **缓存 value**：Provider 的 value 用 useMemo 包装
 3. **局部状态优先**：能用 props 传递就不要用 Context
 
+
+**⚠️ 常见误区**：把高频变化的数据放进同一个 Context，导致全树重渲染
+
+**📝 一句话总结**：Context 的性能关键是「value 的引用稳定性」与「消费者粒度」，高频场景应改用外部 store
+
 ### Q30：React 19 中 useActionState 和 useFormStatus 如何配合使用？
+
+**难度**：⭐⭐⭐ ｜ **频率**：📌 ｜ **考点**：useActionState 管理提交结果与 pending，useFormStatus 在子组件内读取表单状态
+
+**💡 记忆关键词**：useActionState / useFormStatus / 子组件读取
 
 ```typescript
 import { useActionState } from 'react';
@@ -9412,7 +9761,16 @@ function OrderForm() {
 }
 ```
 
+
+**⚠️ 常见误区**：在使用 useActionState 的同一个组件里调用 useFormStatus（它读的是父级 form 的状态）
+
+**📝 一句话总结**：useActionState 管状态，useFormStatus 在被提交 form 内部的子组件里读 pending
+
 ### Q31：React 事件代理机制中，e.stopPropagation() 为何不能阻止原生事件冒泡？
+
+**难度**：⭐⭐⭐ ｜ **频率**：📌 ｜ **考点**：合成事件的 stopPropagation 只作用于 React 委托链，需要 stopImmediatePropagation 或原生监听配合
+
+**💡 记忆关键词**：委托链 / 原生冒泡 / 执行顺序
 
 ```typescript
 function App() {
@@ -9472,7 +9830,16 @@ function Button() {
 }
 ```
 
+
+**⚠️ 常见误区**：以为 e.stopPropagation() 能阻止已绑定在 document/window 上的原生监听
+
+**📝 一句话总结**：合成事件与原生事件是两条链，要同时阻断就得同时处理两条链
+
 ### Q32：React 中如何实现组件间通信？（所有方式总结）
+
+**难度**：⭐⭐ ｜ **频率**：🔥 ｜ **考点**：props、回调、Context、外部 store、ref 五类通信方式
+
+**💡 记忆关键词**：props / Context / store / ref / 事件总线替代
 
 ```mermaid
 graph TB
@@ -9536,7 +9903,16 @@ const Child = forwardRef((_, ref) => {
 | 全局状态（Zustand/Redux） | 🔴 高 | 任意组件 | 低 |
 | ref + forwardRef | 🟡 中 | 命令式操作 | 高 |
 
+
+**⚠️ 常见误区**：什么都往 Context 里塞，或用全局事件总线替代状态提升
+
+**📝 一句话总结**：父子用 props，跨层用 Context，跨路由共享用外部 store，命令式操作才用 ref
+
 ### Q33：React 合成事件与原生事件混用需要注意什么？
+
+**难度**：⭐⭐⭐ ｜ **频率**：📌 ｜ **考点**：合成事件与原生事件混用时的时序、阻止传播与卸载清理
+
+**💡 记忆关键词**：混用时序 / 解绑 / 阻止传播
 
 ```typescript
 function MixedEvents() {
@@ -9572,7 +9948,16 @@ function MixedEvents() {
 | 优先级 | React 事件可享受并发优先级调度，原生事件不能 |
 | **最佳实践** | 优先使用 React 事件，避免混用 |
 
+
+**⚠️ 常见误区**：用 addEventListener 绑定后忘记在 effect 清理里 removeEventListener
+
+**📝 一句话总结**：混用时明确「谁先谁后」，并在同一 effect 里成对绑定与解绑
+
 ### Q34：React 中 key 使用数组索引有什么危害？
+
+**难度**：⭐⭐ ｜ **频率**：🔥 ｜ **考点**：index 作 key 在插入、删除、排序时导致状态错位与多余更新
+
+**💡 记忆关键词**：下标漂移 / 输入态错位 / 稳定 id
 
 ```typescript
 // ❌ 危害：列表重排时状态错乱
@@ -9618,7 +10003,16 @@ function BuggyList() {
 | 性能下降 | 列表插入/删除/排序 | 所有子节点重新创建 |
 | 动画失效 | 使用 TransitionGroup 或 framer-motion | 元素被错误识别为新增/删除 |
 
+
+**⚠️ 常见误区**：认为静态列表用 index 没问题，但列表一旦可增删就立刻出问题
+
+**📝 一句话总结**：key 必须与数据身份绑定，只要列表会变动就不要用 index
+
 ### Q35：React 18 的自动批处理（Automatic Batching）是怎么实现的？
+
+**难度**：⭐⭐⭐ ｜ **频率**：🔥 ｜ **考点**：自动批处理把同一事件循环内的多次 setState 合并为一次渲染
+
+**💡 记忆关键词**：批处理 / 事件循环 / 合并渲染
 
 ```typescript
 // React 17 及以前：仅在合成事件中批处理
@@ -9683,7 +10077,16 @@ function handleClick() {
 > 4. 应在真实的"需要同步 DOM 操作"场景使用（如测量布局）
 > ```
 
+
+**⚠️ 常见误区**：以为批处理意味着 setState 后可以立刻读到新值（同一渲染内读到的仍是旧值）
+
+**📝 一句话总结**：自动批处理让「多次 setState = 一次渲染」，需要基于旧值计算时用函数式更新
+
 ### Q36：React 中 props 和 state 的本质区别？
+
+**难度**：⭐⭐ ｜ **频率**：🔥 ｜ **考点**：props 是外部输入、state 是组件内部可变状态，都触发重渲染
+
+**💡 记忆关键词**：外部输入 / 内部状态 / 单向数据流
 
 | 维度 | props | state |
 |------|-------|-------|
@@ -9713,7 +10116,16 @@ function Counter() {
 //  子组件          setState
 ```
 
+
+**⚠️ 常见误区**：把 props 直接赋值给 state 做「初值」后忘记同步（这是典型的派生状态反模式）
+
+**📝 一句话总结**：props 由父决定、state 由自己决定，能用 props 算出来的就不要存进 state
+
 ### Q37：React 中 PureComponent 和 Component 的区别？
+
+**难度**：⭐⭐⭐ ｜ **频率**：📌 ｜ **考点**：PureComponent 内置 props/state 浅比较，Component 默认全部重渲染
+
+**💡 记忆关键词**：浅比较 / 内置 sCU
 
 ```typescript
 import React, { PureComponent, Component } from 'react';
@@ -9767,7 +10179,16 @@ function Parent() {
 | 性能 | 可能过度渲染 | 避免部分重渲染 | 避免部分重渲染 |
 | 使用建议 | 简单场景 | 纯展示组件 | 纯展示函数组件 |
 
+
+**⚠️ 常见误区**：以为 PureComponent 做深比较（它只浅比较一层，嵌套对象变化照样漏判）
+
+**📝 一句话总结**：PureComponent = Component + 浅比较版 shouldComponentUpdate
+
 ### Q38：React 中 Fragment（<></>）的作用和原理？
+
+**难度**：⭐⭐ ｜ **频率**：📌 ｜ **考点**：Fragment 让组件返回多个节点而不产生额外 DOM
+
+**💡 记忆关键词**：Fragment / key 支持 / 无额外 DOM
 
 ```typescript
 // ❌ 问题：JSX 必须有一个根元素
@@ -9833,7 +10254,16 @@ function Glossary({ items }: { items: { term: string; desc: string }[] }) {
 
 **原理：** `React.Fragment` 是一个特殊的组件类型，React 在渲染时不会为其创建 DOM 节点，只渲染其子节点。源码中通过 `REACT_FRAGMENT_TYPE` 标记，在 commit 阶段跳过 DOM 操作。
 
+
+**⚠️ 常见误区**：以为 Fragment 能接收 key 以外的属性（只有 key 被支持）
+
+**📝 一句话总结**：Fragment 是「不产生 DOM 的容器」，数组场景必须用带 key 的 Fragment
+
 ### Q39：React 中 ref 的几种使用方式及各自适用场景？
+
+**难度**：⭐⭐⭐ ｜ **频率**：🔥 ｜ **考点**：ref 对象、回调 ref、转发 ref、命令式句柄四种用法
+
+**💡 记忆关键词**：useRef / 回调 ref / forwardRef / useImperativeHandle
 
 ```typescript
 import { useRef, createRef, forwardRef, useImperativeHandle, useCallback } from 'react';
@@ -9894,7 +10324,16 @@ const CustomInput = forwardRef<{ focus: () => void; clear: () => void }, {}>(
 | 与第三方库集成（D3/Chart） | callback ref | 可获取 DOM 测量和通知 |
 | 暴露子组件方法 | forwardRef + useImperativeHandle | 封装性好 |
 
+
+**⚠️ 常见误区**：在渲染期间读写 ref.current 并期待触发渲染（ref 变化不触发重渲染）
+
+**📝 一句话总结**：ref 是「绕过渲染的逃生舱」，用于 DOM、命令式句柄与保存不触发渲染的值
+
 ### Q40：React 中 StrictMode 的作用和检测机制？
+
+**难度**：⭐⭐⭐ ｜ **频率**：📌 ｜ **考点**：StrictMode 在开发模式重复调用以暴露不纯渲染与缺失清理
+
+**💡 记忆关键词**：双调用 / 副作用二次执行 / 仅开发
 
 ```typescript
 import { StrictMode } from 'react';
@@ -9936,7 +10375,16 @@ function TestComponent() {
 
 React 实现方式：StrictMode 通过 `React.StrictMode` 组件标记子树，Fiber 节点上设置 `mode` 标志位为 `StrictMode`。在 commit 阶段，如果检测到 `StrictMode` 标志，开发环境的渲染器会执行双重生命周期。
 
+
+**⚠️ 常见误区**：以为 StrictMode 的双调用是 bug，或以为它会影响生产行为
+
+**📝 一句话总结**：StrictMode 用「开发期双调用」逼出副作用不幂等与清理缺失的问题
+
 ### Q41：React 中如何实现条件渲染？各方式对比？
+
+**难度**：⭐ ｜ **频率**：📌 ｜ **考点**：条件渲染的多种写法（&&、三元、早返回、映射表）
+
+**💡 记忆关键词**：&& 陷阱 / 三元 / 早返回
 
 ```typescript
 function ConditionalRendering({ user, loading, error }: {
@@ -10007,7 +10455,16 @@ function ConditionalData({ id }: { id: string | null }) {
 // 传统 Hooks 不能在条件中调用，但 use() 可以！
 ```
 
+
+**⚠️ 常见误区**：用 && 渲染数字 0 时把 0 渲染出来（应写显式布尔判断）
+
+**📝 一句话总结**：条件渲染优先选「早返回 + 三元」，用 && 时确保左侧是布尔值
+
 ### Q42：React 中 dangerouslySetInnerHTML 的危险性和安全替代方案？
+
+**难度**：⭐⭐ ｜ **频率**：📌 ｜ **考点**：dangerouslySetInnerHTML 的 XSS 风险与净化替代方案
+
+**💡 记忆关键词**：XSS / 净化 / 白名单
 
 ```typescript
 function DangerousExample() {
@@ -10055,7 +10512,16 @@ const userInput = '<script>alert("XSS")</script>';
 3. 服务端渲染的 HTML 片段可以使用，但确保服务端输出安全
 4. 使用 `__html` 属性名是 React 故意设计的警示
 
+
+**⚠️ 常见误区**：以为转义输入就够了（富文本必须做 HTML 净化，且不能用正则自己写）
+
+**📝 一句话总结**：能不用就不用，必须用则先净化（DOMPurify 类库）+ CSP 兜底
+
 ### Q43：React 中 useEffect 与 useLayoutEffect 的选择策略？
+
+**难度**：⭐⭐⭐ ｜ **频率**：🔥 ｜ **考点**：useLayoutEffect 用于需要在绘制前测量或修改 DOM 的场景
+
+**💡 记忆关键词**：布局测量 / 闪烁 / 同步执行
 
 ```typescript
 function EffectStrategy() {
@@ -10106,7 +10572,16 @@ function EffectStrategy() {
 
 **SSR 警告：** `useLayoutEffect` 在 SSR 中会触发警告，因为它需要在浏览器环境中执行。
 
+
+**⚠️ 常见误区**：默认用 useLayoutEffect 做数据请求（会阻塞绘制）
+
+**📝 一句话总结**：要「绘制前改 DOM」用 useLayoutEffect，其余一律 useEffect
+
 ### Q44：React 中列表渲染为什么需要 key？Diff 算法如何利用 key？
+
+**难度**：⭐⭐ ｜ **频率**：🔥 ｜ **考点**：Diff 借 key 判断可复用节点，只做同层比较
+
+**💡 记忆关键词**：同层比较 / key 复用 / 类型变化即重建
 
 ```typescript
 // 场景：列表头部插入新元素
@@ -10177,7 +10652,16 @@ function reconcileChildren(currentFirstChild, newChildren) {
 > ```
 > **为什么 React 不做双端 Diff：** Fiber 架构基于单向链表，无反向索引。Vue 的虚拟 DOM 有 children 数组支持双端遍历。Fiber 的"一次只有一个单向链表"架构不允许反向遍历。这是架构设计选择带来的 Diff 策略差异。
 
+
+**⚠️ 常见误区**：以为 key 只在列表里有用（改变 key 是重建任意组件的标准手段）
+
+**📝 一句话总结**：Diff 的规则是「同层 + 同类型 + 同 key 才复用」，否则整棵子树重建
+
 ### Q45：React 16+ 为什么废弃三个 will 生命周期？
+
+**难度**：⭐⭐⭐ ｜ **频率**：📌 ｜ **考点**：三个 will 生命周期在 Render 阶段可能被多次调用，故被标记 UNSAFE
+
+**💡 记忆关键词**：Render 阶段 / 多次调用 / 迁移到 getDerivedStateFromProps
 
 **三个废弃的生命周期：**
 - `componentWillMount`
@@ -10238,7 +10722,16 @@ class UserProfile extends React.Component {
 | componentWillReceiveProps | getDerivedStateFromProps / 完全受控组件 | 静态方法，纯函数，无副作用 |
 | componentWillUpdate | getSnapshotBeforeUpdate + componentDidUpdate | DOM 快照在 Pre-commit 阶段只执行一次 |
 
+
+**⚠️ 常见误区**：以为废弃只是「改名」，真正原因是并发下它们会被打断并重复执行
+
+**📝 一句话总结**：可中断渲染让 Render 阶段的钩子不再可靠，副作用必须挪到 Commit 阶段
+
 ### Q46：React 类组件中事件绑定 this 的几种方式？
+
+**难度**：⭐⭐ ｜ **频率**：📖 ｜ **考点**：构造函数 bind、箭头函数属性、调用处 bind 三种 this 绑定
+
+**💡 记忆关键词**：bind / 箭头函数 / 渲染期绑定开销
 
 ```typescript
 // 方式 1：constructor 中 bind（官方推荐）
@@ -10287,7 +10780,16 @@ class Counter4 extends React.Component {
 | render bind | ❌ 每次创建新函数 | ⭐⭐ | 可能引发子组件不必要渲染 |
 | 箭头函数包裹 | ❌ 每次创建新函数 | ⭐ | 同左，且可读性差 |
 
+
+**⚠️ 常见误区**：在 render 里写 onClick={this.handle.bind(this)}，每次渲染新建函数
+
+**📝 一句话总结**：推荐构造函数 bind 或类字段箭头函数，避免在渲染期创建函数
+
 ### Q47：React 中 setState 的合并策略是什么？
+
+**难度**：⭐⭐⭐ ｜ **频率**：📌 ｜ **考点**：setState 的对象浅合并与函数式更新按序累积
+
+**💡 记忆关键词**：Object.assign / 函数式更新 / 批处理
 
 ```typescript
 // setState 的两种用法
@@ -10331,7 +10833,16 @@ class Example extends React.Component {
 | 多次对象形式 | 最后一次覆盖前面（非 count 累加） | 避免：连续累加 |
 | 多次函数形式 | 依次执行（count 累加） | ✅ 推荐连续更新 |
 
+
+**⚠️ 常见误区**：连续多次 setState({count: count+1}) 只生效一次（要用函数式更新）
+
+**📝 一句话总结**：对象形式做浅合并、函数形式按序累积，依赖前值必须用函数式
+
 ### Q48：React 中函数组件每次渲染都有独立闭包是什么意思？
+
+**难度**：⭐⭐⭐ ｜ **频率**：🔥 ｜ **考点**：每次渲染的函数组件拥有独立的变量快照与闭包
+
+**💡 记忆关键词**：渲染快照 / 闭包 / 独立 props 与 state
 
 ```typescript
 function Counter() {
@@ -10438,7 +10949,16 @@ function ClosureWithUseCallback() {
 - 补齐依赖 → 函数在依赖变化时重建，捕获新快照
 - `useRef` 是唯一能在稳定函数中读取最新值的方式
 
+
+**⚠️ 常见误区**：用「闭包陷阱」解释一切，却不区分「渲染快照」与「effect 未重跑」两种成因
+
+**📝 一句话总结**：每次渲染都是一次函数调用，拿到的是当时的 props/state 快照，effect 的依赖决定是否重跑
+
 ### Q49：React 中 getDerivedStateFromProps 的真实使用场景？
+
+**难度**：⭐⭐⭐ ｜ **频率**：📖 ｜ **考点**：getDerivedStateFromProps 用于「props 变化重置 state」，多数场景应改为受控或 key 重建
+
+**💡 记忆关键词**：派生状态 / 反模式 / key 重建
 
 ```typescript
 // 官方警示：大多数场景不需要 getDerivedStateFromProps
@@ -10507,7 +11027,16 @@ class List extends React.Component<{ items: Item[]; filter: string }> {
 | 缓存计算结果 | props 变化重新计算派生数据 | **useMemo**（函数组件） |
 | props 变化重置 state | 如编辑表单中外部数据变化重置 | **key 属性**：`<EmailInput key={user.id} />` 或完全受控组件 |
 
+
+**⚠️ 常见误区**：把 props 复制到 state 当派生状态（这是官方点名的反模式）
+
+**📝 一句话总结**：派生状态优先用「直接计算」或「改 key 重置组件」，getDerivedStateFromProps 是最后手段
+
 ### Q50：React 中 useState 和 useReducer 如何选择？
+
+**难度**：⭐⭐ ｜ **频率**：🔥 ｜ **考点**：useState 适合独立状态，useReducer 适合多字段联动与可测试的状态机
+
+**💡 记忆关键词**：独立状态 / 状态机 / 可测试性
 
 ```typescript
 // ✅ useState：简单独立的状态
@@ -10598,7 +11127,16 @@ const [items, setItems] = useState(() => {
 // localStorage 读取只在挂载时执行一次
 ```
 
+
+**⚠️ 常见误区**：把所有状态都塞进 useReducer，或把复杂联动拆成一堆 useState
+
+**📝 一句话总结**：状态之间有联动与迁移规则时用 useReducer，否则 useState 更直接
+
 ### Q51：React 中 useEffect 的依赖比较机制（Object.is 比较）？
+
+**难度**：⭐⭐⭐ ｜ **频率**：🔥 ｜ **考点**：依赖数组用 Object.is 逐项比较，引用值每次新建都会导致 effect 重跑
+
+**💡 记忆关键词**：Object.is / 逐项比较 / 引用相等
 
 ```typescript
 useEffect(() => {
@@ -10647,7 +11185,16 @@ useEffect(() => {
 3. 避免将不必要的引用类型放入依赖数组
 4. ESLint `react-hooks/exhaustive-deps` 规则帮你检查
 
+
+**⚠️ 常见误区**：把对象或数组写进依赖却不 memo，effect 每次渲染都重跑
+
+**📝 一句话总结**：依赖比较是引用相等，放进依赖的引用值必须先稳定下来
+
 ### Q52：React 中 ref 回调的执行时机？
+
+**难度**：⭐⭐⭐ ｜ **频率**：📌 ｜ **考点**：回调 ref 在挂载后调用、更新时先 null 再新值、卸载时传 null
+
+**💡 记忆关键词**：挂载后 / 先置空 / 卸载清理
 
 ```typescript
 function RefCallback() {
@@ -10708,7 +11255,16 @@ function OrderOfExecution() {
 // 3. useEffect
 ```
 
+
+**⚠️ 常见误区**：以为回调 ref 只在挂载时执行一次（依赖变化时会重新调用）
+
+**📝 一句话总结**：回调 ref 的调用时机是「DOM 节点身份变化」时，可用于精确感知挂载与卸载
+
 ### Q53：React 中 forceUpdate 的使用场景和替代方案？
+
+**难度**：⭐⭐ ｜ **频率**：📖 ｜ **考点**：forceUpdate 绕过 props/state 比较强制重渲染，通常应改为正确建模状态
+
+**💡 记忆关键词**：强制重渲染 / 逃生舱 / 状态建模
 
 ```typescript
 // 类组件：forceUpdate 强制重新渲染
@@ -10763,7 +11319,16 @@ function FunctionForceUpdate() {
 | 递增 key | ✅ | ✅ | 重新创建整个组件 |
 | forceUpdate | ✅ | ❌ | 尽量不用 |
 
+
+**⚠️ 常见误区**：用 forceUpdate 驱动依赖外部可变数据的渲染（应改用 useSyncExternalStore）
+
+**📝 一句话总结**：forceUpdate 是逃生舱，出现它通常说明有状态没有进入 React 的数据流
+
 ### Q54：React 中 createElement、cloneElement、isValidElement 的用途？
+
+**难度**：⭐⭐ ｜ **频率**：📖 ｜ **考点**：createElement 生成元素、cloneElement 覆写 props、isValidElement 做类型判断
+
+**💡 记忆关键词**：createElement / cloneElement / isValidElement
 
 ```typescript
 import { createElement, cloneElement, isValidElement, ReactNode } from 'react';
@@ -10827,7 +11392,16 @@ function ChildrenUtils({ children }: { children: ReactNode }) {
 | `isValidElement` | 类型判断 | 安全处理 children |
 | `React.Children` | children 操作 | 遍历、计数、转换子元素 |
 
+
+**⚠️ 常见误区**：用 cloneElement 传数据替代 render props 或 Context（会让组件耦合子实现）
+
+**📝 一句话总结**：这三个 API 属于「元素层操作」，日常开发里多数场景可用组合模式替代
+
 ### Q55：React 中 Profiler 如何使用？如何分析渲染性能？
+
+**难度**：⭐⭐⭐ ｜ **频率**：📌 ｜ **考点**：Profiler 采集提交耗时与原因，配合 React DevTools 定位慢渲染
+
+**💡 记忆关键词**：onRender 回调 / actualDuration / DevTools
 
 ```typescript
 import { Profiler, ProfilerOnRenderCallback } from 'react';
@@ -10891,7 +11465,16 @@ function useRenderTrace(componentName: string) {
 | Context 性能 | Profiler 包裹消费组件 | 检查 Context 变化导致的重渲染 |
 
 
+
+**⚠️ 常见误区**：只看总耗时不看提交次数，忽略「渲染次数过多」这一更常见的瓶颈
+
+**📝 一句话总结**：性能分析先问「渲染了几次」，再问「每次多久」，Profiler 两者都能给
+
 ### Q56：React Hooks 安全使用综合指南（useCallback / useEffect / useMemo / useRef）
+
+**难度**：⭐⭐⭐ ｜ **频率**：🔥 ｜ **考点**：Hooks 四条安全准则：依赖写全、引用稳住、副作用清干净、不滥用缓存
+
+**💡 记忆关键词**：依赖写全 / 引用稳住 / 清理干净 / 不滥用
 
 #### useCallback 安全要点
 
@@ -10970,5 +11553,25 @@ useEffect(() => {
 **核心口诀：** 依赖写全、引用稳住、副作用清干净、不滥用缓存。
 
 ---
+
+
+**⚠️ 常见误区**：用禁用 eslint 依赖检查的方式「解决」依赖告警
+
+**📝 一句话总结**：Hooks 的安全问题 90% 出在依赖与引用，按这四条自查可覆盖绝大多数坑
+
+## ✅ 自测清单（React 19）
+
+- [ ] 能画出 Trigger → Render → Commit 三阶段，并说明 Render 可中断、Commit 不可中断的原因
+- [ ] 说清 Fiber 的双向链表结构与 `alternate` 双缓冲，以及 `workInProgress` 树如何被复用
+- [ ] 解释为什么用 `MessageChannel` 而不是 `requestIdleCallback` 做主调度
+- [ ] 讲清 `startTransition` / `useDeferredValue` 的适用场景与「非紧急更新可被打断」的含义
+- [ ] 说清 Hooks 不能写在条件/循环里的真正原因（链表顺序依赖，不是语法限制）
+- [ ] 能复现并修复闭包陷阱（依赖缺失、ref 持有最新值、函数式更新三种解法）
+- [ ] 讲清 `useEffect` 与 `useLayoutEffect` 的执行时序与清理函数触发时机
+- [ ] 说出 React 19 Actions 四大能力，并手写 `useActionState` + `useFormStatus` 组合
+- [ ] 说明 React Compiler 的自动记忆化原理，以及它是否让 `useMemo` 彻底过时
+- [ ] 讲清 RSC 与 SSR 的差异、`use client` 边界与流式渲染的价值
+- [ ] 能列出 5 类内存泄漏场景并给出 Profiler / Memory 的定位手段
+- [ ] 对比 React 重渲染模型与 Vue 响应式模型：谁精确、谁可控、各自的优化入口
 
 
