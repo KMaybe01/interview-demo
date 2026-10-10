@@ -9,8 +9,7 @@
   ],
   "scripts": {
     "prepare": "husky",
-    "changelog": "conventional-changelog -n changelog.config.mjs -i CHANGELOG.md -s",
-    "changelog:rebuild": "conventional-changelog -n changelog.config.mjs -i CHANGELOG.md -s -r 0",
+    "changelog": "conventional-changelog -n changelog.config.mjs -i CHANGELOG.md -s -r 0",
     "dev": "turbo run dev",
     "preview": "turbo run preview",
     "build": "turbo run build",

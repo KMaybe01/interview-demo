@@ -1,5 +1,23 @@
+## [3.4.0](https://github.com/KMaybe01/interview-demo/compare/v4.0.0...v3.4.0) (2026-10-10)
 
-# Changelog
+## [4.0.0](https://github.com/KMaybe01/interview-demo/compare/v3.4.0...v4.0.0) (2026-10-10)
+
+### Bug Fixes
+
+* 修复文档目录点击没高亮 ([ac0ad1d](https://github.com/KMaybe01/interview-demo/commit/ac0ad1d703c6dce71f3a40f9e494cb17aba5cd84))
+
+### Documentation
+
+* 更新工程化篇 ([617b9a6](https://github.com/KMaybe01/interview-demo/commit/617b9a63372bfd34d0ae58320941f863e6c9cb24))
+* 更新基础篇 ([81e3e37](https://github.com/KMaybe01/interview-demo/commit/81e3e3790a82a46f93e590e74eed3d4638d63d45))
+* 更新面试文档 ([b400646](https://github.com/KMaybe01/interview-demo/commit/b400646cf6b67f106762820376bae8d0cbf35309))
+* 更新容器相关和changelog ([909692e](https://github.com/KMaybe01/interview-demo/commit/909692e9d1d62f85b195fc5a5e24dc5a7d71e2c5))
+* update 框架篇 ([29c20da](https://github.com/KMaybe01/interview-demo/commit/29c20da0d0bd629711a47b17f15d4f15403dc64a))
+* update AI ([7e9d045](https://github.com/KMaybe01/interview-demo/commit/7e9d045d84067ad4cc7fe2bab71fddbd6f77a6e1))
+
+### Miscellaneous Chores
+
+* update Go 1.27.2 ([88dcc4d](https://github.com/KMaybe01/interview-demo/commit/88dcc4d2205e93d93701c0e1be32dee79cef2fd1))
 
 ## [3.4.0](https://github.com/KMaybe01/interview-demo/compare/v3.3.1...v3.4.0) (2026-10-09)
 
