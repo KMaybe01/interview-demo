@@ -2,6 +2,8 @@ import type { ComponentType } from 'react';
 import ChatStage from './01-chat/ChatStage.tsx';
 import RagStage from './02-rag/RagStage.tsx';
 import ProdStage from './04-prod/ProdStage.tsx';
+import ProtoStage from './05-proto/ProtoStage.tsx';
+import UiStage from './06-ui/UiStage.tsx';
 
 export type StageStatus = 'ready' | 'building';
 
@@ -17,8 +19,9 @@ export interface StageMeta {
 
 /**
  * 关卡注册表 —— 每完成一关就把它加进来。
- * 已交付：① 流式对话、② 知识增强 RAG、④ 企业级工程化（护栏/熔断/Trace）。
- * 其余关卡给出占位卡片，说明它们解决什么问题。
+ * 已交付：① 流式对话、② 知识增强 RAG、④ 企业级工程化（护栏/熔断/Trace）、
+ * ⑤ 协议与多 Agent（MCP/A2A）、⑥ 前端 AI 交互层（生成式 UI 沙箱）。
+ * ③ Agent 与工具尚未交付，给出占位卡片说明它解决什么问题。
  */
 export const STAGES: StageMeta[] = [
   {
@@ -56,18 +59,18 @@ export const STAGES: StageMeta[] = [
   {
     id: 'proto',
     title: '⑤ 协议与多 Agent',
-    goal: 'MCP 2026-07-28 / A2A v1.0',
-    status: 'building',
+    goal: 'MCP 无状态单端点 / A2A 任务状态机',
+    status: 'ready',
     docPath: 'docs/S5-AI/05-第五关-协议与多Agent/index.md',
-    component: () => <StagePlaceholder title="⑤ 协议与多 Agent" stageId="proto" />,
+    component: ProtoStage,
   },
   {
     id: 'ui',
     title: '⑥ 前端 AI 交互层',
-    goal: '生成式 UI / 端侧推理',
-    status: 'building',
+    goal: '生成式 UI 渲染沙箱 / 端侧推理',
+    status: 'ready',
     docPath: 'docs/S5-AI/06-第六关-前端AI交互层/index.md',
-    component: () => <StagePlaceholder title="⑥ 前端 AI 交互层" stageId="ui" />,
+    component: UiStage,
   },
 ];
 

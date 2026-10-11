@@ -7,7 +7,9 @@ import {
   type UIMessage,
 } from 'ai';
 import { estimateCost, type ModelTier, sumUsage, type TokenUsage } from '../shared/cost.ts';
+import * as a2a from './a2a.ts';
 import { inspectInput, inspectOutput, wrapWithDelimiters } from './guard.ts';
+import { handleMcpRequest } from './mcp.ts';
 import { listModels, resolveModel } from './models.ts';
 import { endSpan, getTrace, listTraces, type Span, startSpan, startTrace } from './obs.ts';
 import { addDocument, buildContext, listDocuments, search } from './rag.ts';
@@ -240,6 +242,54 @@ export function createApiHandler() {
       const traceId = path.slice('/api/obs/traces/'.length);
       const trace = getTrace(traceId);
       sendJson(res, trace ? 200 : 404, trace ?? { error: 'trace not found' });
+      return;
+    }
+
+    // MCP 2026-07-28 无状态单端点：无 initialize、无 session id
+    if (path === '/api/mcp' && method === 'POST') {
+      const body = await readJsonBody<Record<string, unknown>>(req);
+      const response = await handleMcpRequest(body, {
+        protocolVersion: req.headers['mcp-protocol-version'] as string | undefined,
+      });
+      sendJson(res, 200, response);
+      return;
+    }
+
+    if (path === '/api/a2a/agents' && method === 'GET') {
+      sendJson(res, 200, { agents: a2a.listAgents() });
+      return;
+    }
+
+    if (path?.startsWith('/api/a2a/agents/') && path.endsWith('/card') && method === 'GET') {
+      const agentId = path.slice('/api/a2a/agents/'.length, -'/card'.length);
+      const card = a2a.getCard(agentId);
+      sendJson(res, card ? 200 : 404, card ?? { error: 'agent not found' });
+      return;
+    }
+
+    if (path?.startsWith('/api/a2a/agents/') && path.endsWith('/tasks') && method === 'POST') {
+      const agentId = path.slice('/api/a2a/agents/'.length, -'/tasks'.length);
+      const body = await readJsonBody<{ text?: string; taskId?: string }>(req);
+      const task = a2a.sendMessage({ agentId, text: body.text ?? '', taskId: body.taskId });
+      sendJson(res, 'error' in task ? 400 : 201, task);
+      return;
+    }
+
+    if (path === '/api/a2a/tasks' && method === 'GET') {
+      sendJson(res, 200, { tasks: a2a.listTasks() });
+      return;
+    }
+
+    if (path?.startsWith('/api/a2a/tasks/') && path.endsWith('/cancel') && method === 'POST') {
+      const taskId = path.slice('/api/a2a/tasks/'.length, -'/cancel'.length);
+      const task = a2a.cancelTask(taskId);
+      sendJson(res, 'error' in task ? 409 : 200, task);
+      return;
+    }
+
+    if (path?.startsWith('/api/a2a/tasks/') && method === 'GET') {
+      const task = a2a.getTask(path.slice('/api/a2a/tasks/'.length));
+      sendJson(res, task ? 200 : 404, task ?? { error: 'task not found' });
       return;
     }
 

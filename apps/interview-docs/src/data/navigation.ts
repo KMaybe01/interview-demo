@@ -283,6 +283,21 @@ export const navConfig: NavItem[] = [
         items: [
           { text: '关卡概览', icon: '📖', link: '/S5-AI/05-第五关-协议与多Agent/' },
           {
+            text: 'MCP 2026-07-28 详解',
+            icon: '🔌',
+            link: '/S5-AI/05-第五关-协议与多Agent/01-MCP-2026-07-28详解',
+          },
+          {
+            text: '暴露业务系统为 MCP 工具',
+            icon: '🧰',
+            link: '/S5-AI/05-第五关-协议与多Agent/02-暴露业务系统为MCP工具',
+          },
+          {
+            text: 'A2A 多 Agent 协作',
+            icon: '🤝',
+            link: '/S5-AI/05-第五关-协议与多Agent/03-A2A多Agent协作',
+          },
+          {
             text: '前沿技术与生态（MCP / A2A）',
             icon: '🔮',
             link: '/S5-AI/05-第五关-协议与多Agent/附-前沿技术与生态',
@@ -303,6 +318,11 @@ export const navConfig: NavItem[] = [
             text: '生成式 UI 与组件生态',
             icon: '🧱',
             link: '/S5-AI/06-第六关-前端AI交互层/01-生成式UI与组件生态',
+          },
+          {
+            text: 'Ant Design X 实战',
+            icon: '🧩',
+            link: '/S5-AI/06-第六关-前端AI交互层/02-Ant-Design-X实战',
           },
           { text: '端侧推理', icon: '🧠', link: '/S5-AI/06-第六关-前端AI交互层/03-端侧推理' },
           {
