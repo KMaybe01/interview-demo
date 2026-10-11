@@ -53,12 +53,14 @@ apps/ai-course/
 |---|---|---|
 | ① 流式对话 | `src/stages/01-chat/` | TTFT、parts 渲染、中断、错误重试、token/成本 |
 | ② 知识增强 RAG | `src/stages/02-rag/` | 灌库分块 → 检索调试 → 带溯源的问答 |
+| ③ Agent 与工具 | `src/stages/03-agent/` | 工具分级 L0/L2、审批工单（HITL）、步数/重复检测、审计流 |
 | ④ 企业级工程化 | `src/stages/04-prod/` | 护栏拦截、熔断状态机（5 次失败/30s）、Trace 瀑布图 |
 | ⑤ 协议与多 Agent | `src/stages/05-proto/` | MCP 无状态单端点（幂等/MRTR/版本协商）+ A2A 任务状态机 |
 | ⑥ 前端 AI 交互层 | `src/stages/06-ui/` | 生成式 UI 沙箱（白名单组件 + 递归校验） |
 
 后端接口：`/api/models`、`/api/chat`（`stage=rag` 走检索增强）、`/api/rag/{documents,search}`、
-`/api/guard/inspect`、`/api/obs/traces`、`/api/resilience`、`/api/mcp`、`/api/a2a/*`。
+`/api/guard/inspect`、`/api/obs/traces`、`/api/resilience`、`/api/mcp`、`/api/a2a/*`、
+`/api/agent/{tools,run,approvals,audit}`。
 
 **为什么 BFF 挂在 Vite 里**：`server/handler.ts` 导出的是一个 connect 风格中间件，
 `vite.config.ts` 把它挂到 dev server，所以 `bun run dev` 一条命令就够了；

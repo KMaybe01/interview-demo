@@ -8,12 +8,15 @@ import {
 } from 'ai';
 import { estimateCost, type ModelTier, sumUsage, type TokenUsage } from '../shared/cost.ts';
 import * as a2a from './a2a.ts';
+import { getAudit, runAgent } from './agent.ts';
+import { listApprovals, resolveApproval } from './approvals.ts';
 import { inspectInput, inspectOutput, wrapWithDelimiters } from './guard.ts';
 import { handleMcpRequest } from './mcp.ts';
 import { listModels, resolveModel } from './models.ts';
 import { endSpan, getTrace, listTraces, type Span, startSpan, startTrace } from './obs.ts';
 import { addDocument, buildContext, listDocuments, search } from './rag.ts';
 import { breaker } from './resilience.ts';
+import { TOOLS } from './tools.ts';
 
 /**
  * 教程 BFF：一条链路里把「护栏 → 检索 → 模型 → 成本」串起来，
@@ -290,6 +293,58 @@ export function createApiHandler() {
     if (path?.startsWith('/api/a2a/tasks/') && method === 'GET') {
       const task = a2a.getTask(path.slice('/api/a2a/tasks/'.length));
       sendJson(res, task ? 200 : 404, task ?? { error: 'task not found' });
+      return;
+    }
+
+    if (path === '/api/agent/tools' && method === 'GET') {
+      sendJson(
+        res,
+        200,
+        TOOLS.map((tool) => ({
+          name: tool.name,
+          description: tool.description,
+          level: tool.level,
+          timeoutMs: tool.timeoutMs,
+          idempotent: tool.idempotent,
+        })),
+      );
+      return;
+    }
+
+    if (path === '/api/agent/run' && method === 'POST') {
+      const body = await readJsonBody<{
+        task?: string;
+        approvedToolCalls?: string[];
+        idempotencyKey?: string;
+      }>(req);
+      const result = await runAgent({
+        task: body.task ?? '',
+        approvedToolCalls: body.approvedToolCalls,
+        idempotencyKey: body.idempotencyKey,
+      });
+      sendJson(res, 200, result);
+      return;
+    }
+
+    if (path === '/api/agent/approvals' && method === 'GET') {
+      sendJson(res, 200, { approvals: listApprovals() });
+      return;
+    }
+
+    if (
+      path?.startsWith('/api/agent/approvals/') &&
+      path.endsWith('/resolve') &&
+      method === 'POST'
+    ) {
+      const id = path.slice('/api/agent/approvals/'.length, -'/resolve'.length);
+      const body = await readJsonBody<{ approve?: boolean }>(req);
+      const result = resolveApproval(id, body.approve !== false);
+      sendJson(res, 'error' in result ? 404 : 200, result);
+      return;
+    }
+
+    if (path === '/api/agent/audit' && method === 'GET') {
+      sendJson(res, 200, { audit: getAudit() });
       return;
     }
 

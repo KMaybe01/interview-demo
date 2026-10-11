@@ -301,7 +301,7 @@ PageTracker (App.tsx 中包裹每个路由)
 
 - 它是 `docs/S5-AI` 教程的**主线**（AI SDK 7 + TS 全栈），每关一个 `src/stages/NN-*/` 目录
 - 无 `OPENAI_API_KEY` 时自动进入离线演示模式（`server/mockModel.ts` 实现 `LanguageModelV2`）
-- 六关卡中 **③ Agent 与工具** 尚未交付（`src/stages/index.tsx` 中仍为占位卡片），其余五关均有可跑代码
+- 六个关卡（① 流式对话 ② RAG ③ Agent ④ 企业级工程化 ⑤ 协议 ⑥ 生成式 UI）均有可跑代码，新增关卡同步更新 `src/stages/index.tsx`
 - 新增关卡要同步更新 `src/stages/index.tsx` 注册表与对应关卡文档的「代码映射」表
 
 ## 共享主题包

@@ -224,6 +224,21 @@ export const navConfig: NavItem[] = [
             link: '/S5-AI/03-第三关-Agent与工具/01-Agent设计模式',
           },
           {
+            text: '工具设计契约',
+            icon: '🛠️',
+            link: '/S5-AI/03-第三关-Agent与工具/02-工具设计契约',
+          },
+          {
+            text: '停止条件与死循环防护',
+            icon: '⏹️',
+            link: '/S5-AI/03-第三关-Agent与工具/03-停止条件与死循环防护',
+          },
+          {
+            text: 'HITL 人工审批',
+            icon: '👤',
+            link: '/S5-AI/03-第三关-Agent与工具/04-HITL人工审批',
+          },
+          {
             text: '附：AI 编程智能体实战',
             icon: '📄',
             link: '/S5-AI/03-第三关-Agent与工具/附-AI编程智能体实战',
@@ -391,6 +406,7 @@ export const navConfig: NavItem[] = [
           { text: '工具与协议', icon: '🧰', link: '/S5-AI/09-面试篇/04-工具与协议篇' },
           { text: '框架与工程', icon: '🔧', link: '/S5-AI/09-面试篇/05-框架与工程篇' },
           { text: '前沿趋势', icon: '🔮', link: '/S5-AI/09-面试篇/06-前沿趋势篇' },
+          { text: '项目表述模板', icon: '📋', link: '/S5-AI/09-面试篇/07-项目表述模板' },
         ],
       },
       { text: '写作约定', icon: '✍️', link: '/S5-AI/99-写作约定' },

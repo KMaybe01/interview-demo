@@ -36,10 +36,13 @@ graph TB
 | # | 章节 | 你会获得的能力 |
 |:-:|------|----------------|
 | 01 | [Agent 设计模式](./01-Agent设计模式.md) | ReAct / Function Calling / Multi-Agent 的取舍与实现 |
+| 02 | [工具设计契约](./02-工具设计契约.md) | 副作用分级 L0/L1/L2、幂等键、超时、统一执行入口与审计 |
+| 03 | [停止条件与死循环防护](./03-停止条件与死循环防护.md) | 步数/重复检测/超时/预算四道闸，以及"停下来之后怎么办" |
+| 04 | [HITL 人工审批](./04-HITL人工审批.md) | 审批工单（TTL 10min）、中断重发、过期与重放边界 |
 | 附 | [AI 编程智能体实战](./附-AI编程智能体实战.md) | 一个真实 Code Agent 的完整实现手册（原文保留） |
 
-> 🚧 **规划中（暂未成文）**：`02-工具设计契约`、`03-停止条件与死循环防护`、`04-HITL人工审批`。
-> HITL 的工业实现可先看 `backend/internal/tool/` 的权限分级与 `backend/internal/airouter/` 的审批编排。
+> 教程侧可跑代码在 `apps/ai-course/src/stages/03-agent/`（工具分级、审批工单、审计流），
+> 工业实现对照 `backend/internal/tool/` 的权限分级与 `backend/internal/airouter/` 的审批编排。
 
 ## 工具设计的三条铁律
 

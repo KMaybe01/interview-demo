@@ -72,9 +72,9 @@ graph LR
 | S2 | `docs/S2-框架深入/` | 8 | 8 |
 | S3 | `docs/S3-进阶提升/` | 8 | 8 |
 | S4 | `docs/S4-面试冲刺/` | 20 | 19 |
-| S5 | `docs/S5-AI/` | 59 | 59 |
+| S5 | `docs/S5-AI/` | 63 | 63 |
 | S6 | `docs/S6-Go/` | 33 | 33 |
-| **合计** | | **142** | **138**（另加「首页」） |
+| **合计** | | **146** | **142**（另加「首页」） |
 
 共 17 个 `index.md` 目录概览页（S5 的六个关卡各有一个）。S1 是唯一一个三个 `index.md` 都没有进导航的阶段（S1 没有「阶段概览」条目）。
 
@@ -784,7 +784,7 @@ interview-demo/                    ← monorepo 根
 │   ├── S2-框架深入/                8 个文件
 │   ├── S3-进阶提升/                8 个文件
 │   ├── S4-面试冲刺/                20 个文件
-│   ├── S5-AI/                    59 个文件（六关卡结构）
+│   ├── S5-AI/                    63 个文件（六关卡结构）
 │   └── S6-Go/                    33 个文件
 ├── packages/shared-theme/         ← 主题 hook、ThemeToggle、useThemeTransition
 └── apps/interview-docs/
