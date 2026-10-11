@@ -1,5 +1,7 @@
 import type { ComponentType } from 'react';
 import ChatStage from './01-chat/ChatStage.tsx';
+import RagStage from './02-rag/RagStage.tsx';
+import ProdStage from './04-prod/ProdStage.tsx';
 
 export type StageStatus = 'ready' | 'building';
 
@@ -15,7 +17,8 @@ export interface StageMeta {
 
 /**
  * 关卡注册表 —— 每完成一关就把它加进来。
- * P2 阶段先交付第一关，其余关卡给出占位卡片，说明它们解决什么问题。
+ * 已交付：① 流式对话、② 知识增强 RAG、④ 企业级工程化（护栏/熔断/Trace）。
+ * 其余关卡给出占位卡片，说明它们解决什么问题。
  */
 export const STAGES: StageMeta[] = [
   {
@@ -29,10 +32,10 @@ export const STAGES: StageMeta[] = [
   {
     id: 'rag',
     title: '② 知识增强 RAG',
-    goal: '分块 / 检索 / 重排 / 评测闭环',
-    status: 'building',
+    goal: '分块 / 检索 / 溯源 / 评测闭环',
+    status: 'ready',
     docPath: 'docs/S5-AI/02-第二关-知识增强RAG/index.md',
-    component: () => <StagePlaceholder title="② 知识增强 RAG" stageId="rag" />,
+    component: RagStage,
   },
   {
     id: 'agent',
@@ -45,10 +48,10 @@ export const STAGES: StageMeta[] = [
   {
     id: 'prod',
     title: '④ 企业级工程化',
-    goal: '网关容灾 / 护栏 / 观测 / 评测 / 成本',
-    status: 'building',
+    goal: '护栏 / 熔断降级 / Trace 瀑布 / 成本',
+    status: 'ready',
     docPath: 'docs/S5-AI/04-第四关-企业级工程化/index.md',
-    component: () => <StagePlaceholder title="④ 企业级工程化" stageId="prod" />,
+    component: ProdStage,
   },
   {
     id: 'proto',

@@ -164,6 +164,16 @@ export const navConfig: NavItem[] = [
             link: '/S5-AI/01-第一关-流式对话/01-30分钟从0到1',
           },
           {
+            text: 'LLM 调用与 Token 成本',
+            icon: '💰',
+            link: '/S5-AI/01-第一关-流式对话/02-LLM调用与Token成本',
+          },
+          {
+            text: '流式协议与前端渲染',
+            icon: '🌊',
+            link: '/S5-AI/01-第一关-流式对话/03-流式协议与前端渲染',
+          },
+          {
             text: 'AI SDK 7 核心 API',
             icon: '🔗',
             link: '/S5-AI/01-第一关-流式对话/04-AI-SDK-7核心API',
@@ -181,6 +191,21 @@ export const navConfig: NavItem[] = [
         items: [
           { text: '关卡概览', icon: '📖', link: '/S5-AI/02-第二关-知识增强RAG/' },
           { text: 'RAG 全链路', icon: '🔍', link: '/S5-AI/02-第二关-知识增强RAG/01-RAG全链路' },
+          {
+            text: '分块与 Embedding 策略',
+            icon: '🧱',
+            link: '/S5-AI/02-第二关-知识增强RAG/02-分块与Embedding策略',
+          },
+          {
+            text: '混合检索与 Rerank',
+            icon: '🎯',
+            link: '/S5-AI/02-第二关-知识增强RAG/03-混合检索与Rerank',
+          },
+          {
+            text: 'RAG 评测闭环',
+            icon: '📏',
+            link: '/S5-AI/02-第二关-知识增强RAG/04-RAG评测闭环',
+          },
           {
             text: '附：RAG 全栈技术实战',
             icon: '📄',
@@ -211,9 +236,39 @@ export const navConfig: NavItem[] = [
         items: [
           { text: '关卡概览', icon: '📖', link: '/S5-AI/04-第四关-企业级工程化/' },
           {
+            text: '多 Provider 网关与熔断降级',
+            icon: '🔀',
+            link: '/S5-AI/04-第四关-企业级工程化/01-多Provider网关与熔断降级',
+          },
+          {
+            text: '安全护栏',
+            icon: '🛡️',
+            link: '/S5-AI/04-第四关-企业级工程化/02-安全护栏',
+          },
+          {
             text: '上下文工程与 Skills',
             icon: '🧩',
             link: '/S5-AI/04-第四关-企业级工程化/03-上下文工程与Skills',
+          },
+          {
+            text: '可观测性 Trace 与审计',
+            icon: '📊',
+            link: '/S5-AI/04-第四关-企业级工程化/04-可观测性Trace与审计',
+          },
+          {
+            text: '评测体系与 CI 回归门禁',
+            icon: '✅',
+            link: '/S5-AI/04-第四关-企业级工程化/05-评测体系与CI回归门禁',
+          },
+          {
+            text: '成本预算与配额治理',
+            icon: '💰',
+            link: '/S5-AI/04-第四关-企业级工程化/06-成本预算与配额治理',
+          },
+          {
+            text: '部署灰度与容灾',
+            icon: '🚦',
+            link: '/S5-AI/04-第四关-企业级工程化/07-部署灰度与容灾',
           },
           {
             text: '附：生产化与工程化手册',
