@@ -1,6 +1,6 @@
 variables:
-  GO_VERSION: "1.26"
-  BUN_VERSION: "1.4"
+  GO_VERSION: "1.27.2"
+  BUN_VERSION: "1.4.3"
   CI_REGISTRY_IMAGE: registry.gitlab.com/${CI_PROJECT_PATH}
   K8S_NAMESPACE: interview-demo
 
