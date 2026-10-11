@@ -34,6 +34,11 @@ backend/coverage/
 apps/frontend/dist/
 apps/interview-docs/dist/
 
+# 环境变量（含 LLM API Key 等密钥，切勿入库；模板文件除外）
+.env
+.env.*
+!.env.example
+
 # TypeScript build info
 *.tsbuildinfo
 .claude

@@ -291,6 +291,18 @@ PageTracker (App.tsx 中包裹每个路由)
 - 教学代码主线：AI SDK 7 + TypeScript 全栈；Go 后端（`backend/internal/*`）作为参考实现副线
 - 教程正文要能落到本仓库的真实代码或 `/api/ai/*` 接口，避免凭空构造示例
 
+## AI 教程配套代码（apps/ai-course）
+
+| 命令 | 说明 |
+|------|------|
+| `bun run --cwd apps/ai-course dev` | Vite 开发服务器（port 5199，BFF 以 Vite 中间件形式内置） |
+| `bun run --cwd apps/ai-course server` | 独立启动 BFF（`node:http`，默认 :8787） |
+| `bun run --cwd apps/ai-course build` | 类型检查 + 生产构建 |
+
+- 它是 `docs/S5-AI` 教程的**主线**（AI SDK 7 + TS 全栈），每关一个 `src/stages/NN-*/` 目录
+- 无 `OPENAI_API_KEY` 时自动进入离线演示模式（`server/mockModel.ts` 实现 `LanguageModelV2`）
+- 新增关卡要同步更新 `src/stages/index.tsx` 注册表与对应关卡文档的「代码映射」表
+
 ## 共享主题包
 
 路径：`packages/shared-theme/`

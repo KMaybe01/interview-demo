@@ -14,6 +14,31 @@
         "turbo": "^2.10.4",
       },
     },
+    "apps/ai-course": {
+      "name": "@interview-demo/ai-course",
+      "version": "1.0.0",
+      "dependencies": {
+        "@ai-sdk/openai": "^4.0.20",
+        "@ai-sdk/react": "^4.0.39",
+        "ai": "^7.0.36",
+        "react": "^19.2.7",
+        "react-dom": "^19.2.7",
+      },
+      "devDependencies": {
+        "@ai-sdk/provider": "^4.0.3",
+        "@testing-library/jest-dom": "^6.9.1",
+        "@testing-library/react": "^16.3.2",
+        "@testing-library/user-event": "^14.6.1",
+        "@types/node": "^24.13.2",
+        "@types/react": "^19.2.17",
+        "@types/react-dom": "^19.2.3",
+        "@vitejs/plugin-react": "^6.0.2",
+        "jsdom": "^29.1.1",
+        "typescript": "^7.0.2",
+        "vite": "^8.0.16",
+        "vitest": "^4.1.9",
+      },
+    },
     "apps/ai-demo": {
       "name": "@interview-demo/ai-demo",
       "version": "1.0.0",
@@ -327,6 +352,8 @@
     "@iconify/types": ["@iconify/types@2.0.0", "https://registry.npmmirror.com/@iconify/types/-/types-2.0.0.tgz", {}, "sha512-+wluvCrRhXrhyOmRDJ3q8mux9JkKy5SJ/v8ol2tu4FVjyYvtEzkc/3pK15ET6RKg4b4w4BmTk1+gsCUhf21Ykg=="],
 
     "@iconify/utils": ["@iconify/utils@3.1.4", "https://registry.npmmirror.com/@iconify/utils/-/utils-3.1.4.tgz", { "dependencies": { "@antfu/install-pkg": "^1.1.0", "@iconify/types": "^2.0.0", "import-meta-resolve": "^4.2.0" } }, "sha512-b1S7B1k9ohZ+iNTi2ATxbRYG9fTrJmUT0rc46bvVnNxqNRGW7dyo/vRREwyniI5IRN2RSJHDcm+s3BjWrSAjHw=="],
+
+    "@interview-demo/ai-course": ["@interview-demo/ai-course@workspace:apps/ai-course"],
 
     "@interview-demo/ai-demo": ["@interview-demo/ai-demo@workspace:apps/ai-demo"],
 
