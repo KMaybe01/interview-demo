@@ -41,7 +41,7 @@ graph LR
 | # | 章节 | 你会获得的能力 |
 |:-:|------|----------------|
 | 01 | [生成式 UI 与组件生态](./01-生成式UI与组件生态.md) | 主流 AI UI 方案地图：AI Elements / assistant-ui / CopilotKit / AG-UI / Ant Design X |
-| 02 | 🚧 `02-Ant-Design-X实战` | 用 `Bubble.List`/`Sender`/`Conversations` 组装企业级聊天界面 |
+| 02 | [Ant Design X 实战](./02-Ant-Design-X实战.md) | 用 `Bubble.List`/`Sender`/`Conversations` 组装企业级聊天界面 |
 | 03 | [端侧推理](./03-端侧推理.md) | Transformers.js + WebGPU/WebNN + OPFS 把小模型跑进浏览器 |
 | 附 | [Agent 全栈开发实战](./附-Agent全栈开发实战.md) | 全栈视角的 Agent 应用实现手册（原文保留） |
 

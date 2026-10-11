@@ -45,9 +45,9 @@ Agent Card（能力自述） → 任务发现 → message/send → 任务状态�
 
 | # | 章节 | 你会获得的能力 |
 |:-:|------|----------------|
-| 01 | 🚧 `01-MCP-2026-07-28详解` | 无状态单端点、`server/discover`、版本协商、错误处理模型 |
-| 02 | 🚧 `02-暴露业务系统为MCP工具` | 把内部 API 包装成 MCP 工具，并与 Agent 工具共用一套权限/审计 |
-| 03 | 🚧 `03-A2A多Agent协作` | Agent Card、任务状态机、多 Agent 分工与超时/取消 |
+| 01 | [MCP 2026-07-28 详解](./01-MCP-2026-07-28详解.md) | 无状态单端点、`server/discover`、版本协商、MRTR、幂等 |
+| 02 | [暴露业务系统为 MCP 工具](./02-暴露业务系统为MCP工具.md) | 把内部 API 包装成 MCP 工具，与 Agent 工具共用一套权限/审计 |
+| 03 | [A2A 多 Agent 协作](./03-A2A多Agent协作.md) | Agent Card、任务状态机、多 Agent 分工与超时/取消 |
 | 附 | [前沿技术与生态](./附-前沿技术与生态.md) | 协议全景与演进脉络（原文保留） |
 | 附 | [MCP+A2A 全栈实战](./附-MCP+A2A全栈实战.md) | 完整多 Agent 系统实现手册（原文保留） |
 
@@ -59,6 +59,7 @@ Agent Card（能力自述） → 任务发现 → message/send → 任务状态�
 | A2A v1.0：Agent Card、`message/send`、任务状态机、取消、`.well-known` | `backend/internal/a2a/` | `/api/ai/a2a/*` |
 | 工具「一处实现、两处复用」 | `backend/internal/airouter/toolMCPAdapter` | Agent 工具与 MCP 工具共用 registry |
 | 协议控制台（实机调用） | `apps/ai-demo/src/components/ProtocolConsole.tsx` | AI Demo → Protocol 选项卡 |
+| 教学版协议控制台 | `apps/ai-course/src/stages/05-proto/` | `POST /api/mcp`、`/api/a2a/*` |
 
 > `toolMCPAdapter` 是本仓库一个漂亮的设计：工具只要注册一次，就同时是「Agent 的内部工具」和「对外暴露的 MCP 工具」，权限、沙箱、审计自动继承。
 
