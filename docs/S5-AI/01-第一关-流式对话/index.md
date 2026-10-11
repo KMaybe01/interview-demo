@@ -38,10 +38,11 @@ graph LR
 | # | 章节 | 你会获得的能力 |
 |:-:|------|----------------|
 | 01 | [30 分钟从 0 到 1](./01-30分钟从0到1.md) | 跑通服务端 `streamText` + 前端 `useChat` 的完整链路 |
+| 02 | [LLM 调用与 Token 成本](./02-LLM调用与Token成本.md) | 请求参数、token 计量、按任务分档的模型注册表 |
+| 03 | [流式协议与前端渲染](./03-流式协议与前端渲染.md) | SSE 分帧边界、代理缓冲、中断与 parts 渲染 |
 | 04 | [AI SDK 7 核心 API](./04-AI-SDK-7核心API.md) | `useChat` 的 `transport` / `status` / `parts` 新范式与 v4→v7 迁移 |
 | 附 | [AI 聊天室完整实现](./附-AI聊天室完整实现.md) | 一个带会话管理、历史持久化的完整聊天室实现手册 |
 
-> 🚧 **规划中（暂未成文）**：`02-LLM调用与Token成本`（请求参数与计费模型）、`03-流式协议与前端渲染`（SSE 分帧边界、背压、中断重连）。
 ## 跑起来（配套代码）
 
 ```bash
@@ -53,7 +54,7 @@ bun run --cwd apps/ai-course dev     # http://localhost:5199
 - **配了 Key**：同页面换成真实模型，消息下方显示真实 token 数与估算成本
 - 详见 `apps/ai-course/README.md`
 
-> 在此之前，流式协议的工程细节直接读本仓库实现：`apps/ai-demo/src/services/aiStream.ts`（SSE 客户端）与 `backend/internal/sse/`（服务端）。
+> 想看手写 SSE 解析器怎么拼半包，对照本仓库实现：`apps/ai-demo/src/services/aiStream.ts`（客户端）与 `backend/internal/sse/`（服务端）。
 
 ## 与本仓库代码的映射
 

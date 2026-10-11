@@ -38,10 +38,13 @@ graph LR
 | # | 章节 | 你会获得的能力 |
 |:-:|------|----------------|
 | 01 | [RAG 全链路](./01-RAG全链路.md) | 从文档到答案的完整链路与每一步的取舍 |
+| 02 | [分块与 Embedding 策略](./02-分块与Embedding策略.md) | 分块四策略、Embedding 选型的硬约束、元数据过滤 |
+| 03 | [混合检索与 Rerank](./03-混合检索与Rerank.md) | 向量 + BM25 的 RRF 融合、什么时候才需要 Rerank |
+| 04 | [RAG 评测闭环](./04-RAG评测闭环.md) | 四指标定位法、评测集从哪来、接进 CI |
 | 附 | [RAG 全栈技术实战](./附-RAG全栈技术实战.md) | 全栈视角的深度实现手册（原文保留） |
 
-> 🚧 **规划中（暂未成文）**：`02-分块与Embedding策略`、`03-混合检索与Rerank`、`04-RAG评测闭环`。
-> 在此之前可先看本仓库实现 `backend/internal/knowledge/`。
+> 教程侧的可跑代码在 `apps/ai-course/src/stages/02-rag/`（分块 → 检索 → 拼上下文 → 溯源），
+> 服务端参考实现见 `backend/internal/knowledge/`。
 
 ## 决策速查
 

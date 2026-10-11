@@ -47,6 +47,17 @@ apps/ai-course/
     └── ui/styles.ts  内联样式 token（本仓库不用 CSS Module）
 ```
 
+## 已交付的关卡
+
+| 关卡 | 目录 | 演示什么 |
+|---|---|---|
+| ① 流式对话 | `src/stages/01-chat/` | TTFT、parts 渲染、中断、错误重试、token/成本 |
+| ② 知识增强 RAG | `src/stages/02-rag/` | 灌库分块 → 检索调试 → 带溯源的问答 |
+| ④ 企业级工程化 | `src/stages/04-prod/` | 护栏拦截、熔断状态机（5 次失败/30s）、Trace 瀑布图 |
+
+后端接口：`/api/models`、`/api/chat`（`stage=rag` 走检索增强）、`/api/rag/{documents,search}`、
+`/api/guard/inspect`、`/api/obs/traces`、`/api/resilience`。
+
 **为什么 BFF 挂在 Vite 里**：`server/handler.ts` 导出的是一个 connect 风格中间件，
 `vite.config.ts` 把它挂到 dev server，所以 `bun run dev` 一条命令就够了；
 想前后端分开部署时，同一个 handler 也能直接跑在 `node:http` 上（`bun run server`）。
@@ -78,7 +89,7 @@ apps/ai-course/
 
 | 用途 | 位置 |
 |---|---|
-| 教程文档 | `docs/S5-AI/01-第一关-流式对话/index.md` |
+| 教程文档 | `docs/S5-AI/index.md`（第一关 / 第二关 / 第四关已交付正文） |
 | 企业级能力的**服务端参考实现** | `backend/internal/{llm,tool,guard,airouter,obs,mcp,a2a}/` |
 | 成品级 AI Demo（Ant Design X + Go 后端） | `apps/ai-demo/` |
 
