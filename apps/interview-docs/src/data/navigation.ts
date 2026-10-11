@@ -143,165 +143,182 @@ export const navConfig: NavItem[] = [
     text: 'AI 前沿',
     icon: '🤖',
     items: [
-      { text: '阶段概览', icon: '📖', link: '/S5-AI/' },
+      { text: '阶段概览 · 总纲', icon: '📖', link: '/S5-AI/' },
       {
-        text: '入门与选型',
+        text: '导学 · 学什么 / 怎么选',
         icon: '🎯',
         items: [
-          {
-            text: '前端转型Agent路线图',
-            icon: '🗺️',
-            link: '/S5-AI/00-入门与选型/01-前端转型Agent路线图',
-          },
-          { text: '技术选型对比合集', icon: '⚖️', link: '/S5-AI/00-入门与选型/02-技术选型对比合集' },
-          {
-            text: 'AI应用市场与生态',
-            icon: '🌐',
-            link: '/S5-AI/00-入门与选型/03-AI应用市场与生态',
-          },
+          { text: '前端转型 AI 能力地图', icon: '🗺️', link: '/S5-AI/00-导学/01-前端转型AI能力地图' },
+          { text: 'AI 应用市场与生态', icon: '🌐', link: '/S5-AI/00-导学/02-AI应用市场与生态' },
+          { text: '技术选型速查', icon: '⚖️', link: '/S5-AI/00-导学/03-技术选型速查' },
         ],
       },
       {
-        text: '实战篇',
-        icon: '🚀',
+        text: '① 流式对话',
+        icon: '💬',
         items: [
+          { text: '关卡概览', icon: '📖', link: '/S5-AI/01-第一关-流式对话/' },
           {
-            text: '快速入门 · 30 分钟从 0 到 1',
+            text: '30 分钟从 0 到 1',
             icon: '⚡',
-            link: '/S5-AI/01-实战篇/00-快速入门-30分钟从0到1',
+            link: '/S5-AI/01-第一关-流式对话/01-30分钟从0到1',
           },
           {
-            text: 'AI推荐学习',
-            icon: '📖',
-            link: '/S5-AI/01-实战篇/00-AI推荐学习',
-          },
-          {
-            text: '入门期-AI聊天室',
-            icon: '💬',
-            link: '/S5-AI/01-实战篇/01-入门期-AI聊天室',
-          },
-          {
-            text: '进阶期-RAG应用',
-            icon: '📚',
-            link: '/S5-AI/01-实战篇/02-进阶期-RAG应用',
-          },
-          {
-            text: '深耕期-端侧推理',
-            icon: '🧠',
-            link: '/S5-AI/01-实战篇/03-深耕期-端侧推理',
-          },
-          {
-            text: '专家期-Agent设计',
-            icon: '🤖',
-            link: '/S5-AI/01-实战篇/04-专家期-Agent设计',
-          },
-          {
-            text: '生产化与工程化',
-            icon: '🏭',
-            link: '/S5-AI/01-实战篇/05-生产化与工程化',
-          },
-          {
-            text: '前沿技术与生态',
-            icon: '🔮',
-            link: '/S5-AI/01-实战篇/06-前沿技术与生态',
-          },
-          {
-            text: '技术选型对比合集',
-            icon: '⚖️',
-            link: '/S5-AI/01-实战篇/07-技术选型对比合集',
-          },
-          {
-            text: '开发实战与架构指南',
-            icon: '🏗️',
-            link: '/S5-AI/01-实战篇/08-开发实战与架构指南',
-          },
-          {
-            text: 'AI SDK 数据连接与聊天',
+            text: 'AI SDK 7 核心 API',
             icon: '🔗',
-            link: '/S5-AI/01-实战篇/09-AI SDK 数据连接与聊天',
+            link: '/S5-AI/01-第一关-流式对话/04-AI-SDK-7核心API',
           },
           {
-            text: '上下文工程与Agent Skills',
-            icon: '🧩',
-            link: '/S5-AI/01-实战篇/10-上下文工程与Agent Skills',
-          },
-          {
-            text: '生成式UI与前端AI组件生态',
-            icon: '🎨',
-            link: '/S5-AI/01-实战篇/11-生成式UI与前端AI组件生态',
+            text: '附：AI 聊天室完整实现',
+            icon: '📄',
+            link: '/S5-AI/01-第一关-流式对话/附-AI聊天室完整实现',
           },
         ],
       },
       {
-        text: '面试篇',
-        icon: '📝',
+        text: '② 知识增强 RAG',
+        icon: '📚',
+        items: [
+          { text: '关卡概览', icon: '📖', link: '/S5-AI/02-第二关-知识增强RAG/' },
+          { text: 'RAG 全链路', icon: '🔍', link: '/S5-AI/02-第二关-知识增强RAG/01-RAG全链路' },
+          {
+            text: '附：RAG 全栈技术实战',
+            icon: '📄',
+            link: '/S5-AI/02-第二关-知识增强RAG/附-RAG全栈技术实战',
+          },
+        ],
+      },
+      {
+        text: '③ Agent 与工具',
+        icon: '🤖',
+        items: [
+          { text: '关卡概览', icon: '📖', link: '/S5-AI/03-第三关-Agent与工具/' },
+          {
+            text: 'Agent 设计模式',
+            icon: '🧠',
+            link: '/S5-AI/03-第三关-Agent与工具/01-Agent设计模式',
+          },
+          {
+            text: '附：AI 编程智能体实战',
+            icon: '📄',
+            link: '/S5-AI/03-第三关-Agent与工具/附-AI编程智能体实战',
+          },
+        ],
+      },
+      {
+        text: '④ 企业级工程化 ★',
+        icon: '🏭',
+        items: [
+          { text: '关卡概览', icon: '📖', link: '/S5-AI/04-第四关-企业级工程化/' },
+          {
+            text: '上下文工程与 Skills',
+            icon: '🧩',
+            link: '/S5-AI/04-第四关-企业级工程化/03-上下文工程与Skills',
+          },
+          {
+            text: '附：生产化与工程化手册',
+            icon: '📄',
+            link: '/S5-AI/04-第四关-企业级工程化/附-生产化与工程化手册',
+          },
+        ],
+      },
+      {
+        text: '⑤ 协议与多 Agent',
+        icon: '🔌',
+        items: [
+          { text: '关卡概览', icon: '📖', link: '/S5-AI/05-第五关-协议与多Agent/' },
+          {
+            text: '前沿技术与生态（MCP / A2A）',
+            icon: '🔮',
+            link: '/S5-AI/05-第五关-协议与多Agent/附-前沿技术与生态',
+          },
+          {
+            text: '附：MCP+A2A 全栈实战',
+            icon: '📄',
+            link: '/S5-AI/05-第五关-协议与多Agent/附-MCP+A2A全栈实战',
+          },
+        ],
+      },
+      {
+        text: '⑥ 前端 AI 交互层',
+        icon: '🎨',
+        items: [
+          { text: '关卡概览', icon: '📖', link: '/S5-AI/06-第六关-前端AI交互层/' },
+          {
+            text: '生成式 UI 与组件生态',
+            icon: '🧱',
+            link: '/S5-AI/06-第六关-前端AI交互层/01-生成式UI与组件生态',
+          },
+          { text: '端侧推理', icon: '🧠', link: '/S5-AI/06-第六关-前端AI交互层/03-端侧推理' },
+          {
+            text: '附：Agent 全栈开发实战',
+            icon: '📄',
+            link: '/S5-AI/06-第六关-前端AI交互层/附-Agent全栈开发实战',
+          },
+        ],
+      },
+      {
+        text: '⑦ Go 后端参考实现（副线）',
+        icon: '🐹',
+        items: [
+          { text: '支线总览', icon: '📖', link: '/S5-AI/07-Go后端参考实现/' },
+          {
+            text: '阶段1 基础聊天机器人',
+            icon: '💬',
+            link: '/S5-AI/07-Go后端参考实现/阶段1-架构设计与基础聊天机器人开发',
+          },
+          {
+            text: '阶段2 商业级聊天机器人',
+            icon: '💼',
+            link: '/S5-AI/07-Go后端参考实现/阶段2-商业级聊天机器人开发',
+          },
+          {
+            text: '阶段3 LLMOps 平台',
+            icon: '📊',
+            link: '/S5-AI/07-Go后端参考实现/阶段3-LLMOps应用平台可视化',
+          },
+          {
+            text: '阶段4-8 扩展部署与实战',
+            icon: '🚀',
+            link: '/S5-AI/07-Go后端参考实现/阶段4-8-扩展部署与实战',
+          },
+        ],
+      },
+      {
+        text: '⑧ 资料库（归档）',
+        icon: '🗄️',
+        items: [
+          { text: '资料库总览', icon: '📖', link: '/S5-AI/08-资料库/' },
+          { text: '技术选型完整版', icon: '⚖️', link: '/S5-AI/08-资料库/01-技术选型完整版' },
+          { text: '开发实战与架构指南', icon: '🏗️', link: '/S5-AI/08-资料库/02-开发实战与架构指南' },
+          { text: '大模型训练', icon: '🧪', link: '/S5-AI/08-资料库/03-大模型训练' },
+          { text: 'Ollama 学习文档', icon: '🦙', link: '/S5-AI/08-资料库/04-Ollama学习文档' },
+          {
+            text: 'AI Agent 全流程解决方案',
+            icon: '🔄',
+            link: '/S5-AI/08-资料库/05-AI-Agent全流程解决方案',
+          },
+          { text: 'AI 推荐学习', icon: '📖', link: '/S5-AI/08-资料库/06-AI推荐学习' },
+        ],
+      },
+      {
+        text: '⑨ 面试篇',
+        icon: '🎤',
         items: [
           {
             text: '面试技巧与回答模板',
             icon: '💡',
-            link: '/S5-AI/02-面试篇/00-面试技巧与回答模板',
+            link: '/S5-AI/09-面试篇/00-面试技巧与回答模板',
           },
-          { text: 'LLM基础篇', icon: '🧠', link: '/S5-AI/02-面试篇/01-LLM基础篇' },
-          { text: 'RAG与知识库篇', icon: '📚', link: '/S5-AI/02-面试篇/02-RAG与知识库篇' },
-          { text: 'Agent设计篇', icon: '🤖', link: '/S5-AI/02-面试篇/03-Agent设计篇' },
-          { text: '工具与协议篇', icon: '🧰', link: '/S5-AI/02-面试篇/04-工具与协议篇' },
-          { text: '框架与工程篇', icon: '🔧', link: '/S5-AI/02-面试篇/05-框架与工程篇' },
-          { text: '前沿趋势篇', icon: '🔮', link: '/S5-AI/02-面试篇/06-前沿趋势篇' },
+          { text: 'LLM 基础', icon: '🧠', link: '/S5-AI/09-面试篇/01-LLM基础篇' },
+          { text: 'RAG 与知识库', icon: '📚', link: '/S5-AI/09-面试篇/02-RAG与知识库篇' },
+          { text: 'Agent 设计', icon: '🤖', link: '/S5-AI/09-面试篇/03-Agent设计篇' },
+          { text: '工具与协议', icon: '🧰', link: '/S5-AI/09-面试篇/04-工具与协议篇' },
+          { text: '框架与工程', icon: '🔧', link: '/S5-AI/09-面试篇/05-框架与工程篇' },
+          { text: '前沿趋势', icon: '🔮', link: '/S5-AI/09-面试篇/06-前沿趋势篇' },
         ],
       },
-      {
-        text: '课程实战',
-        icon: '📚',
-        items: [
-          { text: '课程总览', icon: '📖', link: '/S5-AI/03-课程实战/' },
-          { text: 'RAG全栈技术实战', icon: '📖', link: '/S5-AI/03-课程实战/01-RAG全栈技术实战' },
-          {
-            text: 'MCP+A2A多Agent全栈实战',
-            icon: '🤝',
-            link: '/S5-AI/03-课程实战/02-MCP+A2A多Agent全栈实战',
-          },
-          { text: 'AI编程智能体实战', icon: '🤖', link: '/S5-AI/03-课程实战/03-AI编程智能体实战' },
-          {
-            text: 'AI Agent全流程解决方案实战',
-            icon: '🔄',
-            link: '/S5-AI/03-课程实战/04-AI Agent全流程解决方案实战',
-          },
-          { text: '大模型训练', icon: '🧠', link: '/S5-AI/03-课程实战/05-大模型训练' },
-          { text: 'Ollama学习文档', icon: '🦙', link: '/S5-AI/03-课程实战/06-Ollama学习文档' },
-          {
-            text: 'Agent全栈开发实战',
-            icon: '🚀',
-            link: '/S5-AI/03-课程实战/07-Agent全栈开发实战',
-          },
-        ],
-      },
-      {
-        text: 'LLM后端',
-        icon: '🐹',
-        items: [
-          { text: '课程总览', icon: '📖', link: '/S5-AI/04-LLM后端/' },
-          {
-            text: '阶段1-架构设计与基础聊天机器人',
-            icon: '💬',
-            link: '/S5-AI/04-LLM后端/阶段1-架构设计与基础聊天机器人开发',
-          },
-          {
-            text: '阶段2-商业级聊天机器人',
-            icon: '💼',
-            link: '/S5-AI/04-LLM后端/阶段2-商业级聊天机器人开发',
-          },
-          {
-            text: '阶段3-LLMOps应用平台',
-            icon: '📊',
-            link: '/S5-AI/04-LLM后端/阶段3-LLMOps应用平台可视化',
-          },
-          {
-            text: '阶段4-8-扩展部署与实战',
-            icon: '🚀',
-            link: '/S5-AI/04-LLM后端/阶段4-8-扩展部署与实战',
-          },
-        ],
-      },
+      { text: '写作约定', icon: '✍️', link: '/S5-AI/99-写作约定' },
     ],
   },
   {

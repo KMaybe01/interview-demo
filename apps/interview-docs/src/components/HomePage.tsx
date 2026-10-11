@@ -31,7 +31,8 @@ const features = [
   {
     icon: '🤖',
     title: 'S5 AI 前沿',
-    details: 'AI Agent · RAG · 端侧推理 · MCP 2026-07-28 / A2A v1.0 · 上下文工程 · 生成式 UI',
+    details:
+      '六关卡从 0 到 1：流式对话 · RAG · Agent 与工具 · 企业级工程化 · MCP 2026-07-28 / A2A v1.0 · 前端 AI 交互层',
     link: '/S5-AI/',
   },
   {

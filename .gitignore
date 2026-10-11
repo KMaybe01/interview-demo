@@ -36,3 +36,5 @@ apps/interview-docs/dist/
 
 # TypeScript build info
 *.tsbuildinfo
+.claude
+.trae

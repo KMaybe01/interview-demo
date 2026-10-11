@@ -19,7 +19,7 @@
 - **[TypeScript](https://www.typescriptlang.org)**：泛型、接口、类型推断
 - **[React](https://react.dev)**：Hooks（useState, useEffect）、组件化思维
 - **[Next.js](https://nextjs.org)**：App Router、API Routes 基础
-- 完成后可继续学习 → [🔵 阶段二：进阶期 - RAG 应用](./02-进阶期-RAG应用.md)
+- 完成后可继续学习 → [🔵 阶段二：进阶期 - RAG 应用](../02-第二关-知识增强RAG/01-RAG全链路.md)
 
 ### 📚 核心能力指标
 - [ ] 理解大语言模型（LLM）的 Token 机制与上下文窗口
@@ -104,7 +104,7 @@ bun add react-markdown remark-gfm
 > - `message.content` → `message.parts`；`isLoading` → `status`
 > - `convertToCoreMessages()` → `convertToModelMessages()`；`maxTokens` → `maxOutputTokens`
 > - 结构化输出：`generateObject` 废弃，改用 `Output.object({ schema })`
-> - 完整迁移清单见 [09-AI SDK 数据连接与聊天](./09-AI%20SDK%20数据连接与聊天.md)
+> - 完整迁移清单见 [09-AI SDK 数据连接与聊天](./04-AI-SDK-7核心API.md)
 
 #### 1.4 环境变量配置
 

@@ -10,6 +10,7 @@
   "scripts": {
     "prepare": "husky",
     "changelog": "conventional-changelog -n changelog.config.mjs -i CHANGELOG.md -s -r 0",
+    "docs:check": "bun scripts/check-docs-links.mjs",
     "dev": "turbo run dev",
     "preview": "turbo run preview",
     "build": "turbo run build",

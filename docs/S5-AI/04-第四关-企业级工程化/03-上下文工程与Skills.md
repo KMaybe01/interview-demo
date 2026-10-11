@@ -46,7 +46,7 @@
 ```
 
 > 预算不是一次性设定：用可观测性记录"实际输入 token 分布"，按 P95 调整（见
-> [05-生产化与工程化](./05-生产化与工程化.md)）。
+> [05-生产化与工程化](./附-生产化与工程化手册.md)）。
 
 ---
 
@@ -92,7 +92,7 @@ function compactHistory(messages: UIMessage[], keepRecent = 6) {
 - 子 Agent 可以在长上下文里翻文档、跑命令、试错
 - 收益：主上下文不被污染，成本与延迟可控
 
-> 对应 AI SDK 7 的 `ToolLoopAgent` + `SandboxSession`；详见 [09-AI SDK 数据连接与聊天](./09-AI%20SDK%20数据连接与聊天.md)。
+> 对应 AI SDK 7 的 `ToolLoopAgent` + `SandboxSession`；详见 [09-AI SDK 数据连接与聊天](../01-第一关-流式对话/04-AI-SDK-7核心API.md)。
 
 ### 4. 缓存（Cache）——省钱与降延迟
 
@@ -186,7 +186,7 @@ description: 根据 Git 提交历史生成发布说明，并按变更类型分�
 | ⑥ 回归 | 用固定评测集对比改动前后 | eval 指标不回退 |
 
 > ⚠️ 任何上下文改动都要配 **eval**：改 prompt/裁剪/换模型都可能悄悄劣化质量，
-> 评测集与回归流程见 [05-生产化与工程化](./05-生产化与工程化.md)。
+> 评测集与回归流程见 [05-生产化与工程化](./附-生产化与工程化手册.md)。
 
 ---
 
@@ -213,6 +213,6 @@ description: 根据 Git 提交历史生成发布说明，并按变更类型分�
 
 ## 延伸阅读
 
-- [09-AI SDK 数据连接与聊天](./09-AI%20SDK%20数据连接与聊天.md) — `ToolLoopAgent`、`uploadSkill`、`Output.object`
-- [06-前沿技术与生态](./06-前沿技术与生态.md) — MCP `2026-07-28` 的缓存提示（`ttlMs` / `cacheScope`）与 Tasks
-- [11-生成式UI与前端AI组件生态](./11-生成式UI与前端AI组件生态.md) — Skill 产出的界面怎么渲染
+- [09-AI SDK 数据连接与聊天](../01-第一关-流式对话/04-AI-SDK-7核心API.md) — `ToolLoopAgent`、`uploadSkill`、`Output.object`
+- [06-前沿技术与生态](../05-第五关-协议与多Agent/附-前沿技术与生态.md) — MCP `2026-07-28` 的缓存提示（`ttlMs` / `cacheScope`）与 Tasks
+- [11-生成式UI与前端AI组件生态](../06-第六关-前端AI交互层/01-生成式UI与组件生态.md) — Skill 产出的界面怎么渲染

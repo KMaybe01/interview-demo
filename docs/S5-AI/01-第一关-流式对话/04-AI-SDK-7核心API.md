@@ -18,7 +18,7 @@
 - AI SDK 7 新增：`reasoning`、`uploadFile` / `uploadSkill`、MCP Apps、Realtime、Telemetry
 
 ### 🔗 前置知识
-- 完成 [🟢 阶段一：入门期 - AI 聊天室](./01-入门期-AI聊天室.md)
+- 完成 [🟢 阶段一：入门期 - AI 聊天室](./附-AI聊天室完整实现.md)
 - 熟悉 React Hooks（`useState` / `useEffect`）
 - 了解 Zod 基础用法
 
@@ -1218,10 +1218,10 @@ registerTelemetry(new OpenTelemetry());
 
 ## 📎 延伸阅读
 
-- [🟢 阶段一：入门期 - AI 聊天室](./01-入门期-AI聊天室.md)
-- [🟡 阶段二：进阶期 - RAG 应用](./02-进阶期-RAG应用.md)
-- [🔵 阶段四：专家期 - Agent 设计](./04-专家期-Agent设计.md)
-- [🟣 阶段六：前沿技术与生态](./06-前沿技术与生态.md)（MCP / MCP Apps / A2A）
+- [🟢 阶段一：入门期 - AI 聊天室](./附-AI聊天室完整实现.md)
+- [🟡 阶段二：进阶期 - RAG 应用](../02-第二关-知识增强RAG/01-RAG全链路.md)
+- [🔵 阶段四：专家期 - Agent 设计](../03-第三关-Agent与工具/01-Agent设计模式.md)
+- [🟣 阶段六：前沿技术与生态](../05-第五关-协议与多Agent/附-前沿技术与生态.md)（MCP / MCP Apps / A2A）
 - [学习指南总览](../index.md)
 
 ---

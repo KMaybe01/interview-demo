@@ -1,4 +1,3 @@
-## [3.4.0](https://github.com/KMaybe01/interview-demo/compare/v4.0.0...v3.4.0) (2026-10-10)
 
 ## [4.0.0](https://github.com/KMaybe01/interview-demo/compare/v3.4.0...v4.0.0) (2026-10-10)
 

@@ -273,6 +273,23 @@ PageTracker (App.tsx 中包裹每个路由)
 - 修改代码后同步更新 `README.md` 和 `docs/` 目录下相关文档
 - 更新 `README.md` 的"演示功能"表时同步更新 `routes/index.tsx`
 - 新增/修改 `Wiki.md` 的难点章节时，同步更新 `README.md` 的对应描述
+- 新增/移动 `docs/` 下的 Markdown 后必跑 `bun run docs:check`（`scripts/check-docs-links.mjs`），保证 0 死链
+- `apps/interview-docs/src/data/docUrls.ts` 用 `import.meta.glob` 自动发现文档，但**侧边栏需要手工维护** `navigation.ts`
+
+## S5-AI 教程结构
+
+`docs/S5-AI/` 是「前端转型 AI 开发」教程，按**能力阶梯**组织（`00`-`06` 六关卡 + `07` Go 副线 + `08` 资料库 + `09` 面试篇）：
+
+| 约定 | 含义 |
+|---|---|
+| `NN-主题.md` | 教程正文，两位数字是阅读顺序 |
+| `附-主题.md` | 保留原文的归档手册，只修链接不改正文 |
+| `index.md` | 关卡/目录概览页（根目录的 `index.md` 还是全库**版本基线真源**） |
+| `99-写作约定.md` | 章节五段式模板（原理 → 企业实现 → 代码 → 验证 → 面试追问） |
+
+- 版本号/协议版本只写在根 `index.md` 的基线表，正文一律引用不自定义
+- 教学代码主线：AI SDK 7 + TypeScript 全栈；Go 后端（`backend/internal/*`）作为参考实现副线
+- 教程正文要能落到本仓库的真实代码或 `/api/ai/*` 接口，避免凭空构造示例
 
 ## 共享主题包
 
