@@ -1,0 +1,595 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>试用期述职 · ideal-payments-ui · Clara</title>
+<style>
+  :root {
+    --bg: #0A1628;
+    --bg-card: #111F38;
+    --bg-card-hover: #16284a;
+    --primary: #2E86FF;
+    --primary-dim: rgba(46, 134, 255, 0.18);
+    --gold: #F5C542;
+    --gold-dim: rgba(245, 197, 66, 0.14);
+    --text: #E9EFFA;
+    --text-dim: #9FB3D1;
+    --line: rgba(159, 179, 209, 0.18);
+    --ok: #3DDC97;
+  }
+
+  * { margin: 0; padding: 0; box-sizing: border-box; }
+
+  html, body { height: 100%; }
+  body {
+    background: var(--bg);
+    color: var(--text);
+    font-family: "Segoe UI", "Microsoft YaHei", "PingFang SC", "Helvetica Neue", sans-serif;
+    overflow: hidden;
+  }
+
+  .slide-deck {
+    position: relative;
+    width: 100vw;
+    height: 100vh;
+    overflow: hidden;
+  }
+  @media (min-width: 769px) {
+    .slide-deck {
+      max-width: calc(100vh * 16 / 9);
+      max-height: calc(100vw * 9 / 16);
+      margin: auto;
+      position: absolute;
+      inset: 0;
+    }
+  }
+
+  .slide {
+    position: absolute;
+    inset: 0;
+    display: flex;
+    flex-direction: column;
+    justify-content: center;
+    padding: clamp(28px, 4.5vw, 72px);
+    opacity: 0;
+    visibility: hidden;
+    transition: opacity 0.45s ease;
+    background:
+      radial-gradient(1200px 600px at 85% -10%, rgba(46,134,255,0.12), transparent 60%),
+      radial-gradient(900px 500px at -10% 110%, rgba(245,197,66,0.06), transparent 60%),
+      var(--bg);
+    overflow: hidden;
+  }
+  .slide.active { opacity: 1; visibility: visible; }
+
+  .eyebrow {
+    font-size: clamp(12px, 1.2vw, 15px);
+    letter-spacing: 0.35em;
+    color: var(--primary);
+    text-transform: uppercase;
+    margin-bottom: clamp(8px, 1.2vh, 16px);
+  }
+  h1 { font-size: clamp(30px, 4.4vw, 62px); line-height: 1.15; font-weight: 800; }
+  h2 { font-size: clamp(24px, 3.2vw, 44px); line-height: 1.2; font-weight: 800; }
+  .sub { color: var(--text-dim); font-size: clamp(14px, 1.6vw, 20px); }
+  .hl { color: var(--gold); }
+  .hl-b { color: var(--primary); }
+
+  /* ---------- metric cards ---------- */
+  .metrics {
+    display: grid;
+    grid-template-columns: repeat(4, 1fr);
+    gap: clamp(10px, 1.4vw, 20px);
+    width: 100%;
+  }
+  .metric {
+    background: var(--bg-card);
+    border: 1px solid var(--line);
+    border-radius: 14px;
+    padding: clamp(12px, 1.8vw, 24px);
+    text-align: center;
+  }
+  .metric .num {
+    font-size: clamp(22px, 3.2vw, 46px);
+    font-weight: 800;
+    color: var(--gold);
+    line-height: 1.1;
+    font-variant-numeric: tabular-nums;
+  }
+  .metric .lbl {
+    margin-top: 6px;
+    font-size: clamp(11px, 1.2vw, 15px);
+    color: var(--text-dim);
+  }
+
+  /* ---------- generic card / split ---------- */
+  .split {
+    display: grid;
+    grid-template-columns: 1fr 1fr;
+    gap: clamp(18px, 3vw, 48px);
+    width: 100%;
+    align-items: stretch;
+  }
+  @media (max-width: 768px) { .split { grid-template-columns: 1fr; } }
+
+  .panel {
+    background: var(--bg-card);
+    border: 1px solid var(--line);
+    border-radius: 16px;
+    padding: clamp(14px, 2vw, 28px);
+    display: flex;
+    flex-direction: column;
+    gap: clamp(8px, 1.2vh, 14px);
+  }
+  .panel.accent { border-color: rgba(46,134,255,0.55); box-shadow: 0 0 0 1px rgba(46,134,255,0.25), 0 12px 40px rgba(46,134,255,0.10); }
+  .panel-title { font-size: clamp(14px, 1.5vw, 19px); font-weight: 700; color: var(--primary); letter-spacing: 0.05em; }
+
+  .row {
+    display: flex;
+    align-items: flex-start;
+    gap: 12px;
+    font-size: clamp(12px, 1.35vw, 17px);
+    line-height: 1.55;
+  }
+  .row .tag {
+    flex: 0 0 auto;
+    min-width: clamp(52px, 5vw, 74px);
+    text-align: center;
+    padding: 3px 8px;
+    border-radius: 999px;
+    font-size: clamp(11px, 1.1vw, 14px);
+    font-weight: 700;
+    background: var(--primary-dim);
+    color: var(--primary);
+    margin-top: 2px;
+  }
+  .row .tag.gold { background: var(--gold-dim); color: var(--gold); }
+  .row .tag.green { background: rgba(61,220,151,0.14); color: var(--ok); }
+
+  .note {
+    font-size: clamp(11px, 1.15vw, 14px);
+    color: var(--text-dim);
+    background: rgba(255,255,255,0.03);
+    border-left: 3px solid var(--primary);
+    padding: 8px 12px;
+    border-radius: 0 8px 8px 0;
+  }
+
+  /* ---------- flow diagram (P3) ---------- */
+  .flow {
+    display: flex;
+    align-items: stretch;
+    justify-content: center;
+    gap: clamp(6px, 1vw, 14px);
+    width: 100%;
+  }
+  .flow .node {
+    flex: 1 1 0;
+    background: var(--bg-card);
+    border: 1px solid var(--line);
+    border-radius: 14px;
+    padding: clamp(10px, 1.4vw, 18px);
+    text-align: center;
+    display: flex;
+    flex-direction: column;
+    justify-content: center;
+    gap: 6px;
+    min-width: 0;
+  }
+  .flow .node.engine {
+    border-color: var(--gold);
+    background: linear-gradient(180deg, rgba(245,197,66,0.10), rgba(245,197,66,0.03));
+  }
+  .flow .node .n-title { font-weight: 800; font-size: clamp(13px, 1.5vw, 19px); }
+  .flow .node .n-sub { font-size: clamp(10px, 1.05vw, 13px); color: var(--text-dim); line-height: 1.45; }
+  .flow .arrow {
+    display: flex;
+    align-items: center;
+    color: var(--primary);
+    font-size: clamp(16px, 2vw, 28px);
+    font-weight: 800;
+    flex: 0 0 auto;
+  }
+  .branch {
+    display: grid;
+    grid-template-columns: 1fr 1fr;
+    gap: clamp(8px, 1vw, 14px);
+    width: 100%;
+    margin-top: clamp(6px, 1vh, 10px);
+  }
+  .branch .b {
+    border-radius: 12px;
+    padding: clamp(8px, 1.2vh, 14px) clamp(10px, 1.4vw, 18px);
+    font-size: clamp(11px, 1.25vw, 16px);
+    line-height: 1.5;
+    border: 1px solid var(--line);
+  }
+  .branch .b.ok { background: rgba(61,220,151,0.10); border-color: rgba(61,220,151,0.4); }
+  .branch .b.no { background: rgba(255,107,107,0.10); border-color: rgba(255,107,107,0.4); }
+  .branch .b b { display: block; font-size: clamp(12px, 1.35vw, 17px); margin-bottom: 2px; }
+  .branch .b.ok b { color: var(--ok); }
+  .branch .b.no b { color: #FF8585; }
+
+  /* ---------- P4 feature cards ---------- */
+  .features {
+    display: grid;
+    grid-template-columns: repeat(3, 1fr);
+    gap: clamp(10px, 1.6vw, 24px);
+    width: 100%;
+  }
+  @media (max-width: 768px) { .features { grid-template-columns: 1fr; } }
+  .feat {
+    background: var(--bg-card);
+    border: 1px solid var(--line);
+    border-radius: 16px;
+    padding: clamp(12px, 1.8vw, 26px);
+    display: flex;
+    flex-direction: column;
+    gap: clamp(6px, 1vh, 12px);
+  }
+  .feat .icon {
+    width: clamp(34px, 3.4vw, 48px);
+    height: clamp(34px, 3.4vw, 48px);
+    border-radius: 12px;
+    background: var(--primary-dim);
+    color: var(--primary);
+    display: flex; align-items: center; justify-content: center;
+    font-size: clamp(16px, 1.8vw, 24px);
+  }
+  .feat h3 { font-size: clamp(14px, 1.6vw, 21px); }
+  .feat .plain { font-size: clamp(12px, 1.25vw, 16px); color: var(--text-dim); line-height: 1.55; }
+  .feat .biz {
+    margin-top: auto;
+    font-size: clamp(11px, 1.2vw, 15px);
+    background: rgba(255,255,255,0.03);
+    border-radius: 10px;
+    padding: 8px 10px;
+    line-height: 1.5;
+  }
+  .feat .biz b { color: var(--gold); }
+  .banner {
+    width: 100%;
+    text-align: center;
+    padding: clamp(8px, 1.4vh, 14px);
+    border-radius: 12px;
+    background: linear-gradient(90deg, rgba(46,134,255,0.16), rgba(245,197,66,0.12));
+    border: 1px solid rgba(46,134,255,0.35);
+    font-size: clamp(13px, 1.5vw, 20px);
+    font-weight: 700;
+  }
+
+  /* ---------- P5 ---------- */
+  .statbar {
+    display: grid;
+    grid-template-columns: repeat(4, 1fr);
+    gap: clamp(8px, 1.2vw, 16px);
+    width: 100%;
+  }
+  .stat {
+    text-align: center;
+    padding: clamp(8px, 1.4vh, 16px) 6px;
+    background: var(--bg-card);
+    border-top: 3px solid var(--gold);
+    border-radius: 10px;
+  }
+  .stat .num { font-size: clamp(20px, 2.8vw, 40px); font-weight: 800; color: var(--gold); font-variant-numeric: tabular-nums; }
+  .stat .lbl { font-size: clamp(10px, 1.1vw, 14px); color: var(--text-dim); margin-top: 2px; }
+  .closing {
+    width: 100%;
+    text-align: center;
+    font-size: clamp(15px, 2vw, 27px);
+    font-weight: 800;
+    padding-top: clamp(4px, 1vh, 10px);
+  }
+  .closing .hl { }
+
+  .col-title { font-size: clamp(13px, 1.4vw, 18px); font-weight: 700; margin-bottom: 2px; }
+  .col-title.g { color: var(--primary); }
+  .col-title.y { color: var(--gold); }
+
+  .footer-line {
+    position: absolute;
+    left: clamp(28px, 4.5vw, 72px);
+    bottom: clamp(14px, 2.4vh, 26px);
+    font-size: clamp(10px, 1vw, 13px);
+    color: rgba(159,179,209,0.55);
+    letter-spacing: 0.08em;
+  }
+
+  /* ---------- animations ---------- */
+  .fade-up { opacity: 0; animation: fadeUp 0.55s ease-out forwards; }
+  @keyframes fadeUp { from { opacity: 0; transform: translateY(26px); } to { opacity: 1; transform: translateY(0); } }
+  .stagger > * { opacity: 0; animation: fadeUp 0.5s ease-out forwards; }
+  .stagger > *:nth-child(1) { animation-delay: 0.10s; }
+  .stagger > *:nth-child(2) { animation-delay: 0.22s; }
+  .stagger > *:nth-child(3) { animation-delay: 0.34s; }
+  .stagger > *:nth-child(4) { animation-delay: 0.46s; }
+  .stagger > *:nth-child(5) { animation-delay: 0.58s; }
+  .slide.active .fade-up, .slide.active .stagger > * { animation-play-state: running; }
+
+  /* ---------- nav ---------- */
+  .progress-bar {
+    position: fixed; top: 0; left: 0; height: 3px;
+    background: linear-gradient(90deg, var(--primary), var(--gold));
+    transition: width 0.3s; z-index: 1000;
+  }
+  .nav-controls {
+    position: fixed; bottom: 18px; right: clamp(10px, 1.5vw, 24px);
+    display: flex; align-items: center; gap: 18px; z-index: 1000;
+  }
+  .nav-btn {
+    background: rgba(255,255,255,0.08); border: 1px solid var(--line);
+    color: var(--text); width: 38px; height: 38px; border-radius: 50%;
+    cursor: pointer; font-size: 16px;
+  }
+  .nav-btn:hover { background: rgba(255,255,255,0.16); }
+  .slide-counter { color: var(--text-dim); font-size: 13px; font-variant-numeric: tabular-nums; }
+</style>
+</head>
+<body>
+
+<div class="progress-bar" id="progressBar"></div>
+
+<div class="slide-deck">
+
+  <!-- ============ P1 · 执行摘要 ============ -->
+  <div class="slide active">
+    <div class="eyebrow fade-up">试用期述职 ｜ PROBATION REVIEW</div>
+    <h1 class="fade-up">星展银行企业网银前端研发<br>试用期述职报告</h1>
+    <p class="sub fade-up" style="margin-top:14px;">
+      Clara ｜ 前端开发工程师 ｜ <span class="hl-b">ideal-payments-ui</span> ｜ 入职两个月
+    </p>
+
+    <div class="banner fade-up" style="margin-top: clamp(16px, 3vh, 34px); text-align:left;">
+      交付 <span class="hl">3 大模块</span>，主导 <span class="hl">1 套通用审批引擎</span>，落地 <span class="hl">3 项质量机制</span>
+    </div>
+
+    <div class="metrics stagger" style="margin-top: clamp(14px, 2.6vh, 30px);">
+      <div class="metric"><div class="num">3</div><div class="lbl">交付核心模块</div></div>
+      <div class="metric"><div class="num">80%</div><div class="lbl">审批组件复用率</div></div>
+      <div class="metric"><div class="num">1周→0.5天</div><div class="lbl">新业务接入周期</div></div>
+      <div class="metric"><div class="num">9</div><div class="lbl">覆盖核心金融业务</div></div>
+    </div>
+
+    <div class="footer-line">ideal-payments-ui ｜ 企业网银资金枢纽 ｜ 汇报时长约 5 分钟</div>
+  </div>
+
+  <!-- ============ P2 · 项目业务全景（纯业务，无技术词） ============ -->
+  <div class="slide">
+    <div class="eyebrow">01 ｜ 项目业务全景</div>
+    <h2>这个系统是做什么的？</h2>
+    <p class="sub fade-up" style="margin-top:10px;">
+      企业网银的<b class="hl-b">"钱袋子中枢"</b>——企业客户的每一笔<b>花钱、收钱、管钱</b>，都要经过这套系统。
+    </p>
+
+    <div class="features stagger" style="margin-top: clamp(12px, 2.2vh, 26px);">
+      <div class="feat">
+        <div class="icon">→</div>
+        <h3>出 · 付款</h3>
+        <div class="plain">
+          给供应商汇款（本币 / 跨境）、公司账户间调拨、<b>批量发薪</b>、缴水电费账单……<br>
+          单据提交后统一进入<b class="hl-b">出账总账本</b>集中监控。
+        </div>
+        <div class="biz">配套：收款人名册 · 快捷模板 · 每月自动扣划的周期付款 · <b>止付追回</b>（风险紧急拦截）</div>
+      </div>
+      <div class="feat">
+        <div class="icon">←</div>
+        <h3>入 · 收款</h3>
+        <div class="plain">
+          向客户单笔或<b>批量托收货款</b>，回款统一沉淀进<b class="hl-b">收款总账本</b>。
+        </div>
+        <div class="biz">配套：付款人档案 · 快捷收款模板——<b>维护一次、处处可用</b>，前台少录重</div>
+      </div>
+      <div class="feat">
+        <div class="icon">✓</div>
+        <h3>管 · 审批</h3>
+        <div class="plain">
+          监管要求：<b class="hl">每笔交易必须"经办 + 复核"双人把关</b>，一人提交、另一人审批，防单人操控资金。
+        </div>
+        <div class="biz">审批员可集中审批或页面内就地处理，<b>勾选多条一键批量通过 / 驳回</b></div>
+      </div>
+    </div>
+
+    <div class="panel fade-up" style="margin-top: clamp(12px, 2.2vh, 24px); padding: clamp(10px, 1.6vh, 18px) clamp(14px, 2vw, 26px);">
+      <div class="panel-title">一笔交易的完整旅程（以付款为例）</div>
+      <div class="flow" style="margin-top:8px;">
+        <div class="node"><div class="n-title">① 经办提交</div><div class="n-sub">财务人员录入付款单</div></div>
+        <div class="arrow">→</div>
+        <div class="node"><div class="n-title">② 待审批</div><div class="n-sub">钱<b>不会</b>直接扣，进入待审池</div></div>
+        <div class="arrow">→</div>
+        <div class="node engine"><div class="n-title hl">③ 复核把关</div><div class="n-sub">审批人通过 / 驳回</div></div>
+        <div class="arrow">→</div>
+        <div class="node"><div class="n-title">④ 落地</div><div class="n-sub">通过 = 银行记账清算<br>驳回 = 记原因、可追溯</div></div>
+      </div>
+    </div>
+
+    <div class="footer-line">谁在用：企业财务（提单）+ 审批人（复核）｜ 全流程满足审计要求</div>
+  </div>
+
+  <!-- ============ P3 · 我的位置 ============ -->
+  <div class="slide">
+    <div class="eyebrow">02 ｜ 我的位置</div>
+    <h2>我的工作：三层价值</h2>
+
+    <div class="panel accent stagger" style="margin-top: clamp(14px, 2.4vh, 28px); gap: clamp(10px, 1.6vh, 18px);">
+      <div class="row"><span class="tag green">L1</span><span><b>业务交付——"把需求做出来"</b><br>独立交付<b class="hl-b">付款人管理</b>全链路（列表 / 详情 / 编辑）+ <b class="hl-b">收款类两大审批页面</b>，直接给企业前台与审批员使用。</span></div>
+      <div class="row"><span class="tag gold">L2</span><span><b class="hl">架构资产——"把重复的事做成公共资产" ★ 重点</b><br>主导设计<b class="hl">通用批量审批中枢</b>（全项目统一的"审批窗口"）：一套引擎服务 <b class="hl">9 类核心业务</b>，重复代码降 <b class="hl">80%</b>，新业务接入 <b class="hl">1 周 → 半天</b>。</span></div>
+      <div class="row"><span class="tag">L3</span><span><b>工程效能——"质量从靠自觉变成靠机制"</b><br>刷新机制现代化、提交时自动格式门禁、公共组件清单指南：让质量靠机制保障，<b>不依赖任何人的自觉</b>。</span></div>
+      <div class="note">L1 证明"能干活"，L2 / L3 证明"能让团队更高效地干活" → 下一页展开 L2 核心交付</div>
+    </div>
+
+    <div class="footer-line">ideal-payments-ui ｜ 三层价值体系</div>
+  </div>
+
+  <!-- ============ P3 · 核心交付（高潮页） ============ -->
+  <div class="slide">
+    <div class="eyebrow">03 ｜ 核心交付 · 高潮页</div>
+    <h2>通用批量审批中枢 <span style="font-size:0.55em; color:var(--text-dim); font-weight:600;">｜ 全项目统一的"审批窗口"</span></h2>
+
+    <div class="note fade-up" style="margin-top: clamp(10px, 1.8vh, 20px);">
+      <b>为什么做：</b>过去每上线一个业务 = 重做一套审批弹窗 → 重复代码、风格割裂、修一处改 N 处。
+    </div>
+
+    <div class="flow stagger" style="margin-top: clamp(12px, 2vh, 24px);">
+      <div class="node">
+        <div class="n-title">9 类业务</div>
+        <div class="n-sub">付款 · 收款<br>收款人 / 付款人 / 模板 / 止付</div>
+      </div>
+      <div class="arrow">→</div>
+      <div class="node engine">
+        <div class="n-title hl">统一审批窗口</div>
+        <div class="n-sub">选记录 → 通过 / 驳回 → 必填原因 → 全程留痕<br><b>接入只需 1 行代码</b></div>
+      </div>
+      <div class="arrow">→</div>
+      <div class="node">
+        <div class="n-title">银行核心系统</div>
+        <div class="n-sub">记账 + 清算结算</div>
+      </div>
+    </div>
+
+    <div class="branch fade-up">
+      <div class="b ok"><b>✓ 通过 Approve</b>直连核心清算，状态 → COMPLETED（已完成）</div>
+      <div class="b no"><b>✗ 驳回 Reject</b>记录原因、审计可追溯，状态 → REJECTED（已驳回）</div>
+    </div>
+
+    <div class="metrics stagger" style="margin-top: clamp(12px, 2.2vh, 26px); grid-template-columns: repeat(4, 1fr);">
+      <div class="metric"><div class="num">80%</div><div class="lbl">代码复用率 · 冗余清零</div></div>
+      <div class="metric"><div class="num">≈90%</div><div class="lbl">接入提速（1 周 → 0.5 天）</div></div>
+      <div class="metric"><div class="num">9</div><div class="lbl">类业务统一一套引擎</div></div>
+      <div class="metric"><div class="num">1 行</div><div class="lbl">业务方接入代码</div></div>
+    </div>
+
+    <div class="footer-line">ideal-payments-ui ｜ Multi-Approval 架构级交付</div>
+  </div>
+
+  <!-- ============ P4 · 工程化三项治理 ============ -->
+  <div class="slide">
+    <div class="eyebrow">04 ｜ 工程化治理</div>
+    <h2>把质量从"靠自觉"变成"靠机制"</h2>
+
+    <div class="features stagger" style="margin-top: clamp(14px, 2.6vh, 30px);">
+      <div class="feat">
+        <div class="icon">↻</div>
+        <h3>刷新机制现代化</h3>
+        <div class="sub" style="font-size: clamp(11px,1.1vw,14px);">Zone.js → Angular Signals</div>
+        <div class="plain">💬 谁的数据变了刷谁，不再全盘轮询检查</div>
+        <div class="biz"><b>业务价值</b>：框架大版本升级时，我负责的模块<b>不用伤筋动骨返工</b><br>🎯 模块 100% 就绪</div>
+      </div>
+      <div class="feat">
+        <div class="icon">🛡</div>
+        <h3>提交即门禁</h3>
+        <div class="sub" style="font-size: clamp(11px,1.1vw,14px);">Prettier + Husky + lint-staged</div>
+        <div class="plain">💬 格式问题机器自动拦截，不靠评审人眼挑</div>
+        <div class="biz"><b>业务价值</b>：评审时间<b>还给业务逻辑与风险把关</b><br>🎯 1~2 秒完成校验</div>
+      </div>
+      <div class="feat">
+        <div class="icon">▦</div>
+        <h3>公共组件清单</h3>
+        <div class="sub" style="font-size: clamp(11px,1.1vw,14px);">Core + Payments 双项目指南</div>
+        <div class="plain">💬 零件整理成清单，有啥、怎么用一查便知</div>
+        <div class="biz"><b>业务价值</b>：新页面<b>更快、风格更统一</b>，新人上手更快<br>🎯 消灭重复造轮子</div>
+      </div>
+    </div>
+
+    <div class="banner fade-up" style="margin-top: clamp(14px, 2.4vh, 28px);">
+      机制留下，人走效率不减 —— 质量保障不依赖任何一个成员的自觉
+    </div>
+
+    <div class="footer-line">ideal-payments-ui ｜ 三项长效质量机制</div>
+  </div>
+
+  <!-- ============ P5 · 总结与规划 ============ -->
+  <div class="slide">
+    <div class="eyebrow">05 ｜ 总结与规划</div>
+    <h2>成果有口径 · 改进有闭环 · 规划可衡量</h2>
+
+    <div class="statbar stagger" style="margin-top: clamp(12px, 2.2vh, 26px);">
+      <div class="stat"><div class="num">≈90%</div><div class="lbl">接入周期提速</div></div>
+      <div class="stat"><div class="num">80%</div><div class="lbl">审批组件复用率</div></div>
+      <div class="stat"><div class="num">9 类</div><div class="lbl">业务覆盖</div></div>
+      <div class="stat"><div class="num">1~2s</div><div class="lbl">提交门禁开销</div></div>
+    </div>
+
+    <div class="split" style="margin-top: clamp(12px, 2.2vh, 26px);">
+      <div class="panel">
+        <div class="col-title g">不足与改进（闭环）</div>
+        <div class="row"><span class="tag">问题</span><span>初期银行合规业务（清算时序、审批链路）理解不深</span></div>
+        <div class="row"><span class="tag green">动作</span><span>梳理全链路流程图 + 建立需求澄清 checklist，评审前预习业务流</span></div>
+        <div class="row"><span class="tag gold">效果</span><span>需求评审提问质量提升，返工明显减少 ⚠️ 待补充数据</span></div>
+      </div>
+
+      <div class="panel accent">
+        <div class="col-title y">下阶段计划（可衡量）</div>
+        <div class="row"><span class="tag gold">业务</span><span>剩余审批场景 <b class="hl">100% 接入</b>通用中枢，消灭独立弹窗</span></div>
+        <div class="row"><span class="tag">技术</span><span>刷新机制改造覆盖率、组件指南覆盖率提升至目标值</span></div>
+        <div class="row"><span class="tag green">成长</span><span>深耕资金清算与风控合规知识，前置问题预判</span></div>
+      </div>
+    </div>
+
+    <div class="closing fade-up" style="margin-top: clamp(12px, 2.4vh, 28px);">
+      交付的不只是页面，更是<span class="hl">让团队少走弯路的长效资产</span>。
+    </div>
+
+    <div class="footer-line">谢谢聆听 ｜ 欢迎提问</div>
+  </div>
+
+</div><!-- /.slide-deck -->
+
+<div class="nav-controls">
+  <button class="nav-btn" onclick="prevSlide()" aria-label="上一页">←</button>
+  <span class="slide-counter"><span id="current">1</span> / <span id="total">6</span></span>
+  <button class="nav-btn" onclick="nextSlide()" aria-label="下一页">→</button>
+</div>
+
+<script>
+  let current = 1;
+  const slides = document.querySelectorAll('.slide');
+  const total = slides.length;
+  document.getElementById('total').textContent = total;
+
+  function showSlide(n) {
+    if (n < 1) n = 1;
+    if (n > total) n = total;
+    current = n;
+    slides.forEach((s, i) => {
+      const on = i === n - 1;
+      s.classList.toggle('active', on);
+      // restart animations
+      if (on) {
+        s.querySelectorAll('.fade-up, .stagger > *').forEach(el => {
+          el.style.animation = 'none';
+          void el.offsetWidth;
+          el.style.animation = '';
+        });
+      }
+    });
+    document.getElementById('current').textContent = n;
+    document.getElementById('progressBar').style.width = (n / total * 100) + '%';
+  }
+
+  function nextSlide() { showSlide(current + 1); }
+  function prevSlide() { showSlide(current - 1); }
+
+  document.addEventListener('keydown', (e) => {
+    if (e.key === 'ArrowRight' || e.key === ' ' || e.key === 'PageDown') { e.preventDefault(); nextSlide(); }
+    if (e.key === 'ArrowLeft' || e.key === 'PageUp') { e.preventDefault(); prevSlide(); }
+    if (e.key === 'Home') showSlide(1);
+    if (e.key === 'End') showSlide(total);
+  });
+
+  // swipe on touch
+  let x0 = null;
+  document.addEventListener('touchstart', e => { x0 = e.changedTouches[0].clientX; }, {passive: true});
+  document.addEventListener('touchend', e => {
+    if (x0 === null) return;
+    const dx = e.changedTouches[0].clientX - x0;
+    if (Math.abs(dx) > 50) (dx < 0 ? nextSlide() : prevSlide());
+    x0 = null;
+  }, {passive: true});
+
+  showSlide(1);
+</script>
+
+</body>
+</html>

@@ -1,0 +1,595 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Probation Review · ideal-payments-ui · Clara</title>
+<style>
+  :root {
+    --bg: #0A1628;
+    --bg-card: #111F38;
+    --bg-card-hover: #16284a;
+    --primary: #2E86FF;
+    --primary-dim: rgba(46, 134, 255, 0.18);
+    --gold: #F5C542;
+    --gold-dim: rgba(245, 197, 66, 0.14);
+    --text: #E9EFFA;
+    --text-dim: #9FB3D1;
+    --line: rgba(159, 179, 209, 0.18);
+    --ok: #3DDC97;
+  }
+
+  * { margin: 0; padding: 0; box-sizing: border-box; }
+
+  html, body { height: 100%; }
+  body {
+    background: var(--bg);
+    color: var(--text);
+    font-family: "Segoe UI", "Microsoft YaHei", "PingFang SC", "Helvetica Neue", sans-serif;
+    overflow: hidden;
+  }
+
+  .slide-deck {
+    position: relative;
+    width: 100vw;
+    height: 100vh;
+    overflow: hidden;
+  }
+  @media (min-width: 769px) {
+    .slide-deck {
+      max-width: calc(100vh * 16 / 9);
+      max-height: calc(100vw * 9 / 16);
+      margin: auto;
+      position: absolute;
+      inset: 0;
+    }
+  }
+
+  .slide {
+    position: absolute;
+    inset: 0;
+    display: flex;
+    flex-direction: column;
+    justify-content: center;
+    padding: clamp(28px, 4.5vw, 72px);
+    opacity: 0;
+    visibility: hidden;
+    transition: opacity 0.45s ease;
+    background:
+      radial-gradient(1200px 600px at 85% -10%, rgba(46,134,255,0.12), transparent 60%),
+      radial-gradient(900px 500px at -10% 110%, rgba(245,197,66,0.06), transparent 60%),
+      var(--bg);
+    overflow: hidden;
+  }
+  .slide.active { opacity: 1; visibility: visible; }
+
+  .eyebrow {
+    font-size: clamp(12px, 1.2vw, 15px);
+    letter-spacing: 0.35em;
+    color: var(--primary);
+    text-transform: uppercase;
+    margin-bottom: clamp(8px, 1.2vh, 16px);
+  }
+  h1 { font-size: clamp(30px, 4.4vw, 62px); line-height: 1.15; font-weight: 800; }
+  h2 { font-size: clamp(24px, 3.2vw, 44px); line-height: 1.2; font-weight: 800; }
+  .sub { color: var(--text-dim); font-size: clamp(14px, 1.6vw, 20px); }
+  .hl { color: var(--gold); }
+  .hl-b { color: var(--primary); }
+
+  /* ---------- metric cards ---------- */
+  .metrics {
+    display: grid;
+    grid-template-columns: repeat(4, 1fr);
+    gap: clamp(10px, 1.4vw, 20px);
+    width: 100%;
+  }
+  .metric {
+    background: var(--bg-card);
+    border: 1px solid var(--line);
+    border-radius: 14px;
+    padding: clamp(12px, 1.8vw, 24px);
+    text-align: center;
+  }
+  .metric .num {
+    font-size: clamp(22px, 3.2vw, 46px);
+    font-weight: 800;
+    color: var(--gold);
+    line-height: 1.1;
+    font-variant-numeric: tabular-nums;
+  }
+  .metric .lbl {
+    margin-top: 6px;
+    font-size: clamp(11px, 1.2vw, 15px);
+    color: var(--text-dim);
+  }
+
+  /* ---------- generic card / split ---------- */
+  .split {
+    display: grid;
+    grid-template-columns: 1fr 1fr;
+    gap: clamp(18px, 3vw, 48px);
+    width: 100%;
+    align-items: stretch;
+  }
+  @media (max-width: 768px) { .split { grid-template-columns: 1fr; } }
+
+  .panel {
+    background: var(--bg-card);
+    border: 1px solid var(--line);
+    border-radius: 16px;
+    padding: clamp(14px, 2vw, 28px);
+    display: flex;
+    flex-direction: column;
+    gap: clamp(8px, 1.2vh, 14px);
+  }
+  .panel.accent { border-color: rgba(46,134,255,0.55); box-shadow: 0 0 0 1px rgba(46,134,255,0.25), 0 12px 40px rgba(46,134,255,0.10); }
+  .panel-title { font-size: clamp(14px, 1.5vw, 19px); font-weight: 700; color: var(--primary); letter-spacing: 0.05em; }
+
+  .row {
+    display: flex;
+    align-items: flex-start;
+    gap: 12px;
+    font-size: clamp(12px, 1.35vw, 17px);
+    line-height: 1.55;
+  }
+  .row .tag {
+    flex: 0 0 auto;
+    min-width: clamp(52px, 5vw, 74px);
+    text-align: center;
+    padding: 3px 8px;
+    border-radius: 999px;
+    font-size: clamp(11px, 1.1vw, 14px);
+    font-weight: 700;
+    background: var(--primary-dim);
+    color: var(--primary);
+    margin-top: 2px;
+  }
+  .row .tag.gold { background: var(--gold-dim); color: var(--gold); }
+  .row .tag.green { background: rgba(61,220,151,0.14); color: var(--ok); }
+
+  .note {
+    font-size: clamp(11px, 1.15vw, 14px);
+    color: var(--text-dim);
+    background: rgba(255,255,255,0.03);
+    border-left: 3px solid var(--primary);
+    padding: 8px 12px;
+    border-radius: 0 8px 8px 0;
+  }
+
+  /* ---------- flow diagram (P3) ---------- */
+  .flow {
+    display: flex;
+    align-items: stretch;
+    justify-content: center;
+    gap: clamp(6px, 1vw, 14px);
+    width: 100%;
+  }
+  .flow .node {
+    flex: 1 1 0;
+    background: var(--bg-card);
+    border: 1px solid var(--line);
+    border-radius: 14px;
+    padding: clamp(10px, 1.4vw, 18px);
+    text-align: center;
+    display: flex;
+    flex-direction: column;
+    justify-content: center;
+    gap: 6px;
+    min-width: 0;
+  }
+  .flow .node.engine {
+    border-color: var(--gold);
+    background: linear-gradient(180deg, rgba(245,197,66,0.10), rgba(245,197,66,0.03));
+  }
+  .flow .node .n-title { font-weight: 800; font-size: clamp(13px, 1.5vw, 19px); }
+  .flow .node .n-sub { font-size: clamp(10px, 1.05vw, 13px); color: var(--text-dim); line-height: 1.45; }
+  .flow .arrow {
+    display: flex;
+    align-items: center;
+    color: var(--primary);
+    font-size: clamp(16px, 2vw, 28px);
+    font-weight: 800;
+    flex: 0 0 auto;
+  }
+  .branch {
+    display: grid;
+    grid-template-columns: 1fr 1fr;
+    gap: clamp(8px, 1vw, 14px);
+    width: 100%;
+    margin-top: clamp(6px, 1vh, 10px);
+  }
+  .branch .b {
+    border-radius: 12px;
+    padding: clamp(8px, 1.2vh, 14px) clamp(10px, 1.4vw, 18px);
+    font-size: clamp(11px, 1.25vw, 16px);
+    line-height: 1.5;
+    border: 1px solid var(--line);
+  }
+  .branch .b.ok { background: rgba(61,220,151,0.10); border-color: rgba(61,220,151,0.4); }
+  .branch .b.no { background: rgba(255,107,107,0.10); border-color: rgba(255,107,107,0.4); }
+  .branch .b b { display: block; font-size: clamp(12px, 1.35vw, 17px); margin-bottom: 2px; }
+  .branch .b.ok b { color: var(--ok); }
+  .branch .b.no b { color: #FF8585; }
+
+  /* ---------- P4 feature cards ---------- */
+  .features {
+    display: grid;
+    grid-template-columns: repeat(3, 1fr);
+    gap: clamp(10px, 1.6vw, 24px);
+    width: 100%;
+  }
+  @media (max-width: 768px) { .features { grid-template-columns: 1fr; } }
+  .feat {
+    background: var(--bg-card);
+    border: 1px solid var(--line);
+    border-radius: 16px;
+    padding: clamp(12px, 1.8vw, 26px);
+    display: flex;
+    flex-direction: column;
+    gap: clamp(6px, 1vh, 12px);
+  }
+  .feat .icon {
+    width: clamp(34px, 3.4vw, 48px);
+    height: clamp(34px, 3.4vw, 48px);
+    border-radius: 12px;
+    background: var(--primary-dim);
+    color: var(--primary);
+    display: flex; align-items: center; justify-content: center;
+    font-size: clamp(16px, 1.8vw, 24px);
+  }
+  .feat h3 { font-size: clamp(14px, 1.6vw, 21px); }
+  .feat .plain { font-size: clamp(12px, 1.25vw, 16px); color: var(--text-dim); line-height: 1.55; }
+  .feat .biz {
+    margin-top: auto;
+    font-size: clamp(11px, 1.2vw, 15px);
+    background: rgba(255,255,255,0.03);
+    border-radius: 10px;
+    padding: 8px 10px;
+    line-height: 1.5;
+  }
+  .feat .biz b { color: var(--gold); }
+  .banner {
+    width: 100%;
+    text-align: center;
+    padding: clamp(8px, 1.4vh, 14px);
+    border-radius: 12px;
+    background: linear-gradient(90deg, rgba(46,134,255,0.16), rgba(245,197,66,0.12));
+    border: 1px solid rgba(46,134,255,0.35);
+    font-size: clamp(13px, 1.5vw, 20px);
+    font-weight: 700;
+  }
+
+  /* ---------- P5 ---------- */
+  .statbar {
+    display: grid;
+    grid-template-columns: repeat(4, 1fr);
+    gap: clamp(8px, 1.2vw, 16px);
+    width: 100%;
+  }
+  .stat {
+    text-align: center;
+    padding: clamp(8px, 1.4vh, 16px) 6px;
+    background: var(--bg-card);
+    border-top: 3px solid var(--gold);
+    border-radius: 10px;
+  }
+  .stat .num { font-size: clamp(20px, 2.8vw, 40px); font-weight: 800; color: var(--gold); font-variant-numeric: tabular-nums; }
+  .stat .lbl { font-size: clamp(10px, 1.1vw, 14px); color: var(--text-dim); margin-top: 2px; }
+  .closing {
+    width: 100%;
+    text-align: center;
+    font-size: clamp(15px, 2vw, 27px);
+    font-weight: 800;
+    padding-top: clamp(4px, 1vh, 10px);
+  }
+  .closing .hl { }
+
+  .col-title { font-size: clamp(13px, 1.4vw, 18px); font-weight: 700; margin-bottom: 2px; }
+  .col-title.g { color: var(--primary); }
+  .col-title.y { color: var(--gold); }
+
+  .footer-line {
+    position: absolute;
+    left: clamp(28px, 4.5vw, 72px);
+    bottom: clamp(14px, 2.4vh, 26px);
+    font-size: clamp(10px, 1vw, 13px);
+    color: rgba(159,179,209,0.55);
+    letter-spacing: 0.08em;
+  }
+
+  /* ---------- animations ---------- */
+  .fade-up { opacity: 0; animation: fadeUp 0.55s ease-out forwards; }
+  @keyframes fadeUp { from { opacity: 0; transform: translateY(26px); } to { opacity: 1; transform: translateY(0); } }
+  .stagger > * { opacity: 0; animation: fadeUp 0.5s ease-out forwards; }
+  .stagger > *:nth-child(1) { animation-delay: 0.10s; }
+  .stagger > *:nth-child(2) { animation-delay: 0.22s; }
+  .stagger > *:nth-child(3) { animation-delay: 0.34s; }
+  .stagger > *:nth-child(4) { animation-delay: 0.46s; }
+  .stagger > *:nth-child(5) { animation-delay: 0.58s; }
+  .slide.active .fade-up, .slide.active .stagger > * { animation-play-state: running; }
+
+  /* ---------- nav ---------- */
+  .progress-bar {
+    position: fixed; top: 0; left: 0; height: 3px;
+    background: linear-gradient(90deg, var(--primary), var(--gold));
+    transition: width 0.3s; z-index: 1000;
+  }
+  .nav-controls {
+    position: fixed; bottom: 18px; right: clamp(10px, 1.5vw, 24px);
+    display: flex; align-items: center; gap: 18px; z-index: 1000;
+  }
+  .nav-btn {
+    background: rgba(255,255,255,0.08); border: 1px solid var(--line);
+    color: var(--text); width: 38px; height: 38px; border-radius: 50%;
+    cursor: pointer; font-size: 16px;
+  }
+  .nav-btn:hover { background: rgba(255,255,255,0.16); }
+  .slide-counter { color: var(--text-dim); font-size: 13px; font-variant-numeric: tabular-nums; }
+</style>
+</head>
+<body>
+
+<div class="progress-bar" id="progressBar"></div>
+
+<div class="slide-deck">
+
+  <!-- ============ P1 · Executive Summary ============ -->
+  <div class="slide active">
+    <div class="eyebrow fade-up">Probation Review ｜ 试用期述职</div>
+    <h1 class="fade-up">Corporate Online Banking Front-End Engineering<br>Probation Review</h1>
+    <p class="sub fade-up" style="margin-top:14px;">
+      Clara ｜ Front-End Developer ｜ <span class="hl-b">ideal-payments-ui</span> ｜ Two months in
+    </p>
+
+    <div class="banner fade-up" style="margin-top: clamp(16px, 3vh, 34px); text-align:left;">
+      Delivered <span class="hl">3 core modules</span>, led <span class="hl">1 universal approval engine</span>, established <span class="hl">3 quality mechanisms</span>
+    </div>
+
+    <div class="metrics stagger" style="margin-top: clamp(14px, 2.6vh, 30px);">
+      <div class="metric"><div class="num">3</div><div class="lbl">Core modules delivered</div></div>
+      <div class="metric"><div class="num">80%</div><div class="lbl">Approval component reuse rate</div></div>
+      <div class="metric"><div class="num">1 wk → 0.5 d</div><div class="lbl">New business onboarding cycle</div></div>
+      <div class="metric"><div class="num">9</div><div class="lbl">Core financial business lines covered</div></div>
+    </div>
+
+    <div class="footer-line">ideal-payments-ui ｜ Corporate e-Banking funds hub ｜ Approx. 5-minute presentation</div>
+  </div>
+
+  <!-- ============ P2 · Business Overview (business-only, zero jargon) ============ -->
+  <div class="slide">
+    <div class="eyebrow">01 ｜ Business Overview</div>
+    <h2>What does this system do?</h2>
+    <p class="sub fade-up" style="margin-top:10px;">
+      The <b class="hl-b">"money-purse hub"</b> of corporate online banking — every corporate client transaction to <b>pay out, collect, and manage money</b> flows through this system.
+    </p>
+
+    <div class="features stagger" style="margin-top: clamp(12px, 2.2vh, 26px);">
+      <div class="feat">
+        <div class="icon">→</div>
+        <h3>Out · Payments</h3>
+        <div class="plain">
+          Remittances to suppliers (local / cross-border), transfers between company accounts, <b>bulk salary payments</b>, utility bills…<br>
+          Once submitted, all instructions are centrally monitored in the <b class="hl-b">Outbound Ledger</b>.
+        </div>
+        <div class="biz">Includes: payee directory · quick templates · recurring monthly auto-debits · <b>payment stop &amp; recovery</b> (emergency risk block)</div>
+      </div>
+      <div class="feat">
+        <div class="icon">←</div>
+        <h3>In · Collections</h3>
+        <div class="plain">
+          Collect receivables from customers one by one or in <b>bulk collection runs</b>; incoming funds all settle into the <b class="hl-b">Inbound Ledger</b>.
+        </div>
+        <div class="biz">Includes: payer profiles · quick collection templates — <b>maintain once, use everywhere</b>, far less re-entry up front</div>
+      </div>
+      <div class="feat">
+        <div class="icon">✓</div>
+        <h3>Control · Approval</h3>
+        <div class="plain">
+          Regulatory requirement: <b class="hl">every transaction needs dual control — "maker + checker"</b>. One person submits, another approves, preventing unilateral control of funds.
+        </div>
+        <div class="biz">Approvers can work in a central queue or in-context — <b>tick multiple rows and batch approve / reject in one click</b></div>
+      </div>
+    </div>
+
+    <div class="panel fade-up" style="margin-top: clamp(12px, 2.2vh, 24px); padding: clamp(10px, 1.6vh, 18px) clamp(14px, 2vw, 26px);">
+      <div class="panel-title">A transaction's full journey (payment example)</div>
+      <div class="flow" style="margin-top:8px;">
+        <div class="node"><div class="n-title">① Maker submits</div><div class="n-sub">Finance staff enters the payment instruction</div></div>
+        <div class="arrow">→</div>
+        <div class="node"><div class="n-title">② Pending approval</div><div class="n-sub">Money is <b>not</b> debited yet; it enters the review pool</div></div>
+        <div class="arrow">→</div>
+        <div class="node engine"><div class="n-title hl">③ Checker reviews</div><div class="n-sub">Approver approves / rejects</div></div>
+        <div class="arrow">→</div>
+        <div class="node"><div class="n-title">④ Settled</div><div class="n-sub">Approved = bank books &amp; clears it<br>Rejected = reason recorded, fully traceable</div></div>
+      </div>
+    </div>
+
+    <div class="footer-line">Who uses it: corporate finance teams (submit) + approvers (review) ｜ End-to-end audit-ready</div>
+  </div>
+
+  <!-- ============ P3 · My Position ============ -->
+  <div class="slide">
+    <div class="eyebrow">02 ｜ My Position</div>
+    <h2>My work: three layers of value</h2>
+
+    <div class="panel accent stagger" style="margin-top: clamp(14px, 2.4vh, 28px); gap: clamp(10px, 1.6vh, 18px);">
+      <div class="row"><span class="tag green">L1</span><span><b>Business delivery — "build what the business asks for"</b><br>Independently delivered the end-to-end <b class="hl-b">Payer Management</b> flow (list / detail / edit) plus <b class="hl-b">two collection-side approval pages</b>, used directly by corporate front-line staff and approvers.</span></div>
+      <div class="row"><span class="tag gold">L2</span><span><b class="hl">Architectural assets — "turn repetitive work into shared assets" ★ Key focus</b><br>Led the design of the <b class="hl">Universal Bulk Approval Hub</b> (the single "approval window" for the whole project): one engine serving <b class="hl">9 core business lines</b>, redundant code down <b class="hl">80%</b>, new business onboarding <b class="hl">1 week → half a day</b>.</span></div>
+      <div class="row"><span class="tag">L3</span><span><b>Engineering efficiency — "quality by mechanism, not by discipline"</b><br>Modernized refresh mechanism, automatic format gate at commit time, shared component catalog guide: quality is guaranteed by mechanisms, <b>never by anyone's vigilance</b>.</span></div>
+      <div class="note">L1 proves "can deliver"; L2 / L3 prove "can make the whole team deliver faster" → next: L2 core delivery in detail</div>
+    </div>
+
+    <div class="footer-line">ideal-payments-ui ｜ Three-layer value system</div>
+  </div>
+
+  <!-- ============ P4 · Core Delivery (highlight page) ============ -->
+  <div class="slide">
+    <div class="eyebrow">03 ｜ Core Delivery · Highlight</div>
+    <h2>Universal Bulk Approval Hub <span style="font-size:0.55em; color:var(--text-dim); font-weight:600;">｜ The single "approval window" for the whole project</span></h2>
+
+    <div class="note fade-up" style="margin-top: clamp(10px, 1.8vh, 20px);">
+      <b>Why we built it:</b> every new business line used to mean rebuilding an approval dialog → duplicated code, inconsistent styling, fix one place, patch N places.
+    </div>
+
+    <div class="flow stagger" style="margin-top: clamp(12px, 2vh, 24px);">
+      <div class="node">
+        <div class="n-title">9 business lines</div>
+        <div class="n-sub">Payments · Collections<br>Payees / Payers / Templates / Payment stops</div>
+      </div>
+      <div class="arrow">→</div>
+      <div class="node engine">
+        <div class="n-title hl">Unified approval window</div>
+        <div class="n-sub">Pick records → approve / reject → reason required → full audit trail<br><b>Integration takes 1 line of code</b></div>
+      </div>
+      <div class="arrow">→</div>
+      <div class="node">
+        <div class="n-title">Bank core systems</div>
+        <div class="n-sub">Bookkeeping + clearing &amp; settlement</div>
+      </div>
+    </div>
+
+    <div class="branch fade-up">
+      <div class="b ok"><b>✓ Approve</b>Connects straight to core clearing, status → COMPLETED</div>
+      <div class="b no"><b>✗ Reject</b>Reason recorded, audit-traceable, status → REJECTED</div>
+    </div>
+
+    <div class="metrics stagger" style="margin-top: clamp(12px, 2.2vh, 26px); grid-template-columns: repeat(4, 1fr);">
+      <div class="metric"><div class="num">80%</div><div class="lbl">Code reuse rate · redundancy eliminated</div></div>
+      <div class="metric"><div class="num">≈90%</div><div class="lbl">Onboarding acceleration (1 wk → 0.5 d)</div></div>
+      <div class="metric"><div class="num">9</div><div class="lbl">Business lines on one engine</div></div>
+      <div class="metric"><div class="num">1 line</div><div class="lbl">Integration code for consumers</div></div>
+    </div>
+
+    <div class="footer-line">ideal-payments-ui ｜ Multi-Approval architecture-level delivery</div>
+  </div>
+
+  <!-- ============ P5 · Engineering Governance ============ -->
+  <div class="slide">
+    <div class="eyebrow">04 ｜ Engineering Governance</div>
+    <h2>Quality from "discipline" to "mechanism"</h2>
+
+    <div class="features stagger" style="margin-top: clamp(14px, 2.6vh, 30px);">
+      <div class="feat">
+        <div class="icon">↻</div>
+        <h3>Modernized refresh mechanism</h3>
+        <div class="sub" style="font-size: clamp(11px,1.1vw,14px);">Zone.js → Angular Signals</div>
+        <div class="plain">💬 Only what changed re-renders — no more whole-app polling checks</div>
+        <div class="biz"><b>Business value</b>: on major framework upgrades, my modules need <b>no disruptive rework</b><br>🎯 Modules 100% ready</div>
+      </div>
+      <div class="feat">
+        <div class="icon">🛡</div>
+        <h3>Commit-time quality gate</h3>
+        <div class="sub" style="font-size: clamp(11px,1.1vw,14px);">Prettier + Husky + lint-staged</div>
+        <div class="plain">💬 Format issues blocked automatically by machines, not caught by reviewer eyes</div>
+        <div class="biz"><b>Business value</b>: review time <b>goes back to logic and risk control</b><br>🎯 Validation in 1–2 seconds</div>
+      </div>
+      <div class="feat">
+        <div class="icon">▦</div>
+        <h3>Shared component catalog</h3>
+        <div class="sub" style="font-size: clamp(11px,1.1vw,14px);">Guide covering both Core and Payments projects</div>
+        <div class="plain">💬 Parts organized into a catalog — what exists and how to use it, one lookup away</div>
+        <div class="biz"><b>Business value</b>: new pages are <b>faster and more consistent</b>, newcomers ramp up quicker<br>🎯 No more reinventing the wheel</div>
+      </div>
+    </div>
+
+    <div class="banner fade-up" style="margin-top: clamp(14px, 2.4vh, 28px);">
+      Mechanisms outlive people — efficiency stays even when faces change. Quality never depends on any single person's discipline.
+    </div>
+
+    <div class="footer-line">ideal-payments-ui ｜ Three enduring quality mechanisms</div>
+  </div>
+
+  <!-- ============ P6 · Summary & Roadmap ============ -->
+  <div class="slide">
+    <div class="eyebrow">05 ｜ Summary &amp; Roadmap</div>
+    <h2>Measured results · closed-loop improvements · measurable plans</h2>
+
+    <div class="statbar stagger" style="margin-top: clamp(12px, 2.2vh, 26px);">
+      <div class="stat"><div class="num">≈90%</div><div class="lbl">Onboarding cycle acceleration</div></div>
+      <div class="stat"><div class="num">80%</div><div class="lbl">Approval component reuse rate</div></div>
+      <div class="stat"><div class="num">9</div><div class="lbl">Business lines covered</div></div>
+      <div class="stat"><div class="num">1–2s</div><div class="lbl">Commit gate overhead</div></div>
+    </div>
+
+    <div class="split" style="margin-top: clamp(12px, 2.2vh, 26px);">
+      <div class="panel">
+        <div class="col-title g">Gaps &amp; improvements (closed loop)</div>
+        <div class="row"><span class="tag">Issue</span><span>Early on, shallow grasp of banking compliance domains (clearing timelines, approval chains)</span></div>
+        <div class="row"><span class="tag green">Action</span><span>Mapped end-to-end process flows + built a requirement clarification checklist; studied business flows before reviews</span></div>
+        <div class="row"><span class="tag gold">Result</span><span>Higher-quality questions in requirement reviews; noticeably less rework ⚠️ data to be added</span></div>
+      </div>
+
+      <div class="panel accent">
+        <div class="col-title y">Next-phase plan (measurable)</div>
+        <div class="row"><span class="tag gold">Business</span><span>Remaining approval scenarios <b class="hl">100% onboarded</b> to the shared hub; standalone dialogs eliminated</span></div>
+        <div class="row"><span class="tag">Tech</span><span>Refresh-mechanism migration coverage and component-guide coverage raised to target values</span></div>
+        <div class="row"><span class="tag green">Growth</span><span>Deepen funds-clearing and risk/compliance knowledge to anticipate issues earlier</span></div>
+      </div>
+    </div>
+
+    <div class="closing fade-up" style="margin-top: clamp(12px, 2.4vh, 28px);">
+      What I deliver is more than pages — it's <span class="hl">durable assets that spare the team from rework</span>.
+    </div>
+
+    <div class="footer-line">Thank you ｜ Questions welcome</div>
+  </div>
+
+</div><!-- /.slide-deck -->
+
+<div class="nav-controls">
+  <button class="nav-btn" onclick="prevSlide()" aria-label="Previous page">←</button>
+  <span class="slide-counter"><span id="current">1</span> / <span id="total">6</span></span>
+  <button class="nav-btn" onclick="nextSlide()" aria-label="Next page">→</button>
+</div>
+
+<script>
+  let current = 1;
+  const slides = document.querySelectorAll('.slide');
+  const total = slides.length;
+  document.getElementById('total').textContent = total;
+
+  function showSlide(n) {
+    if (n < 1) n = 1;
+    if (n > total) n = total;
+    current = n;
+    slides.forEach((s, i) => {
+      const on = i === n - 1;
+      s.classList.toggle('active', on);
+      // restart animations
+      if (on) {
+        s.querySelectorAll('.fade-up, .stagger > *').forEach(el => {
+          el.style.animation = 'none';
+          void el.offsetWidth;
+          el.style.animation = '';
+        });
+      }
+    });
+    document.getElementById('current').textContent = n;
+    document.getElementById('progressBar').style.width = (n / total * 100) + '%';
+  }
+
+  function nextSlide() { showSlide(current + 1); }
+  function prevSlide() { showSlide(current - 1); }
+
+  document.addEventListener('keydown', (e) => {
+    if (e.key === 'ArrowRight' || e.key === ' ' || e.key === 'PageDown') { e.preventDefault(); nextSlide(); }
+    if (e.key === 'ArrowLeft' || e.key === 'PageUp') { e.preventDefault(); prevSlide(); }
+    if (e.key === 'Home') showSlide(1);
+    if (e.key === 'End') showSlide(total);
+  });
+
+  // swipe on touch
+  let x0 = null;
+  document.addEventListener('touchstart', e => { x0 = e.changedTouches[0].clientX; }, {passive: true});
+  document.addEventListener('touchend', e => {
+    if (x0 === null) return;
+    const dx = e.changedTouches[0].clientX - x0;
+    if (Math.abs(dx) > 50) (dx < 0 ? nextSlide() : prevSlide());
+    x0 = null;
+  }, {passive: true});
+
+  showSlide(1);
+</script>
+
+</body>
+</html>
