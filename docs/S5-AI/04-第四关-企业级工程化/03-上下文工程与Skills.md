@@ -211,8 +211,28 @@ description: 根据 Git 提交历史生成发布说明，并按变更类型分�
 
 ---
 
+## 六、编码 Agent 视角的上下文工程（来自 `https://github.com/KMaybe01/claude-code-book`）
+
+通用 Agent 的上下文工程是"预算分配 + 裁剪"；**编码 Agent**（工具直接读写磁盘/跑 shell）把这套逼到极限。`https://github.com/KMaybe01/claude-code-book`（解码 Agent Harness 架构书）给出几个生产级 harness 必须做对的硬动作，和本教程前几节互为印证：
+
+| 硬动作 | 做法 | 对应本章板斧 |
+|---|---|---|
+| **文件选择，而非全仓塞入** | 上下文只放"当前任务相关的文件"，靠 grep/全局搜索结果 + 依赖图决定加载哪些，绝不全仓库倾倒 | 选择（Select） |
+| **自动压缩（Auto-Compact）** | 上下文逼近预算上限时，把早期对话/工具轨迹**自动摘要**替换，触发条件可量化（如输入 token 达窗口 80%） | 压缩（Compress） |
+| **Fork 子 Agent 隔离** | 探索性、易出错、长链路的脏活（翻全仓、试错）放进独立上下文的子 Agent，只把**结论**回传主上下文 | 隔离（Isolate） |
+| **对话分支（Branching）** | 每次"尝试"开分支，失败分支丢弃，主路径只留最终正确结论，避免试错污染主上下文 | 压缩 + 隔离 |
+| **`CLAUDE.md` / `AGENTS.md` 作为终极上下文文件** | 项目级规则、约定、禁忌写进规则文件，每次会话常驻加载，避免重复说明 | 系统指令层 |
+
+> 这里"文件选择 + Fork 子 Agent + 对话分支"正是本教程 [⑩ 编码 Agent 专题](../10-编码Agent专题/index.md) 的 `01 Agent Loop` / `03 上下文压缩` / `04 子 Agent` 三章的工程化落地。Hooks / Skills / Memory 的实操细节另见 `https://github.com/luongnv89/claude-howto`（"Master Claude Code in a Weekend"）。
+
+**和前端经验的映射**（为什么前端转型者有优势）：文件选择 ≈ 只订阅需要的 store 切片；自动压缩 ≈ 把长列表虚拟化/只保留可视区 + 摘要；Fork 子 Agent ≈ 把重计算丢进 Web Worker 只回传结果；`CLAUDE.md` ≈ 全局 `AppContext` + 约定文档。
+
+---
+
 ## 延伸阅读
 
 - [09-AI SDK 数据连接与聊天](../01-第一关-流式对话/04-AI-SDK-7核心API.md) — `ToolLoopAgent`、`uploadSkill`、`Output.object`
 - [06-前沿技术与生态](../05-第五关-协议与多Agent/附-前沿技术与生态.md) — MCP `2026-07-28` 的缓存提示（`ttlMs` / `cacheScope`）与 Tasks
-- [11-生成式UI与前端AI组件生态](../06-第六关-前端AI交互层/01-生成式UI与组件生态.md) — Skill 产出的界面怎么渲染
+- [10-编码 Agent 专题 · 上下文压缩](../10-编码Agent专题/03-上下文压缩与长会话.md) — 编码场景的压缩/Fork/分支落地
+- `https://github.com/KMaybe01/claude-code-book` — 解码 Agent Harness 架构书（文件选择 / Auto-Compact / Fork 子 Agent）
+- `https://github.com/luongnv89/claude-howto` — Hooks / Skills / Memory 实操（"Master Claude Code in a Weekend"）

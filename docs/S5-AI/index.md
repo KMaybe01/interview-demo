@@ -4,7 +4,7 @@
 >
 > **前置要求**：熟悉 TypeScript + React Hooks，了解 HTTP / API 基本概念。**不需要机器学习背景**。
 >
-> **怎么用这份教程**：先看「三条路径」选一条 → 进关卡 → 每章按 `原理 → 企业实现 → 代码 → 验证 → 面试追问` 五段式推进 → 出关卡前用「自检清单」验收。想深挖实现，翻 [参考代码库 `E:\code\ai`](#参考代码库-eocodeai)。
+> **怎么用这份教程**：先看「三条路径」选一条 → 进关卡 → 每章按 `原理 → 企业实现 → 代码 → 验证 → 面试追问` 五段式推进 → 出关卡前用「自检清单」验收。想深挖实现，翻 [参考代码库](#参考代码库)。
 
 ---
 
@@ -24,8 +24,8 @@
 | **前沿模型** | 旗舰：OpenAI GPT-5 系、Claude Opus/Sonnet 4.5–5.5、Gemini 3.5；性价比：DeepSeek V4、Qwen3、GLM-4.5 | 2026-10 Vercel AI Gateway `/v1/models` 实列 |
 | **端侧小模型** | Qwen2.5 / Qwen3 0.5B–1.5B（Transformers.js / onnx-community） | 浏览器推理生态 |
 | **前端 AI UI** | AI Elements、assistant-ui、CopilotKit、AG-UI、`@ant-design/x`、`@a2ui/react` | 公开仓库 / 发布信息 |
-| **生成式 UI 协议** | A2UI v0.9.1（稳定）/ v1.0 RC；传输兼容 A2A / AG-UI | `E:\code\ai\A2UI\README.md` |
-| **编码 Agent 参考实现** | `claude-code`（社区逆向复刻 `claude-code-best`）、`pi`（极简 harness）、`hello-agents`（教学框架） | `E:\code\ai\claude-code\README.md` / `E:\code\ai\pi\README.md` |
+| **生成式 UI 协议** | A2UI v0.9.1（稳定）/ v1.0 RC；传输兼容 A2A / AG-UI | `https://github.com/google/A2UI` |
+| **编码 Agent 参考实现** | `claude-code`（社区逆向复刻 `claude-code-best`）、`pi`（极简 harness）、`hello-agents`（教学框架） | `https://github.com/claude-code-best/claude-code` / `https://github.com/earendil-works/pi` |
 | **包管理器** | `bun`（本仓库禁止 npm/yarn/pnpm） | 根 `AGENTS.md` |
 
 > 💡 **型号说明**：模型迭代极快，上表「旗舰/性价比」是**档位划分**而非永久结论。
@@ -51,12 +51,12 @@
 
 | | 主线（你要手写的代码） | 副线（企业级后端参考实现） | 延伸参考库（业界实现精读） |
 |---|---|---|---|
-| **技术栈** | AI SDK 7 + TypeScript 全栈（React + BFF） | Go + Gin（`backend/internal/*`） | `E:\code\ai` 下的一批开源仓库 |
+| **技术栈** | AI SDK 7 + TypeScript 全栈（React + BFF） | Go + Gin（`backend/internal/*`） | 这些 GitHub 开源仓库（见下方映射表） |
 | **为什么** | 前端转型最短路径，心智模型与 React 一致 | 网关熔断、工具沙箱、护栏、HITL、评测这些**服务端重活**看生产级怎么写 | 读懂 Claude Code / AI SDK / 编码 Agent 的**真实工程实现**，把理论对照源码 |
-| **入口** | [第一关](./01-第一关-流式对话/index.md) → `apps/ai-course/` | [07-Go后端参考实现](./07-Go后端参考实现/index.md) | [参考代码库 E:\code\ai](#参考代码库-eocodeai) |
+| **入口** | [第一关](./01-第一关-流式对话/index.md) → `apps/ai-course/` | [07-Go后端参考实现](./07-Go后端参考实现/index.md) | [参考代码库](#参考代码库) |
 | **通读要求** | 必读 | 按需查阅，不必通读 | 专题精读，配合对应关卡 |
 
-> 每关的 `index.md` 里都有「与本仓库代码的映射」表，可直接对着真实代码读；`E:\code\ai` 的对应关系见下方[参考代码库](#参考代码库-eocodeai)。
+> 每关的 `index.md` 里都有「与本仓库代码的映射」表，可直接对着真实代码读；`这批 GitHub 开源仓库` 的对应关系见下方[参考代码库](#参考代码库)。
 
 ---
 
@@ -107,7 +107,7 @@ S5-AI/
 │   ├── 01-前端转型AI能力地图.md       能力地图、术语速查、AI SDK 迁移要点、编码 Agent 分支
 │   ├── 02-AI应用市场与生态.md         平台 / 工具 / 编码助手 / Copilot / Claude Code 全景
 │   └── 03-技术选型速查.md             核心决策点的精简对比
-├── 01-第一关-流式对话/                LLM 调用 · 流式协议 · AI SDK 7（延伸：E:\code\ai\ai 源码导读）
+├── 01-第一关-流式对话/                LLM 调用 · 流式协议 · AI SDK 7（延伸：https://github.com/vercel/ai 源码导读）
 ├── 02-第二关-知识增强RAG/             分块 · 检索 · 重排 · 评测（延伸：hello-agents RAG）
 ├── 03-第三关-Agent与工具/             设计模式 · 工具契约 · 停止条件 · HITL（延伸：pi / how-pi-agent-works）
 ├── 04-第四关-企业级工程化/ ★           网关 · 护栏 · 上下文工程 · 观测 · 评测 · 成本 · 部署
@@ -124,29 +124,29 @@ S5-AI/
 
 ---
 
-## 参考代码库：`E:\code\ai`
+## 参考代码库
 
-> 这是一批克隆的公开仓库（含 node_modules，体量很大），定位为**「实现精读」参考库**：教程正文讲原理，这里看真实工程怎么写。
+> 以下是一批 GitHub 开源仓库的映射（非本地路径），按需取用、不要求通读。定位为**「实现精读」参考库**：教程正文讲原理，这里看真实工程怎么写。
 > 下面的映射表是「主题 → 仓库 → 该看什么」，避免你在几十万文件里迷路。
 
-| 仓库（绝对路径） | 是什么 | 对应关卡 / 专题 | 重点看 |
+| 仓库（GitHub 地址） | 是什么 | 对应关卡 / 专题 | 重点看 |
 |---|---|---|---|
-| `E:\code\ai\ai\` | Vercel **AI SDK v7** monorepo（`ai` + `@ai-sdk/react` + `@ai-sdk/rsc` 等） | ① ② ③ ⑥ | `packages/ai`（streamText / 工具 / 结构化）、`packages/react`（useChat）、`architecture/`（流式循环、loop control） |
-| `E:\code\ai\A2UI\` | Google **生成式 UI 开放标准**（声明式 JSON 描述 UI，客户端受控渲染） | ⑥ 生成式 UI | README、catalog（可信组件目录）、与 A2A/AG-UI 的传输兼容 |
-| `E:\code\ai\x\` | 蚂蚁 **Ant Design X**（企业级 LLM UI 组件） | ⑥ 前端交互层 | `x-markdown`（流式 Markdown）、`x-card`（基于 A2UI 协议的动态卡片）、`x-skill` |
-| `E:\code\ai\hello-agents\` | Datawhale《从零构建智能体》系统教程 + 自研框架 | ② RAG / ③ Agent / ⑤ 协议 | ReAct/Plan-and-Solve/Reflection 手搓、RAG、MCP·A2A·ANP、多 Agent 案例 |
-| `E:\code\ai\pi\` | 极简可扩展 Agent harness（`pi-ai` / `pi-agent-core` / `pi-coding-agent`） | ③ Agent / ⑩ 编码 Agent | 工具调用 + 状态机、coding-agent CLI、容器化沙箱 |
-| `E:\code\ai\how-pi-agent-works\` | 中文工程视角拆解 Pi Agent + 教学版实现 | ③ Agent / ⑩ 编码 Agent | Agent Loop / 消息 / 流式事件 / 工具调用 / 会话树 / 上下文压缩；4 个渐进 TS Demo |
-| `E:\code\ai\claude-code\` | 社区逆向复刻的 Claude Code（`claude-code-best`，**非官方**） | ⑩ 编码 Agent / ④ | 对话循环、工具系统、权限管线、钩子、子 Agent、ACP |
-| `E:\code\ai\claude-code-book\` | 《解码 Agent Harness》架构剖析书（15 章 + 139 图） | ⑩ 编码 Agent | 对话循环 / `Tool<>` 协议 / 四阶段权限管线 / 上下文压缩 / Fork 子 Agent / MCP / 钩子 / Plan 模式 |
-| `E:\code\ai\claude-code-complete-guide\` | 《图解 Claude Code 完全指南》漫画式源码解析（120 节） | ⑩ 编码 Agent | 12 篇覆盖基础 / 架构 / 工具 / 权限 / UI / 多 Agent / 性能 |
-| `E:\code\ai\claude-howto\` | "Master Claude Code in a Weekend" 实操教程 | ⑩ 编码 Agent | slash commands、memory、skills、subagents、MCP、hooks、plugins 的复制即用模板 |
-| `E:\code\ai\start-claude-code\` | 源码一键运行器（还原 `src/` 1902 文件，Bun+Ink） | ⑩ 编码 Agent（实践） | TUI / 非交互 / 第三方代理接入、构建垫片原理 |
-| `E:\code\ai\openclaude-cn\` | 用国产大模型（Qwen/DeepSeek/GLM/MiMo/Ollama）驱动 Claude Code 的 fork | ⑩ 编码 Agent（国产适配） | 724 行 OpenAI shim 替换 Anthropic SDK；`/provider` `/model` 实时切换 |
-| `E:\code\ai\cc-switch\` | Tauri 桌面 GUI，统一管理 Claude Code/Codex/Gemini 并一键切供应商 | ⑩ 编码 Agent / 00-生态 | 多 Agent 工具统一配置、MCP/Skills/Prompts 管理 |
-| `E:\code\ai\claw-code-parity\` | Python 重写 / 对拍项目（原 TS 源码） | ⑩ 编码 Agent（参考） | `query_engine.py` / `tools.py`、parity-audit 对拍、OmX 编排 |
-| `E:\code\ai\free-code-main\` | Claude Code 自由构建版（剥离遥测/护栏、解锁实验 flag） | ⑩ 编码 Agent（参考） | 五大模型供应商、guardrails 移除对照 |
-| `E:\code\ai\awesome-copilot\` | GitHub Copilot 生态清单（agents / instructions / skills / hooks / plugins） | 00-导学 生态 / ⑩ 横向对比 | 可安装自定义层、Learning Hub、`llms.txt`、Cookbook |
+| `https://github.com/vercel/ai` | Vercel **AI SDK v7** monorepo（`ai` + `@ai-sdk/react` + `@ai-sdk/rsc` 等） | ① ② ③ ⑥ | `packages/ai`（streamText / 工具 / 结构化）、`packages/react`（useChat）、`architecture/`（流式循环、loop control） |
+| `https://github.com/google/A2UI` | Google **生成式 UI 开放标准**（声明式 JSON 描述 UI，客户端受控渲染） | ⑥ 生成式 UI | README、catalog（可信组件目录）、与 A2A/AG-UI 的传输兼容 |
+| `https://github.com/ant-design/x` | 蚂蚁 **Ant Design X**（企业级 LLM UI 组件） | ⑥ 前端交互层 | `x-markdown`（流式 Markdown）、`x-card`（基于 A2UI 协议的动态卡片）、`x-skill` |
+| `https://github.com/datawhalechina/hello-agents` | Datawhale《从零构建智能体》系统教程 + 自研框架 | ② RAG / ③ Agent / ⑤ 协议 | ReAct/Plan-and-Solve/Reflection 手搓、RAG、MCP·A2A·ANP、多 Agent 案例 |
+| `https://github.com/earendil-works/pi` | 极简可扩展 Agent harness（`pi-ai` / `pi-agent-core` / `pi-coding-agent`） | ③ Agent / ⑩ 编码 Agent | 工具调用 + 状态机、coding-agent CLI、容器化沙箱 |
+| `https://github.com/cellinlab/how-pi-agent-works` | 中文工程视角拆解 Pi Agent + 教学版实现 | ③ Agent / ⑩ 编码 Agent | Agent Loop / 消息 / 流式事件 / 工具调用 / 会话树 / 上下文压缩；4 个渐进 TS Demo |
+| `https://github.com/claude-code-best/claude-code` | 社区逆向复刻的 Claude Code（`claude-code-best`，**非官方**） | ⑩ 编码 Agent / ④ | 对话循环、工具系统、权限管线、钩子、子 Agent、ACP |
+| `https://github.com/KMaybe01/claude-code-book` | 《解码 Agent Harness》架构剖析书（15 章 + 139 图） | ⑩ 编码 Agent | 对话循环 / `Tool<>` 协议 / 四阶段权限管线 / 上下文压缩 / Fork 子 Agent / MCP / 钩子 / Plan 模式 |
+| `https://github.com/bcefghj/claude-code-complete-guide` | 《图解 Claude Code 完全指南》漫画式源码解析（120 节） | ⑩ 编码 Agent | 12 篇覆盖基础 / 架构 / 工具 / 权限 / UI / 多 Agent / 性能 |
+| `https://github.com/luongnv89/claude-howto` | "Master Claude Code in a Weekend" 实操教程 | ⑩ 编码 Agent | slash commands、memory、skills、subagents、MCP、hooks、plugins 的复制即用模板 |
+| `https://github.com/JiaranI/start-claude-code` | 源码一键运行器（还原 `src/` 1902 文件，Bun+Ink） | ⑩ 编码 Agent（实践） | TUI / 非交互 / 第三方代理接入、构建垫片原理 |
+| `https://github.com/Autumn1337/openclaude-cn` | 用国产大模型（Qwen/DeepSeek/GLM/MiMo/Ollama）驱动 Claude Code 的 fork | ⑩ 编码 Agent（国产适配） | 724 行 OpenAI shim 替换 Anthropic SDK；`/provider` `/model` 实时切换 |
+| `https://github.com/farion1231/cc-switch` | Tauri 桌面 GUI，统一管理 Claude Code/Codex/Gemini 并一键切供应商 | ⑩ 编码 Agent / 00-生态 | 多 Agent 工具统一配置、MCP/Skills/Prompts 管理 |
+| `https://github.com/ultraworkers/claw-code-parity` | Python 重写 / 对拍项目（原 TS 源码） | ⑩ 编码 Agent（参考） | `query_engine.py` / `tools.py`、parity-audit 对拍、OmX 编排 |
+| `https://github.com/KMaybe01/open-code` | Claude Code 自由构建版（剥离遥测/护栏、解锁实验 flag） | ⑩ 编码 Agent（参考） | 五大模型供应商、guardrails 移除对照 |
+| `https://github.com/github/awesome-copilot` | GitHub Copilot 生态清单（agents / instructions / skills / hooks / plugins） | 00-导学 生态 / ⑩ 横向对比 | 可安装自定义层、Learning Hub、`llms.txt`、Cookbook |
 
 > ⚠️ **版权与合规提醒**：`claude-code` / `start-claude-code` / `free-code-main` 等涉及第三方（含逆向/泄露）源码，**仅限个人学习研究其架构思路**；不要将其代码直接复制进本仓库或用于商业分发。引用时标注「社区复刻 / 逆向研究」并区分于 Anthropic 官方实现。
 
@@ -154,7 +154,7 @@ S5-AI/
 
 1. **先读正文，再读源码**：每关正文建立心智模型后，按上表「重点看」列精准定位文件，不要从 `node_modules` 入口。
 2. **编码 Agent 专题优先顺序**：`claude-howto`（实操上手）→ `claude-code-book`（架构剖析）→ `how-pi-agent-works`（教学实现）→ `pi`（极简 harness）→ `start-claude-code`（看真实工程）。
-3. **对照本仓库**：`E:\code\ai` 是「别人怎么造 Agent」，本仓库 `backend/internal/*` + `apps/ai-course/*` 是「我们怎么造 Agent」——两者互为镜像。
+3. **对照本仓库**：`这批 GitHub 开源仓库` 是「别人怎么造 Agent」，本仓库 `backend/internal/*` + `apps/ai-course/*` 是「我们怎么造 Agent」——两者互为镜像。
 
 ---
 
@@ -222,4 +222,4 @@ S5-AI/
 | 2026-10 | 新增「快速入门 · 30 分钟从 0 到 1」；版本基线对齐仓库实际依赖；模型矩阵改以 Gateway 实列型号为准 |
 | 2026-10 | **体系重建**：由「按资料来源归档」改为「按能力阶梯」的六关卡结构；存量 37 篇正文全量保留，迁移至新目录并修复内部链接 |
 | 2026-10 | 补完第一/二/四/五/六关与第三关，六关全部交付；`apps/ai-course` 提供可跑代码 |
-| 2026-10 | **集成参考代码库 `E:\code\ai`**：新增「参考代码库」映射表与 **⑩ 编码 Agent 专题**；`A2UI`+`x` 充实生成式 UI、`ai` 充实流式源码导读、`hello-agents` 充实 RAG/Agent/协议、`awesome-copilot`+`cc-switch` 充实导学生态；基线表新增生成式 UI 协议与编码 Agent 参考实现行 |
+| 2026-10 | **集成参考代码库 `这批 GitHub 开源仓库`**：新增「参考代码库」映射表与 **⑩ 编码 Agent 专题**；`A2UI`+`x` 充实生成式 UI、`ai` 充实流式源码导读、`hello-agents` 充实 RAG/Agent/协议、`awesome-copilot`+`cc-switch` 充实导学生态；基线表新增生成式 UI 协议与编码 Agent 参考实现行 |

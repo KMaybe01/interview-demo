@@ -40,7 +40,7 @@ graph TB
 
 ## 与本仓库 / 参考代码库的映射
 
-| 教程内容 | 本仓库实现 | `E:\code\ai` 对照（精读） |
+| 教程内容 | 本仓库实现 | `这批 GitHub 开源仓库` 对照（精读） |
 |---|---|---|
 | Agent Loop | `backend/internal/airouter/`（RAG→工具→重试→HITL 循环） | `claude-code-book`（对话循环章节）、`how-pi-agent-works`（Agent Loop + 流式事件） |
 | 工具系统 + 权限 | `backend/internal/tool/`（L0/L1/L2 + 沙箱 + 审计） | `claude-code`（工具系统 + 四阶段权限管线）、`pi/pi-agent-core`（工具调用 + 状态机） |

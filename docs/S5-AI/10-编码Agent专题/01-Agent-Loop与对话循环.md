@@ -4,7 +4,7 @@
 >
 > **前置**：第三关「Agent 设计模式」
 > **产出**：能徒手画出一个编码 Agent 的完整 Loop，并说出停止条件怎么防死循环
-> **参考**：`E:\code\ai\claude-code-book`（对话循环章节）、`E:\code\ai\how-pi-agent-works`（Agent Loop + 流式事件）
+> **参考**：`https://github.com/KMaybe01/claude-code-book`（对话循环章节）、`https://github.com/cellinlab/how-pi-agent-works`（Agent Loop + 流式事件）
 
 ---
 
@@ -60,7 +60,7 @@ async function codingLoop(userInput: string, messages: ModelMessage[]) {
 }
 ```
 
-对照 `E:\code\ai\how-pi-agent-works` 的 4 个渐进 TS Demo：它从「纯函数 Loop」逐步加到「流式事件 + 工具调用 + 会话树」，是本章最贴手的实现参考。
+对照 `https://github.com/cellinlab/how-pi-agent-works` 的 4 个渐进 TS Demo：它从「纯函数 Loop」逐步加到「流式事件 + 工具调用 + 会话树」，是本章最贴手的实现参考。
 
 ## 4. 验证与观测
 
@@ -77,7 +77,7 @@ async function codingLoop(userInput: string, messages: ModelMessage[]) {
 
 ## 6. 延伸阅读
 
-- `E:\code\ai\claude-code-book`：对话循环与 `Tool<>` 协议章节（架构剖析）
-- `E:\code\ai\how-pi-agent-works`：Agent Loop / 消息 / 流式事件（教学实现）
-- `E:\code\ai\pi\pi-agent-core`：工具调用 + 状态机的极简实现
+- `https://github.com/KMaybe01/claude-code-book`：对话循环与 `Tool<>` 协议章节（架构剖析）
+- `https://github.com/cellinlab/how-pi-agent-works`：Agent Loop / 消息 / 流式事件（教学实现）
+- `https://github.com/earendil-works/pi`：工具调用 + 状态机的极简实现
 - 回到本仓库：[第三关 · Agent 设计模式](../03-第三关-Agent与工具/01-Agent设计模式.md)

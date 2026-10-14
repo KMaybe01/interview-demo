@@ -64,13 +64,13 @@ graph TB
 | Agentic 编排循环 | `backend/internal/airouter/` | RAG → 工具 → 重试 → HITL 的循环 + SSE 事件推给前端 |
 | 智能体管理 UI | `apps/ai-demo/src/components/Agents.tsx` | 三种 Agent 类型的可视化管理 |
 
-## E:\code\ai 延伸精读（Agent 实现）
+## 开源仓库延伸精读（Agent 实现）
 
 把 ③ 的通用 Agent 理论对照真实工程实现：
 
-- `E:\code\ai\pi\pi-agent-core`：工具调用 + 状态机的极简实现（落到 01 / 02 章）
-- `E:\code\ai\how-pi-agent-works`：Agent Loop / 消息 / 流式事件 / 工具调用 / 会话树的 4 个渐进 TS Demo（落到 01 / 03 章）
-- `E:\code\ai\hello-agents`：手搓 ReAct / Plan-and-Solve / Reflection + 多 Agent 案例（落到 01 / 04 章）
+- `https://github.com/earendil-works/pi`：工具调用 + 状态机的极简实现（落到 01 / 02 章）
+- `https://github.com/cellinlab/how-pi-agent-works`：Agent Loop / 消息 / 流式事件 / 工具调用 / 会话树的 4 个渐进 TS Demo（落到 01 / 03 章）
+- `https://github.com/datawhalechina/hello-agents`：手搓 ReAct / Plan-and-Solve / Reflection + 多 Agent 案例（落到 01 / 04 章）
 
 > 完整编码 Agent 专论见 [⑩ 编码 Agent 专题](../10-编码Agent专题/index.md)。
 

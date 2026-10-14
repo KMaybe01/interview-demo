@@ -1,6 +1,6 @@
 # 附 · hello-agents 精读导引
 
-> **性质**：本文是**阅读导引**而非原文搬运。`hello-agents` 是 `E:\code\ai\hello-agents` 下的 Datawhale《从零开始构建智能体》系统教程（16 章 + 自研 HelloAgents 框架），体量很大，**不要求通读**，按下面清单取用即可。
+> **性质**：本文是**阅读导引**而非原文搬运。`hello-agents` 是 `https://github.com/datawhalechina/hello-agents` 下的 Datawhale《从零开始构建智能体》系统教程（16 章 + 自研 HelloAgents 框架），体量很大，**不要求通读**，按下面清单取用即可。
 >
 > **与本章关系**：它是本专题「从 0 手搓 Agent」最贴手的教学材料，与 `how-pi-agent-works`（Pi Agent 教学版）互为补充。
 
@@ -27,4 +27,4 @@
 
 ## 注意
 
-`hello-agents` 为外部开源教程，正文不在本仓库内。引用其结论时请回到 `E:\code\ai\hello-agents` 原文核对版本与示例代码，不要凭记忆转述。
+`hello-agents` 为外部开源教程，正文不在本仓库内。引用其结论时请回到 `https://github.com/datawhalechina/hello-agents` 原文核对版本与示例代码，不要凭记忆转述。

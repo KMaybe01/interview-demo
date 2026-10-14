@@ -4,7 +4,7 @@
 >
 > **前置**：第四关「上下文工程与 Skills」
 > **产出**：能区分三者职责边界，并各举一个工程用例
-> **参考**：`E:\code\ai\claude-howto`（slash commands / memory / skills / hooks / plugins）、`E:\code\ai\awesome-copilot`（生态对照）
+> **参考**：`https://github.com/luongnv89/claude-howto`（slash commands / memory / skills / hooks / plugins）、`https://github.com/github/awesome-copilot`（生态对照）
 
 ---
 
@@ -33,7 +33,7 @@ graph LR
 
 **Memory 的层级**：用户级（`~/.claude/CLAUDE.md`）+ 项目级（仓库根 `CLAUDE.md`）+ 会话级（本次对话摘要）。优先级通常 项目 > 用户 > 会话。
 
-> 实操模板见 `E:\code\ai\claude-howto`：它把 slash commands、memory、skills、subagents、MCP、hooks、plugins 都做成了「复制即用」的模板；`awesome-copilot` 则是 GitHub Copilot 一侧的同构生态（agents / instructions / skills / hooks / plugins）。
+> 实操模板见 `https://github.com/luongnv89/claude-howto`：它把 slash commands、memory、skills、subagents、MCP、hooks、plugins 都做成了「复制即用」的模板；`awesome-copilot` 则是 GitHub Copilot 一侧的同构生态（agents / instructions / skills / hooks / plugins）。
 
 ## 3. 代码实现
 
@@ -66,6 +66,6 @@ hooks.on('PreToolUse', ({ tool, args }) => {
 
 ## 6. 延伸阅读
 
-- `E:\code\ai\claude-howto`：slash commands / memory / skills / hooks / plugins（复制即用模板）
-- `E:\code\ai\awesome-copilot`：Copilot 一侧的 agents / instructions / skills / hooks / plugins 生态
+- `https://github.com/luongnv89/claude-howto`：slash commands / memory / skills / hooks / plugins（复制即用模板）
+- `https://github.com/github/awesome-copilot`：Copilot 一侧的 agents / instructions / skills / hooks / plugins 生态
 - 回本仓库：[第四关 · 上下文工程与 Skills](../04-第四关-企业级工程化/03-上下文工程与Skills.md)

@@ -4,7 +4,7 @@
 >
 > **前置**：02 章（工具/权限）、03 章（上下文）、第五关「A2A 多 Agent」
 > **产出**：能说清「子 Agent」和「主循环多调几次工具」的本质区别，并给出适用场景
-> **参考**：`E:\code\ai\claude-code-book`（Fork 子 Agent 章节）、`E:\code\ai\hello-agents`（多 Agent 案例）
+> **参考**：`https://github.com/KMaybe01/claude-code-book`（Fork 子 Agent 章节）、`https://github.com/datawhalechina/hello-agents`（多 Agent 案例）
 
 ---
 
@@ -40,7 +40,7 @@ graph TB
 - A2A 是**跨进程 / 跨组织**的 Agent 通信（HTTP + Agent Card），用于「调用别人的 Agent」。
 - 选型：自己仓库内的探索用子 Agent；调用外部能力用 A2A。
 
-> `E:\code\ai\claude-code-book` 的「Fork 子 Agent」章节详细讲了它如何用独立上下文隔离探索；`hello-agents` 的「赛博小镇 / 旅行助手」是多 Agent 协作的教学案例。
+> `https://github.com/KMaybe01/claude-code-book` 的「Fork 子 Agent」章节详细讲了它如何用独立上下文隔离探索；`hello-agents` 的「赛博小镇 / 旅行助手」是多 Agent 协作的教学案例。
 
 ## 3. 代码实现
 
@@ -56,7 +56,7 @@ async function orchestrate(task: string) {
 }
 ```
 
-工业实现对照：`backend/internal/agent/` 已实现 ReAct / Function Calling / Multi-Agent 三种引擎；`E:\code\ai\pi\pi-coding-agent` 给了一个 CLI 形态的编码子 Agent 样例。
+工业实现对照：`backend/internal/agent/` 已实现 ReAct / Function Calling / Multi-Agent 三种引擎；`https://github.com/earendil-works/pi` 给了一个 CLI 形态的编码子 Agent 样例。
 
 ## 4. 验证与观测
 
@@ -72,6 +72,6 @@ async function orchestrate(task: string) {
 
 ## 6. 延伸阅读
 
-- `E:\code\ai\claude-code-book`：Fork 子 Agent 章节
-- `E:\code\ai\hello-agents`：多 Agent 案例（旅行助手 / 赛博小镇）
+- `https://github.com/KMaybe01/claude-code-book`：Fork 子 Agent 章节
+- `https://github.com/datawhalechina/hello-agents`：多 Agent 案例（旅行助手 / 赛博小镇）
 - 回本仓库：[第五关 · A2A 多 Agent 协作](../05-第五关-协议与多Agent/03-A2A多Agent协作.md)、[第三关 · Agent 设计模式](../03-第三关-Agent与工具/01-Agent设计模式.md)

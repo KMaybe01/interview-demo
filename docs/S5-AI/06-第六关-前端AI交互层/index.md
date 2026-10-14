@@ -66,12 +66,12 @@ graph LR
 | 主题与 i18n 适配 | `apps/ai-demo/src/App.tsx`、`packages/shared-theme/` | 暗色主题与 `XProvider` 配置 |
 | 端侧推理的工程基础 | `apps/frontend/src/workers/` | Web Worker 承担重计算，避免阻塞渲染线程 |
 
-## E:\code\ai 延伸精读（生成式 UI）
+## 开源仓库延伸精读（生成式 UI）
 
-- `E:\code\ai\A2UI`：Google 发起的**生成式 UI 开放标准**——Agent 用声明式 JSON 描述 UI，客户端用自有组件库渲染（"safe like data, expressive like code"）。`x-card` 正是基于它，补充 01 章的「主流方案地图」。
-- `E:\code\ai\x`：蚂蚁 **Ant Design X** 单体仓库——`x-markdown`（流式 Markdown 渲染，公式 / 高亮 / mermaid）、`x-card`（基于 A2UI 协议的动态卡片）、`x-skill`（智能技能库）。直接对照 02 章的 `Bubble.List` / `Sender` / `Conversations`。
+- `https://github.com/google/A2UI`：Google 发起的**生成式 UI 开放标准**——Agent 用声明式 JSON 描述 UI，客户端用自有组件库渲染（"safe like data, expressive like code"）。`x-card` 正是基于它，补充 01 章的「主流方案地图」。
+- `https://github.com/ant-design/x`：蚂蚁 **Ant Design X** 单体仓库——`x-markdown`（流式 Markdown 渲染，公式 / 高亮 / mermaid）、`x-card`（基于 A2UI 协议的动态卡片）、`x-skill`（智能技能库）。直接对照 02 章的 `Bubble.List` / `Sender` / `Conversations`。
 
-> 本仓库 `apps/ai-demo/src/components/A2UI.tsx`（`@a2ui/react`）就是 A2UI 的 React 落地，`E:\code\ai\A2UI` 是它的规范源头。
+> 本仓库 `apps/ai-demo/src/components/A2UI.tsx`（`@a2ui/react`）就是 A2UI 的 React 落地，`https://github.com/google/A2UI` 是它的规范源头。
 
 ## 自检清单
 
