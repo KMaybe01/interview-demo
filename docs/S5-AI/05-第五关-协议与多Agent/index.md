@@ -63,6 +63,13 @@ Agent Card（能力自述） → 任务发现 → message/send → 任务状态�
 
 > `toolMCPAdapter` 是本仓库一个漂亮的设计：工具只要注册一次，就同时是「Agent 的内部工具」和「对外暴露的 MCP 工具」，权限、沙箱、审计自动继承。
 
+## E:\code\ai 延伸精读（协议与多 Agent）
+
+- `E:\code\ai\hello-agents`：MCP · A2A · ANP 三协议手搓章节 + 多 Agent 案例（旅行助手 / 赛博小镇），与 01 / 03 章互为补充
+- 编码 Agent 视角下的多 Agent：`E:\code\ai\claude-code-book`（Fork 子 Agent）对照 [⑩ 编码 Agent 专题 · 子 Agent](../10-编码Agent专题/04-子Agent与多Agent编排.md)
+
+> 注意区分：A2A 是**跨进程 / 跨组织**的 Agent 通信（本章）；子 Agent 是**同进程内**的逻辑隔离（专题 ⑩）。
+
 ## 自检清单
 
 - [ ] 能说清 MCP 无状态化前后的差别，以及为什么它让横向扩展变简单

@@ -410,6 +410,48 @@ export const navConfig: NavItem[] = [
           { text: '项目表述模板', icon: '📋', link: '/S5-AI/09-面试篇/07-项目表述模板' },
         ],
       },
+      {
+        text: '⑩ 编码 Agent 专题',
+        icon: '⌨️',
+        items: [
+          { text: '专题概览', icon: '📖', link: '/S5-AI/10-编码Agent专题/' },
+          {
+            text: 'Agent Loop 与对话循环',
+            icon: '🔄',
+            link: '/S5-AI/10-编码Agent专题/01-Agent-Loop与对话循环',
+          },
+          {
+            text: '工具系统与权限管线',
+            icon: '🛡️',
+            link: '/S5-AI/10-编码Agent专题/02-工具系统与权限管线',
+          },
+          {
+            text: '上下文压缩与长会话',
+            icon: '🗜️',
+            link: '/S5-AI/10-编码Agent专题/03-上下文压缩与长会话',
+          },
+          {
+            text: '子 Agent 与多 Agent 编排',
+            icon: '🕸️',
+            link: '/S5-AI/10-编码Agent专题/04-子Agent与多Agent编排',
+          },
+          {
+            text: 'Hooks、Skills 与 Memory',
+            icon: '🧩',
+            link: '/S5-AI/10-编码Agent专题/05-钩子Hooks与Skills与Memory',
+          },
+          {
+            text: '国产模型适配与供应商切换',
+            icon: '🔀',
+            link: '/S5-AI/10-编码Agent专题/06-国产模型适配与供应商切换',
+          },
+          {
+            text: 'hello-agents 精读',
+            icon: '📑',
+            link: '/S5-AI/10-编码Agent专题/附-hello-agents精读',
+          },
+        ],
+      },
       { text: '写作约定', icon: '✍️', link: '/S5-AI/99-写作约定' },
     ],
   },

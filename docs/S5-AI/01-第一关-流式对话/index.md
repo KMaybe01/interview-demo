@@ -68,6 +68,16 @@ bun run --cwd apps/ai-course dev     # http://localhost:5199
 > 本仓库 `apps/ai-demo` 走的是「自建 SSE 客户端 + Go 后端」路线；教程主线（AI SDK 7）的代码放在 `apps/ai-course/`。
 > 两条实现是刻意保留的对照——**协议层是共通的，差异只在 SDK 封装**。
 
+## E:\code\ai 延伸精读（AI SDK 源码底座）
+
+`E:\code\ai\ai` 是 Vercel AI SDK v7 的单体仓库，教程主线就建立在其上。想看「工业级 SDK 怎么实现流式循环」，重点读：
+
+- `packages/ai`：`streamText` / 工具调用 / 结构化输出 / RSC 生成式 UI
+- `packages/react`：`useChat` 的 `transport` / `status` / `parts` 实现
+- `architecture/stream-text-loop-control.md`：流式循环与中断控制
+
+> 它是 ① 这一关的「源码级底座」：正文讲 API 用法，这里看内部实现。
+
 ## 自检清单
 
 出关前，请逐条打勾：
