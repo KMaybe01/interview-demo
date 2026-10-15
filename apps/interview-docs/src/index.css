@@ -19,6 +19,12 @@
   --header-height: 56px;
   --content-width: 1080px;
   --aside-width: 280px;
+  /* 文档区（正文 + 右侧目录）宽度上限 */
+  --doc-width: 1440px;
+  /* 侧边栏宽度唯一真源：由 useSidebar 写入，同时驱动侧边栏宽度与内容区左偏移 */
+  --sidebar-width: 280px;
+  --c-brand-tint: rgba(62, 175, 124, 0.1);
+  --sidebar-shadow: 0 12px 40px rgba(0, 0, 0, 0.18);
 }
 
 .dark {
@@ -33,6 +39,8 @@
   --c-text-3: #666;
   --c-border: #333355;
   --c-border-light: #2a2a4a;
+  --c-brand-tint: rgba(78, 201, 176, 0.14);
+  --sidebar-shadow: 0 12px 40px rgba(0, 0, 0, 0.6);
 }
 
 *,
@@ -55,6 +63,8 @@
 html {
   scroll-padding-top: calc(var(--header-height) + 16px);
   scroll-behavior: smooth;
+  /* 预留滚动条槽位：布局变化导致滚动条出现/消失时，整页不会左右平移 */
+  scrollbar-gutter: stable;
 }
 
 body {
@@ -65,7 +75,8 @@ body {
   color: var(--c-text-1);
   line-height: 1.7;
   font-size: 16px;
-  transition: background 0.3s;
+  /* 不在这里做 background 过渡：主题切换由 useThemeTransition 的 clip-path 遮罩统一负责，
+     若页面自己再淡入 0.3s，遮罩从右上角展开的那片区域会看到"背景色正在变" */
   -webkit-font-smoothing: antialiased;
 }
 
@@ -87,17 +98,14 @@ a:hover {
   background: var(--c-bg);
   border-bottom: 1px solid var(--c-border);
   z-index: 100;
-  transition: background 0.3s;
 }
 
 .header-inner {
-  max-width: 1440px;
-  margin: 0 auto;
   height: 100%;
   display: flex;
   align-items: center;
   padding: 0 24px;
-  gap: 24px;
+  gap: 16px;
 }
 
 .header-logo {
@@ -125,91 +133,14 @@ a:hover {
   background-clip: text;
 }
 
-.header-nav {
-  flex: 1;
-}
-
-.nav-list {
-  display: flex;
-  list-style: none;
-  gap: 2px;
-}
-
-.nav-link,
-.nav-dropdown-toggle {
-  display: inline-flex;
-  align-items: center;
-  gap: 4px;
-  padding: 6px 12px;
-  border-radius: 8px;
-  font-size: 0.875rem;
-  font-weight: 500;
-  color: var(--c-text-2);
-  background: none;
-  border: none;
-  cursor: pointer;
-  transition:
-    background 0.2s,
-    color 0.2s;
-  white-space: nowrap;
-  font-family: inherit;
-}
-
-.nav-link:hover,
-.nav-dropdown-toggle:hover,
-.nav-link.active,
-.nav-dropdown-toggle.active {
-  color: var(--c-text-1);
-  background: var(--c-bg-soft);
-}
-
-.nav-dropdown {
-  position: relative;
-}
-
-.nav-dropdown-menu {
-  position: absolute;
-  top: 100%;
-  left: 0;
-  min-width: 200px;
-  background: var(--c-bg);
-  border: 1px solid var(--c-border);
-  border-radius: 10px;
-  box-shadow: 0 8px 24px rgba(0, 0, 0, 0.1);
-  padding: 6px;
-  list-style: none;
-  z-index: 200;
-}
-
-.dark .nav-dropdown-menu {
-  box-shadow: 0 8px 24px rgba(0, 0, 0, 0.4);
-}
-
-.nav-dropdown-menu.nested {
-  left: 100%;
-  top: -6px;
-}
-
-.nav-dropdown-menu .nav-link,
-.nav-dropdown-menu .nav-dropdown-toggle {
-  width: 100%;
-  border-radius: 6px;
-  padding: 8px 12px;
-  font-size: 0.85rem;
-}
-
-.chevron {
-  transition: transform 0.2s;
-}
-.nav-dropdown.open > .nav-dropdown-toggle .chevron.rotated {
-  transform: rotate(180deg);
-}
+/* 顶部导航已整体迁入左侧 Sidebar（见 components/Sidebar.tsx） */
 
 .header-actions {
   display: flex;
   align-items: center;
   gap: 6px;
   flex-shrink: 0;
+  margin-left: auto;
 }
 
 .header-action-btn {
@@ -250,7 +181,262 @@ a:hover {
   transition: 0.3s;
 }
 
+/* ── Sidebar（全站左侧导航） ── */
+.sidebar {
+  position: fixed;
+  top: var(--header-height);
+  left: 0;
+  bottom: 0;
+  z-index: 90;
+  display: flex;
+  flex-direction: column;
+  width: var(--sidebar-width);
+  background: var(--c-bg);
+  border-right: 1px solid var(--c-border);
+  transition:
+    width 0.16s ease-out,
+    transform 0.18s ease-out;
+}
+
+.sidebar-nav {
+  flex: 1;
+  min-height: 0;
+  overflow-y: auto;
+  overflow-x: hidden;
+  /* 预留滚动条槽位：折叠时子分组消失导致滚动条出现/消失，否则内容会被顶动产生抖动 */
+  scrollbar-gutter: stable;
+  overscroll-behavior: contain;
+  display: flex;
+  flex-direction: column;
+  gap: 1px;
+  padding: 12px 8px 16px;
+  list-style: none;
+  scrollbar-width: thin;
+  scrollbar-color: var(--c-border) transparent;
+}
+
+.sidebar-nav::-webkit-scrollbar {
+  width: 8px;
+}
+.sidebar-nav::-webkit-scrollbar-track {
+  background: transparent;
+}
+.sidebar-nav::-webkit-scrollbar-thumb {
+  background: var(--c-border);
+  border: 2px solid var(--c-bg);
+  border-radius: 4px;
+}
+.sidebar-nav::-webkit-scrollbar-thumb:hover {
+  background: var(--c-text-3);
+}
+
+.sidebar-link,
+.sidebar-group-toggle {
+  position: relative;
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  width: 100%;
+  padding: 7px 10px;
+  border: none;
+  border-radius: 6px;
+  background: none;
+  color: var(--c-text-2);
+  font-family: inherit;
+  font-size: 13.5px;
+  font-weight: 500;
+  line-height: 1.5;
+  /* 折叠时文字被"挤"出盒外，这里裁掉，避免溢出撑出横向滚动条 */
+  overflow: hidden;
+  text-align: left;
+  cursor: pointer;
+  transition:
+    background 0.15s ease-out,
+    color 0.15s ease-out,
+    /* 折叠时内边距跟着变，图标才会平滑滑向 rail 中心而不是瞬移 */
+    padding-left 0.16s ease-out;
+}
+
+.sidebar-link:hover,
+.sidebar-group-toggle:hover {
+  color: var(--c-text-1);
+  background: var(--c-bg-soft);
+}
+
+.sidebar-icon {
+  flex-shrink: 0;
+  width: 20px;
+  font-size: 15px;
+  line-height: 1;
+  text-align: center;
+}
+
+.sidebar-label {
+  flex: 1;
+  min-width: 0;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+  transition: opacity 0.1s ease-out;
+}
+
+.sidebar-chevron {
+  flex-shrink: 0;
+  opacity: 0.55;
+  transition: transform 0.2s ease-out;
+}
+.sidebar-chevron.is-open {
+  transform: rotate(90deg);
+}
+
+.sidebar-link.active {
+  color: var(--c-brand);
+  background: var(--c-brand-tint);
+  font-weight: 600;
+}
+.sidebar-link.active::before {
+  content: "";
+  position: absolute;
+  left: 0;
+  top: 6px;
+  bottom: 6px;
+  width: 2px;
+  border-radius: 2px;
+  background: var(--c-brand);
+}
+
+/* 子级：左侧引导线表达层级，逐级收缩字号 */
+.sidebar-sublist {
+  display: flex;
+  flex-direction: column;
+  gap: 1px;
+  margin: 2px 0 2px 9px;
+  padding-left: 8px;
+  list-style: none;
+  border-left: 1px solid var(--c-border-light);
+}
+.sidebar-sublist .sidebar-link,
+.sidebar-sublist .sidebar-group-toggle {
+  padding-block: 6px;
+  font-size: 13px;
+}
+.sidebar-sublist .sidebar-sublist .sidebar-link,
+.sidebar-sublist .sidebar-sublist .sidebar-group-toggle {
+  font-size: 12.5px;
+}
+
+.sidebar-footer {
+  flex-shrink: 0;
+  padding: 8px;
+  border-top: 1px solid var(--c-border);
+}
+
+.sidebar-collapse-btn {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  width: 100%;
+  padding: 8px 10px;
+  border: none;
+  border-radius: 8px;
+  background: var(--c-bg-soft);
+  color: var(--c-text-2);
+  font-family: inherit;
+  font-size: 13px;
+  font-weight: 500;
+  overflow: hidden;
+  cursor: pointer;
+  transition:
+    background 0.15s ease-out,
+    color 0.15s ease-out,
+    padding-left 0.16s ease-out;
+}
+.sidebar-collapse-btn:hover {
+  background: var(--c-brand-tint);
+  color: var(--c-brand);
+}
+
+.sidebar-collapse-text {
+  flex: 1;
+  min-width: 0;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+  transition: opacity 0.1s ease-out;
+}
+
+/* 拖拽把手：右缘热区，hover / 聚焦 / 拖拽时显示品牌色高亮条 */
+.sidebar-resizer {
+  position: absolute;
+  top: 0;
+  right: -3px;
+  bottom: 0;
+  width: 6px;
+  z-index: 3;
+  background: transparent;
+  cursor: col-resize;
+  touch-action: none;
+  outline: none;
+}
+.sidebar-resizer::after {
+  content: "";
+  position: absolute;
+  top: 0;
+  left: 2px;
+  bottom: 0;
+  width: 2px;
+  background: var(--c-brand);
+  opacity: 0;
+  transition: opacity 0.15s ease-out;
+}
+.sidebar-resizer:hover::after,
+.sidebar-resizer:focus-visible::after,
+.sidebar.is-resizing .sidebar-resizer::after {
+  opacity: 1;
+}
+
+/* 折叠为图标栏（桌面端）：只收窄盒宽 + 淡出文字，DOM 不变、图标位置连续过渡 */
+.sidebar.is-collapsed .sidebar-label,
+.sidebar.is-collapsed .sidebar-collapse-text {
+  opacity: 0;
+}
+.sidebar.is-collapsed .sidebar-chevron,
+.sidebar.is-collapsed .sidebar-sublist {
+  display: none;
+}
+.sidebar.is-collapsed .sidebar-link,
+.sidebar.is-collapsed .sidebar-group-toggle {
+  /* 内容区实宽 48px（64 rail - 两侧 8px 内边距），(48 - 20) / 2 让 20px 图标居中 */
+  padding-left: 14px;
+  padding-right: 0;
+}
+.sidebar.is-collapsed .sidebar-collapse-btn {
+  /* (48 - 14) / 2，对齐 14px 的箭头图标 */
+  padding-left: 17px;
+  padding-right: 0;
+}
+
+.sidebar-backdrop {
+  display: none;
+}
+
+/* 拖拽期间禁用过渡与文本选中，保证跟手 */
+body.sidebar-resizing,
+body.sidebar-resizing * {
+  cursor: col-resize !important;
+  user-select: none !important;
+}
+body.sidebar-resizing .sidebar,
+body.sidebar-resizing .doc-page {
+  transition: none;
+}
+
 /* ── Main content ── */
+/*
+ * 这里刻意**不加** margin-left：内容区始终占满视口，左侧让位交给 .doc-page 的
+ * max(侧边栏宽度, 右对齐偏移)。这样在宽屏上侧边栏折叠/展开时正文一行都不用重排，
+ * 只有侧边栏自身在动，动画才不会卡。
+ */
 .main-content {
   padding-top: var(--header-height);
   min-height: 100vh;
@@ -644,10 +830,15 @@ pre:hover .code-copy-btn {
 /* ── Doc page ── */
 .doc-page {
   display: flex;
-  max-width: 1440px;
-  margin: 0 auto;
+  max-width: var(--doc-width);
+  /* 右对齐而不是居中：右侧目录/正文的右边缘恒定贴住视口右侧。
+     max(侧边栏宽度, 右对齐偏移) 的含义是"宽屏时保持右对齐、空间不够时才给侧边栏让位"，
+     于是宽屏下折叠/展开侧边栏时文档区完全静止（不重排 → 不卡）。 */
+  margin-left: max(var(--sidebar-width), calc(100% - var(--doc-width)));
+  margin-right: 0;
   padding: 24px;
   gap: 32px;
+  transition: margin-left 0.16s ease-out;
 }
 
 .doc-content {
@@ -1036,27 +1227,6 @@ pre:hover .code-copy-btn {
   color: #4ec9b0 !important;
 }
 
-/* ── Body scroll lock ── */
-body.menu-open {
-  overflow: hidden;
-}
-
-/* ── Mobile menu backdrop ── */
-.mobile-menu-backdrop {
-  position: fixed;
-  top: var(--header-height);
-  left: 0;
-  right: 0;
-  bottom: 0;
-  background: rgba(0, 0, 0, 0.4);
-  z-index: 90;
-  animation: backdropFadeIn 0.2s ease-out;
-}
-
-.dark .mobile-menu-backdrop {
-  background: rgba(0, 0, 0, 0.6);
-}
-
 @keyframes backdropFadeIn {
   from {
     opacity: 0;
@@ -1081,58 +1251,6 @@ body.menu-open {
     display: flex;
   }
 
-  .header-nav {
-    display: none;
-    position: absolute;
-    top: 100%;
-    left: 0;
-    right: 0;
-    background: var(--c-bg);
-    border-bottom: 1px solid var(--c-border);
-    padding: 4px;
-    max-height: calc(100vh - var(--header-height));
-    overflow-y: auto;
-    box-shadow: 0 8px 24px rgba(0, 0, 0, 0.1);
-    z-index: 100;
-  }
-  .header-nav.open {
-    display: block;
-  }
-
-  .nav-list {
-    flex-direction: column;
-    gap: 0;
-  }
-
-  .nav-link,
-  .nav-dropdown-toggle {
-    padding: 12px 14px;
-    font-size: 0.95rem;
-    min-height: 44px;
-    width: 100%;
-    justify-content: flex-start;
-    border-radius: 8px;
-  }
-
-  .nav-dropdown-menu {
-    position: static;
-    box-shadow: none;
-    border: none;
-    padding-left: 16px;
-    margin-top: 2px;
-  }
-
-  .nav-dropdown-menu .nav-link,
-  .nav-dropdown-menu .nav-dropdown-toggle {
-    padding: 10px 14px;
-    font-size: 0.9rem;
-    min-height: 42px;
-  }
-
-  .nav-dropdown-menu.nested {
-    left: 0;
-  }
-
   .header-actions {
     gap: 2px;
   }
@@ -1151,6 +1269,50 @@ body.menu-open {
   }
   .mobile-menu-btn.open span:nth-child(3) {
     transform: translateY(-6px) rotate(-45deg);
+  }
+
+  /* 侧边栏在窄屏降级为左侧抽屉（浮层）：文档区铺满，不再给侧边栏让位 */
+  .doc-page {
+    margin-left: 0;
+  }
+
+  .sidebar {
+    z-index: 95;
+    width: min(320px, 85vw);
+    transform: translateX(-100%);
+    transition: transform 0.25s ease-out;
+  }
+  .sidebar.is-open {
+    transform: translateX(0);
+    box-shadow: var(--sidebar-shadow);
+  }
+  .sidebar-resizer,
+  .sidebar-footer {
+    display: none;
+  }
+
+  .sidebar-backdrop {
+    display: block;
+    position: fixed;
+    top: var(--header-height);
+    left: 0;
+    right: 0;
+    bottom: 0;
+    z-index: 92;
+    background: rgba(0, 0, 0, 0.4);
+    opacity: 0;
+    pointer-events: none;
+  }
+  .sidebar-backdrop.is-visible {
+    pointer-events: auto;
+    animation: backdropFadeIn 0.2s ease-out forwards;
+  }
+  .dark .sidebar-backdrop {
+    background: rgba(0, 0, 0, 0.6);
+  }
+
+  body.menu-open {
+    overflow: hidden;
   }
 
   .doc-page {

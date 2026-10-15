@@ -11,7 +11,7 @@
 | [项目概览](#项目概览) | 这个应用是什么、核心特性、学习路径 |
 | [技术栈](#技术栈) | 精确依赖版本 |
 | [架构设计](#架构设计) | 入口结构、组件树、路由、状态、分包 |
-| [组件参考](#组件参考) | 全部 12 个组件的 props、hooks 与行为 |
+| [组件参考](#组件参考) | 全部 13 个组件的 props、hooks 与行为 |
 | [数据层](#数据层) | `docUrls` / `content` / `navigation` / `docSequence` |
 | [工具函数](#工具函数) | `slugify` / `split-markdown` |
 | [数据流](#数据流) | 内容加载、虚拟滚动、搜索、主题、版本检测 |
@@ -122,14 +122,18 @@ createRoot(#root)                     src/main.tsx
   <div.app>
     ├── <Header>                      （在 Routes 之外 —— 常驻）
     │     ├── Logo → "/"              src={import.meta.env.BASE_URL + 'logo.svg'}
-    │     ├── <motion.nav.header-nav>
-    │     │     └── <NavDropdown> ×N  （递归渲染，数据来自 navConfig）
+    │     ├── <button.mobile-menu-btn> （仅 < 960px 且非首页显示，开合侧边栏抽屉）
     │     ├── <button> 搜索           （打开 GlobalSearch，title="搜索 (Ctrl+K)"）
     │     ├── <ThemeToggle>           来自 @interview-demo/shared-theme
     │     ├── GitHub 链接              https://github.com/KMaybe01/interview-demo
     │     └── {transitionOverlay}      主题切换的圆形裁剪遮罩
     │
-    ├── <main.main-content>
+    ├── <Sidebar>                     （非首页渲染；递归渲染 navConfig）
+    │     ├── <SidebarTree>            （memo，递归节点：<Link> / <button aria-expanded>）
+    │     ├── .sidebar-footer          （折叠 / 展开按钮）
+    │     └── .sidebar-resizer         （拖拽改宽度，role="separator"）
+    │
+    ├── <main.main-content>            （始终占满视口，左侧让位由 .doc-page 的 margin-left 处理）
     │     └── <ErrorBoundary>         只包裹 Routes（Header 永远不会被错误阻断）
     │           └── <Routes>
     │                 ├── "/"  → <HomePage>
@@ -171,6 +175,7 @@ createRoot(#root)                     src/main.tsx
 | `useSyncExternalStore` | 主题：通过 `@interview-demo/shared-theme` 的 `useTheme()`，用 `MutationObserver` 订阅 `<html class>` 变化 |
 | `useMemo` | 派生数据（sections、headings、上下篇、搜索结果、导航扁平化） |
 | `useRef` | 瞬态值（IntersectionObserver、sentinel 映射、高度缓存、拖拽状态、定时器、mermaid `initialized` 标志） |
+| `localStorage` | 跨会话记忆：`theme`（主题）、`sidebar-width` / `sidebar-collapsed`（侧边栏宽度与折叠态）、`cached-version` / `dismissed-version`（更新提示） |
 | `useDeferredValue` | 搜索过滤：在过滤大索引时保持输入流畅 |
 | `useCallback` | 稳定的回调，供 memo 化的 `components` 对象和 effect 使用 |
 | `useInView`（motion） | `HomePage` 上的一次性滚动入场动画 |
@@ -217,7 +222,8 @@ rolldownOptions.output.codeSplitting.groups = [
 
 | 文件 | Props | 备注 |
 |------|-------|------|
-| `Header.tsx` | 无 | 223 行；内含未导出的递归组件 `NavDropdown` |
+| `Header.tsx` | `{ menuOpen; onToggleMenu; onCloseMenu; showMenuButton }` | 顶栏：Logo / 汉堡 / 搜索 / 主题 / GitHub，导航已全部迁到 `Sidebar` |
+| `Sidebar.tsx` | `{ drawerOpen: boolean; onCloseDrawer: () => void }` | 左侧导航：顶层手风琴、可拖拽宽度、折叠 rail、窄屏抽屉；内含 memo 的 `SidebarTree` |
 | `HomePage.tsx` | 无 | 177 行；模块级 `features` 数组含 6 个阶段 |
 | `HeroCanvas.tsx` | 无 | 89 行；canvas 粒子场 |
 | `DocPage.tsx` | 无（读 `useLocation()`） | 164 行 |
@@ -232,11 +238,13 @@ rolldownOptions.output.codeSplitting.groups = [
 
 ## App（`src/App.tsx`）
 
-23 行的根布局。渲染 `Header`、`main > ErrorBoundary > Routes` 和 `UpdateNotification`。
+根布局。渲染 `Header`、`Sidebar`、`main > ErrorBoundary > Routes` 和 `UpdateNotification`。
 
 ```tsx
 <div className="app">
-  <Header />
+  <Header menuOpen={drawerOpen} onToggleMenu={toggleDrawer}
+          onCloseMenu={closeDrawer} showMenuButton={!isHome} />
+  {!isHome && <Sidebar drawerOpen={drawerOpen} onCloseDrawer={closeDrawer} />}
   <main className="main-content">
     <ErrorBoundary>
       <Routes>
@@ -249,35 +257,73 @@ rolldownOptions.output.codeSplitting.groups = [
 </div>
 ```
 
+**状态**：`drawerOpen`（窄屏抽屉开合）。副作用有两个：
+1. `location.pathname` 变化时 `setDrawerOpen(false)` —— 覆盖点击链接、浏览器后退与全局搜索跳转。
+2. `drawerOpen` 变化时给 `body` 加/去 `.menu-open`（滚动锁；该 CSS 规则收在移动端断点内，桌面端无副作用）。
+
+**首页特例**：`isHome = pathname === '/'` 时既不渲染 `Sidebar` 也不渲染汉堡按钮（首页整屏 Hero，没有导航侧边栏）。
+
 ## Header（`src/components/Header.tsx`）
 
-固定在顶部的导航栏，带递归的多级下拉菜单。
+固定顶部的极简工具条：**左侧** Logo（+ 窄屏汉堡），**右侧** 搜索 / 主题 / GitHub。顶部导航已整体迁入 `Sidebar`，Header 不再持有导航树。
 
-**内部组件**（未导出）：
+**Props**：
 
 ```typescript
-function NavDropdown({ item, currentPath, depth = 0, onClose }: {
-  item: NavItem;
-  currentPath: string;
-  depth?: number;
-  onClose?: () => void;
-})
+interface HeaderProps {
+  menuOpen: boolean;          // 抽屉是否打开（汉堡 X 动画 + aria-expanded）
+  onToggleMenu: () => void;   // 汉堡点击
+  onCloseMenu: () => void;    // 点击 Logo 时收起抽屉
+  showMenuButton: boolean;    // 首页没有侧边栏，此时不渲染汉堡
+}
 ```
 
-**状态**：`menuOpen`、`searchOpen`；每个 `NavDropdown` 自己持有 `dropdownOpen`。`timeoutRef: useRef<number>` 保存 200ms 的关闭定时器。
-
-**Hooks**：`useTheme()`、`useThemeTransition(mode, toggleTheme, { darkBg: '#1a1a2e', lightBg: '#f5f5f0' })`、`useLocation()`。
+**Hooks**：`useState`（`searchOpen`）、`useTheme()`、`useThemeTransition(mode, toggleTheme, { darkBg: '#1a1a2e', lightBg: '#f5f5f0' })`。
 
 **行为**：
-- `navConfig` 递归渲染成下拉菜单：有 `items` 的节点渲染为 `<button>` + `<motion.ul>`，叶子节点渲染为 `<Link>`。
-- **≥ 960px**：hover 开合（`onMouseEnter` / `onMouseLeave`）。
-- **< 960px**：点击切换；汉堡按钮切换 `menuOpen`，给 `.header-nav` 加 `.open`、给 `body` 加 `.menu-open`，并出现 `.mobile-menu-backdrop` 点击关闭。
-- 导航区 `onMouseLeave` 延迟 200ms 执行 `setMenuOpen(false)`，`onMouseEnter` 时清除定时器。
-- 高亮判定：`currentPath.startsWith(item.link)`。
+- `.header-inner` 不再限制 `max-width`，左组贴左、右组靠 `margin-left: auto` 贴右。
+- 汉堡按钮交给 CSS 控制可见性（`display: none`，`< 960px` 才 `display: flex`），并由 `showMenuButton` 决定是否渲染。
 - 搜索按钮在 `<AnimatePresence>` 中打开 `<GlobalSearch>`。
 - 主题开关委托给 `<ThemeToggle mode onToggle={handleToggleTheme} />`，并把 `{transitionOverlay}` 作为兄弟节点渲染以实现圆形揭示动画。
 
 > 搜索按钮的 `title` 写着 `Ctrl+K`，但**全仓没有任何全局 keydown 监听** —— 该快捷键实际未实现。
+
+## Sidebar（`src/components/Sidebar.tsx`）
+
+全站左侧导航（首页除外），数据来自 `data/navigation.ts` 的 `navConfig`。
+
+**Props**：`{ drawerOpen, onCloseDrawer }`；宽度/折叠状态由内部 `useSidebar()` 持有（App 不感知宽度）。
+
+**导航渲染**：
+- `renderNavNode()` 递归：叶子 → `<Link>`（激活时 `aria-current="page"`），分组 → `<button aria-expanded>` + 条件渲染的 `<ul.sidebar-sublist>`。
+- **只渲染已展开的分组**，避免一次性铺开上百条链接；`SidebarTree` 用 `memo` 包裹，拖拽宽度时整棵树跳过重渲染。
+- **顶层手风琴**：`isTopLevelKey()` 判定 `n-3` 这类只有一段下标的 key，`activateTopGroup()` 在展开新顶层分组前把其它顶层分组（含其子孙 key）一并移除。
+- **激活判定**：叶子用精确匹配（`normalizeLink(link) === pathname`，避免 `/S6-Go/` 这类"阶段概览"在任意子页面同时亮起）；祖先分组用前缀匹配（`matchesPath`），先精确后前缀地 `findTrail()` 找出活跃链，再由 `trailToGroupKeys()` 得到需要展开的祖先 key。
+- 路由变化后把 `aria-current="page"` 的项 `scrollIntoView({ block: 'nearest' })`。
+
+**折叠与拖拽**（`hooks/useSidebar.ts`）：
+- 布局由 `:root` 的 `--sidebar-width` 单一驱动：`.sidebar { width: var(--sidebar-width) }`，文档区由 `.doc-page` 的 `margin-left: max(var(--sidebar-width), calc(100% - var(--doc-width)))` 让位。
+- 拖拽热路径只写 CSS 变量与 ref，**不 setState**，因此导航树一帧都不会重渲染；松手时才落盘 `localStorage` 并同步 React 状态（供 `aria-valuenow` 使用）。
+- 宽度钳制在 `MIN_SIDEBAR_WIDTH(200) ~ MAX_SIDEBAR_WIDTH(480)`，默认 `280`；折叠 rail 宽 `64`。
+- 拖拽期间给 `body` 加 `.sidebar-resizing`（禁用过渡 / 文本选中 / 全局 `col-resize` 光标）。
+- 无障碍：resizer `role="separator"` + `tabIndex=0`，←/→ 微调 ±8px（Shift ±32px），`Home` 复位默认宽度。
+
+**折叠形态**：折叠态与展开态渲染**完全相同的 DOM**，只靠 CSS 收窄盒宽 + `opacity` 淡出文字 + `padding-left` 过渡把图标送向 rail 中心。
+若像早期实现那样在两种形态间切换节点结构（`display: none` / `justify-content: center`），折叠瞬间会先重排、动画再跟上，视觉上就是"抖一下"。
+
+**响应式**：`< 960px` 时侧边栏变为左侧抽屉（`transform: translateX(-100%)` → `.is-open` 滑入 + `.sidebar-backdrop` 遮罩淡入 + 阴影），并隐藏 resizer 与底部折叠按钮；`body.menu-open` 冻结滚动。抽屉打开时 `rail = collapsed && !drawerOpen` 为 `false`，保证抽屉里始终是完整形态。
+
+**防抖配套细节**：
+- `--sidebar-width` 由 `useLayoutEffect` 写入（而非 `useEffect`），保证"类名 + 宽度"在同一帧生效，不会出现一帧错位。
+- `index.html` 内联脚本在首帧前就按 `localStorage` 写入 `--sidebar-width`，否则刷新后会从默认 280px 过渡动画到记忆值（每次刷新"侧边栏自己动一下"）。
+- `.sidebar-nav` 用 `overflow-x: hidden` + `scrollbar-gutter: stable`：折叠时子分组消失会让滚动条出现/消失，预留槽位可避免内容被顶动。
+- 导航项与折叠按钮都设 `overflow: hidden`，折叠过程中被"挤出"的文字不会撑出横向滚动条。
+- `.main-content` **不设** `margin-left`（内容区始终占满视口），左侧让位交给 `.doc-page` 的
+  `margin-left: max(var(--sidebar-width), calc(100% - var(--doc-width)))`：
+  宽屏时右对齐偏移（常量）胜出 → 折叠/展开侧边栏时**文档区完全静止、一行都不用重排**（这是丝滑的关键，
+  早期版本在 `.main-content` 上做 `margin-left` 过渡，每帧都要重排整篇正文，明显掉帧）；
+  空间不够时侧边栏宽度胜出 → 自动给侧边栏让位，因此宽屏右对齐、窄屏让位两者兼得。
+- `html` 与 `.sidebar-nav` 都设 `scrollbar-gutter: stable`，避免布局变化引起滚动条出现/消失时整页或导航被顶动。
 
 ## HomePage（`src/components/HomePage.tsx`）
 
@@ -526,7 +572,7 @@ export const navConfig: NavItem[] = [ /* 385 行，7 个顶层分区，115 条 l
 | AI 前沿 | 🤖 | 阶段概览 + 入门与选型(3) + 实战篇(12) + 面试篇(7) + 课程实战(8) + LLM后端(5) = 36 |
 | Go 语言 | 🐹 | 阶段概览 + 总纲 + 篇一(4) + 篇二(4) + 篇三(7) + 篇四(4) + 篇五(8) + 篇六(4) = 33 |
 
-嵌套层数不限 —— `NavDropdown` 按 `depth` 递归，`GlobalSearch` 的 `flattenNav` 遍历同一棵树。
+嵌套层数不限 —— `Sidebar` 的 `renderNavNode` 按 `depth` 递归渲染（顶层手风琴只开一个），`GlobalSearch` 的 `flattenNav` 遍历同一棵树。
 
 ## `docSequence.ts` —— 阅读顺序
 
@@ -703,6 +749,16 @@ export { useTheme };
 ```
 
 该包同时提供 Zustand 版 `useThemeStore`，但**本站只用 hook** —— 这里没有 store 实例。
+
+> ⚠️ 该包早期版本在 `store.ts` 的**模块求值阶段**就调用了 `applyTheme(getInitialTheme(_config))`。由于包默认 `storageKey` 是 `theme-mode`（与本站的 `theme` 不同），
+> 这段副作用会在 React 挂载前按默认 key 读到空值并 `applyTheme('light')`，把上面 `index.html` 内联脚本写入的 `dark` class 抹掉 —— 表现为 **刷新后主题回退**。
+> 现在已改为不在模块求值时写 DOM，初始 DOM 状态一律由各 app 的 `configureTheme()` 应用；本站则由 `index.html` 内联脚本负责。
+
+**圆形揭示动画的两个前提**（否则会看到"背景色没被遮罩盖住"）：
+
+1. 页面自己**不能**再对背景色做过渡。`body` / `.header` 上的 `transition: background 0.3s` 已移除 —— 遮罩从右上角（`100% 0%`）开始收缩，那片区域在 t≈0 就被揭开，
+   若背景自身还在 0.3s 的淡入过程中，揭开的瞬间看到的是"正在变色的背景"。现在主题是瞬时切换、完全由遮罩来表现。
+2. 遮罩必须用 `width: 100vw; height: 100vh` 而不是 `inset: 0`：`inset: 0` 只覆盖**布局视口**，右侧经典滚动条所在的槽位会漏在遮罩外，切换瞬间那一条先变色。
 
 ## 版本更新流程
 
@@ -914,11 +970,13 @@ bun run build
 
 Vitest 4 + jsdom + `@testing-library/react` 16 + `@testing-library/user-event` 14。配置位于 `vite.config.ts`。测试与源码同目录，放在 `__tests__/` 下。
 
-**共 9 个测试文件：**
+**共 11 个测试文件：**
 
 | 文件 | 覆盖范围 |
 |------|----------|
-| `src/components/__tests__/Header.test.tsx` | Logo/标题、7 个顶层导航文案、汉堡按钮切换 `.header-nav.open`、搜索按钮开关 `GlobalSearch`、`.theme-switch input[type="checkbox"]` 存在、GitHub 链接的 href/target |
+| `src/components/__tests__/Header.test.tsx` | Logo/标题、顶栏不再渲染导航下拉、汉堡按钮的 `aria-expanded`/`.open` 与 `onToggleMenu` 回调、`showMenuButton=false` 时不渲染汉堡、点击 Logo 触发 `onCloseMenu`、搜索按钮开关 `GlobalSearch`、`.theme-switch input[type="checkbox"]` 存在、GitHub 链接的 href/target |
+| `src/components/__tests__/Sidebar.test.tsx` | 7 个顶层导航项、分组展开/收起、**顶层手风琴只开一个**、随路由切换唯一展开项、激活高亮与祖先分组自动展开、`阶段概览` 不在子页面误高亮、折叠 rail 与 `localStorage['sidebar-collapsed']`、拖拽改宽度 + 钳制 200/480 + `localStorage['sidebar-width']` + `aria-valuenow`、双击复位、方向键微调、遮罩点击关闭抽屉、抽屉内保持完整形态、点击链接请求关闭抽屉 |
+| `src/hooks/__tests__/useSidebar.test.tsx` | 默认值 280/未折叠与 `--sidebar-width` 写入、从 `localStorage` 恢复（越界钳制、脏数据回退）、折叠态恢复为 64px、toggle 持久化、拖拽预览不落盘/不重渲染、松手落盘并同步状态、未开始拖拽时忽略 move、键盘微调与复位、`clampSidebarWidth` 边界 |
 | `src/components/__tests__/HomePage.test.tsx` | Hero 文案、6 张卡片标题、指向 6 个阶段路径的 6 个链接、语录文案、GitHub href |
 | `src/components/__tests__/Outline.test.tsx` | 渲染「目录」+ 全部标题、4 个锚点链接、缩进 0/12/24/12 px、空数组渲染为空 |
 | `src/components/__tests__/DocPageNav.test.tsx` | prev/next 的 href 与标题、「已是第一章」/「已是最后一章」占位、两者皆空时渲染为空 |

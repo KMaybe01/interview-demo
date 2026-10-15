@@ -29,21 +29,24 @@ bun test       # 运行测试
 
 ```
 src/
-├── App.tsx                  # 根组件（路由 + ErrorBoundary）
+├── App.tsx                  # 根组件（左侧边栏 + 路由 + ErrorBoundary）
 ├── main.tsx                 # 入口（StrictMode + HashRouter）
 ├── components/
 │   ├── DocPage.tsx           # 文档页面（异步加载 markdown）
 │   ├── DocVirtualScroll.tsx  # 虚拟滚动（分片渲染大文档）
-│   ├── Header.tsx            # 顶栏导航 + 主题切换 + 搜索
+│   ├── Header.tsx            # 顶栏（Logo / 汉堡 / 搜索 / 主题 / GitHub）
+│   ├── Sidebar.tsx           # 左侧导航侧边栏（可折叠 + 可拖拽宽度 + 窄屏抽屉）
 │   ├── GlobalSearch.tsx      # 全局搜索（全文索引）
 │   ├── MarkdownRenderer.tsx  # Markdown 渲染（代码高亮、图片灯箱）
 │   ├── MermaidDiagram.tsx    # Mermaid 图表（lazy loaded）
 │   ├── HeroCanvas.tsx        # 首页粒子动画
-│   ├── HomePage.tsx          # 首页
+│   ├── HomePage.tsx          # 首页（不含侧边栏）
 │   ├── Outline.tsx           # 文档目录/大纲（scroll-spy 高亮）
 │   ├── UpdateNotification.tsx # 版本更新提示
 │   └── ErrorBoundary.tsx     # 错误边界
-├── hooks/useTheme.ts         # 主题切换（useSyncExternalStore，基于 @interview-demo/shared-theme hook）
+├── hooks/
+│   ├── useTheme.ts           # 主题切换（useSyncExternalStore，基于 @interview-demo/shared-theme hook）
+│   └── useSidebar.ts         # 侧边栏宽度/折叠状态（localStorage 记忆 + --sidebar-width 变量）
 ├── data/
 │   ├── content.ts            # 内容加载（import.meta.glob）
 │   └── navigation.ts         # 导航配置

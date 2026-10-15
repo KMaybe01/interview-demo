@@ -51,7 +51,12 @@ export function useThemeTransition(
     <div
       style={{
         position: 'fixed',
-        inset: 0,
+        top: 0,
+        left: 0,
+        // 用 vw/vh 而不是 inset: 0：inset 只覆盖「布局视口」，
+        // 右侧滚动条槽位漏在遮罩之外，主题切换时那一条会先变色
+        width: '100vw',
+        height: '100vh',
         zIndex: 9999,
         backgroundColor: overlayBg,
         pointerEvents: 'none',

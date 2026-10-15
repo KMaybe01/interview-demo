@@ -59,6 +59,16 @@
         if (saved === 'dark' || (!saved && prefersDark)) {
           document.documentElement.classList.add('dark');
         }
+
+        // 侧边栏宽度/折叠态也必须在首帧前落地：否则刷新后会从默认 280px 过渡动画到记忆值，
+        // 表现为每次刷新"侧边栏自己动一下"。常量与 src/hooks/useSidebar.ts 保持一致。
+        var collapsed = localStorage.getItem('sidebar-collapsed') === 'true';
+        var stored = parseInt(localStorage.getItem('sidebar-width'), 10);
+        var width = isNaN(stored) ? 280 : Math.min(480, Math.max(200, stored));
+        document.documentElement.style.setProperty(
+          '--sidebar-width',
+          (collapsed ? 64 : width) + 'px'
+        );
       })();
     </script>
   </head>

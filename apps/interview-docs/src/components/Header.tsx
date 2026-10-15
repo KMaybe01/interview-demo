@@ -1,113 +1,25 @@
 import { ThemeToggle, useThemeTransition } from '@interview-demo/shared-theme';
-import { AnimatePresence, motion } from 'motion/react';
-import { useEffect, useRef, useState } from 'react';
-import { Link, useLocation } from 'react-router';
-import { type NavItem, navConfig } from '../data/navigation';
+import { AnimatePresence } from 'motion/react';
+import { useState } from 'react';
+import { Link } from 'react-router';
 import { useTheme } from '../hooks/useTheme';
 import GlobalSearch from './GlobalSearch';
 
-function NavDropdown({
-  item,
-  currentPath,
-  depth = 0,
-  onClose,
-}: {
-  item: NavItem;
-  currentPath: string;
-  depth?: number;
-  onClose?: () => void;
-}) {
-  const [dropdownOpen, setDropdownOpen] = useState(false);
-  const isActive = item.link ? currentPath.startsWith(item.link) : false;
-
-  const handleMouseEnter = () => {
-    if (window.innerWidth >= 960) {
-      setDropdownOpen(true);
-    }
-  };
-
-  const handleMouseLeave = () => {
-    if (window.innerWidth >= 960) {
-      setDropdownOpen(false);
-    }
-  };
-
-  const handleToggle = () => {
-    if (window.innerWidth < 960) {
-      setDropdownOpen(!dropdownOpen);
-    }
-  };
-
-  if (!item.items) {
-    return (
-      <li>
-        <Link
-          to={item.link || '#'}
-          className={`nav-link${isActive ? ' active' : ''}`}
-          onClick={onClose}
-        >
-          {item.icon && <span className="nav-item-icon">{item.icon}</span>}
-          {item.text}
-        </Link>
-      </li>
-    );
-  }
-
-  return (
-    <li
-      className={`nav-dropdown${depth > 0 ? ' nested-dropdown' : ''}${dropdownOpen ? ' open' : ''}`}
-      onMouseEnter={handleMouseEnter}
-      onMouseLeave={handleMouseLeave}
-    >
-      <motion.button
-        className={`nav-dropdown-toggle${isActive ? ' active' : ''}`}
-        type="button"
-        whileHover={{ scale: 1.02 }}
-        transition={{ duration: 0.15 }}
-        onClick={handleToggle}
-      >
-        {item.icon && <span className="nav-item-icon">{item.icon}</span>}
-        {item.text}
-        <svg
-          className={`chevron${dropdownOpen ? ' rotated' : ''}`}
-          width="12"
-          height="12"
-          viewBox="0 0 24 24"
-          fill="none"
-          stroke="currentColor"
-          strokeWidth="2"
-        >
-          <path d="M6 9l6 6 6-6" />
-        </svg>
-      </motion.button>
-      <AnimatePresence>
-        {dropdownOpen && (
-          <motion.ul
-            className={`nav-dropdown-menu${depth > 0 ? ' nested' : ''}`}
-            initial={{ opacity: 0, y: -4, scaleY: 0.96 }}
-            animate={{ opacity: 1, y: 0, scaleY: 1 }}
-            exit={{ opacity: 0, y: -4, scaleY: 0.96 }}
-            transition={{ duration: 0.15, ease: 'easeOut' }}
-            style={{ transformOrigin: 'top center' }}
-          >
-            {item.items.map((child, i) => (
-              <NavDropdown
-                key={i}
-                item={child}
-                currentPath={currentPath}
-                depth={depth + 1}
-                onClose={onClose}
-              />
-            ))}
-          </motion.ul>
-        )}
-      </AnimatePresence>
-    </li>
-  );
+interface HeaderProps {
+  /** 移动端抽屉是否打开（用于汉堡按钮的 X 动画与 aria 状态） */
+  menuOpen: boolean;
+  onToggleMenu: () => void;
+  onCloseMenu: () => void;
+  /** 首页没有侧边栏，此时不渲染汉堡按钮 */
+  showMenuButton: boolean;
 }
 
-export default function Header() {
-  const [menuOpen, setMenuOpen] = useState(false);
+export default function Header({
+  menuOpen,
+  onToggleMenu,
+  onCloseMenu,
+  showMenuButton,
+}: HeaderProps) {
   const [searchOpen, setSearchOpen] = useState(false);
   const { theme, toggleTheme } = useTheme();
   const { handleToggleTheme, transitionOverlay } = useThemeTransition(
@@ -115,22 +27,12 @@ export default function Header() {
     toggleTheme,
     { darkBg: '#1a1a2e', lightBg: '#f5f5f0' },
   );
-  const timeoutRef = useRef<number>(undefined);
-  const location = useLocation();
-  const currentPath = location.pathname;
-
-  useEffect(() => {
-    document.body.classList.toggle('menu-open', menuOpen);
-    return () => document.body.classList.remove('menu-open');
-  }, [menuOpen]);
-
-  const closeMenu = () => setMenuOpen(false);
 
   return (
     <>
       <header className="header">
         <div className="header-inner">
-          <Link to="/" className="header-logo" onClick={closeMenu}>
+          <Link to="/" className="header-logo" onClick={onCloseMenu}>
             <img
               src={`${import.meta.env.BASE_URL}logo.svg`}
               alt="Logo"
@@ -139,39 +41,20 @@ export default function Header() {
             <span className="header-logo-text">前端知识体系</span>
           </Link>
 
-          <button
-            className={`mobile-menu-btn${menuOpen ? ' open' : ''}`}
-            onClick={() => setMenuOpen(!menuOpen)}
-            type="button"
-            aria-label="菜单"
-          >
-            <span />
-            <span />
-            <span />
-          </button>
-
-          {menuOpen && (
-            <div className="mobile-menu-backdrop" onClick={closeMenu} role="presentation" />
+          {showMenuButton && (
+            <button
+              className={`mobile-menu-btn${menuOpen ? ' open' : ''}`}
+              onClick={onToggleMenu}
+              type="button"
+              aria-label="菜单"
+              aria-expanded={menuOpen}
+              aria-controls="site-sidebar"
+            >
+              <span />
+              <span />
+              <span />
+            </button>
           )}
-
-          <motion.nav
-            className={`header-nav${menuOpen ? ' open' : ''}`}
-            initial={{ opacity: 0, y: -4 }}
-            animate={{ opacity: 1, y: 0 }}
-            transition={{ duration: 0.3, ease: 'easeOut' }}
-            onMouseEnter={() => {
-              clearTimeout(timeoutRef.current);
-            }}
-            onMouseLeave={() => {
-              timeoutRef.current = setTimeout(() => setMenuOpen(false), 200);
-            }}
-          >
-            <ul className="nav-list">
-              {navConfig.map((item, i) => (
-                <NavDropdown key={i} item={item} currentPath={currentPath} onClose={closeMenu} />
-              ))}
-            </ul>
-          </motion.nav>
 
           <div className="header-actions">
             <button
