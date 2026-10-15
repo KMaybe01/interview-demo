@@ -135,7 +135,6 @@ export const navConfig: NavItem[] = [
         link: '/S4-面试冲刺/Angular-中高级前端面试通关指南',
       },
       { text: '面试技术亮点汇总', icon: '📈', link: '/S4-面试冲刺/00-面试技术亮点汇总' },
-      { text: '述职报告', icon: '📈', link: '/S4-面试冲刺/述职报告' },
       { text: 'ToC 转型面试策略', icon: '🔄', link: '/S4-面试冲刺/03-ToC转型面试策略' },
       { text: 'ToB 前端可视化面试', icon: '🖼️', link: '/S4-面试冲刺/04-ToB前端可视化面试通关指南' },
     ],
