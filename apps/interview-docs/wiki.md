@@ -947,7 +947,7 @@ Vitest 4 + jsdom + `@testing-library/react` 16 + `@testing-library/user-event` 1
 
 ```
 docs/S1-基础夯实/       HTML、CSS、JavaScript 核心、Web API、手写实现
-docs/S2-框架深入/       Vue3、React19、Angular22、框架对比、框架设计思想
+docs/S2-框架深入/       Vue3、React19、Angular22、框架对比（含设计思想）
 docs/S3-进阶提升/       浏览器原理、性能优化、工程化、监控埋点、Node.js
 docs/S4-面试冲刺/       简历、项目复盘、反向面试、通关指南
 docs/S5-AI/            六关卡：流式对话 · RAG · Agent · 企业级工程化 · MCP/A2A · 前端 AI 交互层（另含 Go 后端参考实现、资料库、面试篇）
