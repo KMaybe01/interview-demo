@@ -130,7 +130,7 @@ createRoot(#root)                     src/main.tsx
     │
     ├── <Sidebar>                     （非首页渲染；递归渲染 navConfig）
     │     ├── <SidebarTree>            （memo，递归节点：<Link> / <button aria-expanded>）
-    │     ├── .sidebar-footer          （折叠 / 展开按钮）
+    │     ├── .sidebar-footer          （纯图标折叠/展开按钮）
     │     └── .sidebar-resizer         （拖拽改宽度，role="separator"）
     │
     ├── <main.main-content>            （始终占满视口，左侧让位由 .doc-page 的 margin-left 处理）
@@ -311,13 +311,16 @@ interface HeaderProps {
 **折叠形态**：折叠态与展开态渲染**完全相同的 DOM**，只靠 CSS 收窄盒宽 + `opacity` 淡出文字 + `padding-left` 过渡把图标送向 rail 中心。
 若像早期实现那样在两种形态间切换节点结构（`display: none` / `justify-content: center`），折叠瞬间会先重排、动画再跟上，视觉上就是"抖一下"。
 
+**底部折叠/展开按钮**：纯图标，不显示文字。折叠态显示朝右的双箭头（「展开」符号），展开态显示朝左的双箭头（「折叠」符号）；
+语义靠 `aria-label` / `title`（两种状态分别为「展开侧边栏 / 收起侧边栏」），两种状态 DOM 结构一致，切换时不会跳动。
+
 **响应式**：`< 960px` 时侧边栏变为左侧抽屉（`transform: translateX(-100%)` → `.is-open` 滑入 + `.sidebar-backdrop` 遮罩淡入 + 阴影），并隐藏 resizer 与底部折叠按钮；`body.menu-open` 冻结滚动。抽屉打开时 `rail = collapsed && !drawerOpen` 为 `false`，保证抽屉里始终是完整形态。
 
 **防抖配套细节**：
 - `--sidebar-width` 由 `useLayoutEffect` 写入（而非 `useEffect`），保证"类名 + 宽度"在同一帧生效，不会出现一帧错位。
 - `index.html` 内联脚本在首帧前就按 `localStorage` 写入 `--sidebar-width`，否则刷新后会从默认 280px 过渡动画到记忆值（每次刷新"侧边栏自己动一下"）。
 - `.sidebar-nav` 用 `overflow-x: hidden` + `scrollbar-gutter: stable`：折叠时子分组消失会让滚动条出现/消失，预留槽位可避免内容被顶动。
-- 导航项与折叠按钮都设 `overflow: hidden`，折叠过程中被"挤出"的文字不会撑出横向滚动条。
+- 导航项设 `overflow: hidden`，折叠过程中被"挤出"的文字不会撑出横向滚动条。
 - `.main-content` **不设** `margin-left`（内容区始终占满视口），左侧让位交给 `.doc-page` 的
   `margin-left: max(var(--sidebar-width), calc(100% - var(--doc-width)))`：
   宽屏时右对齐偏移（常量）胜出 → 折叠/展开侧边栏时**文档区完全静止、一行都不用重排**（这是丝滑的关键，

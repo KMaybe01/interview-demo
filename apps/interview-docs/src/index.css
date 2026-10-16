@@ -331,38 +331,29 @@ a:hover {
   border-top: 1px solid var(--c-border);
 }
 
+/* 底部折叠/展开按钮：纯图标，折叠/展开两种状态的 DOM 结构一致，避免切换时跳动 */
 .sidebar-collapse-btn {
   display: flex;
   align-items: center;
-  gap: 8px;
+  justify-content: center;
   width: 100%;
-  padding: 8px 10px;
+  padding: 8px;
   border: none;
   border-radius: 8px;
   background: var(--c-bg-soft);
   color: var(--c-text-2);
-  font-family: inherit;
-  font-size: 13px;
-  font-weight: 500;
-  overflow: hidden;
   cursor: pointer;
   transition:
     background 0.15s ease-out,
-    color 0.15s ease-out,
-    padding-left 0.16s ease-out;
+    color 0.15s ease-out;
 }
 .sidebar-collapse-btn:hover {
   background: var(--c-brand-tint);
   color: var(--c-brand);
 }
 
-.sidebar-collapse-text {
-  flex: 1;
-  min-width: 0;
-  overflow: hidden;
-  text-overflow: ellipsis;
-  white-space: nowrap;
-  transition: opacity 0.1s ease-out;
+.sidebar-collapse-icon {
+  flex-shrink: 0;
 }
 
 /* 拖拽把手：右缘热区，hover / 聚焦 / 拖拽时显示品牌色高亮条 */
@@ -396,8 +387,7 @@ a:hover {
 }
 
 /* 折叠为图标栏（桌面端）：只收窄盒宽 + 淡出文字，DOM 不变、图标位置连续过渡 */
-.sidebar.is-collapsed .sidebar-label,
-.sidebar.is-collapsed .sidebar-collapse-text {
+.sidebar.is-collapsed .sidebar-label {
   opacity: 0;
 }
 .sidebar.is-collapsed .sidebar-chevron,
@@ -408,11 +398,6 @@ a:hover {
 .sidebar.is-collapsed .sidebar-group-toggle {
   /* 内容区实宽 48px（64 rail - 两侧 8px 内边距），(48 - 20) / 2 让 20px 图标居中 */
   padding-left: 14px;
-  padding-right: 0;
-}
-.sidebar.is-collapsed .sidebar-collapse-btn {
-  /* (48 - 14) / 2，对齐 14px 的箭头图标 */
-  padding-left: 17px;
   padding-right: 0;
 }
 

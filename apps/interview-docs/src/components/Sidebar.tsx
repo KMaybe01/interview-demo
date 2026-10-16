@@ -336,21 +336,31 @@ export default function Sidebar({ drawerOpen, onCloseDrawer }: SidebarProps) {
             aria-label={collapsed ? '展开侧边栏' : '收起侧边栏'}
             title={collapsed ? '展开侧边栏' : '收起侧边栏'}
           >
+            {/* 无文字：折叠态显示"展开"符号（朝右双箭头），展开态显示"折叠"符号（朝左双箭头） */}
             <svg
-              className={`sidebar-chevron${collapsed ? '' : ' is-open'}`}
-              width="14"
-              height="14"
+              className="sidebar-collapse-icon"
+              width="18"
+              height="18"
               viewBox="0 0 24 24"
               fill="none"
               stroke="currentColor"
-              strokeWidth="2.5"
+              strokeWidth="2"
               strokeLinecap="round"
               strokeLinejoin="round"
               aria-hidden="true"
             >
-              <path d="M9 6l6 6-6 6" />
+              {collapsed ? (
+                <>
+                  <path d="M13 6l6 6-6 6" />
+                  <path d="M5 6l6 6-6 6" />
+                </>
+              ) : (
+                <>
+                  <path d="M11 6l-6 6 6 6" />
+                  <path d="M19 6l-6 6 6 6" />
+                </>
+              )}
             </svg>
-            <span className="sidebar-collapse-text">{collapsed ? '展开侧边栏' : '收起侧边栏'}</span>
           </button>
         </div>
 

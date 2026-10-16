@@ -155,6 +155,27 @@ describe('Sidebar', () => {
     expect(appliedWidth()).toBe('280px');
   });
 
+  it('switches the bottom icon between the collapse and expand symbols', async () => {
+    const user = userEvent.setup();
+    renderSidebar();
+
+    // 展开态：朝左双箭头（"折叠"符号）
+    expect(
+      screen
+        .getByRole('button', { name: '收起侧边栏' })
+        .querySelector<SVGElement>('.sidebar-collapse-icon path'),
+    ).toHaveAttribute('d', 'M11 6l-6 6 6 6');
+
+    await user.click(screen.getByRole('button', { name: '收起侧边栏' }));
+
+    // 折叠态：朝右双箭头（"展开"符号）
+    expect(
+      screen
+        .getByRole('button', { name: '展开侧边栏' })
+        .querySelector<SVGElement>('.sidebar-collapse-icon path'),
+    ).toHaveAttribute('d', 'M13 6l6 6-6 6');
+  });
+
   it('resizes by dragging the divider and persists the width on release', () => {
     renderSidebar();
 
