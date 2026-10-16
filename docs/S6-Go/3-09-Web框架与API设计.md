@@ -13,7 +13,7 @@
 - 优雅关机、超时控制与并发安全
 - RESTful 设计规范：URI、HTTP 方法映射、幂等/安全、版本管理
 
-## 📑 本篇题目索引（共 10 题）
+## 📑 本篇题目索引（共 13 题）
 
 | # | 题目 | 难度 | 频率 |
 |---|------|------|------|
@@ -27,6 +27,9 @@
 | Q8 | `net/http` 处理一个请求的主流程是什么？ | ⭐⭐⭐ | 🔥 高频 |
 | Q9 | Web 框架的中间件链是如何实现的？ | ⭐⭐⭐ | 🔥 高频 |
 | Q10 | RESTful API 的设计规范有哪些？ | ⭐⭐⭐ | 🔥 高频 |
+| Q11 | 如何用 Swagger/OpenAPI 管理 API 文档？契约先行怎么落地？ | ⭐⭐ | 📌 常考 |
+| Q12 | 如何给 API 加 HTTPS/TLS？应用直连和 Nginx 卸载怎么选？ | ⭐⭐⭐ | 📌 常考 |
+| Q13 | API 上线前如何做性能压测？Makefile/Nginx/启动脚本等工程化落地怎么做？ | ⭐⭐⭐ | 🔥 高频 |
 
 ---
 
@@ -316,6 +319,87 @@ graph TD
 **🔁 前端类比**：REST 的「资源 + 动词」≈ 前端把后端接口抽象成 `resource` 对象调 CRUD；`/v1/` 版本 ≈ npm 包的 semver 大版本，破坏性变更换版本号。
 
 **📝 一句话总结**：REST 一切皆资源，名词复数 URI + HTTP 动词 CRUD，注意「安全/幂等」语义、统一返回格式、`/v1/` 版本管理与分页过滤排序。
+
+---
+
+### Q11: 如何用 Swagger/OpenAPI 管理 API 文档？契约先行怎么落地？
+
+**难度**：⭐⭐ | **频率**：📌 常考
+
+**考点**：OpenAPI 规范、swaggo 注解生成、gin-swagger UI、契约先行与代码生成。
+
+**💡 记忆关键词**：OpenAPI 3.0 规范、swaggo/swag 注解、swag init 生成、gin-swagger UI、契约先行、openapi-typescript 生成前端类型
+
+**答案要点**：
+- **OpenAPI 规范（OAS）**：描述 REST API 的行业标准（YAML/JSON）：paths（路由）、components/schemas（数据模型）、parameters、responses、security。Swagger UI 把它渲染成**可交互的在线文档**（直接在页面上发请求）。
+- **Go 生态主流 = swaggo**：在 handler 上写**注解**，用 `swag init` 生成 `docs.go` + `swagger.json|yaml`：
+  ```go
+  // @Summary 获取用户
+  // @Produce json
+  // @Success 200 {object} User
+  // @Router /api/v1/users/{id} [get]
+  func GetUser(c *gin.Context) {}
+  ```
+  运行时 `r.GET("/swagger/*any", ginSwagger.WrapHandler(swaggerFiles.Handler))` 挂 UI；**文档随代码走**（注解与实现同文件，改接口必须改注解）。
+- **契约先行（contract-first）**：先写/评审 OpenAPI YAML → 生成服务端骨架与前端类型（`openapi-typescript`、`oapi-codegen`），前后端**并行开发**；改动先改契约再改代码，避免「接口悄悄变了前端炸了」。本仓库后端集成 `swaggo/gin-swagger`（6-29 Q10）。
+- **治理要点**：Swagger 挂内网/加鉴权（别把内部 API 暴露公网）；CI 校验「注解与路由一致性」；大项目按版本维护多份 spec。
+
+**🔁 前端类比**：就像 TS 项目的「类型即文档」——OpenAPI 是跨语言的 schema 契约；`openapi-typescript` 生成的类型 ≈ `tRPC`/`orval` 那套「从接口定义推导前端类型」的思路。
+
+**⚠️ 常见误区**：① 手写 YAML 与代码两张皮（改了代码忘改文档）；② Swagger UI 直接暴露公网；③ 把 Swagger 当「设计工具」而不是「生成结果」——源头是注解/契约。
+
+**📝 一句话总结**：用 swaggo 注解 + `swag init` 生成 OpenAPI 文档，gin-swagger 提供交互 UI；契约先行的团队先评审 YAML 再生成前后端代码，接口变更以契约为准。
+
+---
+
+### Q12: 如何给 API 加 HTTPS/TLS？应用直连和 Nginx 卸载怎么选？
+
+**难度**：⭐⭐⭐ | **频率**：📌 常考
+
+**考点**：TLS 握手流程、证书链、Go crypto/tls、TLS 终止位置、HSTS 与 mTLS。
+
+**💡 记忆关键词**：TLS1.2 2-RTT、TLS1.3 1-RTT、证书链、crypto/tls、Nginx 卸载 TLS、HSTS、mTLS 双向证书
+
+**答案要点**：
+- **TLS 握手（详见 5-22 Q4）**：TLS 1.2 需 2-RTT、1.3 只需 1-RTT（且 0-RTT 有重放风险，慎用）；证书链「服务端证书 → 中间 CA → 根 CA」，客户端逐级验到内置根证书。
+- **Go 应用直连 TLS**：`http.ListenAndServeTLS(certFile, keyFile, handler)`；自定义用 `tls.Config`（最低版本 `MinVersion: tls.VersionTLS12`、密码套件、HTTP/2 开关）。适合「内网服务间通信、要自己控制证书轮换」的场景。
+- **Nginx 卸载 TLS（生产主流）**：Nginx 持证书、`listen 443 ssl`，解密后以 **HTTP 转发**给后端应用：
+  - **优点**：证书集中管理（续期只改 Nginx）、应用零证书负担、Nginx 统一做 HTTP/2、TLS 终止省应用 CPU、可复用现有 WAF/限流；
+  - **代价**：内网那跳是明文（要保证内网可信，或 Nginx→应用也用 mTLS）。
+- **配套**：`Strict-Transport-Security`（HSTS，强制浏览器后续只走 HTTPS）；**mTLS**（双向证书）用于服务间强认证（5-22 Q4）；证书自动化用 cert-manager / Let's Encrypt。
+- **混合部署建议**：公网入口 Nginx 卸载，**内网服务间**用 mTLS 或 SPIFFE 身份——「边界解密 + 内部加密」是常见分层。
+
+**🔁 前端类比**：Nginx 卸载 TLS 就像「网关统一处理 HTTPS，内部微服务走 HTTP」——类似前端 SSR 网关处理 cookie/安全头，内部服务假设同源可信；应用直连则像每个 Next.js 服务自己管 HTTPS。
+
+**⚠️ 常见误区**：① 让 Go 应用直接对公网提供 TLS（证书管理、HTTP/2、性能都吃亏）；② 只加密公网那跳，内网完全明文（内网也不是法外之地）；③ 忘记 HSTS 和证书过期监控（线上证书过期事故）。
+
+**📝 一句话总结**：TLS 1.3 仅 1-RTT、证书链验到根 CA；生产主流是 Nginx 卸载 TLS（证书集中 + 应用减负），内网服务间补 mTLS；应用直连只在内网/特殊控制场景用。
+
+---
+
+### Q13: API 上线前如何做性能压测？Makefile/Nginx/启动脚本等工程化落地怎么做？
+
+**难度**：⭐⭐⭐ | **频率**：🔥 高频
+
+**考点**：wrk/ab 压测、QPS/RT/错误率判读、Makefile 一键化、Nginx 部署、systemd 启动脚本与优雅退出。
+
+**💡 记忆关键词**：wrk -t -c -d、QPS/RT P99/错误率、pprof 边压边看、Makefile 变量+伪目标、Nginx 反代+负载均衡、systemd Restart=on-failure、优雅退出 SIGTERM
+
+**答案要点**：
+- **压测工具与指标**：
+  - `wrk -t8 -c200 -d30s http://...`（8 线程 200 连接压 30 秒）或 `ab -n 10000 -c 100`；Go 服务也可写压测客户端（`vegeta`、`hey`）；
+  - 看四个数：**QPS**（吞吐）、**RT 均值与 P99**（延迟）、**错误率**（超时/5xx）、**资源水位**（CPU/内存/GC）；
+  - **压测时同步开 pprof**（5-20 Q4）——先压出瓶颈再剖析，别盲猜。
+- **Makefile 一键化**（《基于 Go 语言构建企业级 RESTful API 服务》第 15 章）：把「格式化→vet→测试→构建→打包镜像」写成目标（`make build`、`make test`、`make image`），变量管理版本号 `VERSION := $(shell git describe --tags)`；团队只记几个 `make` 命令，杜绝「在我机器上能跑」。
+- **Nginx 部署位**：反向代理 + 静态资源 + 负载均衡（`upstream` 多实例 + `proxy_pass`）+ 限流（`limit_req`）+ Gzip；`proxy_read_timeout` 与应用的超时链保持一致（见 4-19 Q6）。
+- **启动脚本与进程守护**：systemd unit（`Restart=on-failure`、`LimitNOFILE=65535` 见 4-17 Q21、`EnvironmentFile` 注配）；应用实现**优雅退出**（监听 `SIGTERM` → 停止接收新连接 → 等存量请求完成 → 关闭资源），K8s 滚动更新靠它做到零丢请求（3-15 Q33）。
+- **灰度/回滚**：Nginx 按权重切流（`weight`）、或双端口蓝绿；镜像 tag 不可变，回滚 = 切回旧 tag。
+
+**🔁 前端类比**：wrk 的输出像 Lighthouse 的「性能分数 + 各项指标」；Makefile ≈ package.json scripts 的一键化；优雅退出 ≈ 浏览器的 `beforeunload`——被要求下线时把手头的事做完再走。
+
+**⚠️ 常见误区**：① 只在本地压测不看 P99 与错误率（均值会骗人）；② 压测不打到瓶颈就收工（梯度加压：100→500→1000 连接找拐点）；③ 应用没有优雅退出，滚动更新时请求被硬切断。
+
+**📝 一句话总结**：wrk/ab 梯度加压看 QPS/P99/错误率，压测时同步 pprof；Makefile 一键化构建测试镜像，Nginx 做反代/负载均衡/限流，systemd 守护 + SIGTERM 优雅退出保障发布无损。
 
 ---
 

@@ -12,7 +12,7 @@
 - GitOps 与环境管理
 - 质量门禁：覆盖率、静态扫描、安全扫描
 
-## 📑 本篇题目索引（共 6 题）
+## 📑 本篇题目索引（共 7 题）
 
 | # | 题目 | 难度 | 频率 |
 |---|------|------|------|
@@ -22,6 +22,7 @@
 | Q4 | 如何加速 CI：构建缓存、并行化与依赖复用？ | ⭐⭐ | 📌 常考 |
 | Q5 | 质量门禁怎么做（覆盖率 / 静态扫描 / 安全扫描）？ | ⭐⭐ | 📌 常考 |
 | Q6 | 什么是 CGO？交叉编译时如何处理 CGO 依赖？ | ⭐⭐ | 📖 了解 |
+| Q7 | GitLab CI 和 Jenkins 怎么用？Makefile 在 CI 中扮演什么角色？ | ⭐⭐ | 📌 常考 |
 
 ---
 
@@ -193,6 +194,35 @@ ENTRYPOINT ["/server"]
 - `CGO` 允许 Go 代码调用 C 代码，但会失去纯静态编译优势，产生动态链接依赖。
 - 交叉编译时，若依赖 CGO，需配置对应的 C 交叉编译器（如 `CC=x86_64-linux-musl-gcc`）。
 - **最佳实践**：尽量使用纯 Go 实现（如 `sqlite` 的纯 Go 驱动 `modernc.org/sqlite`）；必须使用时，在 Docker 中使用多阶段构建，第一阶段安装 GCC 编译，第二阶段复制二进制文件。
+
+---
+
+### Q7: GitLab CI 和 Jenkins 怎么用？Makefile 在 CI 中扮演什么角色？
+
+**难度**：⭐⭐ | **频率**：📌 常考
+
+**考点**：GitLab CI stages/artifacts/cache、Jenkins 声明式流水线、Makefile 统一入口、三者选型。
+
+**💡 记忆关键词**：.gitlab-ci.yml stages、runner cache、artifacts、Jenkinsfile 声明式、Makefile 本地=CI 同命令、自托管 vs SaaS
+
+**答案要点**：
+- **GitLab CI**（仓库自带 CI，`.gitlab-ci.yml`）：
+  - 核心概念：**stages**（build→test→deploy 顺序执行，同 stage 内作业并行）、**artifacts**（作业间传文件，如下游部署用上游产物）、**cache**（依赖缓存，加速复用）、**runner**（执行机，可自托管或用 GitLab 共享 runner）；
+  - 优势：与 GitLab 仓库/MR 深度集成，配置即代码；适合代码已托管在 GitLab 的团队。
+- **Jenkins**（老牌 CI 服务器）：
+  - `Jenkinsfile` **声明式流水线**（pipeline { agent any; stages { stage('Build'){ steps{...} } } }），插件生态最丰富（K8s 插件、凭证管理、参数化构建）；
+  - 优势：**语言/平台无关**（Go/Java/前端都能编排）、自托管完全可控；劣势：维护成本高（插件地狱、Jenkins 本体要运维）、UI 陈旧。
+- **Makefile 的角色（关键考点）**：把构建/测试/镜像/部署逻辑收进 **Makefile 目标**，CI 里只调 `make ci`：
+  - **本地与 CI 跑同一套命令**（消除「本地过了 CI 挂了」的环境差）；
+  - CI 配置只写「编排」（stages/缓存/触发），逻辑在 Makefile（改构建逻辑不用动 CI YAML）；
+  - 变量注入：`make image VERSION=$(git describe --tags)`（Q3 的制品晋级同源）。
+- **选型**：代码在 GitLab → GitLab CI（零维护）；多云/多语言/复杂编排 → Jenkins；**开源项目/公网站** → GitHub Actions（Q3）。趋势：云托管 CI（GitHub/GitLab/Buildkite）替代自建 Jenkins。
+
+**🔁 前端类比**：GitLab CI 的 stages ≈ GitHub Actions 的 jobs+needs；Jenkins ≈ 自建的「万能构建服务器」（像自托管 Sentry）；Makefile ≈ package.json scripts——「所有可重复操作收进一个入口，人和机器都调它」。
+
+**⚠️ 常见误区**：① CI 里直接写一大段 bash 构建逻辑（改一次动三处 CI 配置，应收进 Makefile）；② artifacts 传巨大目录（拖慢流水线，只传必要产物）；③ 自建 Jenkins 但不安排人维护（插件升级、安全补丁都是坑）。
+
+**📝 一句话总结**：GitLab CI 用 stages+artifacts+cache 声明流水线，Jenkins 靠声明式 Jenkinsfile + 插件生态做通用编排；Makefile 收拢构建逻辑让「本地=CI 同命令」，云托管 CI 正替代自建。
 
 ---
 

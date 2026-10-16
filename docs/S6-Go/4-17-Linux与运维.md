@@ -12,7 +12,7 @@
 - systemd、cron 与日志（journalctl）
 - 线上问题排查的标准动作
 
-## 📑 本篇题目索引（共 19 题）
+## 📑 本篇题目索引（共 21 题）
 
 | # | 题目 | 难度 | 频率 |
 |---|------|------|------|
@@ -35,6 +35,8 @@
 | Q17 | 什么是 GUI？ | ⭐ | 📖 了解 |
 | Q18 | 开源的优势是什么？ | ⭐ | 📖 了解 |
 | Q19 | GNU 项目的重要性是什么？ | ⭐ | 📖 了解 |
+| Q20 | 线上性能问题的诊断命令矩阵是怎样的（CPU/内存/磁盘/网络）？ | ⭐⭐⭐ | 🔥 高频 |
+| Q21 | 部署 Go 服务要关注哪些内核参数和 ulimit？ | ⭐⭐⭐ | 📌 常考 |
 
 ---
 
@@ -415,7 +417,52 @@ graph LR
 
 ---
 
+### Q20: 线上性能问题的诊断命令矩阵是怎样的（CPU/内存/磁盘/网络）？
+
+**难度**：⭐⭐⭐ | **频率**：🔥 高频
+
+**考点**：top/vmstat/pidstat、free、iostat、ss/lsof、strace 的判读方法论。
+
+**💡 记忆关键词**：top 看全局、vmstat r/wa、pidstat 定位进程、free 看 available、iostat util%、ss 看 Recv-Q/Send-Q、lsof 查句柄、strace 抓现场、D=IO 瓶颈 R=CPU 瓶颈
+
+**答案要点**：
+- **CPU**：`top`（load1/5/15、us/sy/wa 分项）、`vmstat 1`（`r` 队列 > CPU 数 = 调度瓶颈、`wa` 高 = 在等 IO）、`pidstat -u 1` 下钻到具体进程/线程。
+- **内存**：`free -m`（**available 才是真实可用**，不能只看 free 列）、`vmstat` 的 `si`/`so`（换页 = 内存不足的信号）。
+- **磁盘**：`iostat -xz 1`（`util%` 接近 100 = 饱和、`await` 高 = 慢盘）、`df -h`（容量）、`du -sh`（目录占用）。
+- **网络**：`ss -tan`（ESTAB/TIME-WAIT 分布；**Recv-Q/Send-Q 堆积 = 对端不收或应用不读**）、`netstat -i`（协议错误/丢包计数）。
+- **进程/文件**：`lsof -p PID`（句柄泄漏排查）、`pidstat -d`（进程级磁盘 IO）。
+- **系统调用**：`strace -cp PID`（统计各类系统调用耗时占比，抓「现场」）。
+- **判读方法论**：先 `top` 看全局 → 用 pidstat/ss 定位到进程 → strace/perf 抓现场；**D 状态进程多 = IO 瓶颈，R 状态多 = CPU 瓶颈，Z = 僵尸进程**要清理。
+- **加分**：Go 服务先 `gops` 看 goroutine 数再决定下一步（见 5-24）。
+
+**🔁 前端类比**：和 Chrome DevTools Performance 面板一个思路——先看整体火焰图/帧率定位瓶颈区，再下钻到具体函数；线上就是先 `top` 再 `pidstat`/`strace`，都是「先观测再下结论」。
+
+**⚠️ 常见误区**：把 `free` 列的剩余内存当可用内存（Linux 会拿内存做缓存，要看 available）；load 高就断定是 CPU 问题（可能是 `wa` 高的 IO 等待把 load 抬上去）。
+
+**📝 一句话总结**：top 看全局、pidstat/ss 定位进程、strace/perf 抓现场；D 多 IO 瓶颈、R 多 CPU 瓶颈，free 要看 available。
+
 ---
+
+### Q21: 部署 Go 服务要关注哪些内核参数和 ulimit？
+
+**难度**：⭐⭐⭐ | **频率**：📌 常考
+
+**考点**：文件描述符上限、accept 队列、TIME_WAIT 复用、keepalive 与持久化配置。
+
+**💡 记忆关键词**：ulimit -n 65535+、somaxconn、tcp_tw_reuse、tcp_keepalive_*、fs.file-max、limits.conf/systemd LimitNOFILE、容器 securityContext 继承
+
+**答案要点**：
+- **`ulimit -n`**：单进程文件描述符上限，高并发服务默认 1024 不够，**每个连接/文件都占一个 fd**，要调到 65535+。
+- **`net.core.somaxconn`**：accept 队列上限，Go 默认 128，要配合 `net.Listen` 的 backlog 一起调大，否则连接已被接受但应用来不及 accept。
+- **`net.ipv4.tcp_tw_reuse`**：TIME_WAIT 复用，客户端/NAT 密集发起连接的场景可显著缓解端口耗尽。
+- **`net.ipv4.tcp_keepalive_*`**：keepalive 探测时间，及时发现并回收死连接，避免占用 fd 与内存。
+- **`fs.file-max`**：系统级句柄总量（与 `ulimit -n` 一起看，两者取小生效）。
+- **持久化**：`/etc/security/limits.conf`，或 systemd `LimitNOFILE=65535`；**容器里注意 `securityContext` 与 ulimit 的继承**（k8s 要显式声明）。
+- **加分**：TCP keepalive 与应用层心跳互补（应用层心跳见 6-29 Q8）。
+
+**🔁 前端类比**：Node 服务上线同样要调 `ulimit -n` 与开启 keep-alive——本质都是「操作系统默认值按单机玩具场景设定，生产并发必须显式调大」。
+
+**📝 一句话总结**：fd 上限（ulimit -n）、accept 队列（somaxconn）、TIME_WAIT 复用（tcp_tw_reuse）、keepalive 四类参数，用 limits.conf 或 systemd LimitNOFILE 持久化，容器里还要显式声明。
 
 ---
 
