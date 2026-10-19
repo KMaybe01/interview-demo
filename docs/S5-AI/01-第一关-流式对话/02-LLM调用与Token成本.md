@@ -61,7 +61,7 @@ const CATALOG = {
 
 ### 后端参考实现怎么做的
 
-`backend/internal/llm/` 提供了更完整的形态，值得对照阅读：
+`apps/backend/internal/llm/` 提供了更完整的形态，值得对照阅读：
 
 | 能力 | 实现 | 关键默认值 |
 |---|---|---|

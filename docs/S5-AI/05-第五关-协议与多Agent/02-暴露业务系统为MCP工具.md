@@ -4,7 +4,7 @@
 >
 > **前置**：[01-MCP-2026-07-28详解](./01-MCP-2026-07-28详解.md)
 > **产出**：一套"内部 API → MCP 工具"的包装规范，与 Agent 内部工具共用同一套权限/沙箱/审计
-> **代码**：后端参考 `backend/internal/airouter/router.go`（`toolMCPAdapter`）、`backend/internal/tool/`
+> **代码**：后端参考 `apps/backend/internal/airouter/router.go`（`toolMCPAdapter`）、`apps/backend/internal/tool/`
 
 ---
 
@@ -29,10 +29,10 @@
 
 ### 关键设计：一处实现，两处复用
 
-本仓库的 `toolMCPAdapter`（`backend/internal/airouter/router.go:69-110`）是一个很漂亮的做法：
+本仓库的 `toolMCPAdapter`（`apps/backend/internal/airouter/router.go:69-110`）是一个很漂亮的做法：
 
 ```
-internal/tool.Registry  ──adapter──▶  mcp.ToolProvider
+apps/backend/internal/tool.Registry  ──adapter──▶  mcp.ToolProvider
         │                                    │
     Agent 内部工具                      对外 MCP 工具
 ```
@@ -122,4 +122,4 @@ export interface McpTool {
 - [01-MCP-2026-07-28详解](./01-MCP-2026-07-28详解.md)
 - [03-A2A 多 Agent 协作](./03-A2A多Agent协作.md)
 - [第三关 · Agent 与工具](../03-第三关-Agent与工具/index.md) —— 工具三条铁律
-- 后端源码：`backend/internal/airouter/router.go`、`backend/internal/tool/`
+- 后端源码：`apps/backend/internal/airouter/router.go`、`apps/backend/internal/tool/`

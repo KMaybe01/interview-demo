@@ -55,14 +55,14 @@ graph TB
 
 | 工程能力 | 真实实现 | 可运行入口 |
 |---|---|---|
-| Provider 注册表 / 离线降级 / 熔断 / 定价估算 | `backend/internal/llm/` | `GET /api/ai/models` |
-| Prompt 注入检测 / PII 脱敏 / 输入分隔符隔离 | `backend/internal/guard/` | 随 `/api/ai/chat` 生效 |
-| 工具沙箱 / 权限分级 L0/L1/L2 / 幂等 / 超时 / 审计 | `backend/internal/tool/` | `GET /api/ai/tools`、`POST /api/ai/tools/call` |
-| HITL 人工审批工单 | `backend/internal/airouter/` | `GET /api/ai/approvals`、`POST /api/ai/approvals/:id/resolve` |
-| Trace / 运行计数 / 工具审计 / 离线评测 / Prompt 版本 | `backend/internal/obs/` | `/api/ai/obs/*`、`/api/ai/eval/*`、`/api/ai/prompts/*` |
+| Provider 注册表 / 离线降级 / 熔断 / 定价估算 | `apps/backend/internal/llm/` | `GET /api/ai/models` |
+| Prompt 注入检测 / PII 脱敏 / 输入分隔符隔离 | `apps/backend/internal/guard/` | 随 `/api/ai/chat` 生效 |
+| 工具沙箱 / 权限分级 L0/L1/L2 / 幂等 / 超时 / 审计 | `apps/backend/internal/tool/` | `GET /api/ai/tools`、`POST /api/ai/tools/call` |
+| HITL 人工审批工单 | `apps/backend/internal/airouter/` | `GET /api/ai/approvals`、`POST /api/ai/approvals/:id/resolve` |
+| Trace / 运行计数 / 工具审计 / 离线评测 / Prompt 版本 | `apps/backend/internal/obs/` | `/api/ai/obs/*`、`/api/ai/eval/*`、`/api/ai/prompts/*` |
 | 前端 LLMOps 面板 | `apps/ai-demo/src/components/Observability.tsx` | AI Demo → Observability 选项卡 |
 
-启动后端：`cd backend && go run ./cmd/server/`，再 `cd apps/ai-demo && bun run dev`（`/api` 已代理到 `:8080`）。
+启动后端：`cd apps/backend && go run ./cmd/server/`，再 `cd apps/ai-demo && bun run dev`（`/api` 已代理到 `:8080`）。
 
 ## 自检清单
 

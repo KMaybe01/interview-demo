@@ -208,8 +208,8 @@ package handlers
 import (
     "net/http"
 
-    "github.com/ai-agent-backend/internal/plugins"
-    "github.com/ai-agent-backend/internal/utils"
+    "github.com/ai-agent-apps/backend/internal/plugins"
+    "github.com/ai-agent-apps/backend/internal/utils"
     "github.com/gin-gonic/gin"
 )
 
@@ -418,8 +418,8 @@ package handlers
 import (
     "net/http"
 
-    "github.com/ai-agent-backend/internal/services"
-    "github.com/ai-agent-backend/internal/utils"
+    "github.com/ai-agent-apps/backend/internal/services"
+    "github.com/ai-agent-apps/backend/internal/utils"
     "github.com/gin-gonic/gin"
 )
 
@@ -499,8 +499,8 @@ import (
     "fmt"
     "net/http"
 
-    "github.com/ai-agent-backend/internal/services"
-    "github.com/ai-agent-backend/internal/utils"
+    "github.com/ai-agent-apps/backend/internal/services"
+    "github.com/ai-agent-apps/backend/internal/utils"
     "github.com/gin-gonic/gin"
 )
 
@@ -701,8 +701,8 @@ import (
     "net/http"
     "strings"
 
-    "github.com/ai-agent-backend/internal/services"
-    "github.com/ai-agent-backend/internal/utils"
+    "github.com/ai-agent-apps/backend/internal/services"
+    "github.com/ai-agent-apps/backend/internal/utils"
     "github.com/gin-gonic/gin"
 )
 
@@ -756,8 +756,8 @@ package handlers
 import (
     "net/http"
 
-    "github.com/ai-agent-backend/internal/services"
-    "github.com/ai-agent-backend/internal/utils"
+    "github.com/ai-agent-apps/backend/internal/services"
+    "github.com/ai-agent-apps/backend/internal/utils"
     "github.com/gin-gonic/gin"
 )
 
@@ -903,8 +903,8 @@ import (
     "net/http"
     "strings"
 
-    "github.com/ai-agent-backend/internal/services"
-    "github.com/ai-agent-backend/internal/utils"
+    "github.com/ai-agent-apps/backend/internal/services"
+    "github.com/ai-agent-apps/backend/internal/utils"
     "github.com/gin-gonic/gin"
 )
 
@@ -955,8 +955,8 @@ func APIKeyMiddleware() gin.HandlerFunc {
 package routes
 
 import (
-    "github.com/ai-agent-backend/internal/handlers"
-    "github.com/ai-agent-backend/internal/middleware"
+    "github.com/ai-agent-apps/backend/internal/handlers"
+    "github.com/ai-agent-apps/backend/internal/middleware"
     "github.com/gin-gonic/gin"
 )
 

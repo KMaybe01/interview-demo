@@ -318,7 +318,7 @@ graph LR
 
 ## 🏗️ 本仓库落地实现对照
 
-> 教程中的核心能力已在本仓库 `backend/internal/` 落地为生产化 Go 包，可对照代码阅读。统一入口 `/api/ai/*`（见 `backend/internal/airouter/router.go`）。
+> 教程中的核心能力已在本仓库 `apps/backend/internal/` 落地为生产化 Go 包，可对照代码阅读。统一入口 `/api/ai/*`（见 `apps/backend/internal/airouter/router.go`）。
 
 | 教程阶段 | 落地包 | 关键实现 |
 |---------|--------|----------|

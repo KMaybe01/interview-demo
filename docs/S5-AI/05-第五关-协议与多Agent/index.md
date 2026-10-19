@@ -55,9 +55,9 @@ Agent Card（能力自述） → 任务发现 → message/send → 任务状态�
 
 | 协议能力 | 真实实现 | 可运行入口 |
 |---|---|---|
-| MCP 2026-07-28 无状态单端点、`tools/call`、MRTR、幂等、双版本兼容 | `backend/internal/mcp/` | `POST /api/ai/mcp`、`GET /api/ai/mcp/tools` |
-| A2A v1.0：Agent Card、`message/send`、任务状态机、取消、`.well-known` | `backend/internal/a2a/` | `/api/ai/a2a/*` |
-| 工具「一处实现、两处复用」 | `backend/internal/airouter/toolMCPAdapter` | Agent 工具与 MCP 工具共用 registry |
+| MCP 2026-07-28 无状态单端点、`tools/call`、MRTR、幂等、双版本兼容 | `apps/backend/internal/mcp/` | `POST /api/ai/mcp`、`GET /api/ai/mcp/tools` |
+| A2A v1.0：Agent Card、`message/send`、任务状态机、取消、`.well-known` | `apps/backend/internal/a2a/` | `/api/ai/a2a/*` |
+| 工具「一处实现、两处复用」 | `apps/backend/internal/airouter/toolMCPAdapter` | Agent 工具与 MCP 工具共用 registry |
 | 协议控制台（实机调用） | `apps/ai-demo/src/components/ProtocolConsole.tsx` | AI Demo → Protocol 选项卡 |
 | 教学版协议控制台 | `apps/ai-course/src/stages/05-proto/` | `POST /api/mcp`、`/api/a2a/*` |
 

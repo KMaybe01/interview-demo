@@ -53,9 +53,9 @@ import (
 )
 
 func main() {
-	// 加载 .env 文件（优先当前目录，其次 backend/ 目录）
+	// 加载 .env 文件（优先当前目录 apps/backend/，其次仓库根目录）
 	_ = godotenv.Load(".env")
-	_ = godotenv.Load("../backend/.env")
+	_ = godotenv.Load("../../.env")
 
 	r := gin.Default()
 	r.MaxMultipartMemory = 100 << 20

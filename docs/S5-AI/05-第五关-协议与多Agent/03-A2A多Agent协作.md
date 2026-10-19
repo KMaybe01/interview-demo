@@ -4,7 +4,7 @@
 >
 > **前置**：[01-MCP-2026-07-28详解](./01-MCP-2026-07-28详解.md)
 > **产出**：能跑通「发消息 → 拿任务 → 查状态 → 取消」的完整任务生命周期
-> **代码**：`apps/ai-course/server/a2a.ts`（教学版）；后端参考 `backend/internal/a2a/`
+> **代码**：`apps/ai-course/server/a2a.ts`（教学版）；后端参考 `apps/backend/internal/a2a/`
 
 ---
 
@@ -146,4 +146,4 @@ curl -s -X POST http://localhost:5199/api/a2a/tasks/<taskId>/cancel
 - [附-MCP+A2A全栈实战](./附-MCP+A2A全栈实战.md)
 - [第四关 · 可观测性 Trace](../04-第四关-企业级工程化/04-可观测性Trace与审计.md)
 - 前端成品参考：`apps/ai-demo/src/components/ProtocolConsole.tsx`
-- 后端源码：`backend/internal/a2a/{server.go,types.go,registry.go,store.go}`
+- 后端源码：`apps/backend/internal/a2a/{server.go,types.go,registry.go,store.go}`

@@ -51,7 +51,7 @@
 
 | | 主线（你要手写的代码） | 副线（企业级后端参考实现） | 延伸参考库（业界实现精读） |
 |---|---|---|---|
-| **技术栈** | AI SDK 7 + TypeScript 全栈（React + BFF） | Go + Gin（`backend/internal/*`） | 这些 GitHub 开源仓库（见下方映射表） |
+| **技术栈** | AI SDK 7 + TypeScript 全栈（React + BFF） | Go + Gin（`apps/backend/internal/*`） | 这些 GitHub 开源仓库（见下方映射表） |
 | **为什么** | 前端转型最短路径，心智模型与 React 一致 | 网关熔断、工具沙箱、护栏、HITL、评测这些**服务端重活**看生产级怎么写 | 读懂 Claude Code / AI SDK / 编码 Agent 的**真实工程实现**，把理论对照源码 |
 | **入口** | [第一关](./01-第一关-流式对话/index.md) → `apps/ai-course/` | [07-Go后端参考实现](./07-Go后端参考实现/index.md) | [参考代码库](#参考代码库) |
 | **通读要求** | 必读 | 按需查阅，不必通读 | 专题精读，配合对应关卡 |
@@ -154,7 +154,7 @@ S5-AI/
 
 1. **先读正文，再读源码**：每关正文建立心智模型后，按上表「重点看」列精准定位文件，不要从 `node_modules` 入口。
 2. **编码 Agent 专题优先顺序**：`claude-howto`（实操上手）→ `claude-code-book`（架构剖析）→ `how-pi-agent-works`（教学实现）→ `pi`（极简 harness）→ `start-claude-code`（看真实工程）。
-3. **对照本仓库**：`这批 GitHub 开源仓库` 是「别人怎么造 Agent」，本仓库 `backend/internal/*` + `apps/ai-course/*` 是「我们怎么造 Agent」——两者互为镜像。
+3. **对照本仓库**：`这批 GitHub 开源仓库` 是「别人怎么造 Agent」，本仓库 `apps/backend/internal/*` + `apps/ai-course/*` 是「我们怎么造 Agent」——两者互为镜像。
 
 ---
 
@@ -164,13 +164,13 @@ S5-AI/
 
 | 关卡 | 本仓库实现位置 | 关键接口 / 组件 |
 |------|----------------|-----------------|
-| ① 流式对话 | `apps/ai-demo/src/services/aiStream.ts`、`backend/internal/chat/` | SSE 分帧解析、`POST /api/ai/chat/stream` |
-| ② 知识增强 RAG | `backend/internal/knowledge/` | 文档加载 / 分块 / 嵌入 / 向量检索 |
-| ③ Agent 与工具 | `backend/internal/agent/`、`internal/tool/`、`internal/memory/` | ReAct、Function Calling、工具沙箱与权限分级 L0/L1/L2 |
-| ④ 企业级工程化 | `internal/llm/`、`internal/guard/`、`internal/obs/`、`internal/airouter/` | `/api/ai/obs/*`、`/api/ai/eval/*`、`/api/ai/prompts/*`、`/api/ai/approvals/*` |
-| ⑤ 协议与多 Agent | `internal/mcp/`、`internal/a2a/` | `POST /api/ai/mcp`（无状态单端点）、`/api/ai/a2a/*` |
+| ① 流式对话 | `apps/ai-demo/src/services/aiStream.ts`、`apps/backend/internal/chat/` | SSE 分帧解析、`POST /api/ai/chat/stream` |
+| ② 知识增强 RAG | `apps/backend/internal/knowledge/` | 文档加载 / 分块 / 嵌入 / 向量检索 |
+| ③ Agent 与工具 | `apps/backend/internal/agent/`、`apps/backend/internal/tool/`、`apps/backend/internal/memory/` | ReAct、Function Calling、工具沙箱与权限分级 L0/L1/L2 |
+| ④ 企业级工程化 | `apps/backend/internal/llm/`、`apps/backend/internal/guard/`、`apps/backend/internal/obs/`、`apps/backend/internal/airouter/` | `/api/ai/obs/*`、`/api/ai/eval/*`、`/api/ai/prompts/*`、`/api/ai/approvals/*` |
+| ⑤ 协议与多 Agent | `apps/backend/internal/mcp/`、`apps/backend/internal/a2a/` | `POST /api/ai/mcp`（无状态单端点）、`/api/ai/a2a/*` |
 | ⑥ 前端 AI 交互层 | `apps/ai-demo/src/components/` | `AIChat`（Ant Design X）、`A2UI`（`@a2ui/react`）、`Observability` |
-| ⑩ 编码 Agent | `apps/ai-course/`（Agent stage）、`backend/internal/agent|tool|memory`（可复用引擎） | 工具执行、子 Agent、权限管线、上下文裁剪的工业级样板 |
+| ⑩ 编码 Agent | `apps/ai-course/`（Agent stage）、`apps/backend/internal/agent|tool|memory`（可复用引擎） | 工具执行、子 Agent、权限管线、上下文裁剪的工业级样板 |
 
 启动方式见根 `AGENTS.md`：`bun run dev` 起前端三应用，`go run ./cmd/server/` 起后端 `:8080`。
 

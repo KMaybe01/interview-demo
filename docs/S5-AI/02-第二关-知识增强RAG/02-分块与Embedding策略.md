@@ -119,4 +119,4 @@ export function buildContext(chunks: Chunk[]): string { /* 渲染成 `[n] (score
 - [01-RAG全链路](./01-RAG全链路.md)
 - [03-混合检索与Rerank](./03-混合检索与Rerank.md)
 - [附-RAG全栈技术实战](./附-RAG全栈技术实战.md)
-- 后端参考：`backend/internal/knowledge/`（文档加载 / 分块 / 嵌入 / 检索的完整分层）
+- 后端参考：`apps/backend/internal/knowledge/`（文档加载 / 分块 / 嵌入 / 检索的完整分层）

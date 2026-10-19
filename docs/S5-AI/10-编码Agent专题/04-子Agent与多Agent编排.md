@@ -44,7 +44,7 @@ graph TB
 
 ## 3. 代码实现
 
-派发子 Agent（伪代码，落到 `backend/internal/agent/` 的 Multi-Agent 之上）：
+派发子 Agent（伪代码，落到 `apps/backend/internal/agent/` 的 Multi-Agent 之上）：
 
 ```ts
 async function orchestrate(task: string) {
@@ -56,7 +56,7 @@ async function orchestrate(task: string) {
 }
 ```
 
-工业实现对照：`backend/internal/agent/` 已实现 ReAct / Function Calling / Multi-Agent 三种引擎；`https://github.com/earendil-works/pi` 给了一个 CLI 形态的编码子 Agent 样例。
+工业实现对照：`apps/backend/internal/agent/` 已实现 ReAct / Function Calling / Multi-Agent 三种引擎；`https://github.com/earendil-works/pi` 给了一个 CLI 形态的编码子 Agent 样例。
 
 ## 4. 验证与观测
 

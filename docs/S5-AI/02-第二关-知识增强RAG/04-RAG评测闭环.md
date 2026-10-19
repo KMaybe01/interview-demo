@@ -4,7 +4,7 @@
 >
 > **前置**：[03-混合检索与Rerank](./03-混合检索与Rerank.md)
 > **产出**：一个 30-50 条的评测集 + 每次改动都能跑出分数的脚本
-> **代码**：`apps/ai-course/shared/cost.ts` 同层思路；后端参考 `backend/internal/obs/eval.go`
+> **代码**：`apps/ai-course/shared/cost.ts` 同层思路；后端参考 `apps/backend/internal/obs/eval.go`
 
 ---
 
@@ -34,7 +34,7 @@ RAG 出错时，问题可能出在**四个不同环节**，评测要先定位再
 
 ## 2. 企业实现要点
 
-### 后端参考实现：`internal/obs/eval.go`
+### 后端参考实现：`apps/backend/internal/obs/eval.go`
 
 本仓库已经跑通了一版评测，可以直接读源码：
 
@@ -142,4 +142,4 @@ function runEval(cases: EvalCase[], retriever: Retriever) {
 
 - [附-RAG全栈技术实战](./附-RAG全栈技术实战.md)
 - [第四关 · 评测体系与 CI 回归门禁](../04-第四关-企业级工程化/index.md) —— 把本章做法推广到 Prompt/模型变更
-- 后端参考：`backend/internal/obs/eval.go`（含代理算法的取舍注释）、`internal/obs/prompt.go`（Prompt 版本与回滚）
+- 后端参考：`apps/backend/internal/obs/eval.go`（含代理算法的取舍注释）、`apps/backend/internal/obs/prompt.go`（Prompt 版本与回滚）

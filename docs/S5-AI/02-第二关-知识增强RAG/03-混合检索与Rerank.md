@@ -48,14 +48,14 @@ score(d) = Σ  1 / (k + rank_i(d))      k 通常取 60
 
 ### 后端参考实现
 
-`backend/internal/airouter/runner.go` 的检索参数可以直接对照：
+`apps/backend/internal/airouter/runner.go` 的检索参数可以直接对照：
 
 | 参数 | 默认值 | 位置 |
 |---|---|---|
 | TopK | **3** | 检索调用处 |
 | 上下文注入格式 | `[n] (score=…) 内容` | 渲染 `chat.system` 时 |
 | 检索用 query | **脱敏后**的 query | 护栏 `InspectInput` 之后 |
-| 离线兜底 | 哈希向量 + `Cosine` | `internal/llm/offline.go` |
+| 离线兜底 | 哈希向量 + `Cosine` | `apps/backend/internal/llm/offline.go` |
 
 注意一个细节：**检索发生在护栏之后**，用的是脱敏后的 query。这既避免敏感信息进入检索日志，也符合最小权限原则。
 
@@ -93,7 +93,7 @@ const result = streamText({ model, system: `${SYSTEM}\n\n参考：\n${context}`,
 |---|---|---|
 | **Recall@K** | 正确块是否出现在前 K 个结果里 | 人工标注 30-50 条 QA，脚本跑一遍 |
 | **MRR** | 正确块的排名倒数 | 同上 |
-| **Context Precision** | 前 K 里有多少比例是相关的 | 本仓库 Go 侧 `internal/obs/eval.go` 有用单块 overlap > 0.15 的代理算法 |
+| **Context Precision** | 前 K 里有多少比例是相关的 | 本仓库 Go 侧 `apps/backend/internal/obs/eval.go` 有用单块 overlap > 0.15 的代理算法 |
 | **端到端延迟** | 检索 + 生成 | Trace 里看 retrieval span |
 
 验收标准：
@@ -127,4 +127,4 @@ const result = streamText({ model, system: `${SYSTEM}\n\n参考：\n${context}`,
 
 - [04-RAG评测闭环](./04-RAG评测闭环.md)
 - [第四关 · 可观测性 Trace](../04-第四关-企业级工程化/index.md) —— 把 retrieval 做成 span
-- 后端参考：`backend/internal/knowledge/`（向量检索）、`backend/internal/obs/eval.go`（评测指标）
+- 后端参考：`apps/backend/internal/knowledge/`（向量检索）、`apps/backend/internal/obs/eval.go`（评测指标）

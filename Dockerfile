@@ -40,9 +40,9 @@ RUN bun run build
 # Stage 4: Build backend
 FROM golang:1.27-alpine AS backend-builder
 WORKDIR /app
-COPY backend/go.* ./
+COPY apps/backend/go.* ./
 RUN go mod download
-COPY backend/ .
+COPY apps/backend/ .
 RUN CGO_ENABLED=0 go build -ldflags="-s -w" -o /server ./cmd/server/
 
 # Stage 5: Frontend runtime

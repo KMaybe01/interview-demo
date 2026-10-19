@@ -37,7 +37,7 @@ graph LR
 
 ## 3. 代码实现
 
-PreToolUse 钩子（伪代码，对应 `backend/internal/airouter` 的工具审批编排）：
+PreToolUse 钩子（伪代码，对应 `apps/backend/internal/airouter` 的工具审批编排）：
 
 ```ts
 // 在工具执行前强制拦截危险操作

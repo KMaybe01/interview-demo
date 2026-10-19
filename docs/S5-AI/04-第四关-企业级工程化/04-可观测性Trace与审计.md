@@ -4,7 +4,7 @@
 >
 > **前置**：[01-多Provider网关与熔断降级](./01-多Provider网关与熔断降级.md)
 > **产出**：一个能画出请求瀑布图的 trace 系统 + 一条工具调用审计流
-> **代码**：`apps/ai-course/server/obs.ts`；后端参考 `backend/internal/obs/`、`backend/internal/tool/audit.go`
+> **代码**：`apps/ai-course/server/obs.ts`；后端参考 `apps/backend/internal/obs/`、`apps/backend/internal/tool/audit.go`
 
 ---
 
@@ -23,7 +23,7 @@
 
 ## 2. 企业实现要点
 
-### 后端参考实现：`backend/internal/obs/`
+### 后端参考实现：`apps/backend/internal/obs/`
 
 | 能力 | 实现 |
 |---|---|
@@ -32,7 +32,7 @@
 | Run | 成本与统计的最小粒度：含 `TTFTMs / Steps / ToolCalls / Retrievals / Degraded / CacheHit` |
 | 接口 | `GET /api/ai/obs/{metrics,runs,traces,traces/:traceId}` |
 
-### 工具审计：`internal/tool/audit.go`
+### 工具审计：`apps/backend/internal/tool/audit.go`
 
 ```go
 AuditEvent{ ID, Time, Tool, User, TraceID, Outcome, Detail, Args, DurationMs }
@@ -135,4 +135,4 @@ curl -s http://localhost:5199/api/obs/traces | head
 - [05-评测体系与 CI 回归门禁](./05-评测体系与CI回归门禁.md)
 - [03-上下文工程与 Skills](./03-上下文工程与Skills.md)
 - 前端成品参考：`apps/ai-demo/src/components/Observability.tsx`
-- 后端源码：`backend/internal/obs/{types.go,eval.go,prompt.go}`、`backend/internal/tool/audit.go`
+- 后端源码：`apps/backend/internal/obs/{types.go,eval.go,prompt.go}`、`apps/backend/internal/tool/audit.go`

@@ -2755,7 +2755,7 @@ export async function query(sql: string, params?: any[]) {
   const [rows] = await pool.execute(sql, params); return rows;
 }
 export default pool;`;
-    await writeFile.invoke({ path: "bookstore-backend/src/models/db.ts", content });
+    await writeFile.invoke({ path: "bookstore-apps/backend/src/models/db.ts", content });
     return "数据库连接模块已生成";
   },
   { name: "generate_db_connection", description: "生成 MySQL 数据库连接代码", schema: z.object({}) }

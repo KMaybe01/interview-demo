@@ -10,8 +10,8 @@ AGENT.md
 .husky/
 .gitkeep
 .gitattributes
-backend/bin/
-backend/uploads/
+apps/backend/bin/
+apps/backend/uploads/
 apps/frontend/dist/
 apps/frontend/node_modules/
 apps/ai-demo/dist/

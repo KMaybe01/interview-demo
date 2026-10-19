@@ -54,14 +54,14 @@ bun run --cwd apps/ai-course dev     # http://localhost:5199
 - **配了 Key**：同页面换成真实模型，消息下方显示真实 token 数与估算成本
 - 详见 `apps/ai-course/README.md`
 
-> 想看手写 SSE 解析器怎么拼半包，对照本仓库实现：`apps/ai-demo/src/services/aiStream.ts`（客户端）与 `backend/internal/sse/`（服务端）。
+> 想看手写 SSE 解析器怎么拼半包，对照本仓库实现：`apps/ai-demo/src/services/aiStream.ts`（客户端）与 `apps/backend/internal/sse/`（服务端）。
 
 ## 与本仓库代码的映射
 
 | 教程内容 | 真实实现 | 看点 |
 |---|---|---|
 | SSE 流式接收 | `apps/ai-demo/src/services/aiStream.ts` | 如何处理 TCP 分帧边界，一个逻辑帧可能被拆成多个 chunk |
-| 服务端流式生成 | `backend/internal/chat/`、`backend/internal/sse/` | 流式响应与日志流的两种实现 |
+| 服务端流式生成 | `apps/backend/internal/chat/`、`apps/backend/internal/sse/` | 流式响应与日志流的两种实现 |
 | 前端聊天 UI | `apps/ai-demo/src/components/AIChat.tsx` | Ant Design X 的 Bubble.List / Sender 组织方式 |
 | 会话持久化 | `apps/ai-demo/src/stores/chatStore.ts` | Zustand 管理对话历史 |
 

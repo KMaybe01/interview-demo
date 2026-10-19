@@ -16,7 +16,7 @@ Go 1.27 + Gin 1.12 后端服务，为前端 15 个技术演示场景及 AI Demo 
 ## 项目结构
 
 ```
-backend/
+apps/backend/
 ├── cmd/server/main.go       # 入口 :${PORT}，优雅关闭 + Swagger 路由
 ├── docs/                    # Swagger 自动生成的 API 文档
 │   ├── docs.go
@@ -60,7 +60,7 @@ backend/
 ## 快速启动
 
 ```bash
-cd backend
+cd apps/backend
 go run ./cmd/server/
 ```
 
@@ -129,7 +129,7 @@ go test ./internal/... -v
 | GET | `/ws/alerts` | WebSocket 告警推送（`transport` / `rate` / `workers`） |
 | GET | `/api/alerts` | SSE / HTTP Polling 告警推送 |
 
-### AI 统一入口（`/api/ai/*`，见 `internal/airouter`）
+### AI 统一入口（`/api/ai/*`，见 `apps/backend/internal/airouter`）
 
 | 方法 | 路径 | 说明 |
 |------|------|------|

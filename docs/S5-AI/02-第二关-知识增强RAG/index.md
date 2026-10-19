@@ -44,7 +44,7 @@ graph LR
 | 附 | [RAG 全栈技术实战](./附-RAG全栈技术实战.md) | 全栈视角的深度实现手册（原文保留） |
 
 > 教程侧的可跑代码在 `apps/ai-course/src/stages/02-rag/`（分块 → 检索 → 拼上下文 → 溯源），
-> 服务端参考实现见 `backend/internal/knowledge/`。
+> 服务端参考实现见 `apps/backend/internal/knowledge/`。
 
 ## 决策速查
 
@@ -62,8 +62,8 @@ graph LR
 
 | 教程内容 | 真实实现 | 看点 |
 |---|---|---|
-| 文档接入与切分 | `backend/internal/knowledge/` | loader → chunk → embed → search 的完整分层 |
-| 问答链路 | `backend/internal/airouter/` | 检索结果如何与工具调用、HITL 串成一条 Agentic 循环 |
+| 文档接入与切分 | `apps/backend/internal/knowledge/` | loader → chunk → embed → search 的完整分层 |
+| 问答链路 | `apps/backend/internal/airouter/` | 检索结果如何与工具调用、HITL 串成一条 Agentic 循环 |
 | 前端知识库管理 | `apps/ai-demo/src/components/KnowledgeBase.tsx` | 知识库 CRUD + 文档添加的交互设计 |
 | 引用溯源 UI | `apps/ai-demo/src/components/AIChat.tsx` | 把检索来源渲染成可点击引用 |
 

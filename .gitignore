@@ -29,8 +29,8 @@ dist-ssr
 .tsbuildinfo/
 
 # Build binaries
-backend/bin/
-backend/coverage/
+apps/backend/bin/
+apps/backend/coverage/
 apps/frontend/dist/
 apps/interview-docs/dist/
 

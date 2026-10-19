@@ -216,7 +216,7 @@ mindmap
 | **路由配置** | 15 条 | 14 条懒加载路由 + 1 条 Eager 加载登录页 |
 | **后端 API (Go)** | 100+ | 26 个 internal 包 |
 | **Go 内部包** | 26 个 | 原 19 个（agent/alert/auth/chat/encryptedlog/gis/health/knowledge/lrucache/memory/middleware/model/payment/rbac/requestload/schema/sse/upload/vitals）+ AI 侧 7 个（llm/tool/guard/airouter/mcp/a2a/obs） |
-| **Go 源文件** | 69 个 | `internal/` 非测试源文件 |
+| **Go 源文件** | 69 个 | `apps/backend/internal/` 非测试源文件 |
 | **Go 测试文件** | 35 个 | `go test ./internal/... -v` 全量通过 |
 | **前端状态存储** | 7 个 | Zustand 状态管理 (alert/auth/lru/monitor/request/theme/upload) |
 | **共享包** | 2 个 | `shared-theme` (7 文件), `shared-monitor` (10 文件) |
@@ -539,7 +539,7 @@ JSON 编辑 → handleApplyJson → JSON.parse → formRef.setFormData → 表�
 
 ### 2.2 大文件断点续传 ⭐⭐⭐
 
-**位置**: `src/pages/ChunkedUpload.tsx` + `src/stores/uploadStore.ts` + `backend/handlers/upload.go`
+**位置**: `src/pages/ChunkedUpload.tsx` + `src/stores/uploadStore.ts` + `apps/backend/handlers/upload.go`
 
 #### 实现思路
 
@@ -565,7 +565,7 @@ JSON 编辑 → handleApplyJson → JSON.parse → formRef.setFormData → 表�
 
 ### 2.3 WebSocket 告警推送 ⭐⭐⭐
 
-**位置**: `src/utils/wsTransport.ts` (547 行) + `src/pages/AlertWebSocket.tsx` + `backend/handlers/alert.go`
+**位置**: `src/utils/wsTransport.ts` (547 行) + `src/pages/AlertWebSocket.tsx` + `apps/backend/handlers/alert.go`
 
 #### 实现思路
 
@@ -658,7 +658,7 @@ Worker Pool = `navigator.hardwareConcurrency`，自适应等量分区，K 路指
 
 ### 2.7 单用户单设备登录 ⭐⭐
 
-**位置**: `backend/internal/auth/service.go` + `apps/frontend/src/utils/fetchClient.ts`
+**位置**: `apps/backend/internal/auth/service.go` + `apps/frontend/src/utils/fetchClient.ts`
 
 服务端维护 `activeSessions[userId] → nonce`，nonce 嵌入 JWT claims。`AuthMiddleware` 全局校验，登录时生成新 nonce 覆盖旧记录。
 
@@ -666,7 +666,7 @@ Worker Pool = `navigator.hardwareConcurrency`，自适应等量分区，K 路指
 
 ### 2.8 RBAC 位编码权限 ⭐⭐⭐
 
-**位置**: `src/pages/RbacPermission.tsx` + `src/utils/rbac.ts` + `backend/handlers/rbac.go`
+**位置**: `src/pages/RbacPermission.tsx` + `src/utils/rbac.ts` + `apps/backend/handlers/rbac.go`
 
 6 种权限位编码，5 个预设角色，菜单/路由/按钮三层联动，后端 `POST /api/rbac/check` 双校验。
 
@@ -722,7 +722,7 @@ Worker Pool = `navigator.hardwareConcurrency`，自适应等量分区，K 路指
 
 ### 2.14 UniPay 统一支付中台 ⭐⭐⭐⭐
 
-**位置**: `apps/frontend/src/pages/UniPay.tsx` + `backend/internal/payment/`
+**位置**: `apps/frontend/src/pages/UniPay.tsx` + `apps/backend/internal/payment/`
 
 - 7 种状态 × 6 种驱动力状态机
 - Idempotency-Key 幂等性四层纵深防御
@@ -734,7 +734,7 @@ Worker Pool = `navigator.hardwareConcurrency`，自适应等量分区，K 路指
 
 ### 2.15 AI 后端六阶段进阶模式 ⭐⭐⭐
 
-**位置**: `apps/ai-demo/` (9 组件 + 3 服务层 + 8 工具函数) + `backend/internal/` (llm/tool/guard/airouter/mcp/a2a/obs/agent/chat/knowledge)
+**位置**: `apps/ai-demo/` (9 组件 + 3 服务层 + 8 工具函数) + `apps/backend/internal/` (llm/tool/guard/airouter/mcp/a2a/obs/agent/chat/knowledge)
 
 | Stage | 功能 | 前端组件 | 后端包 |
 |-------|------|----------|--------|

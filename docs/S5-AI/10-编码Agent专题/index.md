@@ -36,18 +36,18 @@ graph TB
 | 06 | [国产模型适配与供应商切换](./06-国产模型适配与供应商切换.md) | 用 Qwen/DeepSeek/GLM/Ollama 驱动编码 Agent；OpenAI shim 与实时切换 |
 | 附 | [从零构建智能体（hello-agents 精读）](./附-hello-agents精读.md) | 手搓 ReAct/Plan-and-Solve/Reflection + MCP·A2A·ANP（原文保留，深度查阅） |
 
-> 教程侧可跑代码在 `apps/ai-course/src/stages/03-agent/`（工具分级、审批工单、审计流），工业实现对照 `backend/internal/agent`、`internal/tool`、`internal/memory`。
+> 教程侧可跑代码在 `apps/ai-course/src/stages/03-agent/`（工具分级、审批工单、审计流），工业实现对照 `apps/backend/internal/agent`、`apps/backend/internal/tool`、`apps/backend/internal/memory`。
 
 ## 与本仓库 / 参考代码库的映射
 
 | 教程内容 | 本仓库实现 | `这批 GitHub 开源仓库` 对照（精读） |
 |---|---|---|
-| Agent Loop | `backend/internal/airouter/`（RAG→工具→重试→HITL 循环） | `claude-code-book`（对话循环章节）、`how-pi-agent-works`（Agent Loop + 流式事件） |
-| 工具系统 + 权限 | `backend/internal/tool/`（L0/L1/L2 + 沙箱 + 审计） | `claude-code`（工具系统 + 四阶段权限管线）、`pi/pi-agent-core`（工具调用 + 状态机） |
-| 上下文压缩 | `backend/internal/memory/`（裁剪与压缩） | `claude-code-book`（上下文压缩章节）、`how-pi-agent-works`（上下文压缩 + 会话树） |
-| 子 Agent | `backend/internal/agent/`（Multi-Agent） | `claude-code-book`（Fork 子 Agent）、`hello-agents`（多 Agent 案例） |
-| Hooks / Skills / Memory | `backend/internal/airouter`（Prompt 版本） | `claude-howto`（slash commands / memory / skills / hooks / plugins）、`awesome-copilot`（生态对照） |
-| 供应商切换 | `backend/internal/llm/`（Provider 注册表 + 熔断） | `openclaude-cn`（OpenAI shim + `/provider` 切换）、`cc-switch`（多厂商 GUI） |
+| Agent Loop | `apps/backend/internal/airouter/`（RAG→工具→重试→HITL 循环） | `claude-code-book`（对话循环章节）、`how-pi-agent-works`（Agent Loop + 流式事件） |
+| 工具系统 + 权限 | `apps/backend/internal/tool/`（L0/L1/L2 + 沙箱 + 审计） | `claude-code`（工具系统 + 四阶段权限管线）、`pi/pi-agent-core`（工具调用 + 状态机） |
+| 上下文压缩 | `apps/backend/internal/memory/`（裁剪与压缩） | `claude-code-book`（上下文压缩章节）、`how-pi-agent-works`（上下文压缩 + 会话树） |
+| 子 Agent | `apps/backend/internal/agent/`（Multi-Agent） | `claude-code-book`（Fork 子 Agent）、`hello-agents`（多 Agent 案例） |
+| Hooks / Skills / Memory | `apps/backend/internal/airouter`（Prompt 版本） | `claude-howto`（slash commands / memory / skills / hooks / plugins）、`awesome-copilot`（生态对照） |
+| 供应商切换 | `apps/backend/internal/llm/`（Provider 注册表 + 熔断） | `openclaude-cn`（OpenAI shim + `/provider` 切换）、`cc-switch`（多厂商 GUI） |
 
 ## 工具系统的三条铁律（编码场景版）
 

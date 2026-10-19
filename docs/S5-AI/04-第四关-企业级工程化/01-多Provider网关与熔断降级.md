@@ -4,7 +4,7 @@
 >
 > **前置**：[第一关 · 流式对话](../01-第一关-流式对话/index.md)
 > **产出**：一个带主备切换、熔断、离线兜底的模型网关（可演示可压测）
-> **代码**：`apps/ai-course/server/resilience.ts`、`server/models.ts`；后端参考 `backend/internal/llm/`
+> **代码**：`apps/ai-course/server/resilience.ts`、`server/models.ts`；后端参考 `apps/backend/internal/llm/`
 
 ---
 
@@ -25,7 +25,7 @@
 
 ## 2. 企业实现要点
 
-### 后端参考实现：`backend/internal/llm/`
+### 后端参考实现：`apps/backend/internal/llm/`
 
 | 能力 | 实现 | 默认值 |
 |---|---|---|
@@ -123,4 +123,4 @@ export async function executeWithFallback(tier: ModelTier, call: ModelCall): Pro
 - [02-安全护栏](./02-安全护栏.md)
 - [04-可观测性 Trace 与审计](./04-可观测性Trace与审计.md) —— 把熔断状态做成可观测指标
 - [07-Go 后端参考实现](../07-Go后端参考实现/index.md)
-- 后端源码：`backend/internal/llm/{registry.go,resilience.go,offline.go,pricing.go}`
+- 后端源码：`apps/backend/internal/llm/{registry.go,resilience.go,offline.go,pricing.go}`

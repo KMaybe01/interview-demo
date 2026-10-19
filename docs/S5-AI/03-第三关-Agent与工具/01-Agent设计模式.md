@@ -5,7 +5,7 @@
 >
 > **前置**：第二关「知识增强 RAG」
 > **产出**：能手写一个 ReAct 循环，并说清它在哪些任务上不如 Plan-and-Execute
-> **代码**：`apps/ai-course/src/stages/03-agent/`、`backend/internal/agent/`（ReAct / Function Calling 引擎）
+> **代码**：`apps/ai-course/src/stages/03-agent/`、`apps/backend/internal/agent/`（ReAct / Function Calling 引擎）
 
 ---
 
@@ -97,13 +97,13 @@ Function Calling 不是新能力——它就是"预测下一个词"，只不过�
 | `pi-agent-core` | Agent 运行时：工具调用 + 状态管理 | 本章 Loop + 下一章工具契约 |
 | `pi-coding-agent` | 交互式编码 Agent CLI | ⑩ 编码 Agent 专题 |
 
-> `pi` 的启发：把「模型接入」「Agent 循环」「工具执行」三层解耦，工具与状态管理独立成 runtime，才能在多种场景复用。本仓库 `backend/internal/agent/`（引擎）+ `tool/`（权限分级）+ `memory/`（记忆）是同一思路的 Go 实现。
+> `pi` 的启发：把「模型接入」「Agent 循环」「工具执行」三层解耦，工具与状态管理独立成 runtime，才能在多种场景复用。本仓库 `apps/backend/internal/agent/`（引擎）+ `tool/`（权限分级）+ `memory/`（记忆）是同一思路的 Go 实现。
 
 ---
 
 ## 3. 代码实现
 
-### 3.1 最小 ReAct 循环（对齐 `backend/internal/agent/`）
+### 3.1 最小 ReAct 循环（对齐 `apps/backend/internal/agent/`）
 
 ```typescript
 // 工具注册：名称 + 描述 + JSON Schema 参数 + 执行函数
@@ -193,4 +193,4 @@ Agent 评估维度（自动化）：任务完成率 >85%、工具选择准确率
 - `https://github.com/cellinlab/how-pi-agent-works` — Agent Loop / 消息 / 流式事件 / 会话树（4 个渐进 TS Demo）
 - `https://github.com/earendil-works/pi` — `pi-ai` / `pi-agent-core` / `pi-coding-agent` 分层 harness
 - `https://github.com/datawhalechina/hello-agents` — ReAct / Plan-and-Solve / Reflection 手搓 + 多 Agent 案例
-- 工业实现：`backend/internal/agent/`、`backend/internal/tool/`、`backend/internal/memory/`
+- 工业实现：`apps/backend/internal/agent/`、`apps/backend/internal/tool/`、`apps/backend/internal/memory/`

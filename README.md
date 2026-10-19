@@ -68,7 +68,7 @@ cd apps/ai-demo && bun run dev        # AI 演示 :5175
 cd apps/interview-docs && bun run dev # 文档站 :5000
 
 # Go 后端
-cd backend && go run ./cmd/server/    # :8080
+cd apps/backend && go run ./cmd/server/    # :8080
 ```
 
 ### Docker Compose (完整环境)

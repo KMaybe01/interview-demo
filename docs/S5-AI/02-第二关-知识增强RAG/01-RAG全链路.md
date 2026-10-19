@@ -5,7 +5,7 @@
 >
 > **前置**：[第一关 · 流式对话](../01-第一关-流式对话/index.md)
 > **产出**：能徒手写一个 Embedding + 余弦检索的最小 RAG，并说清混合检索与 Rerank 怎么叠加
-> **代码**：`apps/ai-course/src/stages/02-rag/`、`backend/internal/knowledge/`（Go 参考实现）
+> **代码**：`apps/ai-course/src/stages/02-rag/`、`apps/backend/internal/knowledge/`（Go 参考实现）
 
 > ⚠️ 历史说明：本文件保留了早先用 LangChain.js + Pinecone 的示例（概念仍有价值），但**正文主线已改为 AI SDK 7 + 本地向量/本仓库 `knowledge` 包**。库无关的核心逻辑见下文「可落地流水线」。
 
@@ -691,7 +691,7 @@ class RAGEvaluator {
 
 ## 🛠 可落地 RAG 流水线（AI SDK 7 + 本仓库 + hello-agents）
 
-上面的概念与 LangChain 示例仍然是理解 RAG 的好材料，但本教程主线用 **AI SDK 7**，因此这里给出**不绑定任何框架**的最小实现，并标注它与 `https://github.com/datawhalechina/hello-agents`（手搓 RAG）和本仓库 `backend/internal/knowledge/` 的对应关系。核心链路只有三步：**分块 → 嵌入 → 检索**，其余都是这之上的增强。
+上面的概念与 LangChain 示例仍然是理解 RAG 的好材料，但本教程主线用 **AI SDK 7**，因此这里给出**不绑定任何框架**的最小实现，并标注它与 `https://github.com/datawhalechina/hello-agents`（手搓 RAG）和本仓库 `apps/backend/internal/knowledge/` 的对应关系。核心链路只有三步：**分块 → 嵌入 → 检索**，其余都是这之上的增强。
 
 ### 分块（保持语义边界）
 
@@ -709,7 +709,7 @@ function recursiveSplit(text: string, size = 800, overlap = 120): string[] {
   return chunks;
 }
 // 代码类文档务必按 AST/符号边界分块（函数、类、导出），而非纯字符——
-// 否则跨块引用会丢上下文（backend/internal/knowledge 的 loader 就是这样做的）
+// 否则跨块引用会丢上下文（apps/backend/internal/knowledge 的 loader 就是这样做的）
 ```
 
 ### 嵌入与向量检索（AI SDK `embed`）
@@ -753,7 +753,7 @@ const { textStream } = streamText({
 | **查询重写** | 分解 / 扩展 / 后退（Step-back） | 模糊问题先"翻译"成可检索形式 |
 | **GraphRAG** | 实体抽取 + 图遍历做多跳推理 | 复杂关系型知识库（上面 2.6 节） |
 
-> `https://github.com/datawhalechina/hello-agents` 把这些增强**逐一手搓实现**（含 MQE 多查询扩展、HyDE、混合检索与 Rerank 的具体代码），可作为本节的"源码级对照"。本仓库生产版在 `backend/internal/knowledge/`（loader → splitter → embedder → vector search → reranker）。
+> `https://github.com/datawhalechina/hello-agents` 把这些增强**逐一手搓实现**（含 MQE 多查询扩展、HyDE、混合检索与 Rerank 的具体代码），可作为本节的"源码级对照"。本仓库生产版在 `apps/backend/internal/knowledge/`（loader → splitter → embedder → vector search → reranker）。
 
 > ⚠️ **Embedding 版本锁定**：生产环境必须锁定精确模型版本（如 `text-embedding-3-small-20250227`），否则上游更新导致向量空间漂移，已索引向量与新查询向量不可比。
 

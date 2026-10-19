@@ -4,7 +4,7 @@
 >
 > **前置**：[02-工具设计契约](./02-工具设计契约.md)、[03-停止条件与死循环防护](./03-停止条件与死循环防护.md)
 > **产出**：一套审批工单机制（创建 → 展示 → 批准/拒绝 → 续跑），并处理过期与重放
-> **代码**：`apps/ai-course/server/approvals.ts`；后端参考 `backend/internal/tool/sandbox.go`
+> **代码**：`apps/ai-course/server/approvals.ts`；后端参考 `apps/backend/internal/tool/sandbox.go`
 
 ---
 
@@ -26,7 +26,7 @@ HITL（Human-in-the-Loop）的本质是：**把不可逆的决策权交回给人
 
 ## 2. 企业实现要点
 
-### 本仓库的实现（`internal/tool/sandbox.go:128-225`）
+### 本仓库的实现（`apps/backend/internal/tool/sandbox.go:128-225`）
 
 | 项 | 实现 |
 |---|---|
@@ -132,4 +132,4 @@ export function resolveApproval(id: string, approve: boolean): { ok: true } | { 
 - [02-工具设计契约](./02-工具设计契约.md)
 - [03-停止条件与死循环防护](./03-停止条件与死循环防护.md)
 - [第四关 · 可观测性 Trace 与审计](../04-第四关-企业级工程化/04-可观测性Trace与审计.md)
-- 后端源码：`backend/internal/tool/sandbox.go`、`backend/internal/airouter/stream.go`（approval_required 事件）
+- 后端源码：`apps/backend/internal/tool/sandbox.go`、`apps/backend/internal/airouter/stream.go`（approval_required 事件）

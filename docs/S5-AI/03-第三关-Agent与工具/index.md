@@ -42,7 +42,7 @@ graph TB
 | 附 | [AI 编程智能体实战](./附-AI编程智能体实战.md) | 一个真实 Code Agent 的完整实现手册（原文保留） |
 
 > 教程侧可跑代码在 `apps/ai-course/src/stages/03-agent/`（工具分级、审批工单、审计流），
-> 工业实现对照 `backend/internal/tool/` 的权限分级与 `backend/internal/airouter/` 的审批编排。
+> 工业实现对照 `apps/backend/internal/tool/` 的权限分级与 `apps/backend/internal/airouter/` 的审批编排。
 
 ## 工具设计的三条铁律
 
@@ -52,16 +52,16 @@ graph TB
 | **有界** | 必须声明超时，超时必须返回结构化超时结果 | 一个慢工具拖死整个 Agent 循环 |
 | **分级** | 按副作用给工具分级（只读 / 可撤销写 / 不可逆写），只对高等级请求审批 | 要么什么都拦（难用），要么什么都不拦（不敢上线） |
 
-> 本仓库 `backend/internal/tool/` 已实现 `L0 只读 / L1 可撤销 / L2 不可逆` 三级 + 参数净化沙箱 + 调用审计，是这三条铁律的落地参考。
+> 本仓库 `apps/backend/internal/tool/` 已实现 `L0 只读 / L1 可撤销 / L2 不可逆` 三级 + 参数净化沙箱 + 调用审计，是这三条铁律的落地参考。
 
 ## 与本仓库代码的映射
 
 | 教程内容 | 真实实现 | 看点 |
 |---|---|---|
-| ReAct / Function Calling | `backend/internal/agent/` | 两种范式的引擎实现与切换 |
-| 工具注册与权限分级 | `backend/internal/tool/` | 沙箱净化、幂等键、超时、审计日志 |
-| 对话记忆 | `backend/internal/memory/` | 多轮会话记忆的裁剪与压缩 |
-| Agentic 编排循环 | `backend/internal/airouter/` | RAG → 工具 → 重试 → HITL 的循环 + SSE 事件推给前端 |
+| ReAct / Function Calling | `apps/backend/internal/agent/` | 两种范式的引擎实现与切换 |
+| 工具注册与权限分级 | `apps/backend/internal/tool/` | 沙箱净化、幂等键、超时、审计日志 |
+| 对话记忆 | `apps/backend/internal/memory/` | 多轮会话记忆的裁剪与压缩 |
+| Agentic 编排循环 | `apps/backend/internal/airouter/` | RAG → 工具 → 重试 → HITL 的循环 + SSE 事件推给前端 |
 | 智能体管理 UI | `apps/ai-demo/src/components/Agents.tsx` | 三种 Agent 类型的可视化管理 |
 
 ## 开源仓库延伸精读（Agent 实现）

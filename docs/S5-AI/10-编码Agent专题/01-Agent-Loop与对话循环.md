@@ -66,7 +66,7 @@ async function codingLoop(userInput: string, messages: ModelMessage[]) {
 
 - 在 `apps/ai-demo` 的聊天界面发一句「读取 package.json 并告诉我用了哪些依赖」，观察事件流是否依次出现 `tool-call(readFile)` → `tool-result` → `text`。
 - 故意让它「改一个不存在的文件」，确认工具返回结构化错误后 Loop 能继续而不是崩溃。
-- 看 `backend/internal/airouter/` 的 SSE 事件：它把「RAG→工具→重试→HITL」的每一步推给前端，正是企业级 Loop 的可观测形态。
+- 看 `apps/backend/internal/airouter/` 的 SSE 事件：它把「RAG→工具→重试→HITL」的每一步推给前端，正是企业级 Loop 的可观测形态。
 
 ## 5. 面试追问
 

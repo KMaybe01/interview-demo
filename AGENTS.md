@@ -54,9 +54,10 @@ bun install          # 只能用 bun, 不能用 npm（从根目录安装所有 w
 | `cd apps/interview-docs && bun run build` | `tsc -p tsconfig.app.json --noEmit && tsc -p tsconfig.node.json --noEmit && vite build && node gen-version.mjs` |
 | `cd apps/interview-docs && bun run lint` | `bunx biome check --write .` |
 
-`backend/`（Go backend）：
+`apps/backend/`（Go backend）：
 
 ```bash
+cd apps/backend
 go run ./cmd/server/          # Gin :8080
 go test ./internal/... -v
 ```
@@ -68,7 +69,7 @@ go test ./internal/... -v
 - **认证守卫**: `apps/frontend/src/components/AuthGuard.tsx` 保护除 `/login` 外的所有路由
 - **状态管理**: Zustand store 位于 `apps/frontend/src/stores/`，通过 `apps/frontend/src/stores/index.ts` 桶文件导出
 - **API 客户端**: `apps/frontend/src/utils/fetchClient.ts` (Axios，自动注入 Bearer Token，401 自动刷新 + 请求重放)
-- **后端**: Go backend (`backend/`) — 26 个内部包覆盖认证、支付、表单、GIS、上传、监控与 AI（LLM Provider 路由 / 工具中心 / MCP / A2A / LLMOps）等全部 API 需求
+- **后端**: Go backend (`apps/backend/`) — 26 个内部包覆盖认证、支付、表单、GIS、上传、监控与 AI（LLM Provider 路由 / 工具中心 / MCP / A2A / LLMOps）等全部 API 需求
 - **前端知识库**: `apps/interview-docs/` — React 19 文档站点，Markdown 内容，GitHub Pages 部署
 - **AI Demo**: `apps/ai-demo/` — 独立项目，8 选项卡 AI 演示（聊天/知识库/模型/智能体/协议控制台/LLMOps/A2UI/控制台），统一走 `/api/ai/*`
 - **共享主题包**: `packages/shared-theme/` — 统一管理 dark/light 主题切换，提供 Zustand store（`useThemeStore`）和 React hook（`useTheme`）两种接口，支持 `class`/`attribute` 两种 DOM 策略
@@ -223,7 +224,7 @@ PageTracker (App.tsx 中包裹每个路由)
 
 ## 后端模块
 
-`backend/internal/` 包含 26 个内部包（新增 AI 侧 7 个：`llm` / `tool` / `guard` / `airouter` / `mcp` / `a2a` / `obs`）：
+`apps/backend/internal/` 包含 26 个内部包（新增 AI 侧 7 个：`llm` / `tool` / `guard` / `airouter` / `mcp` / `a2a` / `obs`）：
 
 | 包 | 职责 |
 |----|------|
@@ -288,7 +289,7 @@ PageTracker (App.tsx 中包裹每个路由)
 | `99-写作约定.md` | 章节五段式模板（原理 → 企业实现 → 代码 → 验证 → 面试追问） |
 
 - 版本号/协议版本只写在根 `index.md` 的基线表，正文一律引用不自定义
-- 教学代码主线：AI SDK 7 + TypeScript 全栈；Go 后端（`backend/internal/*`）作为参考实现副线
+- 教学代码主线：AI SDK 7 + TypeScript 全栈；Go 后端（`apps/backend/internal/*`）作为参考实现副线
 - 教程正文要能落到本仓库的真实代码或 `/api/ai/*` 接口，避免凭空构造示例
 
 ## AI 教程配套代码（apps/ai-course）
@@ -336,7 +337,7 @@ export { useThemeStore };
 
 - **Pre-commit hook**: `go vet` + `go build` 在前端检查**之前**运行 — Go 代码编译失败会阻塞所有提交
 - commitlint 配置在根 `commitlint.config.cjs`，作为全局 devDependencies 管理
-- `backend/Makefile` **不存在**于仓库中
+- `apps/backend/Makefile` **不存在**于仓库中
 - **Monorepo**: 使用 Bun workspaces + Turborepo 管理，根 `package.json` 定义 `apps/*`、`packages/*` 工作区，`turbo.json` 配置编排管道
 - `package.json` 必须包含 `"packageManager": "bun@1.4.2"` 字段（Turborepo 2+ 要求），升级 Bun 时同步更新此字段
 - 使用 `--filter` 参数限定 turbo 只作用于特定 workspace，如 `bun run build --filter=@interview-demo/frontend`

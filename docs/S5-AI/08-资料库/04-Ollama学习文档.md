@@ -109,7 +109,7 @@ console.log(res.message.content)
 
 ```bash
 docker run -d -p 3000:8080 \
-  -v open-webui:/app/backend/data \
+  -v open-webui:/app/apps/backend/data \
   ghcr.io/open-webui/open-webui:main
 # 浏览器打开 http://localhost:3000
 ```
@@ -1711,7 +1711,7 @@ graph TD
 # 使用 Docker 安装
 docker run -d -p 3000:8080 \
   --add-host=host.docker.internal:host-gateway \
-  -v open-webui:/app/backend/data \
+  -v open-webui:/app/apps/backend/data \
   --name open-webui \
   --restart always \
   ghcr.io/open-webui/open-webui:main
@@ -1860,7 +1860,7 @@ services:
     ports:
       - "3000:8080"
     volumes:
-      - webui-data:/app/backend/data
+      - webui-data:/app/apps/backend/data
     environment:
       - OLLAMA_BASE_URLS=http://ollama-main:11434,http://ollama-embed:11435
       - WEBUI_NAME=我的AI平台

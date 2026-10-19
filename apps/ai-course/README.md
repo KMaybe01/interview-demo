@@ -94,7 +94,7 @@ apps/ai-course/
 | 用途 | 位置 |
 |---|---|
 | 教程文档 | `docs/S5-AI/index.md`（第一关 / 第二关 / 第四关已交付正文） |
-| 企业级能力的**服务端参考实现** | `backend/internal/{llm,tool,guard,airouter,obs,mcp,a2a}/` |
+| 企业级能力的**服务端参考实现** | `apps/backend/internal/{llm,tool,guard,airouter,obs,mcp,a2a}/` |
 | 成品级 AI Demo（Ant Design X + Go 后端） | `apps/ai-demo/` |
 
 写自己的关卡时请参考 [99-写作约定.md](../../docs/S5-AI/99-写作约定.md)。

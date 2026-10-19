@@ -1,6 +1,6 @@
 # AI Demo — AI 全栈工程化演示
 
-基于 React 19 + Ant Design 6 + @ant-design/x 构建的 AI 前端交互演示平台，由 Go 后端（`backend/internal/*`）统一提供 `/api/ai/*` 能力，覆盖从 LLM 对话到生产化工程化的完整链路：模型路由与降级、RAG、工具调用 + 人工确认（HITL）、MCP / A2A 协议、LLMOps 可观测与离线评测。
+基于 React 19 + Ant Design 6 + @ant-design/x 构建的 AI 前端交互演示平台，由 Go 后端（`apps/backend/internal/*`）统一提供 `/api/ai/*` 能力，覆盖从 LLM 对话到生产化工程化的完整链路：模型路由与降级、RAG、工具调用 + 人工确认（HITL）、MCP / A2A 协议、LLMOps 可观测与离线评测。
 
 ## 功能模块
 
@@ -10,7 +10,7 @@
 | **AI 聊天** | 流式对话（SSE）、多模型路由、RAG 引用来源、工具调用轨迹、HITL 人工确认、Token/成本、离线降级提示 | `/api/ai/chat/stream` `/api/ai/approvals` |
 | **知识库** | 知识库 CRUD、语义搜索、混合检索、分块配置 | `/api/knowledge/*` |
 | **模型管理** | 真实 provider 注册表、可用性标注、连接探测 | `/api/ai/models` `/api/ai/chat` |
-| **智能体** | ReAct / Function Calling / Multi-Agent、执行轨迹、HITL、记忆 | `/api/agents/*`（`internal/agent`） |
+| **智能体** | ReAct / Function Calling / Multi-Agent、执行轨迹、HITL、记忆 | `/api/agents/*`（`apps/backend/internal/agent`） |
 | **协议控制台** | MCP 2026-07-28（无状态）+ A2A v1.0（Agent 协作）实机调用 | `/api/ai/mcp` `/api/ai/a2a/*` |
 | **LLMOps** | 延迟分位 / Token / 成本、链路追踪、工具审计、评测、Prompt 版本 | `/api/ai/obs/*` `/api/ai/eval/*` `/api/ai/prompts` |
 | **A2UI** | 声明式 UI 生成 | `@a2ui/react` |
@@ -123,9 +123,9 @@ src/
 └── utils/                  # 8 个工具模块
 ```
 
-## 后端契约（backend/）
+## 后端契约（apps/backend/）
 
-前端不再直连模型厂商（旧的 `AISDKDemo` 直连 Google 密钥的方式已移除，存在密钥泄露风险）。所有 AI 能力统一由 Go 后端 `backend/internal/` 提供：
+前端不再直连模型厂商（旧的 `AISDKDemo` 直连 Google 密钥的方式已移除，存在密钥泄露风险）。所有 AI 能力统一由 Go 后端 `apps/backend/internal/` 提供：
 
 | 包 | 职责 |
 |----|------|
@@ -137,4 +137,4 @@ src/
 | `a2a` | A2A v1.0：Agent 卡片 / message/send / 任务状态机 / 取消 |
 | `obs` | 链路追踪 / 运行计数 / 工具审计 / 离线评测 / Prompt 版本 |
 
-配置方式：在 `backend/.env` 中填入对应厂商的 `*_API_KEY`，后端启动时自动装配；未配置密钥的请求会走离线降级链（`degraded=true`），UI 会明确提示。
+配置方式：在 `apps/backend/.env` 中填入对应厂商的 `*_API_KEY`，后端启动时自动装配；未配置密钥的请求会走离线降级链（`degraded=true`），UI 会明确提示。
