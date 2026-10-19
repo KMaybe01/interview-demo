@@ -1,3 +1,11 @@
+
+if git diff --cached --name-only | grep -q 'package\.json$'; then
+  echo "package.json changes detected, running bun install..."
+  bun install
+  bun prune
+  git add bun.lock
+fi
+
 cd "$(git rev-parse --show-toplevel)/apps/backend" && go vet ./...
 cd "$(git rev-parse --show-toplevel)/apps/backend" && go build -o /dev/null ./...
 bun run lint
