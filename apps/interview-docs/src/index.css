@@ -135,12 +135,70 @@ a:hover {
 
 /* 顶部导航已整体迁入左侧 Sidebar（见 components/Sidebar.tsx） */
 
+/* 中间搜索框：占据左右之间的剩余空间并自动居中（max-width 兜住超宽屏） */
+.header-search {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  flex: 1 1 auto;
+  max-width: 520px;
+  min-width: 0;
+  height: 36px;
+  margin: 0 auto;
+  padding: 0 10px;
+  border: 1px solid var(--c-border);
+  border-radius: 8px;
+  background: var(--c-bg-soft);
+  transition:
+    border-color 0.15s ease-out,
+    background 0.15s ease-out;
+}
+.header-search:hover {
+  border-color: var(--c-brand);
+}
+.header-search:focus-within {
+  border-color: var(--c-brand);
+  background: var(--c-bg);
+}
+
+.header-search-icon {
+  flex-shrink: 0;
+  color: var(--c-text-3);
+}
+
+.header-search-input {
+  flex: 1;
+  min-width: 0;
+  padding: 0;
+  border: none;
+  outline: none;
+  background: transparent;
+  color: var(--c-text-1);
+  font-family: inherit;
+  font-size: 13.5px;
+  /* 只读输入框：光标给 pointer，暗示"点一下打开搜索面板" */
+  cursor: pointer;
+}
+.header-search-input::placeholder {
+  color: var(--c-text-3);
+}
+
+.header-search-kbd {
+  flex-shrink: 0;
+  padding: 1px 6px;
+  border: 1px solid var(--c-border);
+  border-radius: 4px;
+  color: var(--c-text-3);
+  font-family: inherit;
+  font-size: 11px;
+  line-height: 1.7;
+}
+
 .header-actions {
   display: flex;
   align-items: center;
   gap: 6px;
   flex-shrink: 0;
-  margin-left: auto;
 }
 
 .header-action-btn {
@@ -253,8 +311,7 @@ a:hover {
   transition:
     background 0.15s ease-out,
     color 0.15s ease-out,
-    /* 折叠时内边距跟着变，图标才会平滑滑向 rail 中心而不是瞬移 */
-    padding-left 0.16s ease-out;
+    /* 折叠时内边距跟着变，图标才会平滑滑向 rail 中心而不是瞬移 */ padding-left 0.16s ease-out;
 }
 
 .sidebar-link:hover,
@@ -1234,6 +1291,15 @@ pre:hover .code-copy-btn {
 
   .mobile-menu-btn {
     display: flex;
+  }
+
+  .header-search {
+    max-width: none;
+    padding: 0 8px;
+  }
+
+  .header-search-kbd {
+    display: none;
   }
 
   .header-actions {

@@ -1,4 +1,4 @@
-import { render, screen } from '@testing-library/react';
+import { fireEvent, render, screen } from '@testing-library/react';
 import userEvent from '@testing-library/user-event';
 import { MemoryRouter } from 'react-router';
 import { describe, expect, it, vi } from 'vitest';
@@ -85,13 +85,31 @@ describe('Header', () => {
     expect(onCloseMenu).toHaveBeenCalledTimes(1);
   });
 
-  it('opens search modal when search button is clicked', async () => {
+  it('renders the search box in the middle of the header as an input', () => {
+    renderHeader();
+
+    const input = screen.getByLabelText('搜索');
+    expect(input.tagName).toBe('INPUT');
+    expect(input).toHaveAttribute('placeholder', '搜索文章标题和章节…');
+    expect(document.querySelector('.header-search')).toContainElement(input);
+  });
+
+  it('opens search panel when the header search box is clicked', async () => {
     const user = userEvent.setup();
     renderHeader();
 
     expect(screen.queryByTestId('global-search')).not.toBeInTheDocument();
 
     await user.click(screen.getByLabelText('搜索'));
+    expect(screen.getByTestId('global-search')).toBeInTheDocument();
+  });
+
+  it('opens search panel with Ctrl+K', () => {
+    renderHeader();
+
+    expect(screen.queryByTestId('global-search')).not.toBeInTheDocument();
+
+    fireEvent.keyDown(window, { key: 'k', ctrlKey: true });
     expect(screen.getByTestId('global-search')).toBeInTheDocument();
   });
 

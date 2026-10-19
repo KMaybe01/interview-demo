@@ -1,6 +1,6 @@
 import { ThemeToggle, useThemeTransition } from '@interview-demo/shared-theme';
 import { AnimatePresence } from 'motion/react';
-import { useState } from 'react';
+import { useCallback, useEffect, useState } from 'react';
 import { Link } from 'react-router';
 import { useTheme } from '../hooks/useTheme';
 import GlobalSearch from './GlobalSearch';
@@ -27,6 +27,20 @@ export default function Header({
     toggleTheme,
     { darkBg: '#1a1a2e', lightBg: '#f5f5f0' },
   );
+
+  const openSearch = useCallback(() => setSearchOpen(true), []);
+
+  // Ctrl/Cmd + K 聚焦搜索（此前只有按钮 title 上写着，实际未实现）
+  useEffect(() => {
+    const handleKeyDown = (event: KeyboardEvent) => {
+      if ((event.ctrlKey || event.metaKey) && event.key.toLowerCase() === 'k') {
+        event.preventDefault();
+        setSearchOpen(true);
+      }
+    };
+    window.addEventListener('keydown', handleKeyDown);
+    return () => window.removeEventListener('keydown', handleKeyDown);
+  }, []);
 
   return (
     <>
@@ -56,29 +70,36 @@ export default function Header({
             </button>
           )}
 
-          <div className="header-actions">
-            <button
-              className="header-action-btn"
-              onClick={() => setSearchOpen(true)}
-              type="button"
-              aria-label="搜索"
-              title="搜索 (Ctrl+K)"
+          {/* 中间搜索框：聚焦/点击即打开全局搜索面板（真正的输入与结果在面板内） */}
+          <div className="header-search">
+            <svg
+              className="header-search-icon"
+              width="16"
+              height="16"
+              viewBox="0 0 24 24"
+              fill="none"
+              stroke="currentColor"
+              strokeWidth="2.5"
+              strokeLinecap="round"
+              strokeLinejoin="round"
+              aria-hidden="true"
             >
-              <svg
-                width="18"
-                height="18"
-                viewBox="0 0 24 24"
-                fill="none"
-                stroke="currentColor"
-                strokeWidth="2.5"
-                strokeLinecap="round"
-                strokeLinejoin="round"
-              >
-                <circle cx="11" cy="11" r="8" />
-                <path d="M21 21l-4.35-4.35" />
-              </svg>
-            </button>
+              <circle cx="11" cy="11" r="8" />
+              <path d="M21 21l-4.35-4.35" />
+            </svg>
+            <input
+              className="header-search-input"
+              type="text"
+              readOnly
+              aria-label="搜索"
+              placeholder="搜索文章标题和章节…"
+              onFocus={openSearch}
+              onClick={openSearch}
+            />
+            <kbd className="header-search-kbd">Ctrl K</kbd>
+          </div>
 
+          <div className="header-actions">
             <ThemeToggle mode={theme === 'dark' ? 'dark' : 'light'} onToggle={handleToggleTheme} />
             <a
               href="https://github.com/KMaybe01/interview-demo"

@@ -123,7 +123,7 @@ createRoot(#root)                     src/main.tsx
     ├── <Header>                      （在 Routes 之外 —— 常驻）
     │     ├── Logo → "/"              src={import.meta.env.BASE_URL + 'logo.svg'}
     │     ├── <button.mobile-menu-btn> （仅 < 960px 且非首页显示，开合侧边栏抽屉）
-    │     ├── <button> 搜索           （打开 GlobalSearch，title="搜索 (Ctrl+K)"）
+    │     ├── .header-search           （居中只读搜索框 + Ctrl K 提示，聚焦即打开 GlobalSearch）
     │     ├── <ThemeToggle>           来自 @interview-demo/shared-theme
     │     ├── GitHub 链接              https://github.com/KMaybe01/interview-demo
     │     └── {transitionOverlay}      主题切换的圆形裁剪遮罩
@@ -281,12 +281,12 @@ interface HeaderProps {
 **Hooks**：`useState`（`searchOpen`）、`useTheme()`、`useThemeTransition(mode, toggleTheme, { darkBg: '#1a1a2e', lightBg: '#f5f5f0' })`。
 
 **行为**：
-- `.header-inner` 不再限制 `max-width`，左组贴左、右组靠 `margin-left: auto` 贴右。
+- `.header-inner` 不再限制 `max-width`；左组（Logo + 窄屏汉堡）贴左，右组（主题 + GitHub）贴右。
+- **中间搜索框**：`.header-search` 用 `flex: 1` + `max-width: 520px` + `margin: 0 auto` 占据左右之间的剩余空间并居中；内部是「放大镜图标 + 只读 `<input>` + `Ctrl K` 提示」。
+  输入框 `readOnly`，`onFocus` / `onClick` 直接打开 `<GlobalSearch>` 面板（真正的输入与结果都在面板里，避免维护两套搜索逻辑）。
+- **Ctrl / Cmd + K** 由 `useEffect` 里的全局 `keydown` 监听实现，`preventDefault` 后打开搜索面板。
 - 汉堡按钮交给 CSS 控制可见性（`display: none`，`< 960px` 才 `display: flex`），并由 `showMenuButton` 决定是否渲染。
-- 搜索按钮在 `<AnimatePresence>` 中打开 `<GlobalSearch>`。
 - 主题开关委托给 `<ThemeToggle mode onToggle={handleToggleTheme} />`，并把 `{transitionOverlay}` 作为兄弟节点渲染以实现圆形揭示动画。
-
-> 搜索按钮的 `title` 写着 `Ctrl+K`，但**全仓没有任何全局 keydown 监听** —— 该快捷键实际未实现。
 
 ## Sidebar（`src/components/Sidebar.tsx`）
 
@@ -450,7 +450,7 @@ const { prev, next } = useMemo(() => getAdjacentDocs(docUrl), [docUrl]);
 
 ## GlobalSearch（`src/components/GlobalSearch.tsx`）
 
-全局搜索弹层。
+全局搜索弹层。由 `Header` 中间那个只读搜索框（聚焦/点击）或 `Ctrl / Cmd + K` 打开；真正的输入与结果都在这层里，避免和头部输入框维护两套搜索逻辑。
 
 **Props**：`{ onClose: () => void }`
 
@@ -977,7 +977,7 @@ Vitest 4 + jsdom + `@testing-library/react` 16 + `@testing-library/user-event` 1
 
 | 文件 | 覆盖范围 |
 |------|----------|
-| `src/components/__tests__/Header.test.tsx` | Logo/标题、顶栏不再渲染导航下拉、汉堡按钮的 `aria-expanded`/`.open` 与 `onToggleMenu` 回调、`showMenuButton=false` 时不渲染汉堡、点击 Logo 触发 `onCloseMenu`、搜索按钮开关 `GlobalSearch`、`.theme-switch input[type="checkbox"]` 存在、GitHub 链接的 href/target |
+| `src/components/__tests__/Header.test.tsx` | Logo/标题、顶栏不再渲染导航下拉、汉堡按钮的 `aria-expanded`/`.open` 与 `onToggleMenu` 回调、`showMenuButton=false` 时不渲染汉堡、点击 Logo 触发 `onCloseMenu`、中间搜索框为只读 `input`（placeholder/容器断言）、点击搜索框与 `Ctrl+K` 打开 `GlobalSearch`、`.theme-switch input[type="checkbox"]` 存在、GitHub 链接的 href/target |
 | `src/components/__tests__/Sidebar.test.tsx` | 7 个顶层导航项、分组展开/收起、**顶层手风琴只开一个**、随路由切换唯一展开项、激活高亮与祖先分组自动展开、`阶段概览` 不在子页面误高亮、折叠 rail 与 `localStorage['sidebar-collapsed']`、拖拽改宽度 + 钳制 200/480 + `localStorage['sidebar-width']` + `aria-valuenow`、双击复位、方向键微调、遮罩点击关闭抽屉、抽屉内保持完整形态、点击链接请求关闭抽屉 |
 | `src/hooks/__tests__/useSidebar.test.tsx` | 默认值 280/未折叠与 `--sidebar-width` 写入、从 `localStorage` 恢复（越界钳制、脏数据回退）、折叠态恢复为 64px、toggle 持久化、拖拽预览不落盘/不重渲染、松手落盘并同步状态、未开始拖拽时忽略 move、键盘微调与复位、`clampSidebarWidth` 边界 |
 | `src/components/__tests__/HomePage.test.tsx` | Hero 文案、6 张卡片标题、指向 6 个阶段路径的 6 个链接、语录文案、GitHub href |
