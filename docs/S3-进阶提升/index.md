@@ -131,7 +131,7 @@ graph TB
 | 周 | 内容 | 产出 |
 |----|------|------|
 | 第 1 周 | 篇一浏览器 + 篇二性能 | 画出渲染流水线图；用 Lighthouse + web-vitals 测一次自己的项目并给出优化项 |
-| 第 2 周 | 篇三工程化 | 搭一个 Bun/Turborepo + Biome + Vitest 的最小 Monorepo，配好 CI 门禁 |
+| 第 2 周 | 篇三工程化 | 搭一个 Bun/Turborepo + oxlint/oxfmt + Vitest 的最小 Monorepo，配好 CI 门禁 |
 | 第 3 周 | 篇五网络 + 篇六监控 | 讲清一次完整请求链路；实现一个最小监控 SDK（错误 + Web Vitals + sendBeacon） |
 | 第 4 周 | 篇七 Node + 篇四算法（每天 2~3 题） | 写一个带超时/降级/日志的 BFF 接口；算法刷完「优先掌握」列 |
 
@@ -162,7 +162,9 @@ graph TB
 | Rollup | **4.64.4** | — |
 | esbuild | **0.28.2**（仍为 0.x） | — |
 | SWC | **1.16.13** | — |
-| Biome | **2.5.15** | `^2.5.0`（唯一 linter/formatter） |
+| oxlint | **1.89.0** | `^1.89.0`（唯一 linter） |
+| oxfmt | **0.74.0** | `^0.74.0`（唯一 formatter，仍为 0.x 预览） |
+| Biome | **2.5.15** | 对比项（本仓库已迁出） |
 | oxlint | **1.87.0** | —（对比项） |
 | Turborepo | **2.11.7** | 仓库使用的任务编排器 |
 | Nx | **23.3.0** | —（对比项） |
@@ -185,7 +187,7 @@ graph TB
 - [ ] 能说清 `preload`/`prefetch`/`preconnect` 的区别与误用后果
 - [ ] 能给出构建工具选型理由，并按「定位 → 缩小 → 缓存 → 换引擎」优化构建
 - [ ] 能解释 Turborepo 的任务编排、增量与缓存，以及锁文件的作用
-- [ ] 能对比 Biome / ESLint+Prettier / oxlint 并给出选型
+- [ ] 能对比 oxlint+oxfmt / Biome / ESLint+Prettier 并给出选型
 - [ ] 能说明微前端各方案的隔离差异，并判断什么时候「不该上微前端」
 - [ ] 能对比 SSE / WebSocket / 长轮询，并设计心跳与重连
 - [ ] 能讲清监控三层、上报策略与 Source Map 还原链路
@@ -204,7 +206,7 @@ graph TB
 | 本项目实际使用 | 对应篇 | 对比内容 |
 |---------------|--------|----------|
 | Bun workspace + Turborepo | 篇三（Monorepo / 包管理器） | Turborepo vs Nx vs pnpm/Bun workspace |
-| Biome（唯一 linter/formatter） | 篇三（代码质量） | Biome vs ESLint 9 + Prettier vs oxlint |
+| oxlint + oxfmt（唯一 linter/formatter） | 篇三（代码质量） | oxlint+oxfmt vs ESLint 9 + Prettier vs Biome |
 | Vite + Rolldown + Vitest | 篇三（构建工具 / 测试） | Rolldown vs esbuild vs SWC；Vitest vs Jest vs Bun test |
 | web-vitals 上报 + 自建监控 | 篇六、篇二 | 自建 RUM vs Sentry/Faro/OTel RUM；Lab vs Field |
 | SSE / WebSocket（Go 后端） | 篇五 | SSE vs WebSocket vs 长轮询 |

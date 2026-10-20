@@ -61,7 +61,7 @@ export default function PageTracker({ children }: { children: React.ReactNode })
             referrer: referrerRef.current,
           },
         ])
-        // biome-ignore lint/suspicious/noConsole: log API errors for debugging
+        // oxlint-disable-next-line no-console -- log API errors for debugging
         .catch((err) => console.warn('[PageTracker] page-report failed', err));
 
       if (navigationTimings.size > 0 && pathname !== '/login') {
@@ -76,7 +76,7 @@ export default function PageTracker({ children }: { children: React.ReactNode })
               version: 'navigation',
             })),
           )
-          // biome-ignore lint/suspicious/noConsole: log API errors for debugging
+          // oxlint-disable-next-line no-console -- log API errors for debugging
           .catch((err) => console.warn('[PageTracker] vitals/report failed', err));
       }
     }, 0);

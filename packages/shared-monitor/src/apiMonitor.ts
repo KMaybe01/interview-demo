@@ -35,12 +35,16 @@ export class APIMonitor {
 
     axiosInstance.interceptors.response.use(
       (response: unknown) => {
-        const res = response as { config: Record<string, unknown>; status: number; headers: Record<string, string> };
+        const res = response as {
+          config: Record<string, unknown>;
+          status: number;
+          headers: Record<string, string>;
+        };
         const metadata = res.config.__monitorStart as { startTime: number } | undefined;
         if (!metadata) return response;
         const duration = performance.now() - metadata.startTime;
         const url = String(res.config.url ?? '');
-        const method = (String(res.config.method ?? 'GET')).toUpperCase();
+        const method = String(res.config.method ?? 'GET').toUpperCase();
         const size = parseInt(res.headers['content-length'] as string, 10) || 0;
 
         if (duration > SLOW_API_THRESHOLD_MS) {
@@ -62,11 +66,15 @@ export class APIMonitor {
         return response;
       },
       (error: unknown) => {
-        const err = error as { config?: Record<string, unknown>; message?: string; response?: { status: number } };
+        const err = error as {
+          config?: Record<string, unknown>;
+          message?: string;
+          response?: { status: number };
+        };
         const metadata = err.config?.__monitorStart as { startTime: number } | undefined;
         const duration = metadata ? performance.now() - metadata.startTime : 0;
         const url = String(err.config?.url ?? '');
-        const method = (String(err.config?.method ?? 'GET')).toUpperCase();
+        const method = String(err.config?.method ?? 'GET').toUpperCase();
         const report: APIReport = {
           type: 'api_error',
           url,

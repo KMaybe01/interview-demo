@@ -94,7 +94,7 @@ graph LR
 | 主题 | `@interview-demo/shared-theme`（workspace 包） | `workspace:*` |
 | 类型检查 | TypeScript | `^7.0.2` |
 | 测试 | Vitest + jsdom + Testing Library | `vitest ^4.1.9`、`jsdom ^29.1.1`、`@testing-library/react ^16.3.2` |
-| 代码质量 | Biome（根目录统一配置，唯一标准） | 根 `biome.json` |
+| 代码质量 | oxlint + oxfmt（根目录统一配置，唯一标准） | 根 `.oxlintrc.json` / `.oxfmtrc.json` |
 | 包管理 | Bun | 根 `packageManager` |
 | 部署 | GitHub Pages | `.github/workflows/deploy-interview-docs.yml` |
 
@@ -821,7 +821,8 @@ bun install
 | `bun dev` | Vite 开发服务器，`http://localhost:5000` |
 | `bun run build` | `tsc -p tsconfig.app.json --noEmit` → `tsc -p tsconfig.node.json --noEmit` → `vite build` → `node gen-version.mjs` |
 | `bun run preview` | 本地预览 `dist/` |
-| `bun run lint` | `bunx biome check --write .` |
+| `bun run lint` | `bunx oxlint --fix .` |
+| `bun run format` | `bunx oxfmt .`（Markdown 已在配置中忽略） |
 | `bun run typecheck` | 两个 `tsc` project，只做类型检查 |
 | `bun test` / `bun run test` | `vitest run` |
 | `bun run test:watch` | `vitest` |
@@ -892,8 +893,8 @@ interview-demo/                    ← monorepo 根
 
 ### 代码检查
 
-- Biome 是**唯一**的 linter/formatter，在 monorepo 根目录统一配置：2 空格缩进、单引号、**必须分号**、尾逗号 `all`、行宽 100。
-- `interview-docs` 有自己的 Biome override，放宽了 `noNonNullAssertion`、`noArrayIndexKey`、`noDangerouslySetInnerHtml` 以及部分 a11y 规则 —— 分别被 `DocPage`、`Header`/`DocVirtualScroll`、`MarkdownRenderer`/`MermaidDiagram` 所需要。
+- oxlint（lint）+ oxfmt（format）是**唯一**的代码检查工具，在 monorepo 根目录统一配置：2 空格缩进、单引号、**必须分号**、尾逗号 `all`、行宽 100；Markdown 不参与格式化（避免中文表格重排）。
+- `interview-docs` 在根 `.oxlintrc.json` 里有独立 `overrides`，放宽了 `no-unused-vars`、`typescript/no-non-null-assertion`、`react/no-array-index-key`、`react/no-danger` 以及部分 `jsx-a11y` 规则 —— 分别被 `DocPage`、`Header`/`DocVirtualScroll`、`MarkdownRenderer`/`MermaidDiagram` 所需要。
 
 ## 配置文件
 
@@ -1287,9 +1288,9 @@ workspace 包（`packages/shared-theme/`），用于消除 monorepo 各 app 之�
 | frontend | `useThemeStore`（Zustand） | `theme-mode` | `.dark` class |
 | ai-demo | `useThemeStore`（Zustand） | `theme-mode` | `data-theme` 属性 |
 
-## Biome
+## oxlint / oxfmt
 
-整个 monorepo 唯一的 linter/formatter —— 比 ESLint + Prettier 更快，原生解析 TypeScript。2 空格缩进、单引号、必须分号、尾逗号、行宽 100。
+整个 monorepo 唯一的 linter/formatter，同属 Oxc 工具链（Rust）—— 比 ESLint + Prettier 更快，原生解析 TypeScript。2 空格缩进、单引号、必须分号、尾逗号、行宽 100。
 
 ## Bun
 

@@ -18,7 +18,7 @@ import { useMessageApi } from '../AIDemo.tsx';
 
 const { Text } = Typography;
 
-// biome-ignore lint/suspicious/noExplicitAny: A2UI component props are dynamic
+// oxlint-disable-next-line typescript/no-explicit-any -- A2UI component props are dynamic
 const XCARD_COMPONENTS: Record<string, React.ComponentType<any>> = {
   Column: ({ children }: { children?: React.ReactNode }) => (
     <div style={{ display: 'flex', flexDirection: 'column', gap: 8 }}>{children}</div>

@@ -53,7 +53,7 @@ hooks.on('PreToolUse', ({ tool, args }) => {
 
 ## 4. 验证与观测
 
-- 配置一个 `PostToolUse` 钩子：每次 `Edit` 后自动跑 `biome check`。确认改完文件立即被格式化。
+- 配置一个 `PostToolUse` 钩子：每次 `Edit` 后自动跑 `oxlint --fix` + `oxfmt`。确认改完文件立即被格式化。
 - 写一条 Memory「本仓库禁止 npm」：新会话里让 Agent 装依赖，确认它自动用 `bun`。
 - 调一个 Skill「加 CRUD 接口」：确认它按固定套路产出 controller/service/route 而不偏离。
 

@@ -30,8 +30,8 @@ bun install          # 只能用 bun, 不能用 npm（从根目录安装所有 w
 | `bun run --cwd apps/frontend dev` | Vite 开发服务器 (port 5173, `/api` + `/ws` 代理到 `:8080`) |
 | `bun run --cwd apps/frontend build` | `tsc -p tsconfig.app.json --noEmit && tsc -p tsconfig.node.json --noEmit && vite build` (Rolldown Rust 打包) |
 | `bun run --cwd apps/frontend test:watch` | `vitest` (监听模式) |
-| `bun run --cwd apps/frontend lint` | `bunx biome check --write src/` (Biome 是**唯一**的 linter/formatter) |
-| `bun run --cwd apps/frontend format` | `bunx biome format --write src/` |
+| `bun run --cwd apps/frontend lint` | `bunx oxlint --fix src/` (oxlint + oxfmt 是**唯一**的 linter/formatter) |
+| `bun run --cwd apps/frontend format` | `bunx oxfmt src/` |
 | `bun run --cwd apps/frontend typecheck` | `tsc -p tsconfig.app.json --noEmit && tsc -p tsconfig.node.json --noEmit` — 类型检查 |
 
 也可直接 `cd apps/frontend` 后执行上述命令。
@@ -43,7 +43,8 @@ bun install          # 只能用 bun, 不能用 npm（从根目录安装所有 w
 | `bun run --cwd apps/ai-demo dev` | Vite 开发服务器 (port 5175, `/api` 代理到 `:8080`) |
 | `bun run --cwd apps/ai-demo build` | `tsc -p tsconfig.app.json --noEmit && tsc -p tsconfig.node.json --noEmit && vite build` |
 | `bun run --cwd apps/ai-demo test` | `vitest run` |
-| `bun run --cwd apps/ai-demo lint` | `bunx biome check --write src/` |
+| `bun run --cwd apps/ai-demo lint` | `bunx oxlint --fix src/` |
+| `bun run --cwd apps/ai-demo format` | `bunx oxfmt src/` |
 | `bun run --cwd apps/ai-demo typecheck` | `tsc -p tsconfig.app.json --noEmit && tsc -p tsconfig.node.json --noEmit` |
 
 `apps/interview-docs/`（前端知识库文档站点）：
@@ -52,7 +53,8 @@ bun install          # 只能用 bun, 不能用 npm（从根目录安装所有 w
 |------|------|
 | `cd apps/interview-docs && bun run dev` | Vite 开发服务器 (port 5000) |
 | `cd apps/interview-docs && bun run build` | `tsc -p tsconfig.app.json --noEmit && tsc -p tsconfig.node.json --noEmit && vite build && node gen-version.mjs` |
-| `cd apps/interview-docs && bun run lint` | `bunx biome check --write .` |
+| `cd apps/interview-docs && bun run lint` | `bunx oxlint --fix .` |
+| `cd apps/interview-docs && bun run format` | `bunx oxfmt .` |
 
 `apps/backend/`（Go backend）：
 
@@ -77,7 +79,7 @@ go test ./internal/... -v
 
 ## 代码规范
 
-- Biome 配置 (`根目录 biome.json`) 是唯一标准：2 空格缩进、单引号、**必须分号**、尾逗号、行宽 100
+- oxlint / oxfmt 配置（根目录 `.oxlintrc.json` + `.oxfmtrc.json`）是唯一标准：2 空格缩进、单引号、**必须分号**、尾逗号、行宽 100；Markdown 不参与格式化（`.oxfmtrc.json` 里 `**/*.md` 已忽略，避免中文表格重排产生大 diff）
 - 所有页面导入路径必须带 `.tsx` 扩展名 (`allowImportingTsExtensions`)
 - 组件：PascalCase 文件名，`export default function ComponentName()`
 - 工具函数：camelCase 文件名
@@ -342,4 +344,4 @@ export { useThemeStore };
 - `package.json` 必须包含 `"packageManager": "bun@1.4.2"` 字段（Turborepo 2+ 要求），升级 Bun 时同步更新此字段
 - 使用 `--filter` 参数限定 turbo 只作用于特定 workspace，如 `bun run build --filter=@interview-demo/frontend`
 - Vite 配置中 `form` 代码分割组包含 ajv 但**未使用** @rjsf
-- **TypeScript 7** (Go 原生编译器 tsgo)：`@biomejs/biome` 统一在根 `package.json` 管理，各 app 无独立 biome.json
+- **TypeScript 7** (Go 原生编译器 tsgo)：`oxlint` / `oxfmt` 统一在根 `package.json` 管理，各 app 无独立配置文件（配置只放根目录，靠就近查找生效）

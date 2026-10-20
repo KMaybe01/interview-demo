@@ -61,7 +61,7 @@ function LightboxImage({ src, alt }: { src: string; alt: string }) {
   const drag = useRef({ dragging: false, startX: 0, startY: 0, tx: 0, ty: 0 });
   const lightboxRef = useRef<HTMLDivElement>(null);
 
-  // biome-ignore lint/correctness/useExhaustiveDependencies: need open to re-attach when element mounts
+  // oxlint-disable-next-line react/exhaustive-deps -- need open to re-attach when element mounts
   useEffect(() => {
     const el = lightboxRef.current;
     if (!el) return;

@@ -3,6 +3,10 @@
   "version": "1.0.0",
   "private": true,
   "type": "module",
+  "scripts": {
+    "lint": "bunx oxlint --fix src/",
+    "format": "bunx oxfmt src/"
+  },
   "main": "./src/index.ts",
   "types": "./src/index.ts",
   "exports": {

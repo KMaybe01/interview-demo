@@ -41,7 +41,7 @@ export default function MermaidDiagram({ chart }: { chart: string }) {
     };
   }, [chart]);
 
-  // biome-ignore lint/correctness/useExhaustiveDependencies: need open to re-attach wheel listener when lightbox mounts
+  // oxlint-disable-next-line react/exhaustive-deps -- need open to re-attach wheel listener when lightbox mounts
   useEffect(() => {
     const el = lightboxRef.current;
     if (!el) return;

@@ -66,7 +66,7 @@ export default function ProtoStage() {
     const params: Json = {
       name: toolName,
       arguments: JSON.parse(args || '{}') as Json,
-      _meta: { idempotencyKey: idemKey, ...(extra ?? {}) },
+      _meta: { idempotencyKey: idemKey, ...extra },
     };
     const res = await rpc('tools/call', params);
     setCallResult(res);

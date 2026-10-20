@@ -13,7 +13,7 @@ React 19 文档站点，使用 Vite 8 构建，部署在 GitHub Pages。
 - **虚拟滚动**: IntersectionObserver 分片渲染（大文档仅渲染视口附近区块）
 - **目录高亮**: IntersectionObserver scroll-spy，滚动时自动高亮当前章节
 - **图表**: Mermaid (lazy loaded)
-- **代码质量**: Biome, TypeScript strict mode
+- **代码质量**: oxlint + oxfmt, TypeScript strict mode
 
 ## 开发
 

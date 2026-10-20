@@ -69,7 +69,7 @@
 
 此外，我也设计了多协议降级传输层（WebSocket → SSE → Polling 三级降级），`bufferTime(16ms/64条)` + RAF 双缓冲，4000 msg/s 全帧率渲染；以及内部组件库 @axyom-ui（表格代码减少 80%），以 ng-packagr Library 发布 + GitLab CI 条件触发全自动流水线。
 
-**差异化优势**：React 19 + Angular 22 双栈，能根据项目规模和技术遗产灵活选型；全栈思维——从 Biome → ESLint → TS Strict 三层约束到 K8s 部署，独立完成全链路。
+**差异化优势**：React 19 + Angular 22 双栈，能根据项目规模和技术遗产灵活选型；全栈思维——从 oxlint/oxfmt → ESLint → TS Strict 三层约束到 K8s 部署，独立完成全链路。
 ```
 
 ### 1 分钟版本（精简）

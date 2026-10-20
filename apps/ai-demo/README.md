@@ -38,7 +38,7 @@ bun run dev                  # turbo 并行启动所有服务
 bun run --cwd apps/ai-demo dev      # 开发服务器 :5175
 bun run --cwd apps/ai-demo build    # 生产构建
 bun run --cwd apps/ai-demo typecheck # 类型检查
-bun run --cwd apps/ai-demo lint     # Biome 代码检查
+bun run --cwd apps/ai-demo lint     # oxlint 代码检查
 ```
 
 ## 构建与拆包策略
@@ -92,7 +92,7 @@ bun run --cwd apps/ai-demo lint     # Biome 代码检查
 | 状态 | Zustand 5 |
 | 主题 | @interview-demo/shared-theme（Zustand store via data-theme attribute） |
 | 测试 | Vitest 4 + @testing-library/react 16 |
-| 格式/Lint | Biome（单引号、分号、尾逗号、行宽 100） |
+| 格式/Lint | oxlint + oxfmt（单引号、分号、尾逗号、行宽 100） |
 
 ## 项目结构
 

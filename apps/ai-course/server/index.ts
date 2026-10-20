@@ -17,6 +17,6 @@ createServer((req, res) => {
   });
 }).listen(PORT, () => {
   // 服务端进程启动日志，保留即可
-  // biome-ignore lint/suspicious/noConsole: BFF 启动提示，属于服务端正常输出
+  // oxlint-disable-next-line no-console -- BFF 启动提示，属于服务端正常输出
   console.log(`[ai-course] BFF listening on http://localhost:${PORT}`);
 });

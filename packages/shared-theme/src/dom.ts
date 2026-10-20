@@ -30,13 +30,8 @@ export function getDOMSnapshot(config: ThemeConfig): ThemeMode {
   return document.documentElement.classList.contains(config.domTarget) ? 'dark' : 'light';
 }
 
-export function subscribeToDOM(
-  callback: () => void,
-  config?: ThemeConfig,
-): () => void {
-  const attributeFilter = config?.domStrategy === 'attribute'
-    ? [config.domTarget]
-    : ['class'];
+export function subscribeToDOM(callback: () => void, config?: ThemeConfig): () => void {
+  const attributeFilter = config?.domStrategy === 'attribute' ? [config.domTarget] : ['class'];
   const observer = new MutationObserver(() => callback());
   observer.observe(document.documentElement, { attributes: true, attributeFilter });
   return () => observer.disconnect();

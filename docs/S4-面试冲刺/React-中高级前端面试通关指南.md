@@ -797,7 +797,7 @@ graph TB
 graph LR
     A["代码提交"] --> B["GitLab CI 触发"]
     B --> C1["lint-backend go vet"]
-    B --> C2["lint-frontend biome check"]
+    B --> C2["lint-frontend oxlint --fix"]
     C1 --> D["build-backend go build"]
     C2 --> D
     D --> E["Docker 多阶段构建"]

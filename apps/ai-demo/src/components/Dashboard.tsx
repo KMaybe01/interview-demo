@@ -209,8 +209,8 @@ function Dashboard({ onNavigate }: DashboardProps) {
   }, [loadStats, checkHealth, refreshRuntime]);
 
   const handleRefresh = useCallback(() => {
-    loadStats(true).then();
-    checkHealth().then();
+    loadStats(true);
+    checkHealth();
     refreshRuntime();
     message.success('已刷新数据');
   }, [loadStats, checkHealth, refreshRuntime, message]);

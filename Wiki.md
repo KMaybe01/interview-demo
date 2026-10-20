@@ -43,7 +43,7 @@ graph TB
 | **三** | [设计模式与架构亮点](#三设计模式与架构亮点) | 9 种设计模式 / 状态管理 / 错误处理 / 数据流 / 统一 HTTP 请求层 |
 | **四** | [React 19 实战](#四react-19-新特性实战应用) | forwardRef / 编译器 / 闭包陷阱修复 |
 | **五** | [性能优化策略](#五性能优化策略) | 渲染 / 计算 / 网络 / 构建 四级优化 |
-| **六** | [工程化体系](#六工程化体系) | 三层约束 / Biome+TS / CI/CD / 构建优化 |
+| **六** | [工程化体系](#六工程化体系) | 三层约束 / oxlint+oxfmt+TS / CI/CD / 构建优化 |
 | **七** | [组件设计亮点](#七组件设计亮点) | 表单引擎组件 / Zustand Store / Web Worker |
 | **八** | [面试高频问题](#八面试高频问题深度版) | 8 个深度 Q&A（闭包 / 表单 / WS vs SSE / Zustand...） |
 | **九** | [面试追问模拟](#附面试追问模拟) | 5 个面试场景模拟 |
@@ -92,7 +92,7 @@ graph TB
     subgraph Build["🔧 构建层 Build"]
         Vite["Vite 8 + Rolldown"]
         Turbo["Turborepo 2 编排"]
-        Biome["Biome 2.5"]
+        Oxc["oxlint 1.89 + oxfmt 0.74"]
         Babel["Babel React 编译器"]
     end
 
@@ -838,7 +838,7 @@ Babel 插件启用，自动 memo（40+ 组件受益），消除手动 memo/useMe
 
 ### 代码规范
 
-- Biome 2.5：2 空格、单引号、必分号、尾逗号、行宽 100
+- oxlint 1.89 + oxfmt 0.74：2 空格、单引号、必分号、尾逗号、行宽 100（配置在根 `.oxlintrc.json` / `.oxfmtrc.json`）
 - TypeScript strict 模式
 - Husky + commitlint conventional commits
 
@@ -988,6 +988,6 @@ use() 声明式，Suspense 自动处理加载态，消除 loading 样板代码�
 5. **UniPay 支付中台** — 7 状态状态机、Idempotency-Key 四层防御、指数退避重试、T+1 对账
 6. **AI 全栈工程化** — 六阶段渐进式设计，从 LLM 流式对话到生产级中间件和遥测体系
 
-工程化方面：Biome 规范、Zustand 状态管理、Web Worker 多线程、Docker/Helm 部署、Turborepo 并行加速。
+工程化方面：oxlint/oxfmt 规范、Zustand 状态管理、Web Worker 多线程、Docker/Helm 部署、Turborepo 并行加速。
 
 所有代码和文档都遵循规范，强调生产级工程实践而非玩具演示。"

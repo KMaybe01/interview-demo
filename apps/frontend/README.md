@@ -20,7 +20,7 @@ React 19 + TypeScript 7 + Vite 8 前端 SPA，为 **16 个技术场景**（含�
 | Axios 1 | HTTP 客户端（统一请求层 + 自动 401 刷新） |
 | react-window | 虚拟滚动 |
 | web-vitals 5 | 页面性能指标采集 |
-| Biome 2.5 | Lint + Format |
+| oxlint 1.89 + oxfmt 0.74 | Lint + Format |
 
 ## 项目结构
 
@@ -126,8 +126,8 @@ bun dev
 
 ```bash
 bun run build       # tsc -b + vite build (Rolldown)
-bun run lint        # Biome check
-bun run format      # Biome format
+bun run lint        # oxlint --fix
+bun run format      # oxfmt
 ```
 
 ## 测试
@@ -177,7 +177,7 @@ src/
 ## 代码质量
 
 - **React 19 编译器** Babel 插件启用（自动 memo，40+ 组件受益）
-- **Biome 2.5** lint + format
+- **oxlint 1.89 + oxfmt 0.74** lint + format（根目录 `.oxlintrc.json` / `.oxfmtrc.json`）
 - **Husky** pre-commit hook（lint-staged）
 - **commitlint** conventional commits
 - **conventional-changelog** CHANGELOG 自动生成（`bun run changelog`）

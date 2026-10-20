@@ -10,8 +10,8 @@
     "preview": "vite preview",
     "test": "vitest run",
     "test:watch": "vitest",
-    "lint": "bunx biome check --write src/ server/ shared/",
-    "format": "bunx biome format --write src/ server/ shared/",
+    "lint": "bunx oxlint --fix src/ server/ shared/",
+    "format": "bunx oxfmt src/ server/ shared/",
     "typecheck": "tsc -p tsconfig.app.json --noEmit && tsc -p tsconfig.node.json --noEmit"
   },
   "dependencies": {

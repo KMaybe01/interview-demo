@@ -20,7 +20,7 @@ Monorepo (Bun workspaces + Turborepo) 全栈项目，包含：
 | AI 前端 (ai-demo) | React 19, @ant-design/x (Bubble/Sender/Conversations), Ant Design X SDK, @a2ui/* 协议库 |
 | 文档站 (interview-docs) | React 19, Vite 8, React Router 8 (HashRouter), react-markdown 9, Mermaid 11, highlight.js 11 |
 | 共享包 | `shared-theme` (Zustand + DOM 策略 + useSyncExternalStore + ThemeToggle 组件), `shared-monitor` (声明式监控 SDK) |
-| 工具链 | Biome 2.5 (lint + format), Husky + commitlint, Vitest 4, Turborepo 2 (编排) |
+| 工具链 | oxlint 1.89 + oxfmt 0.74 (lint + format, Rust/Oxc), Husky + commitlint, Vitest 4, Turborepo 2 (编排) |
 | 样式 | Ant Design tokens + CSS Modules (Login) + BEM (interview-docs) |
 | 后端 (Go) | Go 1.27（`go.mod` 声明 `go 1.27.2`）, Gin 1.12, Gorilla WebSocket, golang-jwt, go-openai |
 | 运行时 | Bun 1.4.2（依赖安装 + 脚本执行 + CI/CD, Monorepo + Turborepo 编排） |
@@ -103,7 +103,7 @@ bun run test
 
 # 单独构建前端
 cd apps/frontend && bun run build   # tsc -p tsconfig.app.json --noEmit && tsc -p tsconfig.node.json --noEmit && vite build (Rolldown)
-bun run lint                        # Biome check
+bun run lint                        # oxlint --fix
 bun run test                        # Vitest run
 ```
 
@@ -116,7 +116,7 @@ GitHub Actions（`.github/workflows/lint.yml`，Go 1.27 / Bun）：
 | lint-backend | `go vet ./...` | Go vet |
 | test-backend | `go test ./internal/...` + `go test -race -coverprofile ./...` | Go test |
 | lint-ai-demo | `bun run build --filter=@interview-demo/ai-demo` | Vite 8 |
-| lint-workspaces | `bun run lint`（turbo 并行） | Biome 2.5 |
+| lint-workspaces | `bun run lint`（turbo 并行） | oxlint 1.89 |
 | test-workspaces | `bun run test`（turbo 并行缓存，不依赖 build） | Vitest 4 |
 | typecheck-workspaces | `bun run typecheck` | TypeScript 7 |
 

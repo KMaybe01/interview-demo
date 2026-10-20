@@ -147,7 +147,11 @@ export const navConfig: NavItem[] = [
         text: '导学 · 学什么 / 怎么选',
         icon: '🎯',
         items: [
-          { text: '前端转型 AI 能力地图', icon: '🗺️', link: '/S5-AI/00-导学/01-前端转型AI能力地图' },
+          {
+            text: '前端转型 AI 能力地图',
+            icon: '🗺️',
+            link: '/S5-AI/00-导学/01-前端转型AI能力地图',
+          },
           { text: 'AI 应用市场与生态', icon: '🌐', link: '/S5-AI/00-导学/02-AI应用市场与生态' },
           { text: '技术选型速查', icon: '⚖️', link: '/S5-AI/00-导学/03-技术选型速查' },
         ],
@@ -379,7 +383,11 @@ export const navConfig: NavItem[] = [
         items: [
           { text: '资料库总览', icon: '📖', link: '/S5-AI/08-资料库/' },
           { text: '技术选型完整版', icon: '⚖️', link: '/S5-AI/08-资料库/01-技术选型完整版' },
-          { text: '开发实战与架构指南', icon: '🏗️', link: '/S5-AI/08-资料库/02-开发实战与架构指南' },
+          {
+            text: '开发实战与架构指南',
+            icon: '🏗️',
+            link: '/S5-AI/08-资料库/02-开发实战与架构指南',
+          },
           { text: '大模型训练', icon: '🧪', link: '/S5-AI/08-资料库/03-大模型训练' },
           { text: 'Ollama 学习文档', icon: '🦙', link: '/S5-AI/08-资料库/04-Ollama学习文档' },
           {

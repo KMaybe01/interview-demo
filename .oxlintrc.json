@@ -1,0 +1,103 @@
+{
+  "$schema": "./node_modules/oxlint/configuration_schema.json",
+  "plugins": ["eslint", "typescript", "react", "unicorn", "oxc", "import", "promise", "jsx-a11y", "vitest"],
+  "categories": {
+    "correctness": "error"
+  },
+  "env": {
+    "browser": true,
+    "node": true,
+    "es2024": true
+  },
+  "rules": {
+    "no-console": "warn",
+    "eqeqeq": ["error", "smart"],
+    "prefer-const": "error",
+    "no-unused-vars": [
+      "error",
+      {
+        "args": "after-used",
+        "argsIgnorePattern": "^_",
+        "varsIgnorePattern": "^_",
+        "ignoreRestSiblings": true
+      }
+    ],
+    "typescript/no-explicit-any": "warn",
+    "typescript/no-non-null-assertion": "warn",
+    "typescript/prefer-optional-chain": "error",
+    "typescript/only-throw-error": "error",
+    "react/react-in-jsx-scope": "off",
+    "react/rules-of-hooks": "error",
+    "react/exhaustive-deps": "warn",
+    "react/no-danger": "error",
+    "react/no-array-index-key": "warn",
+    "react/jsx-no-useless-fragment": "warn",
+    "react/self-closing-comp": "warn",
+
+    // 行内编辑场景主动使用 autoFocus 提升体验（如 TreeDataEngine 的重命名输入框），非可访问性缺陷
+    "jsx-a11y/no-autofocus": "off",
+
+    // React Compiler 相关规则（oxlint 1.89 归入 correctness，默认开启）：
+    // 存量代码有大量「effect 内 setState / 渲染期读 ref」写法，先按 Biome 时期的口径关掉，留作后续单独治理。
+    "react/set-state-in-effect": "off",
+    "react/refs": "off",
+    "react/purity": "off",
+    "react/immutability": "off",
+
+    // vitest 插件的这两条对存量测试用例要求过严（mock 泛型必填 / 每个 test 必须有 expect），与 Biome 时期口径对齐后关闭
+    "vitest/require-mock-type-parameters": "off",
+    "vitest/expect-expect": "off"
+  },
+  "ignorePatterns": [
+    "**/dist/**",
+    "**/node_modules/**",
+    "**/coverage/**",
+    "**/.turbo/**",
+    "apps/backend/**",
+    "apps/interview-docs/public/**"
+  ],
+  "overrides": [
+    {
+      "files": ["**/*.ts", "**/*.tsx"],
+      "rules": {
+        "react/no-array-index-key": "off"
+      }
+    },
+    {
+      "files": ["**/*.worker.ts"],
+      "rules": {
+        "no-unused-vars": "off"
+      }
+    },
+    {
+      "files": ["**/*.test.ts", "**/*.test.tsx", "**/__tests__/**"],
+      "rules": {
+        // 存量测试里已有「条件断言」（找不到目标数据就跳过），迁移阶段先保持行为不变
+        "vitest/no-conditional-expect": "off"
+      }
+    },
+    {
+      "files": ["apps/frontend/src/components/dynamic-form/Renderer.tsx"],
+      "rules": {
+        // Renderer 的 path 目前只在递归中传递（叶子字段用 leaf.key 拼路径），
+        // 属于预留的嵌套表单位置上下文，先保留参数、关掉这条 oxc 规则
+        "oxc/only-used-in-recursion": "off"
+      }
+    },
+    {
+      "files": ["apps/interview-docs/**"],
+      "rules": {
+        "no-unused-vars": "off",
+        "no-cond-assign": "off",
+        "typescript/no-non-null-assertion": "off",
+        "react/no-array-index-key": "off",
+        "react/no-danger": "off",
+        "jsx-a11y/alt-text": "off",
+        "jsx-a11y/no-static-element-interactions": "off",
+        "jsx-a11y/prefer-tag-over-role": "off",
+        "jsx-a11y/control-has-associated-label": "off",
+        "jsx-a11y/no-noninteractive-element-interactions": "off"
+      }
+    }
+  ]
+}

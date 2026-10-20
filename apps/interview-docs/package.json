@@ -7,7 +7,8 @@
     "dev": "vite",
     "build": "tsc -p tsconfig.app.json --noEmit && tsc -p tsconfig.node.json --noEmit && vite build && node gen-version.mjs",
     "preview": "vite preview",
-    "lint": "bunx biome check --write .",
+    "lint": "bunx oxlint --fix .",
+    "format": "bunx oxfmt .",
     "typecheck": "tsc -p tsconfig.app.json --noEmit && tsc -p tsconfig.node.json --noEmit",
     "test": "vitest run",
     "test:watch": "vitest"

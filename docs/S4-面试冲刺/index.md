@@ -127,7 +127,8 @@ graph TB
 | Vite | **8.3.4** | 本仓库 `^8.0.16` |
 | Rolldown | **1.2.13** | Vite 生产底座 |
 | Bun | **1.4.3** | 本仓库 `packageManager: bun@1.4.2` |
-| Biome | **2.5.15** | 本仓库唯一 linter/formatter |
+| oxlint | **1.89.0** | 本仓库唯一 linter |
+| oxfmt | **0.74.0** | 本仓库唯一 formatter（仍为 0.x 预览，未发 1.0） |
 | antd | **6.6.5** | — |
 | NG-ZORRO | **22.1.1** | 配 Angular 22 |
 | Zustand | **5.0.15** | — |
@@ -139,7 +140,7 @@ graph TB
 ## 项目与技术栈口径（与仓库一致）
 
 本阶段列出的项目复盘以本仓库 `interview-demo` 的真实实现为参照：
-**Bun workspace + Turborepo + Vite 8 + React 19 + TypeScript 7 + Biome**（包管理器为 **Bun**，不是 pnpm）。
+**Bun workspace + Turborepo + Vite 8 + React 19 + TypeScript 7 + oxlint/oxfmt**（包管理器为 **Bun**，不是 pnpm）。
 
 ```bash
 bun install        # 从仓库根目录安装所有 workspace

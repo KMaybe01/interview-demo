@@ -45,7 +45,8 @@ export const useMonitorStore = create<MonitorState>((set) => ({
   addBundleReport: (report) => {
     set((state) => ({
       bundleReports: [report, ...state.bundleReports].slice(0, MAX_STORED_ITEMS),
-      slowBundleCount: report.totalLoadTime > 3000 ? state.slowBundleCount + 1 : state.slowBundleCount,
+      slowBundleCount:
+        report.totalLoadTime > 3000 ? state.slowBundleCount + 1 : state.slowBundleCount,
     }));
   },
 

@@ -7,7 +7,7 @@
   position: relative;
 }
 
-[data-theme="dark"] .container {
+[data-theme='dark'] .container {
   background: var(--header-bg, #000000);
 }
 
@@ -89,7 +89,7 @@
 }
 
 .navItem--active::before {
-  content: "";
+  content: '';
   position: absolute;
   left: 0;
   width: 3px;
@@ -129,7 +129,7 @@
   min-height: 0;
 }
 
-[data-theme="dark"] .content {
+[data-theme='dark'] .content {
   background: var(--header-bg, #000000);
 }
 

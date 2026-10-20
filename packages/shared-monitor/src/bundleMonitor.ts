@@ -76,9 +76,10 @@ export class BundleMonitor {
     const totalLoadTime = this.getTotalLoadTime();
 
     const sorted = [...chunks].sort((a, b) => b.transferSize - a.transferSize);
-    const largest = sorted.length > 0
-      ? { name: sorted[0].name, size: sorted[0].transferSize, duration: sorted[0].duration }
-      : null;
+    const largest =
+      sorted.length > 0
+        ? { name: sorted[0].name, size: sorted[0].transferSize, duration: sorted[0].duration }
+        : null;
 
     const report: BundleReport = {
       type: 'bundle',
@@ -135,7 +136,7 @@ export class BundleMonitor {
       })
       .map((r) => ({
         name: getModuleName(r.name),
-        type: r.initiatorType === 'link' ? 'style' as const : 'script' as const,
+        type: r.initiatorType === 'link' ? ('style' as const) : ('script' as const),
         duration: r.duration,
         transferSize: (r as unknown as Record<string, number>).transferSize ?? 0,
         decodedSize: (r as unknown as Record<string, number>).decodedBodySize ?? 0,
@@ -144,7 +145,9 @@ export class BundleMonitor {
   }
 
   private getTotalLoadTime(): number {
-    const nav = performance.getEntriesByType('navigation')[0] as PerformanceNavigationTiming | undefined;
+    const nav = performance.getEntriesByType('navigation')[0] as
+      | PerformanceNavigationTiming
+      | undefined;
     if (nav) {
       return nav.loadEventEnd - nav.startTime;
     }
@@ -158,7 +161,17 @@ export class BundleMonitor {
   private trimChunks(chunks: BundleChunk[], max: number): BundleChunk[] {
     if (chunks.length <= max) return chunks;
     const sorted = [...chunks].sort((a, b) => b.transferSize - a.transferSize);
-    return [...sorted.slice(0, max), { name: `...and ${chunks.length - max} more`, type: 'script', duration: 0, transferSize: 0, decodedSize: 0, startTime: 0 }];
+    return [
+      ...sorted.slice(0, max),
+      {
+        name: `...and ${chunks.length - max} more`,
+        type: 'script',
+        duration: 0,
+        transferSize: 0,
+        decodedSize: 0,
+        startTime: 0,
+      },
+    ];
   }
 }
 

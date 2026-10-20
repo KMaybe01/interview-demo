@@ -8,7 +8,7 @@ React 19 静态文档站点，GitHub Pages 部署，内容为前端面试知识�
 bun dev           # dev server (port 5000)
 bun run build     # tsc -p tsconfig.app.json --noEmit && tsc -p tsconfig.node.json --noEmit → vite build → node gen-version.mjs
 bun run preview   # serve dist/
-bun run lint      # bunx biome check --write . (auto-fix + format)
+bun run lint      # bunx oxlint --fix . (lint 自动修复；格式化由 bun run format 负责)
 bun run typecheck # tsc -p tsconfig.app.json --noEmit && tsc -p tsconfig.node.json --noEmit
 bun test          # vitest run
 bun run test:watch # vitest (watch mode)
@@ -41,8 +41,8 @@ bun run changelog # conventional-changelog
 
 ## Coding Conventions
 
-- **Biome** (根目录统一管理): space indent 2, single quotes, semicolons `always`, trailing commas `all`, line width 100.
-- interview-docs 有独立 override (noNonNullAssertion, noArrayIndexKey, noDangerouslySetInnerHtml, a11y rules).
+- **oxlint + oxfmt** (根目录统一管理, `.oxlintrc.json` / `.oxfmtrc.json`): space indent 2, single quotes, semicolons `always`, trailing commas `all`, line width 100. Markdown 不参与格式化。
+- interview-docs 在 `.oxlintrc.json` 的 `overrides` 里单独放宽了 no-unused-vars、no-non-null-assertion、no-array-index-key、react/no-danger 与部分 a11y 规则。
 - TypeScript: `strict: true`, `jsx: "react-jsx"`.
 - Docs: Chinese, UTF-8, filename pattern `NN-中文标题.md`.
 - Nav icons use emoji prefixes.
