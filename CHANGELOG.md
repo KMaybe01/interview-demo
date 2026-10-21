@@ -1,3 +1,46 @@
+## [4.1.0](https://github.com/KMaybe01/interview-demo/compare/v4.0.0...v4.1.0) (2026-10-21)
+
+### Features
+
+* 更新A2A ([85c19ff](https://github.com/KMaybe01/interview-demo/commit/85c19ffabe4b1089d9edc2930e44c893985c87b5))
+* 更新ai-course ([5aa5932](https://github.com/KMaybe01/interview-demo/commit/5aa59326e145db216e93b659c0ff304a6ce972c8))
+* 更新ai-course ([8c5b7f0](https://github.com/KMaybe01/interview-demo/commit/8c5b7f0ac8b7cb93f17cbb64a8d4e17b56ce58a5))
+* add ai-course ([7300db9](https://github.com/KMaybe01/interview-demo/commit/7300db9f7d4b34576b850351a1b6ca04a3d0ce0d))
+
+### Documentation
+
+* 更新框架对比 ([5c962ad](https://github.com/KMaybe01/interview-demo/commit/5c962adec457cf4c009281d3d140588cb2aea980))
+* 更新算法 ([b31fb2b](https://github.com/KMaybe01/interview-demo/commit/b31fb2bba08e1c4fe89b19cd7f0c41f0f8a55a74))
+* 更新AI索引 ([2bb9eb0](https://github.com/KMaybe01/interview-demo/commit/2bb9eb095bb194b027a2896ece13446d6d494d55))
+* 更新AI索引 ([62a24aa](https://github.com/KMaybe01/interview-demo/commit/62a24aa6266ac48bae3eda676b272eb1716887cb))
+* 更新AI文档 ([eed90d1](https://github.com/KMaybe01/interview-demo/commit/eed90d1e8c2db891919d6ab0dd72d200bb48c8f9))
+* 更新AI文档 ([ee62dac](https://github.com/KMaybe01/interview-demo/commit/ee62dac5412f05770fe8d0c79f1a0a6627859af2))
+* 更新Go文档 ([36341e9](https://github.com/KMaybe01/interview-demo/commit/36341e959caa818723fb776c52ed22f98a97b9f5))
+* 为文档内路径与链接补充可跳转地址 ([c3945f9](https://github.com/KMaybe01/interview-demo/commit/c3945f93520feac6430e30659f9b6fd609e04791))
+* update AI Agent ([d8c8428](https://github.com/KMaybe01/interview-demo/commit/d8c8428e11b411f265f0c2159088670ba5d667ad))
+* update Go ([de8f6de](https://github.com/KMaybe01/interview-demo/commit/de8f6de8a19a50bb865efa9f340334de141589f0))
+* update Go ([8b29cfd](https://github.com/KMaybe01/interview-demo/commit/8b29cfd8b6f274678733ee2ba6bb66d2f0f34afa))
+* update JS ([93a0f06](https://github.com/KMaybe01/interview-demo/commit/93a0f0606c87314b1e75f2f6c153001fb27ad609))
+
+### Code Refactoring
+
+* 重构文档导航栏 ([0bd589b](https://github.com/KMaybe01/interview-demo/commit/0bd589b8e8a14b892762f406797830bbd1900142))
+
+### Styles
+
+* update search ([251ccae](https://github.com/KMaybe01/interview-demo/commit/251ccae2e9676bc853e54aa0682ba4d8dfd9febd))
+
+### Build System
+
+* **tooling:** 用 oxlint + oxfmt 替换 Biome ([a84f03a](https://github.com/KMaybe01/interview-demo/commit/a84f03ab14f113834bda66395637517c84e67601))
+
+### Miscellaneous Chores
+
+* 优化折叠按钮 ([b8aa9ed](https://github.com/KMaybe01/interview-demo/commit/b8aa9ed21cc36ecea6218bd9f7523d7cd075a95d))
+* 更新自动装包 ([a4cc7a5](https://github.com/KMaybe01/interview-demo/commit/a4cc7a5ca9c8a8ad19d2c16abf7e8a515b88c5cf))
+* 移动backend目录到apps ([62402b5](https://github.com/KMaybe01/interview-demo/commit/62402b52f519bf13ac59aa7bf016ecb954161afa))
+* update agent ([db2acf8](https://github.com/KMaybe01/interview-demo/commit/db2acf81feb5e1246e5e9cb6d11065a6bccd4665))
+* v4.0.0 ([9274690](https://github.com/KMaybe01/interview-demo/commit/92746905a119e58802442e0587b62e1584697a82))
 
 ## [4.0.0](https://github.com/KMaybe01/interview-demo/compare/v3.4.0...v4.0.0) (2026-10-10)
 
@@ -187,72 +230,3 @@
 
 * clean up Turborepo config and unused tsBuildInfoFile ([22f0413](https://github.com/KMaybe01/interview-demo/commit/22f041398c7ea3072936f15d1d6edd384b42310a))
 * remove outdated project structure and API route sections from README ([c71d463](https://github.com/KMaybe01/interview-demo/commit/c71d4633eb9713647b4915a78b945a2be7d12399))
-
-## [2.0.0](https://github.com/KMaybe01/interview-demo/compare/cf8b16748f77e34e4dfaa9aa40fc06026b3db55a...v2.0.0) (2026-07-01)
-
-### Features
-
-* add AI Demo page with 6-tab agent management interface ([f4ab8ee](https://github.com/KMaybe01/interview-demo/commit/f4ab8ee32c97034d0b224f9834caa4bfaf1ef9ad))
-* add Swagger/OpenAPI docs for all handler endpoints ([83a7141](https://github.com/KMaybe01/interview-demo/commit/83a7141c71e00778789496421132815ff8541465))
-* migrate AI Agent backend (chat, knowledge base, models, agents) from AI-Agent-Demo ([f0dc1b7](https://github.com/KMaybe01/interview-demo/commit/f0dc1b7f1c18c80513dbaed51d29b0678928b01f))
-
-### Bug Fixes
-
-* 从环境变量读取 JWT 密钥和登录凭据，校验 JWT 签名算法，加固 CORS/WebSocket 来源校验 ([e713b05](https://github.com/KMaybe01/interview-demo/commit/e713b056a85248923c1b67185db4869a8575fc1e))
-* 修复 ProcessPayment goroutine 泄漏，添加 context 取消；usedRefreshTokens 添加 TTL 清理；payment.go 改用 RWMutex 处理读场景 ([409607b](https://github.com/KMaybe01/interview-demo/commit/409607b9646be8dbb01a2e5179eef1c9d18f7bdf))
-* 修复所有被忽略的错误 — json.Marshal、WriteFile、token 创建错误不再忽略 ([ac587b1](https://github.com/KMaybe01/interview-demo/commit/ac587b14abb3943376af410e453893e1dbaea1da))
-* 移除非 main 包中的 log.Fatalf；用 sync.Once 替代 init() 副作用；端口从环境变量读取 ([af312ce](https://github.com/KMaybe01/interview-demo/commit/af312ce2cedd59cf4586be6f42f1e99bcb09235f))
-* ai chat dark mode support - replace hardcoded colors with antd theme tokens ([6175495](https://github.com/KMaybe01/interview-demo/commit/61754954fdec54e0387729608c1f56687db8df8d))
-* ai demo page dark mode support for tabs and dashboard feature cards ([e55bc9b](https://github.com/KMaybe01/interview-demo/commit/e55bc9beb74e84a5f54abceccd6c89b76eb31dd5))
-* code review optimization - bug fixes and architecture improvements ([5ead874](https://github.com/KMaybe01/interview-demo/commit/5ead874f6755efcf07e530c1f6d1f95a8648a272))
-* dynamicForm infinite loop in runAjvValidation useEffect ([7d43faf](https://github.com/KMaybe01/interview-demo/commit/7d43fafd28e86ab807f8f671cb09000cedc6d625))
-* increase access token lifetime and fix hydrate to prevent auto-logout ([5769a6e](https://github.com/KMaybe01/interview-demo/commit/5769a6edf41f3c63579798a829ced02017505089))
-* move vitals endpoints out of auth group so page tracking works without login ([7867df7](https://github.com/KMaybe01/interview-demo/commit/7867df7413522f01181b5eb33e7419dfaea27700))
-* payment.go data race - 值拷贝分离读写锁，消除 ProcessPayment goroutine 并发竞争 ([2ce4446](https://github.com/KMaybe01/interview-demo/commit/2ce44461beaadaff40092b36090a8ed3f382b127))
-
-### Documentation
-
-* 更新 stores 列表，补充 themeStore，修复数量 ([58e7267](https://github.com/KMaybe01/interview-demo/commit/58e7267a7eecf123e78e4fcf4fccef83564b7378))
-* add document ([a714c24](https://github.com/KMaybe01/interview-demo/commit/a714c2435257fa3ef8d1f11eec7b1ed9d7e2336a))
-* update README and docs with code review optimization summary ([7f40d13](https://github.com/KMaybe01/interview-demo/commit/7f40d13c8145c3bd2f21e544670c156179350611))
-* update readme.md ([1c854bf](https://github.com/KMaybe01/interview-demo/commit/1c854bf4a8b5e32beaedc00936959161548b2cef))
-* update root README with new backend structure and Swagger docs ([465f308](https://github.com/KMaybe01/interview-demo/commit/465f308f10a7725a2c3b708f95d91baea155a704))
-
-### Code Refactoring
-
-* 将 token 过期检查移至 authStore 的 initUser，AuthGuard 移除冗余渲染内副作用 ([cf8b167](https://github.com/KMaybe01/interview-demo/commit/cf8b16748f77e34e4dfaa9aa40fc06026b3db55a))
-* 统一 HTTP 状态码使用 net/http 常量，移除冗余 done 检查，添加关键函数 doc 注释 ([63d02c5](https://github.com/KMaybe01/interview-demo/commit/63d02c581460d83b79d60a2f672c0734996fe617))
-* 优化 alertStore 和 requestLoadingStore 不可变更新模式 ([b869a2a](https://github.com/KMaybe01/interview-demo/commit/b869a2a9bedcd833a106a77b75d32b2a3d254164))
-* apply Go naming conventions across backend ([acb23ce](https://github.com/KMaybe01/interview-demo/commit/acb23ce0237ca7bb43d176b24c7f5ce2428b9ef4))
-* ChunkedUpload 使用 getState() 避免 effect 闭包捕获问题，移除 eslint-disable ([b2fc938](https://github.com/KMaybe01/interview-demo/commit/b2fc9384ff47cf6d833216b0748d5df04ea865c1))
-* fetchClient 添加 getResponseData 类型守卫，消除不安全的 data.code 类型断言 ([86717f9](https://github.com/KMaybe01/interview-demo/commit/86717f988d8ccce4a8b3bc67b79f49f364b9b4df))
-* fix data races, context leak, global state, and other critical issues ([b6985f0](https://github.com/KMaybe01/interview-demo/commit/b6985f07e02851d47b463e8fdcd7f281730ce513))
-* flatten backend structure under cmd/ and internal/ ([412c4a5](https://github.com/KMaybe01/interview-demo/commit/412c4a5a3d3df6d62574a78776cb7c3d7be280d5))
-* **frontend:** fix sorting and improve tracking ([4d801a1](https://github.com/KMaybe01/interview-demo/commit/4d801a1f41201af3fd986052b3aba7adf7e44f26))
-* Login 使用 useSearchParams 替代直接读取 location.search ([5c2fbb5](https://github.com/KMaybe01/interview-demo/commit/5c2fbb545fd01211a8942dc2b853dd1ef4887f99))
-* lruRouteStore 减少重复 get() 调用，提取 applyExclude 工具函数 ([1c63c17](https://github.com/KMaybe01/interview-demo/commit/1c63c172e37d9b92c5a3547d6a7ea498cfa45858))
-* move sub-packages from internal/demo/xxx to internal/xxx + fix encoding ([273c3aa](https://github.com/KMaybe01/interview-demo/commit/273c3aa4e93f5d5b2d1dc3ff0f6f54e1adc7a56c))
-* split monolithic packages into feature modules ([2b9455f](https://github.com/KMaybe01/interview-demo/commit/2b9455ff55b67d85389805fb22516374da695aa8))
-* themeStore 将 localStorage 读取包裹在 getInitialMode 函数中 ([89eec69](https://github.com/KMaybe01/interview-demo/commit/89eec6995369ae18a9a8b8e5e54aef982600d8b3))
-
-### Styles
-
-* gofmt 格式化 schema.go 和 vitals.go ([d51ad1e](https://github.com/KMaybe01/interview-demo/commit/d51ad1e16d55c7a84c7289b6b988038cfd61c0dd))
-* update AI ([1617812](https://github.com/KMaybe01/interview-demo/commit/16178125c89d9f9a6fa00fb265de3d51cdc870e3))
-
-### Tests
-
-* 修复 TestAuthMiddleware_ValidToken 断言逻辑，修复 TestSSELogStream_InvalidInterval 断言 ([3b835aa](https://github.com/KMaybe01/interview-demo/commit/3b835aa9a537c5ec385dbd002d8cb4ba863821d5))
-* add handler-level integration tests for agent, chat, and knowledge ([08da269](https://github.com/KMaybe01/interview-demo/commit/08da269e4ab10b5059f811864ac10e7b13b48e50))
-* add unit tests for agent, chat, knowledge, and memory packages ([2aadc55](https://github.com/KMaybe01/interview-demo/commit/2aadc5550654a6ecccbd94cb1431070c23ff659d))
-
-### Continuous Integration
-
-* update github actions and add node24 force env ([aa20bcd](https://github.com/KMaybe01/interview-demo/commit/aa20bcd8af3516857b813a784295e1ce7c03084b))
-
-### Miscellaneous Chores
-
-* add commitlint configuration ([6a52eac](https://github.com/KMaybe01/interview-demo/commit/6a52eac1e08b54952caadfbafb8e2baea23ae354))
-* add conventional-changelog and update frontend docs ([c790e11](https://github.com/KMaybe01/interview-demo/commit/c790e11de753f5297124e3dbe192f46da8552798))
-* build server ([a823729](https://github.com/KMaybe01/interview-demo/commit/a82372919a339581ffcd090101747ac657b1c6d9))
-* clean up BOMs and update backend run docs ([6c8d1d8](https://github.com/KMaybe01/interview-demo/commit/6c8d1d8fd91fb4f1b94d81b86bfd0a77e2a3719c))
