@@ -17,16 +17,16 @@
 | 维度 | 基线值 | 核验来源 |
 |------|--------|---------|
 | **AI SDK** | `ai@^7.0.36`（本仓库实际依赖；`engines: node >= 22`，peerDeps `zod ^3.25.76 \|\| ^4.1.8`） | 本仓库 `node_modules/ai/package.json` = `7.0.36` |
-| **React 适配器** | `@ai-sdk/react@^4.0.39` | 本仓库 `apps/ai-demo/package.json` |
-| **React** | `19.x` | 本仓库 `apps/ai-demo/package.json` |
-| **MCP 规范** | `2026-07-28`（上一稳定版 `2025-11-25`） | modelcontextprotocol.io/specification/2026-07-28 |
+| **React 适配器** | `@ai-sdk/react@^4.0.39` | 本仓库 [apps/ai-demo/package.json](https://github.com/KMaybe01/interview-demo/blob/main/apps/ai-demo/package.json) |
+| **React** | `19.x` | 本仓库 [apps/ai-demo/package.json](https://github.com/KMaybe01/interview-demo/blob/main/apps/ai-demo/package.json) |
+| **MCP 规范** | `2026-07-28`（上一稳定版 `2025-11-25`） | [modelcontextprotocol.io/specification/2026-07-28](https://modelcontextprotocol.io/specification/2026-07-28) |
 | **A2A 规范** | `v1.0`（2026-03 发布，首个生产就绪版） | a2aproject / Linux Foundation Agentic AI Foundation |
 | **前沿模型** | 旗舰：OpenAI GPT-5 系、Claude Opus/Sonnet 4.5–5.5、Gemini 3.5；性价比：DeepSeek V4、Qwen3、GLM-4.5 | 2026-10 Vercel AI Gateway `/v1/models` 实列 |
 | **端侧小模型** | Qwen2.5 / Qwen3 0.5B–1.5B（Transformers.js / onnx-community） | 浏览器推理生态 |
 | **前端 AI UI** | AI Elements、assistant-ui、CopilotKit、AG-UI、`@ant-design/x`、`@a2ui/react` | 公开仓库 / 发布信息 |
-| **生成式 UI 协议** | A2UI v0.9.1（稳定）/ v1.0 RC；传输兼容 A2A / AG-UI | `https://github.com/google/A2UI` |
-| **编码 Agent 参考实现** | `claude-code`（社区逆向复刻 `claude-code-best`）、`pi`（极简 harness）、`hello-agents`（教学框架） | `https://github.com/claude-code-best/claude-code` / `https://github.com/earendil-works/pi` |
-| **包管理器** | `bun`（本仓库禁止 npm/yarn/pnpm） | 根 `AGENTS.md` |
+| **生成式 UI 协议** | A2UI v0.9.1（稳定）/ v1.0 RC；传输兼容 A2A / AG-UI | [https://github.com/google/A2UI](https://github.com/google/A2UI) |
+| **编码 Agent 参考实现** | `claude-code`（社区逆向复刻 `claude-code-best`）、`pi`（极简 harness）、`hello-agents`（教学框架） | [https://github.com/claude-code-best/claude-code](https://github.com/claude-code-best/claude-code) / [https://github.com/earendil-works/pi](https://github.com/earendil-works/pi) |
+| **包管理器** | `bun`（本仓库禁止 npm/yarn/pnpm） | 根 [AGENTS.md](https://github.com/KMaybe01/interview-demo/blob/main/AGENTS.md) |
 
 > 💡 **型号说明**：模型迭代极快，上表「旗舰/性价比」是**档位划分**而非永久结论。
 > 写代码前请核对你所用 Gateway / 厂商当期的**实际模型 ID**（如 `openai/gpt-5`、
@@ -53,7 +53,7 @@
 |---|---|---|---|
 | **技术栈** | AI SDK 7 + TypeScript 全栈（React + BFF） | Go + Gin（`apps/backend/internal/*`） | 这些 GitHub 开源仓库（见下方映射表） |
 | **为什么** | 前端转型最短路径，心智模型与 React 一致 | 网关熔断、工具沙箱、护栏、HITL、评测这些**服务端重活**看生产级怎么写 | 读懂 Claude Code / AI SDK / 编码 Agent 的**真实工程实现**，把理论对照源码 |
-| **入口** | [第一关](./01-第一关-流式对话/index.md) → `apps/ai-course/` | [07-Go后端参考实现](./07-Go后端参考实现/index.md) | [参考代码库](#参考代码库) |
+| **入口** | [第一关](./01-第一关-流式对话/index.md) → [apps/ai-course/](https://github.com/KMaybe01/interview-demo/tree/main/apps/ai-course) | [07-Go后端参考实现](./07-Go后端参考实现/index.md) | [参考代码库](#参考代码库) |
 | **通读要求** | 必读 | 按需查阅，不必通读 | 专题精读，配合对应关卡 |
 
 > 每关的 `index.md` 里都有「与本仓库代码的映射」表，可直接对着真实代码读；`这批 GitHub 开源仓库` 的对应关系见下方[参考代码库](#参考代码库)。
@@ -75,7 +75,7 @@ graph LR
 
 | 关卡 | 主题 | 产出物 | 参考周期 |
 |:---:|------|--------|:------:|
-| [①](./01-第一关-流式对话/index.md) | 流式对话 | 生产级流式聊天（可中断 / 可重连 / 有成本显示）→ `apps/ai-course/src/stages/01-chat/` | 1-2 周 |
+| [①](./01-第一关-流式对话/index.md) | 流式对话 | 生产级流式聊天（可中断 / 可重连 / 有成本显示）→ [apps/ai-course/src/stages/01-chat/](https://github.com/KMaybe01/interview-demo/tree/main/apps/ai-course/src/stages/01-chat) | 1-2 周 |
 | [②](./02-第二关-知识增强RAG/index.md) | 知识增强 RAG | 支持 PDF/Word 的企业知识问答 + 评测闭环 | 2-3 周 |
 | [③](./03-第三关-Agent与工具/index.md) | Agent 与工具 | 带审批、能停下来的自主 Agent | 3-4 周 |
 | [④](./04-第四关-企业级工程化/index.md) | **企业级工程化** | 有网关容灾、护栏、观测、评测、配额的生产系统 | 持续 |
@@ -131,29 +131,29 @@ S5-AI/
 
 | 仓库（GitHub 地址） | 是什么 | 对应关卡 / 专题 | 重点看 |
 |---|---|---|---|
-| `https://github.com/vercel/ai` | Vercel **AI SDK v7** monorepo（`ai` + `@ai-sdk/react` + `@ai-sdk/rsc` 等） | ① ② ③ ⑥ | `packages/ai`（streamText / 工具 / 结构化）、`packages/react`（useChat）、`architecture/`（流式循环、loop control） |
-| `https://github.com/google/A2UI` | Google **生成式 UI 开放标准**（声明式 JSON 描述 UI，客户端受控渲染） | ⑥ 生成式 UI | README、catalog（可信组件目录）、与 A2A/AG-UI 的传输兼容 |
-| `https://github.com/ant-design/x` | 蚂蚁 **Ant Design X**（企业级 LLM UI 组件） | ⑥ 前端交互层 | `x-markdown`（流式 Markdown）、`x-card`（基于 A2UI 协议的动态卡片）、`x-skill` |
-| `https://github.com/datawhalechina/hello-agents` | Datawhale《从零构建智能体》系统教程 + 自研框架 | ② RAG / ③ Agent / ⑤ 协议 | ReAct/Plan-and-Solve/Reflection 手搓、RAG、MCP·A2A·ANP、多 Agent 案例 |
-| `https://github.com/earendil-works/pi` | 极简可扩展 Agent harness（`pi-ai` / `pi-agent-core` / `pi-coding-agent`） | ③ Agent / ⑩ 编码 Agent | 工具调用 + 状态机、coding-agent CLI、容器化沙箱 |
-| `https://github.com/cellinlab/how-pi-agent-works` | 中文工程视角拆解 Pi Agent + 教学版实现 | ③ Agent / ⑩ 编码 Agent | Agent Loop / 消息 / 流式事件 / 工具调用 / 会话树 / 上下文压缩；4 个渐进 TS Demo |
-| `https://github.com/claude-code-best/claude-code` | 社区逆向复刻的 Claude Code（`claude-code-best`，**非官方**） | ⑩ 编码 Agent / ④ | 对话循环、工具系统、权限管线、钩子、子 Agent、ACP |
-| `https://github.com/KMaybe01/claude-code-book` | 《解码 Agent Harness》架构剖析书（15 章 + 139 图） | ⑩ 编码 Agent | 对话循环 / `Tool<>` 协议 / 四阶段权限管线 / 上下文压缩 / Fork 子 Agent / MCP / 钩子 / Plan 模式 |
-| `https://github.com/bcefghj/claude-code-complete-guide` | 《图解 Claude Code 完全指南》漫画式源码解析（120 节） | ⑩ 编码 Agent | 12 篇覆盖基础 / 架构 / 工具 / 权限 / UI / 多 Agent / 性能 |
-| `https://github.com/luongnv89/claude-howto` | "Master Claude Code in a Weekend" 实操教程 | ⑩ 编码 Agent | slash commands、memory、skills、subagents、MCP、hooks、plugins 的复制即用模板 |
-| `https://github.com/JiaranI/start-claude-code` | 源码一键运行器（还原 `src/` 1902 文件，Bun+Ink） | ⑩ 编码 Agent（实践） | TUI / 非交互 / 第三方代理接入、构建垫片原理 |
-| `https://github.com/Autumn1337/openclaude-cn` | 用国产大模型（Qwen/DeepSeek/GLM/MiMo/Ollama）驱动 Claude Code 的 fork | ⑩ 编码 Agent（国产适配） | 724 行 OpenAI shim 替换 Anthropic SDK；`/provider` `/model` 实时切换 |
-| `https://github.com/farion1231/cc-switch` | Tauri 桌面 GUI，统一管理 Claude Code/Codex/Gemini 并一键切供应商 | ⑩ 编码 Agent / 00-生态 | 多 Agent 工具统一配置、MCP/Skills/Prompts 管理 |
-| `https://github.com/ultraworkers/claw-code-parity` | Python 重写 / 对拍项目（原 TS 源码） | ⑩ 编码 Agent（参考） | `query_engine.py` / `tools.py`、parity-audit 对拍、OmX 编排 |
-| `https://github.com/KMaybe01/open-code` | Claude Code 自由构建版（剥离遥测/护栏、解锁实验 flag） | ⑩ 编码 Agent（参考） | 五大模型供应商、guardrails 移除对照 |
-| `https://github.com/github/awesome-copilot` | GitHub Copilot 生态清单（agents / instructions / skills / hooks / plugins） | 00-导学 生态 / ⑩ 横向对比 | 可安装自定义层、Learning Hub、`llms.txt`、Cookbook |
+| [https://github.com/vercel/ai](https://github.com/vercel/ai) | Vercel **AI SDK v7** monorepo（`ai` + `@ai-sdk/react` + `@ai-sdk/rsc` 等） | ① ② ③ ⑥ | `packages/ai`（streamText / 工具 / 结构化）、`packages/react`（useChat）、`architecture/`（流式循环、loop control） |
+| [https://github.com/google/A2UI](https://github.com/google/A2UI) | Google **生成式 UI 开放标准**（声明式 JSON 描述 UI，客户端受控渲染） | ⑥ 生成式 UI | README、catalog（可信组件目录）、与 A2A/AG-UI 的传输兼容 |
+| [https://github.com/ant-design/x](https://github.com/ant-design/x) | 蚂蚁 **Ant Design X**（企业级 LLM UI 组件） | ⑥ 前端交互层 | `x-markdown`（流式 Markdown）、`x-card`（基于 A2UI 协议的动态卡片）、`x-skill` |
+| [https://github.com/datawhalechina/hello-agents](https://github.com/datawhalechina/hello-agents) | Datawhale《从零构建智能体》系统教程 + 自研框架 | ② RAG / ③ Agent / ⑤ 协议 | ReAct/Plan-and-Solve/Reflection 手搓、RAG、MCP·A2A·ANP、多 Agent 案例 |
+| [https://github.com/earendil-works/pi](https://github.com/earendil-works/pi) | 极简可扩展 Agent harness（`pi-ai` / `pi-agent-core` / `pi-coding-agent`） | ③ Agent / ⑩ 编码 Agent | 工具调用 + 状态机、coding-agent CLI、容器化沙箱 |
+| [https://github.com/cellinlab/how-pi-agent-works](https://github.com/cellinlab/how-pi-agent-works) | 中文工程视角拆解 Pi Agent + 教学版实现 | ③ Agent / ⑩ 编码 Agent | Agent Loop / 消息 / 流式事件 / 工具调用 / 会话树 / 上下文压缩；4 个渐进 TS Demo |
+| [https://github.com/claude-code-best/claude-code](https://github.com/claude-code-best/claude-code) | 社区逆向复刻的 Claude Code（`claude-code-best`，**非官方**） | ⑩ 编码 Agent / ④ | 对话循环、工具系统、权限管线、钩子、子 Agent、ACP |
+| [https://github.com/KMaybe01/claude-code-book](https://github.com/KMaybe01/claude-code-book) | 《解码 Agent Harness》架构剖析书（15 章 + 139 图） | ⑩ 编码 Agent | 对话循环 / `Tool<>` 协议 / 四阶段权限管线 / 上下文压缩 / Fork 子 Agent / MCP / 钩子 / Plan 模式 |
+| [https://github.com/bcefghj/claude-code-complete-guide](https://github.com/bcefghj/claude-code-complete-guide) | 《图解 Claude Code 完全指南》漫画式源码解析（120 节） | ⑩ 编码 Agent | 12 篇覆盖基础 / 架构 / 工具 / 权限 / UI / 多 Agent / 性能 |
+| [https://github.com/luongnv89/claude-howto](https://github.com/luongnv89/claude-howto) | "Master Claude Code in a Weekend" 实操教程 | ⑩ 编码 Agent | slash commands、memory、skills、subagents、MCP、hooks、plugins 的复制即用模板 |
+| [https://github.com/JiaranI/start-claude-code](https://github.com/JiaranI/start-claude-code) | 源码一键运行器（还原 `src/` 1902 文件，Bun+Ink） | ⑩ 编码 Agent（实践） | TUI / 非交互 / 第三方代理接入、构建垫片原理 |
+| [https://github.com/Autumn1337/openclaude-cn](https://github.com/Autumn1337/openclaude-cn) | 用国产大模型（Qwen/DeepSeek/GLM/MiMo/Ollama）驱动 Claude Code 的 fork | ⑩ 编码 Agent（国产适配） | 724 行 OpenAI shim 替换 Anthropic SDK；`/provider` `/model` 实时切换 |
+| [https://github.com/farion1231/cc-switch](https://github.com/farion1231/cc-switch) | Tauri 桌面 GUI，统一管理 Claude Code/Codex/Gemini 并一键切供应商 | ⑩ 编码 Agent / 00-生态 | 多 Agent 工具统一配置、MCP/Skills/Prompts 管理 |
+| [https://github.com/ultraworkers/claw-code-parity](https://github.com/ultraworkers/claw-code-parity) | Python 重写 / 对拍项目（原 TS 源码） | ⑩ 编码 Agent（参考） | `query_engine.py` / `tools.py`、parity-audit 对拍、OmX 编排 |
+| [https://github.com/KMaybe01/open-code](https://github.com/KMaybe01/open-code) | Claude Code 自由构建版（剥离遥测/护栏、解锁实验 flag） | ⑩ 编码 Agent（参考） | 五大模型供应商、guardrails 移除对照 |
+| [https://github.com/github/awesome-copilot](https://github.com/github/awesome-copilot) | GitHub Copilot 生态清单（agents / instructions / skills / hooks / plugins） | 00-导学 生态 / ⑩ 横向对比 | 可安装自定义层、Learning Hub、`llms.txt`、Cookbook |
 
 > ⚠️ **版权与合规提醒**：`claude-code` / `start-claude-code` / `free-code-main` 等涉及第三方（含逆向/泄露）源码，**仅限个人学习研究其架构思路**；不要将其代码直接复制进本仓库或用于商业分发。引用时标注「社区复刻 / 逆向研究」并区分于 Anthropic 官方实现。
 
 ### 怎么用这个参考库（建议读法）
 
 1. **先读正文，再读源码**：每关正文建立心智模型后，按上表「重点看」列精准定位文件，不要从 `node_modules` 入口。
-2. **编码 Agent 专题优先顺序**：`claude-howto`（实操上手）→ `claude-code-book`（架构剖析）→ `how-pi-agent-works`（教学实现）→ `pi`（极简 harness）→ `start-claude-code`（看真实工程）。
+2. **编码 Agent 专题优先顺序**：[claude-howto](https://github.com/luongnv89/claude-howto)（实操上手）→ [claude-code-book](https://github.com/KMaybe01/claude-code-book)（架构剖析）→ [how-pi-agent-works](https://github.com/cellinlab/how-pi-agent-works)（教学实现）→ [pi](https://github.com/earendil-works/pi)（极简 harness）→ [start-claude-code](https://github.com/JiaranI/start-claude-code)（看真实工程）。
 3. **对照本仓库**：`这批 GitHub 开源仓库` 是「别人怎么造 Agent」，本仓库 `apps/backend/internal/*` + `apps/ai-course/*` 是「我们怎么造 Agent」——两者互为镜像。
 
 ---
@@ -164,15 +164,15 @@ S5-AI/
 
 | 关卡 | 本仓库实现位置 | 关键接口 / 组件 |
 |------|----------------|-----------------|
-| ① 流式对话 | `apps/ai-demo/src/services/aiStream.ts`、`apps/backend/internal/chat/` | SSE 分帧解析、`POST /api/ai/chat/stream` |
-| ② 知识增强 RAG | `apps/backend/internal/knowledge/` | 文档加载 / 分块 / 嵌入 / 向量检索 |
-| ③ Agent 与工具 | `apps/backend/internal/agent/`、`apps/backend/internal/tool/`、`apps/backend/internal/memory/` | ReAct、Function Calling、工具沙箱与权限分级 L0/L1/L2 |
-| ④ 企业级工程化 | `apps/backend/internal/llm/`、`apps/backend/internal/guard/`、`apps/backend/internal/obs/`、`apps/backend/internal/airouter/` | `/api/ai/obs/*`、`/api/ai/eval/*`、`/api/ai/prompts/*`、`/api/ai/approvals/*` |
-| ⑤ 协议与多 Agent | `apps/backend/internal/mcp/`、`apps/backend/internal/a2a/` | `POST /api/ai/mcp`（无状态单端点）、`/api/ai/a2a/*` |
-| ⑥ 前端 AI 交互层 | `apps/ai-demo/src/components/` | `AIChat`（Ant Design X）、`A2UI`（`@a2ui/react`）、`Observability` |
-| ⑩ 编码 Agent | `apps/ai-course/`（Agent stage）、`apps/backend/internal/agent|tool|memory`（可复用引擎） | 工具执行、子 Agent、权限管线、上下文裁剪的工业级样板 |
+| ① 流式对话 | [apps/ai-demo/src/services/aiStream.ts](https://github.com/KMaybe01/interview-demo/blob/main/apps/ai-demo/src/services/aiStream.ts)、[apps/backend/internal/chat/](https://github.com/KMaybe01/interview-demo/tree/main/apps/backend/internal/chat) | SSE 分帧解析、`POST /api/ai/chat/stream` |
+| ② 知识增强 RAG | [apps/backend/internal/knowledge/](https://github.com/KMaybe01/interview-demo/tree/main/apps/backend/internal/knowledge) | 文档加载 / 分块 / 嵌入 / 向量检索 |
+| ③ Agent 与工具 | [apps/backend/internal/agent/](https://github.com/KMaybe01/interview-demo/tree/main/apps/backend/internal/agent)、[apps/backend/internal/tool/](https://github.com/KMaybe01/interview-demo/tree/main/apps/backend/internal/tool)、[apps/backend/internal/memory/](https://github.com/KMaybe01/interview-demo/tree/main/apps/backend/internal/memory) | ReAct、Function Calling、工具沙箱与权限分级 L0/L1/L2 |
+| ④ 企业级工程化 | [apps/backend/internal/llm/](https://github.com/KMaybe01/interview-demo/tree/main/apps/backend/internal/llm)、[apps/backend/internal/guard/](https://github.com/KMaybe01/interview-demo/tree/main/apps/backend/internal/guard)、[apps/backend/internal/obs/](https://github.com/KMaybe01/interview-demo/tree/main/apps/backend/internal/obs)、[apps/backend/internal/airouter/](https://github.com/KMaybe01/interview-demo/tree/main/apps/backend/internal/airouter) | `/api/ai/obs/*`、`/api/ai/eval/*`、`/api/ai/prompts/*`、`/api/ai/approvals/*` |
+| ⑤ 协议与多 Agent | [apps/backend/internal/mcp/](https://github.com/KMaybe01/interview-demo/tree/main/apps/backend/internal/mcp)、[apps/backend/internal/a2a/](https://github.com/KMaybe01/interview-demo/tree/main/apps/backend/internal/a2a) | `POST /api/ai/mcp`（无状态单端点）、`/api/ai/a2a/*` |
+| ⑥ 前端 AI 交互层 | [apps/ai-demo/src/components/](https://github.com/KMaybe01/interview-demo/tree/main/apps/ai-demo/src/components) | `AIChat`（Ant Design X）、`A2UI`（`@a2ui/react`）、`Observability` |
+| ⑩ 编码 Agent | [apps/ai-course/](https://github.com/KMaybe01/interview-demo/tree/main/apps/ai-course)（Agent stage）、`apps/backend/internal/agent|tool|memory`（可复用引擎） | 工具执行、子 Agent、权限管线、上下文裁剪的工业级样板 |
 
-启动方式见根 `AGENTS.md`：`bun run dev` 起前端三应用，`go run ./cmd/server/` 起后端 `:8080`。
+启动方式见根 [AGENTS.md](https://github.com/KMaybe01/interview-demo/blob/main/AGENTS.md)：`bun run dev` 起前端三应用，`go run ./cmd/server/` 起后端 `:8080`。
 
 ---
 
