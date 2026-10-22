@@ -6,12 +6,14 @@ export class PerformanceMonitor {
   private intervalTimer: ReturnType<typeof setInterval> | null = null;
 
   init(): void {
-    if (this.initialized) return;
+    if (this.initialized) {
+      return;
+    }
     this.initialized = true;
     this.collectResourceTiming();
     this.intervalTimer = setInterval(() => {
       this.collectResourceTiming();
-    }, 60000);
+    }, 60_000);
   }
 
   destroy(): void {
@@ -22,34 +24,38 @@ export class PerformanceMonitor {
   }
 
   private collectResourceTiming(): void {
-    if (typeof performance.getEntriesByType !== 'function') return;
+    if (typeof performance.getEntriesByType !== 'function') {
+      return;
+    }
 
     const navEntries = performance.getEntriesByType('navigation');
     if (navEntries.length > 0) {
       const nav = navEntries[0] as PerformanceNavigationTiming;
       reportManager.add({
-        priority: ReportPriority.NORMAL,
         data: {
-          type: 'performance',
           category: 'navigation',
           metrics: {
             dns: nav.domainLookupEnd - nav.domainLookupStart,
+            domComplete: nav.domComplete,
+            domInteractive: nav.domInteractive,
+            loadEvent: nav.loadEventEnd - nav.loadEventStart,
             tcp: nav.connectEnd - nav.connectStart,
             tls: nav.secureConnectionStart ? nav.connectEnd - nav.secureConnectionStart : 0,
             ttfb: nav.responseStart - nav.requestStart,
-            domInteractive: nav.domInteractive,
-            domComplete: nav.domComplete,
-            loadEvent: nav.loadEventEnd - nav.loadEventStart,
           },
-          url: window.location.pathname,
           timestamp: Date.now(),
+          type: 'performance',
+          url: window.location.pathname,
         },
+        priority: ReportPriority.NORMAL,
         timestamp: Date.now(),
       });
     }
 
     const resources = performance.getEntriesByType('resource') as PerformanceResourceTiming[];
-    if (resources.length === 0) return;
+    if (resources.length === 0) {
+      return;
+    }
 
     const totalSize = resources.reduce(
       (sum, r) => sum + ((r as unknown as Record<string, number>).transferSize ?? 0),
@@ -61,14 +67,14 @@ export class PerformanceMonitor {
     ).length;
 
     reportManager.add({
-      priority: ReportPriority.LOW,
       data: {
-        type: 'performance',
         category: 'resource',
-        metrics: { totalSize, totalCount, failedCount },
-        url: window.location.pathname,
+        metrics: { failedCount, totalCount, totalSize },
         timestamp: Date.now(),
+        type: 'performance',
+        url: window.location.pathname,
       },
+      priority: ReportPriority.LOW,
       timestamp: Date.now(),
     });
   }

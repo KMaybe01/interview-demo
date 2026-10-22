@@ -1,4 +1,4 @@
-export type TrackEvent = {
+export interface TrackEvent {
   event: string;
   page: string;
   module: string;
@@ -7,9 +7,9 @@ export type TrackEvent = {
   extra?: Record<string, string | number>;
   timestamp: number;
   source?: 'declarative' | 'code';
-};
+}
 
-export type ErrorReport = {
+export interface ErrorReport {
   type: 'js_error' | 'promise_error' | 'resource_error' | 'api_error' | 'business_error';
   message: string;
   stack?: string;
@@ -19,9 +19,9 @@ export type ErrorReport = {
   url?: string;
   timestamp: number;
   fingerprint?: string;
-};
+}
 
-export type APIReport = {
+export interface APIReport {
   type: 'slow_api' | 'api_error';
   url: string;
   method: string;
@@ -30,25 +30,25 @@ export type APIReport = {
   size: number;
   error?: string;
   timestamp: number;
-};
+}
 
-export type PerformanceReport = {
+export interface PerformanceReport {
   name: string;
   value: number;
   rating: 'good' | 'needs-improvement' | 'poor';
   timestamp: number;
   url: string;
-};
+}
 
-export type BundleChunkEntry = {
+export interface BundleChunkEntry {
   name: string;
   type: 'script' | 'style';
   duration: number;
   transferSize: number;
   decodedSize: number;
-};
+}
 
-export type BundleReportSummary = {
+export interface BundleReportSummary {
   totalLoadTime: number;
   totalTransferSize: number;
   chunkCount: number;
@@ -57,15 +57,15 @@ export type BundleReportSummary = {
   largestChunk: { name: string; size: number; duration: number } | null;
   chunks: BundleChunkEntry[];
   timestamp: number;
-};
+}
 
-export type DegradationReport = {
+export interface DegradationReport {
   type: 'degradation';
   module: string;
   reason: 'network_timeout' | 'business_deny' | 'resource_fail';
   fallback: string;
   timestamp: number;
-};
+}
 
 export enum ReportPriority {
   HIGH = 1,
@@ -73,11 +73,11 @@ export enum ReportPriority {
   LOW = 3,
 }
 
-export type ReportItem = {
+export interface ReportItem {
   priority: ReportPriority;
   data: unknown;
   timestamp: number;
-};
+}
 
 export interface MonitorState {
   errors: ErrorReport[];

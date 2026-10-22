@@ -1,9 +1,9 @@
 import type { ThemeConfig, ThemeMode } from './types.ts';
 
 export const DEFAULT_CONFIG: ThemeConfig = {
-  storageKey: 'theme-mode',
   domStrategy: 'class',
   domTarget: 'dark',
+  storageKey: 'theme-mode',
 };
 
 export function getInitialTheme(config: ThemeConfig): ThemeMode {
@@ -33,6 +33,6 @@ export function getDOMSnapshot(config: ThemeConfig): ThemeMode {
 export function subscribeToDOM(callback: () => void, config?: ThemeConfig): () => void {
   const attributeFilter = config?.domStrategy === 'attribute' ? [config.domTarget] : ['class'];
   const observer = new MutationObserver(() => callback());
-  observer.observe(document.documentElement, { attributes: true, attributeFilter });
+  observer.observe(document.documentElement, { attributeFilter, attributes: true });
   return () => observer.disconnect();
 }

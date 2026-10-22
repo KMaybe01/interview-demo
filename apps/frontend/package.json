@@ -9,19 +9,10 @@
     "preview": "vite preview",
     "test": "vitest run",
     "test:watch": "vitest",
-    "lint": "bunx oxlint --fix src/",
+    "lint": "bunx oxlint src/",
     "format": "bunx oxfmt src/",
     "typecheck": "bunx tsrs-wasm -p tsconfig.app.json --noEmit && bunx tsrs-wasm -p tsconfig.node.json --noEmit",
     "changelog": "conventional-changelog -p conventionalcommits -i CHANGELOG.md -s"
-  },
-  "lint-staged": {
-    "src/**/*.{ts,tsx,js,jsx}": [
-      "bunx oxlint --fix --no-error-on-unmatched-pattern",
-      "bunx oxfmt"
-    ],
-    "*.{json,css,md}": [
-      "bunx oxfmt"
-    ]
   },
   "dependencies": {
     "@interview-demo/shared-monitor": "workspace:*",
@@ -57,7 +48,6 @@
     "babel-plugin-react-compiler": "^1.0.0",
     "husky": "^9.1.7",
     "jsdom": "^29.1.1",
-    "lint-staged": "^17.0.8",
     "rollup-plugin-visualizer": "^7.0.1",
     "vite": "^8.0.16",
     "vitest": "^4.1.9"

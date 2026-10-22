@@ -15,9 +15,9 @@ export function ThemeToggle({ mode, onToggle }: ThemeToggleProps) {
       whileHover={{ scale: 1.05 }}
       transition={{ duration: 0.15, ease: 'easeOut' }}
       style={{
-        display: 'inline-flex',
         alignItems: 'center',
         cursor: 'pointer',
+        display: 'inline-flex',
       }}
     >
       <input
@@ -28,28 +28,28 @@ export function ThemeToggle({ mode, onToggle }: ThemeToggleProps) {
       />
       <span
         style={{
-          position: 'relative',
-          width: 44,
-          height: 24,
-          borderRadius: 12,
           background: mode === 'dark' ? '#333355' : '#e2e2e3',
+          borderRadius: 12,
+          height: 24,
+          position: 'relative',
           transition: 'background 0.3s',
+          width: 44,
         }}
       >
         <motion.span
           initial={false}
           style={{
+            alignItems: 'center',
+            background: mode === 'dark' ? '#1a1a2e' : '#ffffff',
+            borderRadius: '50%',
+            boxShadow: '0 1px 3px rgba(0,0,0,0.2)',
+            display: 'flex',
+            height: 20,
+            justifyContent: 'center',
+            left: 2,
             position: 'absolute',
             top: 2,
-            left: 2,
             width: 20,
-            height: 20,
-            borderRadius: '50%',
-            background: mode === 'dark' ? '#1a1a2e' : '#ffffff',
-            display: 'flex',
-            alignItems: 'center',
-            justifyContent: 'center',
-            boxShadow: '0 1px 3px rgba(0,0,0,0.2)',
           }}
           animate={{
             left: mode === 'dark' ? 22 : 2,

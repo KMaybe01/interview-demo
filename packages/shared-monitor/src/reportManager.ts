@@ -1,8 +1,9 @@
-import { type ReportItem, ReportPriority } from './types.ts';
+import { ReportPriority } from './types.ts';
+import type { ReportItem } from './types.ts';
 
 const FLUSH_INTERVAL_MS = 3000;
 const MAX_BATCH_SIZE = 50;
-const SEND_BEACON_SIZE_LIMIT = 65536;
+const SEND_BEACON_SIZE_LIMIT = 65_536;
 const DEDUP_WINDOW_MS = 5000;
 const DEDUP_CACHE_MAX = 500;
 
@@ -56,7 +57,7 @@ export class ReportManager {
     const payload = JSON.stringify(data);
     const encoder = new TextEncoder();
     const bytes = encoder.encode(payload);
-    const chunkSize = 32768;
+    const chunkSize = 32_768;
     for (let i = 0; i < bytes.length; i += chunkSize) {
       const chunk = bytes.slice(i, i + chunkSize);
       const blob = new Blob([chunk], { type: 'application/octet-stream' });
@@ -66,15 +67,17 @@ export class ReportManager {
 
   private fetchFallback(data: unknown): void {
     fetch(reportEndpoint, {
-      method: 'POST',
       body: JSON.stringify(data),
       headers: { 'Content-Type': 'application/json' },
       keepalive: true,
-    }).catch(() => undefined);
+      method: 'POST',
+    }).catch(() => {});
   }
 
   private scheduleFlush(): void {
-    if (this.isFlushing) return;
+    if (this.isFlushing) {
+      return;
+    }
     if ('requestIdleCallback' in window) {
       requestIdleCallback(() => this.flush(), { timeout: FLUSH_INTERVAL_MS });
     } else {
@@ -132,7 +135,9 @@ export class ReportManager {
   }
 
   flushImmediate(): void {
-    if (this.buffer.length === 0) return;
+    if (this.buffer.length === 0) {
+      return;
+    }
     if (this.flushTimer) {
       clearTimeout(this.flushTimer);
       this.flushTimer = null;

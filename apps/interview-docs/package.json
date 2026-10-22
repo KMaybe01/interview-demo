@@ -7,7 +7,7 @@
     "dev": "vite",
     "build": "bunx tsrs-wasm -p tsconfig.app.json --noEmit && bunx tsrs-wasm -p tsconfig.node.json --noEmit && vite build && node gen-version.mjs",
     "preview": "vite preview",
-    "lint": "bunx oxlint --fix .",
+    "lint": "bunx oxlint .",
     "format": "bunx oxfmt .",
     "typecheck": "bunx tsrs-wasm -p tsconfig.app.json --noEmit && bunx tsrs-wasm -p tsconfig.node.json --noEmit",
     "test": "vitest run",

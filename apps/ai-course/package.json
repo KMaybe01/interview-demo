@@ -10,7 +10,7 @@
     "preview": "vite preview",
     "test": "vitest run",
     "test:watch": "vitest",
-    "lint": "bunx oxlint --fix src/ server/ shared/",
+    "lint": "bunx oxlint src/ server/ shared/",
     "format": "bunx oxfmt src/ server/ shared/",
     "typecheck": "bunx tsrs-wasm -p tsconfig.app.json --noEmit && bunx tsrs-wasm -p tsconfig.node.json --noEmit"
   },

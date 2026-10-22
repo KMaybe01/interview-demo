@@ -9,7 +9,7 @@
     "preview": "vite preview",
     "test": "vitest run",
     "test:watch": "vitest",
-    "lint": "bunx oxlint --fix src/",
+    "lint": "bunx oxlint src/",
     "format": "bunx oxfmt src/",
     "typecheck": "bunx tsrs-wasm -p tsconfig.app.json --noEmit && bunx tsrs-wasm -p tsconfig.node.json --noEmit"
   },

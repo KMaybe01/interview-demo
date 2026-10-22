@@ -4,7 +4,7 @@
   "private": true,
   "type": "module",
   "scripts": {
-    "lint": "bunx oxlint --fix src/",
+    "lint": "bunx oxlint src/",
     "format": "bunx oxfmt src/"
   },
   "main": "./src/index.ts",

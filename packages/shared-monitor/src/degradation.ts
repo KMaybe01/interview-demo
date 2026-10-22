@@ -43,20 +43,20 @@ export async function withDegradation<T>(
       const result = await wrappedFetcher();
       clearTimeout(timer);
       return result;
-    } catch (err) {
+    } catch (error) {
       clearTimeout(timer);
 
-      if (err instanceof BusinessError) {
+      if (error instanceof BusinessError) {
         reportManager.add({
-          priority: ReportPriority.NORMAL,
           data: {
-            type: 'degradation',
+            code: error.code,
+            fallback: String(fallback),
             module: moduleName,
             reason: 'business_deny' as const,
-            fallback: String(fallback),
-            code: err.code,
             timestamp: Date.now(),
+            type: 'degradation',
           },
+          priority: ReportPriority.NORMAL,
           timestamp: Date.now(),
         });
         return fallback;
@@ -68,14 +68,14 @@ export async function withDegradation<T>(
       }
 
       reportManager.add({
-        priority: ReportPriority.NORMAL,
         data: {
-          type: 'degradation',
+          fallback: String(fallback),
           module: moduleName,
           reason: 'network_timeout' as const,
-          fallback: String(fallback),
           timestamp: Date.now(),
+          type: 'degradation',
         },
+        priority: ReportPriority.NORMAL,
         timestamp: Date.now(),
       });
 

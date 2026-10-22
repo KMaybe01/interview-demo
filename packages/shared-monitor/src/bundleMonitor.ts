@@ -40,7 +40,7 @@ function getModuleName(url: string): string {
     let name = parts.pop() || parts.pop() || path;
     name = name.replace(/\.(js|mjs|cjs|css)(\?.*)?$/, '');
     if (name === 'index' && parts.length > 0) {
-      name = parts[parts.length - 1];
+      name = parts.at(-1);
     }
     return name || 'unknown';
   } catch {
@@ -52,7 +52,9 @@ export class BundleMonitor {
   private initialized = false;
 
   init(): void {
-    if (this.initialized) return;
+    if (this.initialized) {
+      return;
+    }
     this.initialized = true;
 
     if (document.readyState === 'complete') {
@@ -64,7 +66,9 @@ export class BundleMonitor {
 
   private collect(): void {
     const chunks = this.getBundleChunks();
-    if (chunks.length === 0) return;
+    if (chunks.length === 0) {
+      return;
+    }
 
     const jsChunks = chunks.filter((c) => c.type === 'script');
     const cssChunks = chunks.filter((c) => c.type === 'style');
@@ -78,48 +82,48 @@ export class BundleMonitor {
     const sorted = [...chunks].sort((a, b) => b.transferSize - a.transferSize);
     const largest =
       sorted.length > 0
-        ? { name: sorted[0].name, size: sorted[0].transferSize, duration: sorted[0].duration }
+        ? { duration: sorted[0].duration, name: sorted[0].name, size: sorted[0].transferSize }
         : null;
 
     const report: BundleReport = {
-      type: 'bundle',
-      totalLoadTime,
-      totalTransferSize,
-      totalDecodedSize,
       chunkCount: chunks.length,
-      jsCount: jsChunks.length,
+      chunks: this.trimChunks(chunks, 20),
       cssCount: cssChunks.length,
-      jsTotalSize,
       cssTotalSize,
+      jsCount: jsChunks.length,
+      jsTotalSize,
       largestChunk: largest,
       slowChunks: slowChunks.slice(0, 10),
-      chunks: this.trimChunks(chunks, 20),
-      url: window.location.pathname,
       timestamp: Date.now(),
+      totalDecodedSize,
+      totalLoadTime,
+      totalTransferSize,
+      type: 'bundle',
+      url: window.location.pathname,
     };
 
     const chunkEntries = this.trimChunks(chunks, 30).map((c) => ({
-      name: c.name,
-      type: c.type,
-      duration: c.duration,
-      transferSize: c.transferSize,
       decodedSize: c.decodedSize,
+      duration: c.duration,
+      name: c.name,
+      transferSize: c.transferSize,
+      type: c.type,
     }));
 
     useMonitorStore.getState().addBundleReport({
+      chunkCount: chunks.length,
+      chunks: chunkEntries,
+      cssCount: cssChunks.length,
+      jsCount: jsChunks.length,
+      largestChunk: largest,
+      timestamp: Date.now(),
       totalLoadTime,
       totalTransferSize,
-      chunkCount: chunks.length,
-      jsCount: jsChunks.length,
-      cssCount: cssChunks.length,
-      largestChunk: largest,
-      chunks: chunkEntries,
-      timestamp: Date.now(),
     });
 
     reportManager.add({
-      priority: ReportPriority.LOW,
       data: report,
+      priority: ReportPriority.LOW,
       timestamp: Date.now(),
     });
   }
@@ -128,19 +132,25 @@ export class BundleMonitor {
     const resources = performance.getEntriesByType('resource') as PerformanceResourceTiming[];
     return resources
       .filter((r) => {
-        const name = r.name;
-        if (!name) return false;
-        if (r.initiatorType === 'script' && SCRIPT_EXT.test(name)) return true;
-        if (r.initiatorType === 'link' && CSS_EXT.test(name)) return true;
+        const { name } = r;
+        if (!name) {
+          return false;
+        }
+        if (r.initiatorType === 'script' && SCRIPT_EXT.test(name)) {
+          return true;
+        }
+        if (r.initiatorType === 'link' && CSS_EXT.test(name)) {
+          return true;
+        }
         return false;
       })
       .map((r) => ({
-        name: getModuleName(r.name),
-        type: r.initiatorType === 'link' ? ('style' as const) : ('script' as const),
-        duration: r.duration,
-        transferSize: (r as unknown as Record<string, number>).transferSize ?? 0,
         decodedSize: (r as unknown as Record<string, number>).decodedBodySize ?? 0,
+        duration: r.duration,
+        name: getModuleName(r.name),
         startTime: r.startTime,
+        transferSize: (r as unknown as Record<string, number>).transferSize ?? 0,
+        type: r.initiatorType === 'link' ? ('style' as const) : ('script' as const),
       }));
   }
 
@@ -159,17 +169,19 @@ export class BundleMonitor {
   }
 
   private trimChunks(chunks: BundleChunk[], max: number): BundleChunk[] {
-    if (chunks.length <= max) return chunks;
+    if (chunks.length <= max) {
+      return chunks;
+    }
     const sorted = [...chunks].sort((a, b) => b.transferSize - a.transferSize);
     return [
       ...sorted.slice(0, max),
       {
-        name: `...and ${chunks.length - max} more`,
-        type: 'script',
-        duration: 0,
-        transferSize: 0,
         decodedSize: 0,
+        duration: 0,
+        name: `...and ${chunks.length - max} more`,
         startTime: 0,
+        transferSize: 0,
+        type: 'script',
       },
     ];
   }
