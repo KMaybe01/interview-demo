@@ -6,13 +6,13 @@
   "scripts": {
     "dev": "vite",
     "server": "bun server/index.ts",
-    "build": "tsc -p tsconfig.app.json --noEmit && tsc -p tsconfig.node.json --noEmit && vite build",
+    "build": "bunx tsrs-wasm -p tsconfig.app.json --noEmit && bunx tsrs-wasm -p tsconfig.node.json --noEmit && vite build",
     "preview": "vite preview",
     "test": "vitest run",
     "test:watch": "vitest",
     "lint": "bunx oxlint --fix src/ server/ shared/",
     "format": "bunx oxfmt src/ server/ shared/",
-    "typecheck": "tsc -p tsconfig.app.json --noEmit && tsc -p tsconfig.node.json --noEmit"
+    "typecheck": "bunx tsrs-wasm -p tsconfig.app.json --noEmit && bunx tsrs-wasm -p tsconfig.node.json --noEmit"
   },
   "dependencies": {
     "@ai-sdk/openai": "^4.0.20",
@@ -31,7 +31,6 @@
     "@types/react-dom": "^19.2.3",
     "@vitejs/plugin-react": "^6.0.2",
     "jsdom": "^29.1.1",
-    "typescript": "^7.0.2",
     "vite": "^8.0.16",
     "vitest": "^4.1.9"
   }

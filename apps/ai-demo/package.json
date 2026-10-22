@@ -5,13 +5,13 @@
   "type": "module",
   "scripts": {
     "dev": "vite",
-    "build": "tsc -p tsconfig.app.json --noEmit && tsc -p tsconfig.node.json --noEmit && vite build",
+    "build": "bunx tsrs-wasm -p tsconfig.app.json --noEmit && bunx tsrs-wasm -p tsconfig.node.json --noEmit && vite build",
     "preview": "vite preview",
     "test": "vitest run",
     "test:watch": "vitest",
     "lint": "bunx oxlint --fix src/",
     "format": "bunx oxfmt src/",
-    "typecheck": "tsc -p tsconfig.app.json --noEmit && tsc -p tsconfig.node.json --noEmit"
+    "typecheck": "bunx tsrs-wasm -p tsconfig.app.json --noEmit && bunx tsrs-wasm -p tsconfig.node.json --noEmit"
   },
   "dependencies": {
     "@a2ui/markdown-it": "^0.1.0",
@@ -46,7 +46,6 @@
     "@vitejs/plugin-react": "^6.0.2",
     "jsdom": "^29.1.1",
     "rollup-plugin-visualizer": "^7.0.1",
-    "typescript": "^7.0.2",
     "vite": "^8.0.16",
     "vitest": "^4.1.9"
   }

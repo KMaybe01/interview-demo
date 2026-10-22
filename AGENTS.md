@@ -28,11 +28,11 @@ bun install          # 只能用 bun, 不能用 npm（从根目录安装所有 w
 | 命令 | 说明 |
 |------|------|
 | `bun run --cwd apps/frontend dev` | Vite 开发服务器 (port 5173, `/api` + `/ws` 代理到 `:8080`) |
-| `bun run --cwd apps/frontend build` | `tsc -p tsconfig.app.json --noEmit && tsc -p tsconfig.node.json --noEmit && vite build` (Rolldown Rust 打包) |
+| `bun run --cwd apps/frontend build` | `bunx tsrs-wasm -p tsconfig.app.json --noEmit && bunx tsrs-wasm -p tsconfig.node.json --noEmit && vite build` (Rolldown Rust 打包) |
 | `bun run --cwd apps/frontend test:watch` | `vitest` (监听模式) |
 | `bun run --cwd apps/frontend lint` | `bunx oxlint --fix src/` (oxlint + oxfmt 是**唯一**的 linter/formatter) |
 | `bun run --cwd apps/frontend format` | `bunx oxfmt src/` |
-| `bun run --cwd apps/frontend typecheck` | `tsc -p tsconfig.app.json --noEmit && tsc -p tsconfig.node.json --noEmit` — 类型检查 |
+| `bun run --cwd apps/frontend typecheck` | `bunx tsrs-wasm -p tsconfig.app.json --noEmit && bunx tsrs-wasm -p tsconfig.node.json --noEmit` — 类型检查 |
 
 也可直接 `cd apps/frontend` 后执行上述命令。
 
@@ -41,18 +41,18 @@ bun install          # 只能用 bun, 不能用 npm（从根目录安装所有 w
 | 命令 | 说明 |
 |------|------|
 | `bun run --cwd apps/ai-demo dev` | Vite 开发服务器 (port 5175, `/api` 代理到 `:8080`) |
-| `bun run --cwd apps/ai-demo build` | `tsc -p tsconfig.app.json --noEmit && tsc -p tsconfig.node.json --noEmit && vite build` |
+| `bun run --cwd apps/ai-demo build` | `bunx tsrs-wasm -p tsconfig.app.json --noEmit && bunx tsrs-wasm -p tsconfig.node.json --noEmit && vite build` |
 | `bun run --cwd apps/ai-demo test` | `vitest run` |
 | `bun run --cwd apps/ai-demo lint` | `bunx oxlint --fix src/` |
 | `bun run --cwd apps/ai-demo format` | `bunx oxfmt src/` |
-| `bun run --cwd apps/ai-demo typecheck` | `tsc -p tsconfig.app.json --noEmit && tsc -p tsconfig.node.json --noEmit` |
+| `bun run --cwd apps/ai-demo typecheck` | `bunx tsrs-wasm -p tsconfig.app.json --noEmit && bunx tsrs-wasm -p tsconfig.node.json --noEmit` |
 
 `apps/interview-docs/`（前端知识库文档站点）：
 
 | 命令 | 说明 |
 |------|------|
 | `cd apps/interview-docs && bun run dev` | Vite 开发服务器 (port 5000) |
-| `cd apps/interview-docs && bun run build` | `tsc -p tsconfig.app.json --noEmit && tsc -p tsconfig.node.json --noEmit && vite build && node gen-version.mjs` |
+| `cd apps/interview-docs && bun run build` | `bunx tsrs-wasm -p tsconfig.app.json --noEmit && bunx tsrs-wasm -p tsconfig.node.json --noEmit && vite build && node gen-version.mjs` |
 | `cd apps/interview-docs && bun run lint` | `bunx oxlint --fix .` |
 | `cd apps/interview-docs && bun run format` | `bunx oxfmt .` |
 
@@ -344,4 +344,4 @@ export { useThemeStore };
 - `package.json` 必须包含 `"packageManager": "bun@1.4.2"` 字段（Turborepo 2+ 要求），升级 Bun 时同步更新此字段
 - 使用 `--filter` 参数限定 turbo 只作用于特定 workspace，如 `bun run build --filter=@interview-demo/frontend`
 - Vite 配置中 `form` 代码分割组包含 ajv 但**未使用** @rjsf
-- **TypeScript 7** (Go 原生编译器 tsgo)：`oxlint` / `oxfmt` 统一在根 `package.json` 管理，各 app 无独立配置文件（配置只放根目录，靠就近查找生效）
+- **类型检查**: tsrs（oxc-project 的 TypeScript 7 编译器 Rust 移植）由根 `package.json` 的 `@tsrs/wasm` 统一提供，脚本统一调用 `bunx tsrs-wasm`（wasm 版跨平台含 Windows；原生 `tsrs` 包 0.18.0 尚无 Windows 二进制，故不采用）；`oxlint` / `oxfmt` 同样统一在根 `package.json` 管理，各 app 无独立配置文件（配置只放根目录，靠就近查找生效）

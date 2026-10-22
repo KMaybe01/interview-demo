@@ -6,10 +6,10 @@ React 19 静态文档站点，GitHub Pages 部署，内容为前端面试知识�
 
 ```bash
 bun dev           # dev server (port 5000)
-bun run build     # tsc -p tsconfig.app.json --noEmit && tsc -p tsconfig.node.json --noEmit → vite build → node gen-version.mjs
+bun run build     # bunx tsrs-wasm -p tsconfig.app.json --noEmit && bunx tsrs-wasm -p tsconfig.node.json --noEmit → vite build → node gen-version.mjs
 bun run preview   # serve dist/
 bun run lint      # bunx oxlint --fix . (lint 自动修复；格式化由 bun run format 负责)
-bun run typecheck # tsc -p tsconfig.app.json --noEmit && tsc -p tsconfig.node.json --noEmit
+bun run typecheck # bunx tsrs-wasm -p tsconfig.app.json --noEmit && bunx tsrs-wasm -p tsconfig.node.json --noEmit
 bun test          # vitest run
 bun run test:watch # vitest (watch mode)
 bun run changelog # conventional-changelog

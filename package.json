@@ -26,6 +26,7 @@
   "devDependencies": {
     "@commitlint/cli": "^21.1.0",
     "@commitlint/config-conventional": "^21.1.0",
+    "@tsrs/wasm": "^0.18.0-ts7.1.0-dev.20260929",
     "conventional-changelog": "^8.0.1",
     "conventional-changelog-conventionalcommits": "^10.2.1",
     "husky": "^9.1.7",

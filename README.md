@@ -24,6 +24,7 @@ Monorepo (Bun workspaces + Turborepo) 全栈项目，包含：
 | 样式 | Ant Design tokens + CSS Modules (Login) + BEM (interview-docs) |
 | 后端 (Go) | Go 1.27（`go.mod` 声明 `go 1.27.2`）, Gin 1.12, Gorilla WebSocket, golang-jwt, go-openai |
 | 运行时 | Bun 1.4.2（依赖安装 + 脚本执行 + CI/CD, Monorepo + Turborepo 编排） |
+| 类型检查 | tsrs 0.18（`@tsrs/wasm`，TypeScript 7 编译器的 Rust 移植，脚本统一 `bunx tsrs-wasm`，跨平台含 Windows） |
 | CI/CD | GitHub Actions (lint/test/typecheck) + GitHub Pages (文档站) + GitLab CI (validate → build → Docker 镜像) |
 | 部署 | Helm Chart 手工部署到 K8s (RollingUpdate, maxUnavailable=0 → zero-downtime) + Nginx Ingress；文档站同时发布到 GitLab Pages |
 
@@ -102,7 +103,7 @@ bun run typecheck
 bun run test
 
 # 单独构建前端
-cd apps/frontend && bun run build   # tsc -p tsconfig.app.json --noEmit && tsc -p tsconfig.node.json --noEmit && vite build (Rolldown)
+cd apps/frontend && bun run build   # bunx tsrs-wasm -p tsconfig.app.json --noEmit && bunx tsrs-wasm -p tsconfig.node.json --noEmit && vite build (Rolldown)
 bun run lint                        # oxlint --fix
 bun run test                        # Vitest run
 ```
@@ -118,7 +119,7 @@ GitHub Actions（`.github/workflows/lint.yml`，Go 1.27 / Bun）：
 | lint-ai-demo | `bun run build --filter=@interview-demo/ai-demo` | Vite 8 |
 | lint-workspaces | `bun run lint`（turbo 并行） | oxlint 1.89 |
 | test-workspaces | `bun run test`（turbo 并行缓存，不依赖 build） | Vitest 4 |
-| typecheck-workspaces | `bun run typecheck` | TypeScript 7 |
+| typecheck-workspaces | `bun run typecheck` | tsrs（@tsrs/wasm） |
 
 GitLab CI（`.gitlab-ci.yml`）分四阶段：`validate`（go vet / go test -race / lint / test / typecheck）→ `build`（backend 二进制 + 三个前端 dist）→ `package`（构建并推送 4 个 Docker 镜像）→ `deploy`（GitLab Pages 发布文档站）。
 

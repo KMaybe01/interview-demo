@@ -5,11 +5,11 @@
   "type": "module",
   "scripts": {
     "dev": "vite",
-    "build": "tsc -p tsconfig.app.json --noEmit && tsc -p tsconfig.node.json --noEmit && vite build && node gen-version.mjs",
+    "build": "bunx tsrs-wasm -p tsconfig.app.json --noEmit && bunx tsrs-wasm -p tsconfig.node.json --noEmit && vite build && node gen-version.mjs",
     "preview": "vite preview",
     "lint": "bunx oxlint --fix .",
     "format": "bunx oxfmt .",
-    "typecheck": "tsc -p tsconfig.app.json --noEmit && tsc -p tsconfig.node.json --noEmit",
+    "typecheck": "bunx tsrs-wasm -p tsconfig.app.json --noEmit && bunx tsrs-wasm -p tsconfig.node.json --noEmit",
     "test": "vitest run",
     "test:watch": "vitest"
   },
@@ -34,7 +34,6 @@
     "@vitejs/plugin-react": "^6.0.0",
     "jsdom": "^29.1.1",
     "rollup-plugin-visualizer": "^7.0.1",
-    "typescript": "^7.0.2",
     "vite": "^8.1.0",
     "vitest": "^4.1.9"
   }

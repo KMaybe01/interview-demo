@@ -92,7 +92,7 @@ graph LR
 | 代码高亮 | highlight.js | `^11.11.1` |
 | 图表 | Mermaid（懒加载） | `^11.6.0` |
 | 主题 | `@interview-demo/shared-theme`（workspace 包） | `workspace:*` |
-| 类型检查 | TypeScript | `^7.0.2` |
+| 类型检查 | tsrs（`@tsrs/wasm`） | `0.18.0-ts7.1.0-dev.20260929` |
 | 测试 | Vitest + jsdom + Testing Library | `vitest ^4.1.9`、`jsdom ^29.1.1`、`@testing-library/react ^16.3.2` |
 | 代码质量 | oxlint + oxfmt（根目录统一配置，唯一标准） | 根 `.oxlintrc.json` / `.oxfmtrc.json` |
 | 包管理 | Bun | 根 `packageManager` |
@@ -819,11 +819,11 @@ bun install
 | 命令 | 作用 |
 |------|------|
 | `bun dev` | Vite 开发服务器，`http://localhost:5000` |
-| `bun run build` | `tsc -p tsconfig.app.json --noEmit` → `tsc -p tsconfig.node.json --noEmit` → `vite build` → `node gen-version.mjs` |
+| `bun run build` | `bunx tsrs-wasm -p tsconfig.app.json --noEmit` → `bunx tsrs-wasm -p tsconfig.node.json --noEmit` → `vite build` → `node gen-version.mjs` |
 | `bun run preview` | 本地预览 `dist/` |
 | `bun run lint` | `bunx oxlint --fix .` |
 | `bun run format` | `bunx oxfmt .`（Markdown 已在配置中忽略） |
-| `bun run typecheck` | 两个 `tsc` project，只做类型检查 |
+| `bun run typecheck` | 两个 `tsrs-wasm` project，只做类型检查 |
 | `bun test` / `bun run test` | `vitest run` |
 | `bun run test:watch` | `vitest` |
 
@@ -1149,8 +1149,8 @@ bun run build
 
 四个步骤顺序执行：
 
-1. `tsc -p tsconfig.app.json --noEmit` —— 应用类型检查
-2. `tsc -p tsconfig.node.json --noEmit` —— `vite.config.ts` 类型检查
+1. `bunx tsrs-wasm -p tsconfig.app.json --noEmit` —— 应用类型检查
+2. `bunx tsrs-wasm -p tsconfig.node.json --noEmit` —— `vite.config.ts` 类型检查
 3. `vite build` —— rolldown 生产打包
 4. `node gen-version.mjs` —— 生成构建产物
 

@@ -125,7 +125,7 @@ bun dev
 ## 构建
 
 ```bash
-bun run build       # tsc -b + vite build (Rolldown)
+bun run build       # bunx tsrs-wasm 类型检查 + vite build (Rolldown)
 bun run lint        # oxlint --fix
 bun run format      # oxfmt
 ```
