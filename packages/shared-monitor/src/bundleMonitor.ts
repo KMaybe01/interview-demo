@@ -40,7 +40,7 @@ function getModuleName(url: string): string {
     let name = parts.pop() || parts.pop() || path;
     name = name.replace(/\.(js|mjs|cjs|css)(\?.*)?$/, '');
     if (name === 'index' && parts.length > 0) {
-      name = parts.at(-1);
+      name = parts[parts.length - 1];
     }
     return name || 'unknown';
   } catch {

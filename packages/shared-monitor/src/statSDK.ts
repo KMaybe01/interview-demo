@@ -16,7 +16,7 @@ export class StatSDK {
       if (!target) {
         return;
       }
-      const raw = target.dataset.stat;
+      const raw = (target as HTMLElement).dataset.stat;
       if (!raw) {
         return;
       }
