@@ -49,8 +49,8 @@
 - 5G 核心网测试用例管理系统
 - 企业级综合网络管理系统（AeMS）
 
-技术栈上，主要使用 React 19 + TypeScript 7 (tsgo) + Ant Design 6 + Zustand 5，
-配合 Go + Gin 后端，深度使用 TypeScript 7 strict 模式（tsgo Go 原生编译器，类型检查提速约 10×）。
+技术栈上，主要使用 React 19 + TypeScript 7 (tsrs，Rust 移植) + Ant Design 6 + Zustand 5，
+配合 Go + Gin 后端，深度使用 TypeScript 7 strict 模式（本仓库用 `@tsrs/wasm`，Rust 移植，通过 `bunx tsrs-wasm --noEmit` 做类型检查）。
 
 核心能力聚焦于三个方向：
 ┌─ 实时通信 ─── 多协议降级传输层 (WS→SSE→Polling) + 背压控制 + 消息合并
@@ -77,7 +77,7 @@
 我有 4 年前端经验，专注企业级 ToB 平台与实时通信系统架构。
 主导过 5G 测试平台、网络管理系统等项目。
 
-技术栈：React 19 + TypeScript 7 (tsgo) + Ant Design 6 + Zustand 5 + Go。
+技术栈：React 19 + TypeScript 7 (tsrs，Rust 移植) + Ant Design 6 + Zustand 5 + Go。
 
 核心能力：
 - 实时通信：多协议降级传输(WS→SSE→Polling)+背压控制，1000+QPS下保持60fps
@@ -172,7 +172,7 @@
 | 属性 | 内容 |
 |------|------|
 | 类型 | ToB 企业级 — 5G 核心网 SMF 测试工具管理界面 |
-| 技术栈 | React 19 + TypeScript 7 (tsgo) + Ant Design 6 + Zustand 5 + SSE + Go + Gin |
+| 技术栈 | React 19 + TypeScript 7 (tsrs，Rust 移植) + Ant Design 6 + Zustand 5 + SSE + Go + Gin |
 | 时间 | 2024.03 – 至今 |
 | 负责 | 前端架构设计、递归动态表单引擎、SSE实时日志流、React 19并发特性实践、全链路可观测体系 |
 
@@ -540,6 +540,8 @@ Zustand：
 
 ### React Fiber 原理
 
+> 🧠 **大白话**：Fiber 就是把「一次性做完的大扫除」拆成「按房间逐个打扫、门铃一响随时能停」的待办清单；双缓冲是「先在草稿纸上画完，再一次性贴到墙上」，所以中途不会出现半张画。
+
 ```
 Fiber 是 React 16 引入的新的协调引擎，核心是"可中断的递归"。
 
@@ -565,6 +567,8 @@ Fiber 架构：
 
 ### React 19 新特性
 
+> 🧠 **大白话**：`use` 让组件在渲染中「像读同步数据一样等 Promise / Context」；`startTransition` 是「后台搬重物，不挡前台接待客人」；React Compiler 是「自动帮你贴 memo 胶带的机器人」——不用手写 `useMemo`。
+
 ```
 ├─ React Compiler 1.0（原 React Forget，已于正式版发布）
 │   └─ 构建期自动注入 memo/useMemo/useCallback，零手动优化
@@ -579,6 +583,8 @@ Fiber 架构：
 ```
 
 ### Event Loop + 微任务/宏任务
+
+> 🧠 **大白话**：同步任务是「正在接待的客人」，微任务是「这位客人走之前必须顺手办完的事」，宏任务是「下一位客人」——所以微任务队列清空前绝不会叫下一位；浏览器渲染插在两位客人之间。
 
 ```
 ├─ 执行同步代码（属于宏任务）
@@ -602,6 +608,8 @@ Fiber 架构：
 ```
 
 ### 浏览器渲染流程
+
+> 🧠 **大白话**：渲染流水线像**印海报**——Style 是定稿文字（算出样式），Layout 是排版（算出位置），Paint 是上色（画出像素），Composite 是把各层贴图叠成成品。`transform`/`opacity` 只动最后一步，所以最快。
 
 ```
 ├─ Style：将 CSS 规则匹配到 DOM 节点，生成 Computed Style

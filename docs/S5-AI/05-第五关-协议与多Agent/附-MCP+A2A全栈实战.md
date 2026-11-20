@@ -3354,7 +3354,7 @@ class A2AHTTPClient {
   }
 
   async getAgentCard(): Promise<AgentCard> {
-    const res = await fetch(`${this.baseUrl}/.well-known/agent-card`);
+    const res = await fetch(`${this.baseUrl}/.well-known/agent.json`);
     return res.json();
   }
 
@@ -3489,7 +3489,7 @@ class A2AAgentServer {
     this.app.use(express.json());
 
     // Agent Card 端点
-    this.app.get("/.well-known/agent-card", (req, res) => {
+    this.app.get("/.well-known/agent.json", (req, res) => {
       res.json(this.config.card);
     });
 

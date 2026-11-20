@@ -1,12 +1,12 @@
-# 🚀 AI Agent 全栈开发工程师学习指南
+# ⑦ Go 后端参考实现（副线）
 
-> 📖 **从零到一构建商业级 AI Agent 应用，掌握 LLMOps 全栈开发技能**
-> 技术栈：**Go Gin + React 19 + TypeScript + Docker**
+> 📖 **用 Go + Gin 重走一遍 LLM 后端**：网关熔断、工具沙箱、护栏、HITL、评测这些「服务端重活」看生产级怎么写。
+> 技术栈：**Go + Gin + React 19 + TypeScript + Docker**
 
 ---
 
-> ⚠️ **本支线的定位**：这是与 [03-课程实战](../08-资料库/index.md)（TS / LangChain 主线）**并行的第二条支线**，
-> 用 Go + Gin 重走一遍 LLM 后端。两条线技术栈独立、目标相同，**选一条走完即可**，不必都读。
+> ⚠️ **本支线的定位**：这是[六关卡主线](../index.md)之外的**副线**，按需查阅、**不要求通读**。
+> 主线是 AI SDK 7 + TypeScript 全栈（`apps/ai-course/`）；本支线对应 `apps/backend/internal/*` 的 Go 实现。
 >
 > **版本基线**：型号与协议版本统一以 [../index.md](../index.md#版本基线唯一真源) 为准。
 

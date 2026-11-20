@@ -308,7 +308,7 @@ Bun 1.4（运行时 + 包管理）   → pnpm / yarn（workspace monorepo）
 Ant Design 6                 → 移动端：Ant Design Mobile / Vant
 ECharts 6 + OpenLayers 10.9  → Framer Motion / Lottie（动画）
 Zustand 5（精确订阅）         → Jotai / Signals（原子化状态）
-Biome + ESLint + TS Strict   → 同栈迁移，无需学习
+oxlint + oxfmt + TS Strict  → 同栈迁移，无需学习
 GitHub Actions + GitLab CI   → Vercel / Netlify / Cloudflare Pages
 Prometheus + Grafana         → Sentry / Datadog RUM / Firebase
 SSE / WebSocket              → WebSocket + 消息推送 SDK

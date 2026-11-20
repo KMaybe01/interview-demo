@@ -8,7 +8,7 @@ title: TypeScript 高频题
 >
 > **本篇定位**：TS 题的区分点在「类型系统思维」而不仅是语法：`unknown` vs `any`、类型守卫与收窄、泛型约束、条件/映射类型、`satisfies` 与 `as const` 的取舍。本篇 22 题按统一模板组织，可直接复述。
 >
-> 📌 **版本现状（2026-10-10 核验）**：TypeScript 最新 stable 为 **7.0.2**（`rc` `7.0.1-rc`、`next` `7.1.0-dev`）；**Angular 22 只支持 `typescript >=6.0 <6.1`，不支持 TS 7**。TS 7 是 Go 原生编译器（tsgo）主线，编译性能大幅提升；文中 TS 6 vs 7 的差异以此为准。
+> 📌 **版本现状（2026-10-10 核验）**：TypeScript 最新 stable 为 **7.0.2**（`rc` `7.0.1-rc`、`next` `7.1.0-dev`）；**Angular 22 只支持 `typescript >=6.0 <6.1`，不支持 TS 7**。TS 7 语言主线的原生编译器是 Go 版（tsgo），编译性能大幅提升；**本仓库**用 `@tsrs/wasm`（Rust 移植，`bunx tsrs-wasm`）做类型检查，二者是「语言实现」与「仓库工具」的关系；文中 TS 6 vs 7 的差异以语言主线为准。
 
 ## 🧭 核心考点
 
@@ -836,7 +836,7 @@ class User {
 | **元数据** | 需 `emitDecoratorMetadata` + `reflect-metadata` | `context.metadata` 内置支持 |
 | **私有成员** | 无法装饰私有字段 | ✅ `context.private` 标记，可安全访问 |
 | **TS 版本** | 1.5+ | 5.0+ |
-| **ES 状态** | Babel 遗留规范 | Stage 3，已进入 ES2024 候选 |
+| **ES 状态** | Babel 遗留规范 | Stage 3，尚未进入任何已发布 ES 版本（2026-10 核验） |
 | **未来** | TypeScript 6.x 可能移除 | 长期发展方向 |
 
 **推荐：新项目使用标准装饰器，无需开启 `experimentalDecorators`。**
@@ -1335,7 +1335,7 @@ import { utils } from '#/utils.js'
 |------|-------------|-------------|
 | `strict` | `false` | **`true`** |
 | `module` | `commonjs` | **`esnext`** |
-| `target` | `es3` | **`es2025`** |
+| `target` | `es5`（TS 5.0 起由 es3 改为 es5） | **`es2025`** |
 | `esModuleInterop` | `false` | **`true`**（不能关闭） |
 | `types` | 自动扫描所有 | **`[]`**（需显式声明） |
 | `rootDir` | 自动推断 | **`.`**（tsconfig 目录） |
@@ -1423,7 +1423,7 @@ type Result = HeadTail<'😀abc'>
 | 新项目 | 直接使用 TS 7.0 + `strict: true`，走 `esnext` + `bundler` |
 | 现有项目 | 先升级到 TS 6.0，处理所有 deprecation 警告，再升 7.0 |
 | 使用 Vue/Svelte/Astro | 暂留 TS 6.0，等待生态工具适配 7.0 API |
-| 使用 Angular | CLI 用 TS 7 编译，编辑器可降级到 TS 6 |
+| 使用 Angular | Angular 22 只支持 `typescript >=6.0 <6.1`，CLI 与编辑器都留在 TS 6，等适配后再升 7 |
 | 工具/库作者 | 使用 `@typescript/typescript6` 兼容包，期待 7.1 API |
 | 大 monorepo | TS 7 CI 提速 8-10x，editor 体验极大改善 |
 

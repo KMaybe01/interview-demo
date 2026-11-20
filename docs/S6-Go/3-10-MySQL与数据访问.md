@@ -262,18 +262,18 @@ graph TD
 **答案要点**：
 - **READ UNCOMMITTED**：可读到未提交数据（脏读）
 - **READ COMMITTED**：只能读已提交数据（解决脏读，有不可重复读）
-- **REPEATABLE READ**（默认）：同一事务多次读取一致（解决不可重复读，MVCC 解决幻读）
+- **REPEATABLE READ**（默认）：同一事务多次读取一致（解决不可重复读；**快照读靠 MVCC、当前读靠 next-key lock** 共同避免幻读）
 - **SERIALIZABLE**：完全串行化（解决所有问题，性能最差）
 
 ```mermaid
 graph LR
     A[READ UNCOMMITTED] -->|解决脏读| B[READ COMMITTED]
     B -->|解决不可重复读| C[REPEATABLE READ 默认]
-    C -->|解决幻读| D[SERIALIZABLE]
+    C -->|最强一致性：所有读加锁| D[SERIALIZABLE]
 
     A --> A1[脏读 ❌]
     B --> B1[不可重复读 ❌]
-    C --> C1[幻读 ✅ MVCC]
+    C --> C1[幻读 ✅<br/>MVCC 快照读 + next-key lock 当前读]
     D --> D1[性能最差]
 
     style A fill:#ffcdd2
@@ -306,7 +306,7 @@ graph LR
 **答案要点**：
 - **候选键**：能唯一标识一行的最小属性集
 - **主键**：从候选键中选择的一个，作为表的唯一标识
-- 主键不能为 NULL，候选键可以为 NULL
+- 主键与候选键都要求**唯一且非空**；SQL 的 `UNIQUE` 列允许 NULL，但只有满足非空约束时才构成候选键
 - 一个表只能有一个主键，但可有多个候选键
 
 ---

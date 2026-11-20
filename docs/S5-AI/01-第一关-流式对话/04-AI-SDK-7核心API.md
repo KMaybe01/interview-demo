@@ -32,7 +32,7 @@
 - [ ] 接入 Telemetry，能回答「这次请求花了多少 token、卡在哪一步」
 
 > ⚠️ **版本基线**：本文基于 **AI SDK 7**（2026-06 发布）。本仓库 `apps/ai-demo` 依赖 `ai@^7`。
-> 从 v6 升级请优先跑官方 codemod：`npx @ai-sdk/codemod v7`。
+> 从 v6 升级请优先跑官方 codemod：`bunx @ai-sdk/codemod v7`（本仓库只用 bun）。
 
 ---
 
@@ -278,7 +278,7 @@ for await (const chunk of result.textStream) {
 const { performance } = await result.finalStep;
 console.log({
   responseTimeMs: performance.responseTimeMs,       // 总耗时
-  timeToFirstOutputMs: performance.timeToFirstOutputMs, // 首字延迟（TTFO）
+  timeToFirstOutputMs: performance.timeToFirstOutputMs, // 首字延迟（TTFT）
   outputTokensPerSecond: performance.outputTokensPerSecond, // 输出速度
 });
 ```
@@ -885,7 +885,7 @@ reranking、usage、错误，以及选中的 runtime / tool context。
 官方集成：Datadog、Langfuse、Braintrust、Raindrop、Sentry、Laminar、LangSmith。
 
 > 📌 **最小可用可观测清单**（上线前至少要有这 5 个指标）：
-> TTFO（首字延迟）、输出 tokens/s、每次会话总成本、工具失败率、`finishReason` 分布。
+> TTFT（首字延迟）、输出 tokens/s、每次会话总成本、工具失败率、`finishReason` 分布。
 
 ---
 
@@ -929,7 +929,7 @@ const { providerReference } = await uploadFile({
 });
 
 const result = streamText({
-  model: openai.responses('gpt-5.5'),
+  model: openai.responses('gpt-5-mini'), // 示例型号按版本基线核对当期实列
   messages: [
     {
       role: 'user',
@@ -1211,7 +1211,7 @@ registerTelemetry(new OpenTelemetry());
 - [ ] 前端渲染覆盖了全部 5 种 part，而不是只渲染 `text`
 - [ ] 高风险工具配了 `toolApproval`
 - [ ] `messages` 未经裁剪不会无限增长
-- [ ] 已接入 Telemetry，能看到 TTFO / tokens / 成本 / 工具失败率
+- [ ] 已接入 Telemetry，能看到 TTFT / tokens / 成本 / 工具失败率
 - [ ] 密钥只放在服务端，第三方工具通过 `contextSchema` 隔离
 
 ---

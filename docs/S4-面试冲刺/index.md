@@ -123,10 +123,10 @@ graph TB
 |------|--------------|------|
 | React | **19.3.0** | 本仓库 `^19.2.7` |
 | Angular | **22.2.2**（21.x LTS `21.2.25`） | — |
-| TypeScript | **7.0.2**（tsgo 主线） | **Angular 22 只支持 `>=6.0 <6.1`** |
+| TypeScript | **7.0.2**（语言版本；仓库用 `@tsrs/wasm`） | **Angular 22 只支持 `>=6.0 <6.1`** |
 | Vite | **8.3.4** | 本仓库 `^8.0.16` |
 | Rolldown | **1.2.13** | Vite 生产底座 |
-| Bun | **1.4.3** | 本仓库 `packageManager: bun@1.4.2` |
+| Bun | **1.4.3** | 本仓库 `packageManager: bun@1.4.3` |
 | oxlint | **1.89.0** | 本仓库唯一 linter |
 | oxfmt | **0.74.0** | 本仓库唯一 formatter（仍为 0.x 预览，未发 1.0） |
 | antd | **6.6.5** | — |
@@ -137,10 +137,9 @@ graph TB
 | React Compiler | **1.0.0 GA** | 可写「已 GA」 |
 | Go | **1.27.2** | 后端栈 |
 
-## 项目与技术栈口径（与仓库一致）
+## 项目与技术栈口径
 
-本阶段列出的项目复盘以本仓库 `interview-demo` 的真实实现为参照：
-**Bun workspace + Turborepo + Vite 8 + React 19 + TypeScript 7 + oxlint/oxfmt**（包管理器为 **Bun**，不是 pnpm）。
+⚠️ **两类素材要分清**：[项目复盘合集](./项目/index.md) 是**候选人历史项目**（多为 Angular / ng-packagr 栈），讲的是「简历上的项目」；本仓库 `interview-demo` 的**当前技术栈**则是 **Bun workspace + Turborepo + Vite 8 + React 19 + TypeScript 7 + oxlint/oxfmt**（包管理器为 **Bun**，不是 pnpm）。面试表述时务必说明项目背景与年代，不要把历史项目栈说成当前选型。
 
 ```bash
 bun install        # 从仓库根目录安装所有 workspace

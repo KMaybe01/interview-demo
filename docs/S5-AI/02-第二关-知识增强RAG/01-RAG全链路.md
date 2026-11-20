@@ -404,7 +404,7 @@ export class RAGChain {
 
   constructor(vectorStore: VectorStoreManager) {
     this.vectorStore = vectorStore;
-    // 型号按 ../X 基线表选择当期型号
+    // 型号按 [版本基线](../index.md#版本基线唯一真源) 选择当期型号
     this.llm = new ChatOpenAI({ model: 'gpt-5-mini', temperature: 0.3 });
     this.chain = this.buildChain();
   }

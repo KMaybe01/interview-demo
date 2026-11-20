@@ -40,7 +40,7 @@
 - **安全**：使用非 root 用户运行，设置 `USER 1000`；启用只读文件系统。
 
 ```dockerfile
-FROM golang:1.22 AS builder
+FROM golang:1.27 AS builder
 WORKDIR /app
 COPY go.mod go.sum ./
 RUN go mod download
@@ -102,7 +102,7 @@ ENTRYPOINT ["/server"]
       steps:
         - uses: actions/checkout@v4
         - uses: actions/setup-go@v5
-          with: { go-version: '1.26', cache: true }   # 缓存模块与构建缓存
+          with: { go-version: '1.27', cache: true }   # 缓存模块与构建缓存
         - run: go vet ./...
         - run: go test -race -covermode=atomic -coverprofile=cover.out ./...
         - run: go build -trimpath -ldflags="-s -w" -o bin/app ./cmd/server
@@ -116,7 +116,7 @@ ENTRYPOINT ["/server"]
   ```
 - **部署侧**：`kubectl set image` / Helm upgrade / Argo CD 同步；生产建议**自动部署到预发 + 人工审批到生产**。
 
-**🔁 前端类比**：`npm ci → eslint → vitest → vite build → 上传 CDN` 就是前端流水线，后端只是把「上传静态资源」换成「构建镜像 + 滚动发布」。
+**🔁 前端类比**：`bun install → oxlint/oxfmt → vitest → vite build → 上传 CDN` 就是前端流水线，后端只是把「上传静态资源」换成「构建镜像 + 滚动发布」。
 
 **📝 一句话总结**：lint → test → build → image → deploy 五段式，便宜的先跑，制品只构建一次并逐环境晋级。
 

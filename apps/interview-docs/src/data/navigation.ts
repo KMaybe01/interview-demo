@@ -147,6 +147,7 @@ export const navConfig: NavItem[] = [
         text: '导学 · 学什么 / 怎么选',
         icon: '🎯',
         items: [
+          { text: '导学概览', icon: '📖', link: '/S5-AI/00-导学/' },
           {
             text: '前端转型 AI 能力地图',
             icon: '🗺️',
@@ -402,6 +403,7 @@ export const navConfig: NavItem[] = [
         text: '⑨ 面试篇',
         icon: '🎤',
         items: [
+          { text: '面试篇概览', icon: '📖', link: '/S5-AI/09-面试篇/' },
           {
             text: '面试技巧与回答模板',
             icon: '💡',

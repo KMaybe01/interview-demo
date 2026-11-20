@@ -13,7 +13,7 @@
 - 使用 [Vercel](https://vercel.com) AI SDK 零基础搭建生产级聊天界面
 - 对话历史管理、上下文截断策略、Token 估算
 - 完整的错误处理与指数退避重试机制
-- **对应项目代码**: `apps/ai-demo/components/Chat.tsx` (Ant Design X Bubble.List + Sender)
+- **对应项目代码**: `apps/ai-demo/src/components/AIChat.tsx` (Ant Design X Bubble.List + Sender)
 
 ### 🔗 前置知识
 - **[TypeScript](https://www.typescriptlang.org)**：泛型、接口、类型推断
@@ -90,7 +90,7 @@ bunx create-next-app@latest ai-chat --typescript --tailwind --app
 
 cd ai-chat
 
-# 📦 安装核心依赖（AI SDK 7 —— 本仓库统一用 bun，版本号对齐 X 基线表）
+# 📦 安装核心依赖（AI SDK 7 —— 本仓库统一用 bun，版本号对齐 [版本基线](../index.md#版本基线唯一真源)）
 bun add ai@^7 @ai-sdk/openai@^4 @ai-sdk/react@^4
 
 # 🎨 安装辅助依赖 (Markdown 渲染)
@@ -143,7 +143,7 @@ export async function POST(req: Request) {
     // 🌊 启动流式生成（AI SDK 7 写法）
     // convertToModelMessages：把 UI 消息（parts）转为模型消息（content）
     const result = streamText({
-      // 型号按 X 基线表选择当期模型；聊天 demo 用低成本档即可
+      // 型号按 [版本基线](../index.md#版本基线唯一真源)选择当期模型；聊天 demo 用低成本档即可
       model: openai('gpt-5-mini'),
       messages: convertToModelMessages(messages),
       system: `你是一个专业的 AI 助手。请用简洁、准确的语言回答问题。
@@ -520,7 +520,7 @@ export async function POST(req: Request) {
         const response = await fetch(process.env.OPENAI_API_URL, {
           method: 'POST',
           headers: { 'Content-Type': 'application/json', Authorization: `Bearer ${process.env.OPENAI_API_KEY}` },
-          // 型号按 X 基线表选择当期模型（此处示例走低成本档）
+          // 型号按 [版本基线](../index.md#版本基线唯一真源)选择当期模型（此处示例走低成本档）
           body: JSON.stringify({ model: 'gpt-5-mini', messages, stream: true }),
         });
 

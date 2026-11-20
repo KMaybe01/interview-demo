@@ -53,8 +53,8 @@ timeline
               : ES2022（类字段/顶层 await）
               : ES2023（数组 toSorted/toReversed）
                : ES2024（正则 v 标志）
-     2025-2026 : ES2025（模式匹配/管道运算符草案）
-               : ES2026（显式资源管理）
+     2025-2026 : ES2025（迭代器助手/Promise.try/Set 集合运算/RegExp.escape）
+               : ES2026（Temporal API / using 显式资源管理）
 ```
 
 ### 关键版本对比
@@ -69,7 +69,8 @@ timeline
 | **ES2022** | 2022 | 类字段、顶层 await | OOP + 模块完善 |
 | **ES2023** | 2023 | 数组不可变方法 | 函数式编程增强 |
 | **ES2024** | 2024 | 正则 v 标志 | 正则增强 |
-| **ES2025** | 2025 | 模式匹配、管道运算符 | 元编程成熟 |
+| **ES2025** | 2025 | 迭代器助手、`Promise.try`、`Set` 集合运算、`RegExp.escape` | 日常数据处理更简洁（模式匹配/管道仍是草案） |
+| **ES2026** | 2026 | `Temporal` API、`using`/`await using` 显式资源管理 | 日期处理与资源释放首次有了语言级方案 |
 
 ### 为什么 ES6 是 JavaScript 的分水岭？
 

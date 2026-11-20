@@ -4,7 +4,7 @@
 >
 > **产出物**：一个具备生成式 UI、AI 原生交互范式，并能根据场景选择「云端 vs 端侧」的应用。
 
-← [上一关：协议与多 Agent](../05-第五关-协议与多Agent/index.md) · [返回总纲](../index.md)
+← [上一关：协议与多 Agent](../05-第五关-协议与多Agent/index.md) · [返回总纲](../index.md) · → [下一关：编码 Agent 专题](../10-编码Agent专题/index.md)
 
 ---
 
@@ -64,7 +64,7 @@ graph LR
 | 对话历史侧栏 | `apps/ai-demo/src/components/AIChat.tsx`（`Conversations`） | 创建/切换/重命名/删除 + 右键菜单 |
 | 声明式 UI 生成 | `apps/ai-demo/src/components/A2UI.tsx` | `@a2ui/react` 渲染模型产出的 UI |
 | 主题与 i18n 适配 | `apps/ai-demo/src/App.tsx`、`packages/shared-theme/` | 暗色主题与 `XProvider` 配置 |
-| 端侧推理的工程基础 | `apps/frontend/src/workers/` | Web Worker 承担重计算，避免阻塞渲染线程 |
+| 端侧推理的工程基础 | `apps/frontend/src/utils/{merge,decrypt,hash}.worker.ts` | Web Worker 承担重计算，避免阻塞渲染线程（这些 worker 现用于大文件合并/解密/哈希，端侧推理可复用同一模式） |
 
 ## 开源仓库延伸精读（生成式 UI）
 

@@ -144,10 +144,9 @@ db.Create(&user)
 // 读操作自动走从库
 db.Where("name = ?", "Alice").Find(&users)
 
-// 写后读强制走主库
-tx := db.Session(&gorm.Session{Context: db.Set("read_write", "write")})
-tx.Model(&user).Update("age", 30)
-tx.First(&user)
+// 写后读强制走主库（dbresolver 的标准写法）
+db.Clauses(dbresolver.Write).Model(&user).Update("age", 30)
+db.Clauses(dbresolver.Write).First(&user, user.ID)
 ```
 
 ### Q6: 什么是优雅关停（Graceful Shutdown）？Go 中如何实现？
@@ -240,7 +239,7 @@ func GetConfig() *Config {
   4. `c.serve` 读取并解析请求；
   5. 调用 `serverHandler{c.server}.ServeHTTP(w, req)` 进入自定义处理逻辑；
   6. `serverHandler.ServeHTTP` 里：若 `Server.Handler == nil` 则用 `DefaultServeMux`，否则用自定义 Handler；
-  7. `DefaultServeMux` 内部是 `map[pattern]handler`，`mux.match(path)` 查路由分发。
+  7. `DefaultServeMux` 在 **Go 1.22 起是方法/模式感知的路由树**（支持 `GET /path`、`{id}` 通配与优先级匹配），不再是简单的 `map[pattern]handler`；未命中则走 `NotFoundHandler`。
 - **关键结论**：net/http 是**单进程、多协程**模型 —— 每个连接一个 goroutine；因此**每个 goroutine 必须自己兜住 panic**（否则整个进程崩溃），这是 Recovery 中间件必备的原因。
 - **扩展点**：`Handler` 接口只有 `ServeHTTP(w, r)` 一个方法，框架（gin 等）都是通过实现它、替换 `Server.Handler` 来接管整个请求生命周期。
 

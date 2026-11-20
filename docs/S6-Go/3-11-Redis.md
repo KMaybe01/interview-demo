@@ -745,7 +745,7 @@ for iter.Next(ctx) {
 - 释放：Lua 脚本原子检查并删除（防止误删）
 - 续期：看门狗后台 goroutine 定时延长过期时间
 - 高可用：Redlock（多节点独立加锁，多数成功）
-- Go 实现：`redis-lock` 库或 Redisson（Java）
+- Go 实现：`bsm/redislock`、`redis/go-redsync`，或基于 `go-redis/v9` 自行实现 SET NX PX + Lua
 
 ```go
 // Go 分布式锁示例

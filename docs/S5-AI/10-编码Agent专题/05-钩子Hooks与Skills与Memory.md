@@ -5,10 +5,13 @@
 > **前置**：第四关「上下文工程与 Skills」
 > **产出**：能区分三者职责边界，并各举一个工程用例
 > **参考**：`https://github.com/luongnv89/claude-howto`（slash commands / memory / skills / hooks / plugins）、`https://github.com/github/awesome-copilot`（生态对照）
+> **代码**：`apps/backend/internal/airouter/`（工具审批编排）、`apps/backend/internal/guard/`（护栏规则）、根 `AGENTS.md`（项目级 Memory 的真实样例）
 
 ---
 
 ## 1. 原理（够用即可）
+
+> 🧠 **生活化类比**：Memory 是**员工手册**（入职第一天就发，写着「本仓库用 bun、禁 npm」）；Skills 是**标准作业流程 SOP**（接到「加 CRUD 接口」任务就照着做）；Hooks 是**门禁与监控摄像头**（不管你记不记得，强推代码时物理拦下）。手册靠自觉、SOP 靠调用、门禁靠强制——所以「禁止强推」必须做成 Hook。
 
 三者解决的不是同一件事，常常被混为一谈：
 
@@ -34,6 +37,8 @@ graph LR
 **Memory 的层级**：用户级（`~/.claude/CLAUDE.md`）+ 项目级（仓库根 `CLAUDE.md`）+ 会话级（本次对话摘要）。优先级通常 项目 > 用户 > 会话。
 
 > 实操模板见 `https://github.com/luongnv89/claude-howto`：它把 slash commands、memory、skills、subagents、MCP、hooks、plugins 都做成了「复制即用」的模板；`awesome-copilot` 则是 GitHub Copilot 一侧的同构生态（agents / instructions / skills / hooks / plugins）。
+>
+> ⚠️ **常见坑**：① 把临时任务写进 Memory，导致每次会话都背着无关上下文；② Hook 里做重 IO 又不设超时，把每次工具调用都拖慢；③ Skill 写成「万能大杂烩」，模型不知道何时该用——一个 Skill 只封装一条清晰流程，并写清楚触发条件。
 
 ## 3. 代码实现
 
@@ -56,6 +61,7 @@ hooks.on('PreToolUse', ({ tool, args }) => {
 - 配置一个 `PostToolUse` 钩子：每次 `Edit` 后自动跑 `oxlint --fix` + `oxfmt`。确认改完文件立即被格式化。
 - 写一条 Memory「本仓库禁止 npm」：新会话里让 Agent 装依赖，确认它自动用 `bun`。
 - 调一个 Skill「加 CRUD 接口」：确认它按固定套路产出 controller/service/route 而不偏离。
+- **可断言的验收条件**：① `PreToolUse` 对 `git push --force` 返回 `block: true`，且工具**没有被执行**（不是执行后回滚）；② 新会话首条请求中必须出现 Memory 里的「用 bun、禁 npm」约定；③ 同一 Skill 连续调用 3 次，产出结构一致（文件清单与顺序相同）。
 
 ## 5. 面试追问
 

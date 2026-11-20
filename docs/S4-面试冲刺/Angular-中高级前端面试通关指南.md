@@ -954,11 +954,11 @@ NgZone 控制：
 └─ 应用：高频事件（mousemove/scroll）在 runOutsideAngular 中执行，
    避免频繁触发 CD
 
-Angular 17+（Zoneless）：
+Angular 18（实验）→ 22（稳定可用）的 Zoneless：
 ├─ 基于 Signals 的变更检测，不再依赖 Zone.js
 ├─ signal.set() / update() 精确通知相关组件变更
 ├─ 无需 zone.js polyfill，减少 bundle 体积
-└─ 当前处于开发者预览阶段，生产环境仍建议使用 Zone.js
+└─ Angular 22 已将 Zoneless 转为正式可用；老项目仍用 Zone.js 属技术遗产，不是「当前建议」
 ```
 
 ### Angular DI 层次体系
@@ -1088,7 +1088,7 @@ RouteReuseStrategy（路由复用）：
 ```
 ├─ Signal-based Components（Signal inputs/outputs）
 │   └─ input() / output() / model() 替代 @Input / @Output
-├─ Zoneless Change Detection（实验性预览，19+ 逐步稳定）
+├─ Zoneless Change Detection（18 实验 → 22 正式可用）
 │   └─ signal 变更自动触发 CD，无需 Zone.js
 ├─ httpResource()
 │   └─ 基于 Signal 的 HTTP 请求包装，替代 HttpClient Observable（19+ 起正式可用）

@@ -5,10 +5,13 @@
 > **前置**：第三关「Agent 设计模式」
 > **产出**：能徒手画出一个编码 Agent 的完整 Loop，并说出停止条件怎么防死循环
 > **参考**：`https://github.com/KMaybe01/claude-code-book`（对话循环章节）、`https://github.com/cellinlab/how-pi-agent-works`（Agent Loop + 流式事件）
+> **代码**：`apps/ai-course/src/stages/03-agent/`（Agent 循环）、`apps/backend/internal/airouter/`（SSE 事件编排）
 
 ---
 
 ## 1. 原理（够用即可）
+
+> 🧠 **生活化类比**：普通聊天像「窗口一问一答」；编码 Agent 像**装修队干活**——设计师（模型）看完现场（文件）开工单（tool-call），工人（工具）施工后把结果回报，设计师再决定下一步，直到验收。区别在于工人干的活会**真的落到磁盘和 shell 上**。
 
 普通 Chatbot：`用户 → 模型 → 文本`，一次就结束。
 编码 Agent：`用户 → 模型 → 决定调工具 → 执行工具(读文件/跑命令) → 工具结果回灌上下文 → 模型再推理 …` 直到模型认为任务完成或触发停止条件。
@@ -36,6 +39,8 @@ graph LR
 | 中断恢复 | 无 | 可 `cancel` 当前执行；可 `resume` 从断点继续（见 `how-pi-agent-works` 的会话树） |
 
 > 死循环防护不是「限制步数」这么简单：真实工程里更要检测「工具反复返回相同结果」这类**隐性不收敛**，这一步和 ③ 的「重复检测」一脉相承。
+>
+> ⚠️ **常见坑**：① 只靠 `stepCountIs` 兜底——模型可能 3 步就陷入「反复读同一文件」的无效循环，步数上限根本没触发；② 把 `tool-result` 原文全量回灌而不截断，几轮后直接爆窗；③ 中断后不留检查点，恢复时从头重跑（既慢又费钱）。
 
 ## 3. 代码实现
 
@@ -67,6 +72,7 @@ async function codingLoop(userInput: string, messages: ModelMessage[]) {
 - 在 `apps/ai-demo` 的聊天界面发一句「读取 package.json 并告诉我用了哪些依赖」，观察事件流是否依次出现 `tool-call(readFile)` → `tool-result` → `text`。
 - 故意让它「改一个不存在的文件」，确认工具返回结构化错误后 Loop 能继续而不是崩溃。
 - 看 `apps/backend/internal/airouter/` 的 SSE 事件：它把「RAG→工具→重试→HITL」的每一步推给前端，正是企业级 Loop 的可观测形态。
+- **可断言的验收条件**：① 事件序列必须严格满足 `tool-call(readFile) → tool-result → text`，缺一即视为回灌失败；② 任务完成后 `messages` 末条必须是 `assistant` 且不含未完成的 tool-call；③ 人为让工具连续 3 次返回相同内容时，Loop 应在第 3 次后停止（重复检测生效），而不是跑满 25 步。
 
 ## 5. 面试追问
 

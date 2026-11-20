@@ -134,7 +134,7 @@ graph TB
 
 | 技术 / 标准 | 真实状态 | 备注 |
 |-------------|----------|------|
-| TypeScript | **7.0.2**（`rc` `7.0.1-rc`，`next` `7.1.0-dev`） | TS 7 为 Go 原生编译器（tsgo）主线 |
+| TypeScript | **7.0.2**（`rc` `7.0.1-rc`，`next` `7.1.0-dev`） | 语言主线是 Go 原生编译器（tsgo）；**本仓库**用 `@tsrs/wasm`（Rust 移植，`bunx tsrs-wasm`）做类型检查 |
 | Angular 对 TS 的约束 | 只支持 `typescript >=6.0 <6.1` | **Angular 22 不支持 TS 7**（跨阶段易错点） |
 | ECMAScript | **ES2026（第 17 版）已正式发布** | 代表特性：**Temporal API**、`using`/`await using` 显式资源管理 |
 | ES2025 | 已发布 | 迭代器助手、`Promise.try`、`Set` 集合运算、`RegExp.escape` |

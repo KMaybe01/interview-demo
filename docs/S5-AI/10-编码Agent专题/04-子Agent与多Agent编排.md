@@ -5,10 +5,13 @@
 > **前置**：02 章（工具/权限）、03 章（上下文）、第五关「A2A 多 Agent」
 > **产出**：能说清「子 Agent」和「主循环多调几次工具」的本质区别，并给出适用场景
 > **参考**：`https://github.com/KMaybe01/claude-code-book`（Fork 子 Agent 章节）、`https://github.com/datawhalechina/hello-agents`（多 Agent 案例）
+> **代码**：`apps/backend/internal/agent/`（ReAct / Function Calling / Multi-Agent 三种引擎）、`apps/backend/internal/memory/`（会话隔离）
 
 ---
 
 ## 1. 原理（够用即可）
+
+> 🧠 **生活化类比**：子 Agent 像**派实习生去查资料**——你（主 Agent）只给他一个明确问题和截止时间，他自己翻文档、试错，最后只交一页结论； raw 资料不会堆到你的桌上。和 A2A 的区别是：实习生在你同一个办公室（同进程），A2A 则是把活外包给另一家公司（跨进程、跨组织）。
 
 主 Agent 遇到「先去把整个 `utils/` 读一遍、总结用法」这类任务，如果自己读，所有文件内容都会进**主上下文**，挤掉真正要写的代码所需的空间。
 
@@ -41,6 +44,8 @@ graph TB
 - 选型：自己仓库内的探索用子 Agent；调用外部能力用 A2A。
 
 > `https://github.com/KMaybe01/claude-code-book` 的「Fork 子 Agent」章节详细讲了它如何用独立上下文隔离探索；`hello-agents` 的「赛博小镇 / 旅行助手」是多 Agent 协作的教学案例。
+>
+> ⚠️ **常见坑**：① 子 Agent 任务描述含糊（「去看看代码」），回来一堆无关结论——必须给**明确产出格式与边界**；② 并行 Fork 无上限，瞬间几十个 Agent 打爆 token 预算与工具限流；③ 子 Agent 结论不附证据索引，主 Agent 无法核验，等于把幻觉从主上下文搬到了子上下文。
 
 ## 3. 代码实现
 
@@ -62,6 +67,7 @@ async function orchestrate(task: string) {
 
 - 让主 Agent「先调研再改代码」，观察子 Agent 的上下文长度与主 Agent 解耦（主 Agent 上下文不随子 Agent 读的文件增长）。
 - 故意让一个子 Agent 走错路：确认它失败后主路径仍可继续（分支可丢弃）。
+- **可断言的验收条件**：① 主 Agent 的 token 用量不随子 Agent 读取的文件数增长（只增长结论部分）；② 子 Agent 返回结构必须含「结论 + 证据索引（文件:行号）」，缺索引视为无效结果；③ 并发 Fork 数受配置上限约束，超限任务排队而不是无限起。
 
 ## 5. 面试追问
 

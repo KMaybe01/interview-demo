@@ -491,7 +491,7 @@ timeline
 2020: Angular 9（Ivy 默认）            ← 性能飞跃
   │    增量 DOM，包体积 -40%
   ▼
-2024: Angular 17（Signals + 控制流）   ← 响应式革命
+2023: Angular 17（Signals + 控制流）   ← 响应式革命（2023-11 发布）
   │    新语法，新范式
   ▼
 2026: Angular 22（Signal 优先）        ← Signal 优先时代
@@ -5985,7 +5985,7 @@ formField 指令职责：
 | 自定义控件 | 支持 ControlValueAccessor | 支持 ControlValueAccessor |
 
 **面试追问：** *`formField` 指令如何处理自定义组件（如日期选择器、下拉框）？*
-> 与 ngModel 一样，自定义控件实现 `ControlValueAccessor` 接口（writeValue / registerOnChange / registerOnTorch），formField 指令会自动识别并绑定。Angular 22 的 signal-based ControlValueAccessor 正在设计中，未来会提供更简洁的 API。
+> 与 ngModel 一样，自定义控件实现 `ControlValueAccessor` 接口（writeValue / registerOnChange / registerOnTouched / setDisabledState），formField 指令会自动识别并绑定。Angular 22 的 signal-based ControlValueAccessor 正在设计中，未来会提供更简洁的 API。
 
 
 **⚠️ 常见误区**：以为 formField 自己做校验（校验仍由 schema/验证器定义，指令只负责绑定）
